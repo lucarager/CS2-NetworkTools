@@ -1,0 +1,117 @@
+$magenta-haze: #AE4377ff;
+$raspberry-rose: #B4446Eff;
+$raspberry-rose-2: #BA4565ff;
+$cerise: #C0455Cff;
+$bittersweet-shimmer: #C64653ff;
+$bittersweet-shimmer-2: #CC474Aff;
+$bittersweet-shimmer-3: rgb(204, 87, 71);
+$color1: $magenta-haze;
+$color2: $raspberry-rose;
+$color3: $raspberry-rose-2;
+$color4: $cerise;
+$color5: $bittersweet-shimmer;
+$color6: $bittersweet-shimmer-2;
+$color7: $bittersweet-shimmer-3;
+$opacityRest: 100%;
+$brighten: 10%;
+
+.wrapper {
+    position: relative;
+}
+
+.panel {
+    position: absolute;
+    top: 100%;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+}
+
+.headerText {
+    margin-left: -5rem;
+}
+
+.actionButton {
+    $size: 64rem;
+    $iconSize: 32rem;
+
+    display: flex;
+    width: $size;
+    height: $size;
+    flex-direction: row;
+    padding: 8rem 16rem;
+    margin-bottom: 8rem;
+    border-radius: 50%;
+    background-color: $color1;
+    align-items: center;
+    justify-content: flex-start;
+
+    img {
+        width: $iconSize;
+        height: $iconSize;
+    }
+
+    &:nth-child(1) {
+        background-color: rgba($color1, $opacityRest);
+
+        &:hover {
+            background-color: brighten($color1, $brighten);
+        }
+    }
+
+    &:nth-child(2) {
+        background-color: rgba($color2, $opacityRest);
+
+        &:hover {
+            background-color: brighten($color2, $brighten);
+        }
+    }
+
+    &:nth-child(3) {
+        background-color: rgba($color3, $opacityRest);
+
+        &:hover {
+            background-color: brighten($color3, $brighten);
+        }
+    }
+
+    &:nth-child(4) {
+        background-color: rgba($color4, $opacityRest);
+
+        &:hover {
+            background-color: brighten($color4, $brighten);
+        }
+    }
+
+    &:nth-child(5) {
+        background-color: rgba($color5, $opacityRest);
+
+        &:hover {
+            background-color: brighten($color5, $brighten);
+        }
+    }
+
+    &:nth-child(6) {
+        background-color: rgba($color6, $opacityRest);
+
+        &:hover {
+            background-color: brighten($color6, $brighten);
+        }
+    }
+
+    &:nth-child(7) {
+        background-color: rgba($color7, $opacityRest);
+
+        &:hover {
+            background-color: brighten($color7, $brighten);
+        }
+    }
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    padding-top: 16rem;
+}

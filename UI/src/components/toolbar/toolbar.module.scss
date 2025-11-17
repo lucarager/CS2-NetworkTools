@@ -1,0 +1,48 @@
+.wrapper {
+position: absolute;
+    bottom: 140rem;
+    left: 0px;
+    right: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.panel {
+    background-color:  var(--panelColorNormal) ;
+    backdrop-filter:  var(--panelBlur) ;
+    border-radius: 24rem;
+    display: flex;
+    flex-direction: row;
+}
+
+.divider {
+    height: 100%;
+    width: 1rem;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    padding: 16rem;
+    justify-content: center;
+    align-items: center;
+
+    & > * {
+        margin: 0 8rem;
+    }
+}
+
+.applyButton {
+    padding-left: 16rem;
+    padding-right: 16rem;
+}
+
+.iconButton {
+
+}
+
+.icon {
+
+}
