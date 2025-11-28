@@ -1,4 +1,4 @@
-﻿// <copyright file="NT_AddDelete.cs" company="Luca Rager">
+﻿// <copyright file="NT_Select.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -10,5 +10,5 @@ namespace Game.Prefabs {
 
     #endregion
 
-    public struct NT_AddDelete : IComponentData { }
+    public struct NT_Select : IComponentData { }
 }

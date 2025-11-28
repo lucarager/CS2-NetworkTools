@@ -1,12 +1,14 @@
-﻿// <copyright file="${File.FileName}" company="${User.FullName}">
-// Copyright (c) ${User.Name}. All rights reserved.
+﻿// <copyright file="NT_ToolData.cs" company="Luca Rager">
+// Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-using System;
-using Unity.Entities;
-
 namespace Game.Prefabs {
-    public struct NT_ToolLookup : IComponentLookup {
-    }
+    #region Using Statements
+
+    using Unity.Entities;
+
+    #endregion
+
+    public struct NT_ToolData : IComponentData { }
 }

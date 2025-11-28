@@ -10,5 +10,5 @@ namespace Game.Prefabs {
 
     #endregion
 
-    public struct NT_AddDelete : IComponentData { }
+    public struct NT_Highlighted : IComponentData { }
 }
