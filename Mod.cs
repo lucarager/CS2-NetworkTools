@@ -1,18 +1,19 @@
-﻿// <copyright file="NetworkToolsMod.cs" company="Luca Rager">
+﻿// <copyright file="Mod.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-using NetworkTools.Settings;
-
 namespace NetworkTools {
+    #region Using Statements
+
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Reflection;
     using Colossal;
-    using Colossal.IO.AssetLookupbase;
+    using Colossal.IO.AssetDatabase;
+    using Colossal.Json;
     using Colossal.Localization;
     using Colossal.Logging;
     using Colossal.Reflection;
@@ -21,9 +22,13 @@ namespace NetworkTools {
     using Game;
     using Game.Modding;
     using Game.SceneFlow;
-    using NetworkTools.Systems;
     using Newtonsoft.Json;
+    using Settings;
+    using Systems;
     using UnityEngine;
+    using StreamReader = System.IO.StreamReader;
+
+    #endregion
 
     /// <summary>
     /// Mod entry point.
@@ -40,43 +45,35 @@ namespace NetworkTools {
         public static readonly string Id = "NetworkTools";
 
         /// <summary>
-        /// Gets the instance reference.
+        /// Sets mod to test mode
         /// </summary>
-        public static NetworkToolsMod Instance {
-            get; private set;
-        }
-
-        /// <summary>
-        /// Gets the mod's settings configuration.
-        /// </summary>
-        internal NetworkToolsModSettings Settings {
-            get; private set;
-        }
+        internal bool IsTestMode { get; set; } = false;
 
         /// <summary>
         /// Gets the mod's logger.
         /// </summary>
-        internal ILog Log {
-            get; private set;
-        }
+        internal ILog Log { get; private set; }
 
         /// <summary>
-        /// Sets mod to test mode
+        /// Gets the instance reference.
         /// </summary>
-        internal bool IsTestMode {
-            get;
-            set;
-        } = false;
+        public static NetworkToolsMod Instance { get; private set; }
+
+        /// <summary>
+        /// Gets the mod's settings configuration.
+        /// </summary>
+        internal NetworkToolsModSettings Settings { get; private set; }
+
+        /// <summary>
+        /// Gets the mod's informational version
+        /// </summary>
+        public static string InformationalVersion =>
+            Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
         /// <summary>
         /// Gets the mod's version
         /// </summary>
         public static string Version => Assembly.GetExecutingAssembly().GetName().Version.ToString(4);
-
-        /// <summary>
-        /// Gets the mod's informational version
-        /// </summary>
-        public static string InformationalVersion => Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
         /// <inheritdoc/>
         public void OnLoad(UpdateSystem updateSystem) {
@@ -96,9 +93,9 @@ namespace NetworkTools {
 
             // Load i18n
             GameManager.instance.localizationManager.AddSource("en-US", new EnUsConfig(Settings));
-            Log.Info($"[NetworkTools] Loaded en-US.");
+            Log.Info("[NetworkTools] Loaded en-US.");
             LoadNonEnglishLocalizations();
-            Log.Info($"[NetworkTools] Loaded localization files.");
+            Log.Info("[NetworkTools] Loaded localization files.");
 
             // Generate i18n files
 #if IS_DEBUG && EXPORT_EN_US
@@ -109,13 +106,14 @@ namespace NetworkTools {
             Settings.RegisterInOptionsUI();
 
             // Load saved settings.
-            AssetLookupbase.global.LoadSettings("NetworkTools", Settings, new NetworkToolsModSettings(this));
+            AssetDatabase.global.LoadSettings("NetworkTools", Settings, new NetworkToolsModSettings(this));
 
             // Apply input bindings.
             Settings.RegisterKeyBindings();
 
             // Activate Systems
             updateSystem.UpdateAt<NT_PrefabsCreateSystem>(SystemUpdatePhase.PrefabUpdate);
+            updateSystem.UpdateAt<NT_NodeSelectionToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_RenderSystem>(SystemUpdatePhase.Rendering);
@@ -126,7 +124,7 @@ namespace NetworkTools {
 
             // Add mod UI resource directory to UI resource handler.
             if (!GameManager.instance.modManager.TryGetExecutableAsset(this, out var modAsset)) {
-                Log.Error($"Failed to get executable asset path. Exiting.");
+                Log.Error("Failed to get executable asset path. Exiting.");
                 return;
             }
 
@@ -134,22 +132,6 @@ namespace NetworkTools {
             UIManager.defaultUISystem.AddHostLocation("nt", assemblyPath + "/Assets/");
 
             Log.Info($"Installed and enabled. RenderedFrame: {Time.renderedFrameCount}");
-        }
-
-        private void GenerateLanguageFile() {
-            Log.Info($"[NetworkTools] Exporting localization");
-            var localeDict = new EnUsConfig(Settings).ReadEntries(new List<IDictionaryEntryError>(), new Dictionary<string, int>()).ToDictionary(pair => pair.Key, pair => pair.Value);
-            var str = JsonConvert.SerializeObject(localeDict, Newtonsoft.Json.Formatting.Indented);
-            try {
-                var path = "C:\\Users\\lucar\\source\\repos\\NetworkTools\\lang\\en-US.json";
-                Log.Info($"[NetworkTools] Exporting to {path}");
-                File.WriteAllText(path, str);
-                path = "C:\\Users\\lucar\\source\\repos\\NetworkTools\\UI\\src\\lang\\en-US.json";
-                Log.Info($"[NetworkTools] Exporting to {path}");
-                File.WriteAllText(path, str);
-            } catch (Exception ex) {
-                Log.Error(ex.ToString());
-            }
         }
 
         /// <inheritdoc/>
@@ -164,9 +146,26 @@ namespace NetworkTools {
             }
         }
 
+        private void GenerateLanguageFile() {
+            Log.Info("[NetworkTools] Exporting localization");
+            var localeDict = new EnUsConfig(Settings).ReadEntries(new List<IDictionaryEntryError>(), new Dictionary<string, int>())
+                                                     .ToDictionary(pair => pair.Key, pair => pair.Value);
+            var str = JsonConvert.SerializeObject(localeDict, Formatting.Indented);
+            try {
+                var path = "C:\\Users\\lucar\\source\\repos\\NetworkTools\\lang\\en-US.json";
+                Log.Info($"[NetworkTools] Exporting to {path}");
+                File.WriteAllText(path, str);
+                path = "C:\\Users\\lucar\\source\\repos\\NetworkTools\\UI\\src\\lang\\en-US.json";
+                Log.Info($"[NetworkTools] Exporting to {path}");
+                File.WriteAllText(path, str);
+            } catch (Exception ex) {
+                Log.Error(ex.ToString());
+            }
+        }
+
         private static void AddTests() {
             var log = LogManager.GetLogger(ModName);
-            log.Debug($"AddTests()");
+            log.Debug("AddTests()");
 
             var m_ScenariosField = typeof(TestScenarioSystem).GetField("m_Scenarios", BindingFlags.Instance | BindingFlags.NonPublic);
             if (m_ScenariosField == null) {
@@ -178,18 +177,20 @@ namespace NetworkTools {
 
             foreach (var type in GetTests()) {
                 if (!type.IsClass || type.IsAbstract || type.IsInterface || !type.TryGetAttribute(
-                        out TestDescriptorAttribute testDescriptorAttribute, false)) {
+                        out TestDescriptorAttribute testDescriptorAttribute)) {
                     continue;
                 }
 
                 log.Debug($"AddTests() -- {testDescriptorAttribute.description}");
 
-                m_Scenarios.Add(testDescriptorAttribute.description, new TestScenarioSystem.Scenario {
-                    category = testDescriptorAttribute.category,
-                    testPhase = testDescriptorAttribute.testPhase,
-                    test = type,
-                    disabled = testDescriptorAttribute.disabled,
-                });
+                m_Scenarios.Add(
+                    testDescriptorAttribute.description,
+                    new TestScenarioSystem.Scenario {
+                        category  = testDescriptorAttribute.category,
+                        testPhase = testDescriptorAttribute.testPhase,
+                        test      = type,
+                        disabled  = testDescriptorAttribute.disabled,
+                    });
             }
 
             m_Scenarios = TestScenarioSystem.SortScenarios(m_Scenarios);
@@ -199,16 +200,16 @@ namespace NetworkTools {
 
         private static IEnumerable<Type> GetTests() {
             return from t in Assembly.GetExecutingAssembly().GetTypes()
-                   where typeof(TestScenario).IsAssignableFrom(t)
-                   select t;
+                where typeof(TestScenario).IsAssignableFrom(t)
+                select t;
         }
 
         private void LoadNonEnglishLocalizations() {
-            var thisAssembly = Assembly.GetExecutingAssembly();
+            var thisAssembly  = Assembly.GetExecutingAssembly();
             var resourceNames = thisAssembly.GetManifestResourceNames();
 
             try {
-                Log.Debug($"Reading localizations");
+                Log.Debug("Reading localizations");
 
                 foreach (var localeID in GameManager.instance.localizationManager.GetSupportedLocales()) {
                     var resourceName = $"{thisAssembly.GetName().Name}.lang.{localeID}.json";
@@ -218,10 +219,10 @@ namespace NetworkTools {
                             Log.Debug($"Reading embedded translation file {resourceName}");
 
                             // Read embedded file.
-                            using System.IO.StreamReader reader = new(thisAssembly.GetManifestResourceStream(resourceName));
+                            using StreamReader reader = new(thisAssembly.GetManifestResourceStream(resourceName));
                             {
-                                var entireFile = reader.ReadToEnd();
-                                var varient = Colossal.Json.JSON.Load(entireFile);
+                                var entireFile   = reader.ReadToEnd();
+                                var varient      = JSON.Load(entireFile);
                                 var translations = varient.Make<Dictionary<string, string>>();
                                 GameManager.instance.localizationManager.AddSource(localeID, new MemorySource(translations));
                             }

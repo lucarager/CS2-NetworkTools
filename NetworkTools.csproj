@@ -2,7 +2,8 @@
 
 	<PropertyGroup>
 		<Configurations>Debug;Release</Configurations>
-	
+		<TargetFramework>net48</TargetFramework>
+		<LangVersion>11.0</LangVersion>
 		<!--The file where mod information which is required for publishing mod on PDX mods are stored-->
 		<PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
 	</PropertyGroup>
@@ -33,7 +34,7 @@
 		<Reference Include="Colossal.Core">
 			<Private>false</Private>
 		</Reference>
-		<Reference Include="Colossal.IO.AssetLookupbase">
+		<Reference Include="Colossal.IO.AssetDatabase">
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Colossal.Localization">
@@ -84,7 +85,7 @@
 		<Reference Update="System.Core">
 			<Private>false</Private>
 		</Reference>
-		<Reference Update="System.Lookup">
+		<Reference Update="System.Data">
 			<Private>false</Private>
 		</Reference>
 	</ItemGroup>
@@ -95,21 +96,29 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<_AssetsDir Include="$(ProjectDir)/UI/src/assets/*" />
+		<Compile Remove="UI\**" />
+		<EmbeddedResource Remove="UI\**" />
+		<None Remove="UI\**" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Remove="UI\**" />
-	  <EmbeddedResource Remove="UI\**" />
-	  <None Remove="UI\**" />
+		<PackageReference Include="PolySharp" Version="1.15.0">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 	</ItemGroup>
 
 	<Target Name="BuildUI" AfterTargets="AfterBuild">
+		<Message Text="[BuildUI]" Importance="high" />
 		<Exec Command="npm run build" WorkingDirectory="$(ProjectDir)/UI" />
 	</Target>
 
 	<Target Name="CopyAssets" AfterTargets="AfterBuild">
-		<Copy SourceFiles="@(_AssetsDir)" DestinationFolder="$(DeployDir)/Assets" />
-	</Target>
+		<Message Text="[CopyAssets]" Importance="high" />
+		<ItemGroup>
+			<_AssetsDir Include="$(ProjectDir)/Assets/**/*.*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_AssetsDir)" DestinationFolder="$(DeployDir)\Assets\%(RecursiveDir)" />
+</Target>
 
 </Project>
