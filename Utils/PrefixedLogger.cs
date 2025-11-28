@@ -4,11 +4,15 @@
 // </copyright>
 
 namespace NetworkTools.Utils {
+    #region Using Statements
+
     using Colossal.Logging;
 
+    #endregion
+
     internal class PrefixedLogger {
+        private readonly ILog   m_Log;
         private readonly string m_Prefix;
-        private readonly ILog m_Log;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PrefixedLogger"/> class.
@@ -16,24 +20,16 @@ namespace NetworkTools.Utils {
         /// <param name="prefix"></param>
         public PrefixedLogger(string prefix) {
             m_Prefix = prefix;
-            m_Log = NetworkToolsMod.Instance.Log;
+            m_Log    = NetworkToolsMod.Instance.Log;
         }
 
-        public void Info(string message) {
-            Log("INFO", message);
-        }
+        public void Info(string message) { Log("INFO", message); }
 
-        public void Warn(string message) {
-            Log("WARN", message);
-        }
+        public void Warn(string message) { Log("WARN", message); }
 
-        public void Error(string message) {
-            Log("ERROR", message);
-        }
+        public void Error(string message) { Log("ERROR", message); }
 
-        public void Debug(string message) {
-            Log("DEBUG", message);
-        }
+        public void Debug(string message) { Log("DEBUG", message); }
 
         private void Log(string level, string message) {
             var formattedMessage = $"[{m_Prefix}] {message}";
