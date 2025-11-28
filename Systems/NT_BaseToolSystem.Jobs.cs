@@ -4,7 +4,8 @@
 // </copyright>
 
 namespace NetworkTools.Systems {
-    using System;
+    #region Using Statements
+
     using Colossal.Mathematics;
     using Game.Areas;
     using Game.Buildings;
@@ -17,9 +18,12 @@ namespace NetworkTools.Systems {
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
+    using Node = Game.Net.Node;
     using SubArea = Game.Prefabs.SubArea;
     using SubNet = Game.Prefabs.SubNet;
     using SubObject = Game.Prefabs.SubObject;
+
+    #endregion
 
     public abstract partial class NT_BaseToolSystem {
         public enum ToolMode {
@@ -34,7 +38,7 @@ namespace NetworkTools.Systems {
             [ReadOnly] private ToolMode                               m_ToolMode;
             [ReadOnly] private NativeList<ControlPoint>               m_ControlPoints;
             [ReadOnly] private ComponentLookup<Edge>                  m_EdgeLookup;
-            [ReadOnly] private ComponentLookup<Game.Net.Node>         m_NodeLookup;
+            [ReadOnly] private ComponentLookup<Node>                  m_NodeLookup;
             [ReadOnly] private ComponentLookup<Curve>                 m_CurveLookup;
             [ReadOnly] private ComponentLookup<PrefabRef>             m_PrefabRefLookup;
             [ReadOnly] private ComponentLookup<Attachment>            m_AttachmentLookup;
@@ -328,9 +332,9 @@ namespace NetworkTools.Systems {
                         i++;
                         continue;
                         IL_00C2:
-                        var ptr = m_AreaGeometryDataLookup[subArea.m_Prefab];
-                        var     entity             = m_CommandBuffer.CreateEntity();
-                        var     creationDefinition = default(CreationDefinition);
+                        var ptr                = m_AreaGeometryDataLookup[subArea.m_Prefab];
+                        var entity             = m_CommandBuffer.CreateEntity();
+                        var creationDefinition = default(CreationDefinition);
                         creationDefinition.m_Prefab     = subArea.m_Prefab;
                         creationDefinition.m_RandomSeed = num;
                         if (ptr.m_Type != AreaType.Lot) {
@@ -645,8 +649,8 @@ namespace NetworkTools.Systems {
             }
 
             private void UpdateSubAreas(Transform transform, Entity prefab, Entity original) {
-                if (this.m_SubAreaLookup.HasBuffer(original)) {
-                    DynamicBuffer<Game.Areas.SubArea> dynamicBuffer = this.m_SubAreaLookup[original];
+                if (m_SubAreaLookup.HasBuffer(original)) {
+                    var dynamicBuffer = m_SubAreaLookup[original];
                     for (var i = 0; i < dynamicBuffer.Length; i++) {
                         var area               = dynamicBuffer[i].m_Area;
                         var entity             = m_CommandBuffer.CreateEntity();
@@ -661,10 +665,10 @@ namespace NetworkTools.Systems {
                             });
                         m_CommandBuffer.AddComponent(entity, creationDefinition);
                         m_CommandBuffer.AddComponent(entity, default(Updated));
-                        DynamicBuffer<Game.Areas.Node> dynamicBuffer2 = this.m_AreaNodeLookup[area];
+                        var dynamicBuffer2 = m_AreaNodeLookup[area];
                         m_CommandBuffer.AddBuffer<Game.Areas.Node>(entity).CopyFrom(dynamicBuffer2.AsNativeArray());
-                        if (this.m_CachedNodeLookup.HasBuffer(area)) {
-                            DynamicBuffer<LocalNodeCache> dynamicBuffer3 = this.m_CachedNodeLookup[area];
+                        if (m_CachedNodeLookup.HasBuffer(area)) {
+                            var dynamicBuffer3 = m_CachedNodeLookup[area];
                             m_CommandBuffer.AddBuffer<LocalNodeCache>(entity).CopyFrom(dynamicBuffer3.AsNativeArray());
                         }
                     }

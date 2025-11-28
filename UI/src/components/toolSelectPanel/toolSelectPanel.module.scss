@@ -1,0 +1,85 @@
+@use '../shared/animations.module.scss' as *;
+
+$magenta-haze: #ae4377ff;
+$raspberry-rose: #b4446eff;
+$raspberry-rose-2: #ba4565ff;
+$cerise: #c0455cff;
+$bittersweet-shimmer: #c64653ff;
+$bittersweet-shimmer-2: #cc474aff;
+$bittersweet-shimmer-3: rgb(204, 87, 71);
+$color1: $magenta-haze;
+$color2: $raspberry-rose;
+$color3: $raspberry-rose-2;
+$color4: $cerise;
+$color5: $bittersweet-shimmer;
+$color6: $bittersweet-shimmer-2;
+$color7: $bittersweet-shimmer-3;
+$opacityRest: 100%;
+$brighten: 10%;
+
+.wrapper {
+    animation: slideIn 0.16s ease-out forwards;
+}
+
+.divider {
+    height: 100%;
+    width: 1rem;
+    margin: 0 8rem;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 14rem;
+    position: relative;
+
+    & > * {
+        margin-right: 4rem;
+
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+}
+
+.activeBar {
+    position: absolute;
+    bottom: 0;
+    left: 14rem;
+    width: 40rem;
+    height: 2rem;
+    background-color: #dd5781;
+    border-top-left-radius: 2rem;
+    border-top-right-radius: 2rem;
+    transition: transform 0.2s ease-out;
+}
+
+.row .actionButton {
+    $iconSize: 24rem;
+
+    margin: 0;
+    padding: 8rem;
+    display: flex;
+    flex-direction: row;
+    background: transparent;
+    border: none;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+
+    img {
+        width: $iconSize;
+        height: $iconSize;
+    }
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    &:active {
+        background: rgba(255, 255, 255, 0.3);
+    }
+}

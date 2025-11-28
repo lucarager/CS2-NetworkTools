@@ -1,0 +1,56 @@
+@use '../shared/animations.module.scss' as *;
+
+.wrapper {
+    position: relative;
+}
+
+.panel {
+    margin-top: 4rem;
+    animation: slideIn 0.16s ease-out forwards;
+}
+
+.divider {
+    height: 100%;
+    width: 1rem;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    padding: 8rem 14rem;
+    // justify-content: center;
+    align-items: center;
+    justify-content: space-between;
+    flex: 2;
+}
+
+.actions {
+    display: flex;
+    flex-direction: row;
+
+    & > * {
+        margin: 0 4rem;
+    }
+}
+
+.iconButton {
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.7);
+    }
+}
+
+.applyButton {
+    padding: 5rem 8rem;
+    font-size: var(--fontSizeS);
+}
+
+.toolTitle {
+    color: white;
+}

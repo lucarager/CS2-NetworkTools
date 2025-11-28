@@ -1,12 +1,16 @@
-﻿// <copyright file="${File.FileName}" company="${User.FullName}">
-// Copyright (c) ${User.Name}. All rights reserved.
+﻿// <copyright file="NT_ToolPrefab.cs" company="Luca Rager">
+// Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
-using System;
-using System.Collections.Generic;
-using Unity.Entities;
 
 namespace Game.Prefabs {
+    #region Using Statements
+
+    using System.Collections.Generic;
+    using Unity.Entities;
+
+    #endregion
+
     public class NT_ToolPrefab : PrefabBase {
         public string DisplayName;
         public string Description;
@@ -14,7 +18,7 @@ namespace Game.Prefabs {
 
         public override void GetPrefabComponents(HashSet<ComponentType> components) {
             base.GetPrefabComponents(components);
-            components.Add(ComponentType.ReadWrite<NT_ToolLookup>());
+            components.Add(ComponentType.ReadWrite<NT_ToolData>());
         }
     }
 }

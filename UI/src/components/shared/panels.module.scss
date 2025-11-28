@@ -1,0 +1,10 @@
+.nt_panel {
+    // background-color: var(--panelColorDark);
+    background-color: rgba(24, 24, 37, 0.33);
+    backdrop-filter: var(--panelBlur);
+    border-radius: 12rem;
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    color: white;
+}

@@ -1,36 +1,35 @@
-﻿// <copyright file="NT_NodeTool.cs" company="Luca Rager">
+﻿// <copyright file="NT_AddNodeToolSystem.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
 namespace NetworkTools.Systems {
-    using Colossal.Mathematics;
+    #region Using Statements
+
     using Game.Common;
-    using Game.Input;
     using Game.Net;
     using Game.Notifications;
-    using Game.Objects;
     using Game.Prefabs;
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
-    using Unity.Burst;
-    using Unity.Burst.Intrinsics;
-    using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
+    using UnityEngine;
+
+    #endregion
 
     public partial class NT_AddNodeToolSystem : NT_BaseToolSystem {
-        private ControlPoint          m_ControlPoint;
-        private Entity                m_HoveredEntity;
-        private float3                m_LastHitPosition;
-        private PrefabBase            m_Prefab;
-        private EntityQuery           m_DefinitionQuery;
-        private ToolOutputBarrier     m_ToolOutputBarrier;
-        private TerrainSystem         m_TerrainSystem;
-        private WaterSystem           m_WaterSystem;
-        private Game.Net.SearchSystem m_NetSearchSystem;
+        private ControlPoint      m_ControlPoint;
+        private Entity            m_HoveredEntity;
+        private EntityQuery       m_DefinitionQuery;
+        private float3            m_LastHitPosition;
+        private PrefabBase        m_Prefab;
+        private SearchSystem      m_NetSearchSystem;
+        private TerrainSystem     m_TerrainSystem;
+        private ToolOutputBarrier m_ToolOutputBarrier;
+        private WaterSystem       m_WaterSystem;
 
         public override bool TrySetPrefab(PrefabBase prefab) {
             m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_AddDelete>(prefab)}");
@@ -41,14 +40,14 @@ namespace NetworkTools.Systems {
             m_ToolOutputBarrier = World.GetOrCreateSystemManaged<ToolOutputBarrier>();
             m_TerrainSystem     = World.GetOrCreateSystemManaged<TerrainSystem>();
             m_WaterSystem       = World.GetOrCreateSystemManaged<WaterSystem>();
-            m_NetSearchSystem   = World.GetOrCreateSystemManaged<Game.Net.SearchSystem>();
+            m_NetSearchSystem   = World.GetOrCreateSystemManaged<SearchSystem>();
             base.OnCreate();
         }
 
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             const string logPrefix = "OnUpdate()";
             var          buffer    = World.GetOrCreateSystemManaged<OverlayRenderSystem>().GetBuffer(out var bufferJobHandle);
-            buffer.DrawCircle(UnityEngine.Color.white, m_ControlPoint.m_Position, 4f);
+            buffer.DrawCircle(Color.white, m_ControlPoint.m_Position, 4f);
 
             inputDeps = JobHandle.CombineDependencies(
                 inputDeps,
@@ -87,7 +86,7 @@ namespace NetworkTools.Systems {
                     m_Prefab = null;
                 }
 
-                var curvePrefabRef = EntityManager.GetComponentLookup<PrefabRef>(entity);
+                var curvePrefabRef = EntityManager.GetComponentData<PrefabRef>(entity);
                 m_Prefab = m_PrefabSystem.GetPrefab<PrefabBase>(curvePrefabRef);
             }
 
@@ -101,7 +100,7 @@ namespace NetworkTools.Systems {
 
             // Handle Temp Entities Creation / Destruction
             inputDeps = CreateTempEntities(inputDeps);
-            
+
             return inputDeps;
         }
 
@@ -117,41 +116,41 @@ namespace NetworkTools.Systems {
             m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset | RaycastFlags.SubElements |
                                                RaycastFlags.Cargo   | RaycastFlags.Passenger;
         }
-        
+
         private JobHandle SnapControlPoint(JobHandle inputDeps) {
-            var snapJobHandle = new SnapJob(
-                netTree: m_NetSearchSystem.GetNetSearchTree(true, out var netTreeJobHandle),
-                terrainHeightLookup: m_TerrainSystem.GetHeightLookup(),
-                waterSurfaceLookup: m_WaterSystem.GetSurfaceLookup(out var waterSurfaceJobHandle),
-                controlPoint: m_ControlPoint,
-                entityTypeHandle: SystemAPI.GetEntityTypeHandle(),
-                nodeLookup: SystemAPI.GetComponentLookup<Node>(),
-                edgeLookup: SystemAPI.GetComponentLookup<Edge>(),
-                curveLookup: SystemAPI.GetComponentLookup<Curve>(),
-                compositionLookup: SystemAPI.GetComponentLookup<Composition>(),
-                prefabRefLookup: SystemAPI.GetComponentLookup<PrefabRef>(),
-                netLookupLookup: SystemAPI.GetComponentLookup<NetLookup>(),
-                netGeometryLookupLookup: SystemAPI.GetComponentLookup<NetGeometryLookup>(),
-                netCompositionLookupLookup: SystemAPI.GetComponentLookup<NetCompositionLookup>(),
-                connectedEdgeLookup: SystemAPI.GetBufferLookup<ConnectedEdge>()
-            ).Schedule(inputDeps);
+            //var snapJobHandle = new SnapJob(
+            //    netTree: m_NetSearchSystem.GetNetSearchTree(true, out var netTreeJobHandle),
+            //    terrainHeightLookup: m_TerrainSystem.GetHeightData(),
+            //    waterSurfaceLookup: m_WaterSystem.GetSurfaceData(out var waterSurfaceJobHandle),
+            //    controlPoint: m_ControlPoint,
+            //    entityTypeHandle: SystemAPI.GetEntityTypeHandle(),
+            //    nodeLookup: SystemAPI.GetComponentLookup<Node>(),
+            //    edgeLookup: SystemAPI.GetComponentLookup<Edge>(),
+            //    curveLookup: SystemAPI.GetComponentLookup<Curve>(),
+            //    compositionLookup: SystemAPI.GetComponentLookup<Composition>(),
+            //    prefabRefLookup: SystemAPI.GetComponentLookup<PrefabRef>(),
+            //    netLookupLookup: SystemAPI.GetComponentLookup<NetData>(),
+            //    netGeometryLookupLookup: SystemAPI.GetComponentLookup<NetGeometryData>(),
+            //    netCompositionLookupLookup: SystemAPI.GetComponentLookup<NetCompositionData>(),
+            //    connectedEdgeLookup: SystemAPI.GetBufferLookup<ConnectedEdge>()
+            //).Schedule(inputDeps);
             return inputDeps;
         }
 
         private JobHandle CreateTempEntities(JobHandle inputDeps) {
             //var destroyDefinitionsJobHandle = DestroyDefinitions(m_DefinitionQuery, m_ToolOutputBarrier, inputDeps);
-            
+
             //if (m_Prefab == null) {
             //    return destroyDefinitionsJobHandle;
             //}
 
             //var createDefinitionsJobHandle = new CreateDefinitionsJob() {
-            //    m_WaterSurfaceLookup = m_WaterSystem.GetVelocitiesSurfaceLookup(out var waterSystemJobHandle),
+            //    m_WaterSurfaceLookup = m_WaterSystem.GetVelocitiesSurfaceData(out var waterSystemJobHandle),
             //}.Schedule(JobHandle.CombineDependencies(inputDeps, waterSystemJobHandle));
 
             //destroyDefinitionsJobHandle = JobHandle.CombineDependencies(destroyDefinitionsJobHandle, createDefinitionsJobHandle);
-            
-            
+
+
             return inputDeps;
         }
     }
