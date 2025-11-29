@@ -132,8 +132,6 @@ namespace NetworkTools.Systems {
                                                    .WithAll<Node>()
                                                    .WithNone<Deleted, NT_Eligible>()
                                                    .Build();
-                
-
 
             // Query for nodes with NT_Eligible component
             m_NodesWithEligibleQuery = SystemAPI.QueryBuilder()
@@ -198,10 +196,11 @@ namespace NetworkTools.Systems {
                     if (m_CurrentState == SelectionState.FirstNodeSelected) {
                         // In STATE 1: highlight entire path to hovered node
                         UpdateHoverHighlighting(controlPoint.m_OriginalEntity);
-                    } else {
-                        // In other states: simple single-node highlighting
+                    } else if (m_CurrentState == SelectionState.NoSelection) {
+                        // In STATE 0: simple single-node highlighting
                         SwapHighlitedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity);
                     }
+                    // STATE 2: No highlighting
                 }
 
                 m_LastHoveredEntity.Value = controlPoint.m_OriginalEntity;
@@ -215,9 +214,10 @@ namespace NetworkTools.Systems {
                 if (m_CurrentState == SelectionState.FirstNodeSelected) {
                     ClearAllHighlights();
                     m_CurrentPath.Clear();
-                } else {
+                } else if (m_CurrentState == SelectionState.NoSelection) {
                     ChangeHighlighting(m_LastHoveredEntity.Value, ChangeObjectHighlightMode.RemoveHighlight);
                 }
+                // STATE 2: No cleanup needed
                 m_LastHoveredEntity.Value = Entity.Null;
                 m_LastHitPosition         = float3.zero;
             }
