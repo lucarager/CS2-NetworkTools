@@ -63,6 +63,9 @@ namespace NetworkTools.Systems {
                     m_Buffer                         = m_OverlayRenderSystem.GetBuffer(out var bufferJobHandle),
                     m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
                     m_SelectedComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
+                    m_EligibleComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Eligible>(),
+                    m_SelectedFirstComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_SelectedFirst>(),
+                    m_SelectedLastComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<NT_SelectedLast>(),
                     m_NodeComponentTypeHandle        = SystemAPI.GetComponentTypeHandle<Node>(),
                 };
 
@@ -88,6 +91,9 @@ namespace NetworkTools.Systems {
             [ReadOnly] public required OverlayRenderSystem.Buffer          m_Buffer;
             [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Selected>    m_SelectedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_Eligible>    m_EligibleComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_SelectedFirst> m_SelectedFirstComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_SelectedLast>  m_SelectedLastComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Node>           m_NodeComponentTypeHandle;
 
             /// <inheritdoc/>
@@ -98,27 +104,66 @@ namespace NetworkTools.Systems {
                 var nodesArray = chunk.GetNativeArray(ref m_NodeComponentTypeHandle);
 
                 for (var i = 0; i < nodesArray.Length; i++) {
-                    var node          = nodesArray[i];
-                    var isHighlighted = chunk.Has(ref m_HighlightedComponentTypeHandle);
-                    var isSelected    = chunk.Has(ref m_SelectedComponentTypeHandle);
+                    var node = nodesArray[i];
+                    
+                    // Check component flags
+                    var isHighlighted   = chunk.Has(ref m_HighlightedComponentTypeHandle);
+                    var isSelected      = chunk.Has(ref m_SelectedComponentTypeHandle);
+                    var isEligible      = chunk.Has(ref m_EligibleComponentTypeHandle);
+                    var isSelectedFirst = chunk.Has(ref m_SelectedFirstComponentTypeHandle);
+                    var isSelectedLast  = chunk.Has(ref m_SelectedLastComponentTypeHandle);
 
-                    var fillOpacity   = isHighlighted ? 0.5f : 0.2f;
-                    var borderOpacity = isHighlighted ? 0.95f : 0.75f;
-                    var fillColor     = isSelected ? new Color(0.86f, 0.34f, 0.50f, fillOpacity) : new Color(1f, 1f, 1f, fillOpacity);
-                    var borderColor   = isSelected ? new Color(0.86f, 0.34f, 0.50f, borderOpacity) : new Color(1f, 1f, 1f, borderOpacity);
+                    // Determine visual style based on node state
+                    Color fillColor;
+                    Color borderColor;
+                    float radius;
+                    float borderWidth;
+
+                    if (isSelectedFirst) {
+                        // First selected node - bright green
+                        fillColor   = new Color(0.2f, 1f, 0.2f, 0.6f);
+                        borderColor = new Color(0.2f, 1f, 0.2f, 1f);
+                        radius      = 12f;
+                        borderWidth = 0.5f;
+                    } else if (isSelectedLast) {
+                        // Last selected node - bright blue
+                        fillColor   = new Color(0.2f, 0.5f, 1f, 0.6f);
+                        borderColor = new Color(0.2f, 0.5f, 1f, 1f);
+                        radius      = 12f;
+                        borderWidth = 0.5f;
+                    } else if (isSelected) {
+                        // Intermediate path nodes - pink/rose
+                        fillColor   = new Color(0.86f, 0.34f, 0.50f, 0.5f);
+                        borderColor = new Color(0.86f, 0.34f, 0.50f, 0.9f);
+                        radius      = 10f;
+                        borderWidth = 0.4f;
+                    } else if (isHighlighted) {
+                        // Hovered eligible node or path nodes - yellow/gold
+                        fillColor   = new Color(1f, 0.9f, 0.2f, 0.5f);
+                        borderColor = new Color(1f, 0.9f, 0.2f, 0.95f);
+                        radius      = 10f;
+                        borderWidth = 0.4f;
+                    } else if (isEligible) {
+                        // Eligible but not hovered - white/subtle
+                        fillColor   = new Color(1f, 1f, 1f, 0.2f);
+                        borderColor = new Color(1f, 1f, 1f, 0.6f);
+                        radius      = 8f;
+                        borderWidth = 0.3f;
+                    } else {
+                        // Not eligible - don't render
+                        continue;
+                    }
 
                     m_Buffer.DrawCircle(
                         borderColor,
                         fillColor,
-                        0.4f,
+                        borderWidth,
                         OverlayRenderSystem.StyleFlags.Projected,
                         default,
                         node.m_Position,
-                        10f
+                        radius
                     );
                 }
-
-                if (nodesArray.Length > 0) { }
             }
         }
     }
