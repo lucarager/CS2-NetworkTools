@@ -8,8 +8,10 @@ namespace NetworkTools.Systems {
 
     using Colossal.UI.Binding;
     using Extensions;
+    using Game.Net;
     using Game.Prefabs;
     using Game.Tools;
+    using Game.UI;
     using Unity.Collections;
     using Unity.Entities;
     using Utils;
@@ -20,14 +22,24 @@ namespace NetworkTools.Systems {
     /// System responsible for UI Bindings & Lookup Handling.
     /// </summary>
     public partial class NT_UISystem : ExtendedUISystemBase {
+        /// <summary>
+        /// Enum to represent the type of selected entity.
+        /// </summary>
+        public enum SelectedEntityType {
+            Unknown = 0,
+            Node    = 1,
+            Edge    = 2,
+        }
+
         private EntityQuery                              m_ToolPrefabQuery;
+        private NameSystem                               m_NameSystem;
+        private NT_NodeSelectionToolSystem               m_NodeSelectionToolSystem;
         private PrefabSystem                             m_PrefabSystem;
         private PrefixedLogger                           m_Log;
         private ToolSystem                               m_ToolSystem;
-        private NT_NodeSelectionToolSystem               m_NodeSelectionToolSystem;
+        private ValueBindingHelper<ToolSelectionData[]> m_SelectedEntitiesBinding;
         private ValueBindingHelper<string>               m_SelectedPrefabBinding;
         private ValueBindingHelper<ToolUILookup[]>       m_ToolLookupBinding;
-        private ValueBindingHelper<SelectedEntityData[]> m_SelectedEntitiesBinding;
 
         /// <inheritdoc/>
         protected override void OnCreate() {
@@ -36,13 +48,15 @@ namespace NetworkTools.Systems {
             m_Log = new PrefixedLogger(nameof(NT_UISystem));
             m_Log.Debug("OnCreate()");
 
-            m_PrefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
-            m_ToolSystem   = World.GetOrCreateSystemManaged<ToolSystem>();
+            m_PrefabSystem            = World.GetOrCreateSystemManaged<PrefabSystem>();
+            m_ToolSystem              = World.GetOrCreateSystemManaged<ToolSystem>();
             m_NodeSelectionToolSystem = World.GetOrCreateSystemManaged<NT_NodeSelectionToolSystem>();
+            m_NameSystem              = World.GetOrCreateSystemManaged<NameSystem>();
 
-            m_ToolLookupBinding     = CreateBinding("UI_DATA", new ToolUILookup[] { });
-            m_SelectedPrefabBinding = CreateBinding("SELECTED_PREFAB", "");
-            m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES", new SelectedEntityData[] { });
+            m_ToolLookupBinding       = CreateBinding("UI_DATA", new ToolUILookup[] { });
+            m_SelectedPrefabBinding   = CreateBinding("SELECTED_PREFAB", "");
+            m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES", new ToolSelectionData[] { });
+
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
 
             m_ToolPrefabQuery = SystemAPI.QueryBuilder()
@@ -61,14 +75,31 @@ namespace NetworkTools.Systems {
 
             m_ToolLookupBinding.Value     = toolLookupArray;
             m_SelectedPrefabBinding.Value = m_ToolSystem.activePrefab != null ? m_ToolSystem.activePrefab.GetPrefabID().GetName() : "";
-            
+
             // Update selected entities binding
-            var selectedNodes = m_NodeSelectionToolSystem.GetSelectedNodes();
-            var selectedEntitiesData = new SelectedEntityData[selectedNodes.Length];
+            var selectedNodes        = m_NodeSelectionToolSystem.GetSelectedNodes();
+            var selectedEntitiesData = new ToolSelectionData[selectedNodes.Length];
+
             for (var i = 0; i < selectedNodes.Length; i++) {
-                selectedEntitiesData[i] = new SelectedEntityData(selectedNodes[i]);
+                var entity     = selectedNodes[i];
+                var entityType = DetermineEntityType(entity);
+                var entityName = entityType == SelectedEntityType.Node ? $"Node {i + 1}" : m_NameSystem.GetRenderedLabelName(entity);
+                selectedEntitiesData[i] = new ToolSelectionData(entity, entityType, entityName);
             }
+
             m_SelectedEntitiesBinding.Value = selectedEntitiesData;
+        }
+
+        private SelectedEntityType DetermineEntityType(Entity entity) {
+            if (EntityManager.HasComponent<Edge>(entity)) {
+                return SelectedEntityType.Edge;
+            }
+
+            if (EntityManager.HasComponent<Node>(entity)) {
+                return SelectedEntityType.Node;
+            }
+
+            return SelectedEntityType.Unknown;
         }
 
         private void HandleSelectTool(string id) {
@@ -111,20 +142,29 @@ namespace NetworkTools.Systems {
         /// <summary>
         /// Struct to store and send selected entity data to the React UI.
         /// </summary>
-        public readonly struct SelectedEntityData : IJsonWritable {
-            private readonly Entity m_Entity;
+        public readonly struct ToolSelectionData : IJsonWritable {
+            private readonly Entity             m_Entity;
+            private readonly SelectedEntityType m_EntityType;
+            private readonly string             m_EntityName;
 
-            public SelectedEntityData(Entity entity) { m_Entity = entity; }
+            public ToolSelectionData(Entity entity, SelectedEntityType entityType, string entityName) {
+                m_Entity     = entity;
+                m_EntityType = entityType;
+                m_EntityName = entityName;
+            }
 
             /// <inheritdoc/>
             public void Write(IJsonWriter writer) {
                 writer.TypeBegin(GetType().FullName);
 
-                writer.PropertyName("Index");
-                writer.Write(m_Entity.Index);
+                writer.PropertyName("Entity");
+                writer.Write(m_Entity);
 
-                writer.PropertyName("Version");
-                writer.Write(m_Entity.Version);
+                writer.PropertyName("Type");
+                writer.Write((int)m_EntityType);
+
+                writer.PropertyName("Name");
+                writer.Write(m_EntityName);
 
                 writer.TypeEnd();
             }

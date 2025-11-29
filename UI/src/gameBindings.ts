@@ -9,13 +9,21 @@ export type ToolUIData = {
     ID: string;
 };
 
+export enum SelectedEntityType {
+    Unknown = 0,
+    Node = 1,
+    Edge = 2,
+}
+
 export type ToolSelectionData = {
     Entity: Entity;
+    Type: SelectedEntityType;
+    Name: string;
 };
 
 export const GAME_BINDINGS = {
     UI_DATA: new TwoWayBinding<ToolUIData[]>("UI_DATA", []),
-    SELECTION_DATA: new TwoWayBinding<ToolSelectionData[]>("SELECTION_DATA", []),
+    SELECTED_ENTITIES: new TwoWayBinding<ToolSelectionData[]>("SELECTED_ENTITIES", []),
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
 };
 

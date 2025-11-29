@@ -37,7 +37,11 @@ const modulePaths = [
     {
         path: "game-ui/common/scrolling/scrollable.tsx",
         components: ["Scrollable"]
-    }
+    },
+    {
+        path: "game-ui/game/data-binding/camera-bindings.ts",
+        components: ["focusEntity"]
+    },
 ];
 
 const themePaths = [

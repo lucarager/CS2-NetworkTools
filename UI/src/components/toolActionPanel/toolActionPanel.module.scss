@@ -10,8 +10,8 @@
 }
 
 .divider {
-    height: 100%;
-    width: 1rem;
+    height: 1rem;
+    width: 100%;
     background-color: rgba(255, 255, 255, 0.05);
 }
 
@@ -23,6 +23,27 @@
     align-items: center;
     justify-content: space-between;
     flex: 2;
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+    padding: 8rem 14rem;
+    flex: 2;
+}
+
+.selectedEntity {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.helper {
+    color: rgba(255, 255, 255, 0.6);
+    width: 100%;
+    align-items: center;
 }
 
 .actions {

@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from "react";
-import { UniqueFocusKey } from "cs2/bindings";
+import { Entity, UniqueFocusKey } from "cs2/bindings";
 import { HTMLAttributes } from "react";
 import { InfoRowProps, InfoSectionProps } from "cs2/ui";
 
@@ -15,6 +15,7 @@ export interface IVanillaComponents {
     PageSelector: React.FC<PageSelectorProps>;
     Page: React.FC<any>;
     PageSwitcher: React.FC<PropsWithChildren<PageSwitcherProps>>;
+    focusEntity: any;
     [key: string]: React.FC<any>;
 }
 

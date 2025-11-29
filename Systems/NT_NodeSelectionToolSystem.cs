@@ -59,7 +59,7 @@ namespace NetworkTools.Systems {
         /// </summary>
         /// <returns>Array of selected Entity objects.</returns>
         public Entity[] GetSelectedNodes() {
-            return m_SelectedNodes.ToArray();
+            return m_SelectedNodes.ToArray(Allocator.Temp).ToArray();
         }
 
         protected override void OnCreate() {
