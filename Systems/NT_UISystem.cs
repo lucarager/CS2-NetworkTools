@@ -33,7 +33,7 @@ namespace NetworkTools.Systems {
 
         private EntityQuery                              m_ToolPrefabQuery;
         private NameSystem                               m_NameSystem;
-        private NT_NodeSelectionToolSystem               m_NodeSelectionToolSystem;
+        private NT_ContiguousEdgeSelectionToolSystem               m_NodeSelectionToolSystem;
         private PrefabSystem                             m_PrefabSystem;
         private PrefixedLogger                           m_Log;
         private ToolSystem                               m_ToolSystem;
@@ -50,7 +50,7 @@ namespace NetworkTools.Systems {
 
             m_PrefabSystem            = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_ToolSystem              = World.GetOrCreateSystemManaged<ToolSystem>();
-            m_NodeSelectionToolSystem = World.GetOrCreateSystemManaged<NT_NodeSelectionToolSystem>();
+            m_NodeSelectionToolSystem = World.GetOrCreateSystemManaged<NT_ContiguousEdgeSelectionToolSystem>();
             m_NameSystem              = World.GetOrCreateSystemManaged<NameSystem>();
 
             m_ToolLookupBinding       = CreateBinding("UI_DATA", new ToolUILookup[] { });

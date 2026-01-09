@@ -3,7 +3,6 @@
 	<PropertyGroup>
 		<Configurations>Debug;Release</Configurations>
 		<TargetFramework>net48</TargetFramework>
-		<LangVersion>11.0</LangVersion>
 		<!--The file where mod information which is required for publishing mod on PDX mods are stored-->
 		<PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
 	</PropertyGroup>
@@ -11,6 +10,10 @@
 	<!--Imports must be after PropertyGroup block-->
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
+
+	<PropertyGroup>
+		<LangVersion>11.0</LangVersion>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<Reference Include="Colossal.TestFramework">
