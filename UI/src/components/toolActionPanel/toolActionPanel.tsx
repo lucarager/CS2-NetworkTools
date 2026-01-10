@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "./toolActionPanel.module.scss";
 import panels from "../shared/panels.module.scss";
-import { GAME_BINDINGS } from "gameBindings";
+import { GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
 import { useValue } from "cs2/api";
 import { Button } from "cs2/ui";
 import { VC, VF, VT } from "components/vanilla/Components";
@@ -19,12 +19,16 @@ export const ToolActionPanel = () => {
                     <div className={styles.row}>
                         <span className={styles.toolTitle}>{selectedBinding}</span>
                         <div className={styles.actions}>
+                            <Button
+                                variant="primary"
+                                className={styles.applyButton}
+                                onSelect={() => GAME_TRIGGERS.APPLY_SLOPE()}>
+                                Apply
+                            </Button>
                             {/* <Button variant="primary" className={styles.iconButton}>
                                 <img src={iconsUndo} className={styles.icon} />
                             </Button>
-                            <Button variant="primary" className={styles.applyButton}>
-                                Apply
-                            </Button>
+
                             <Button variant="primary" className={styles.iconButton}>
                                 <img src={iconsRedo} className={styles.icon} />
                             </Button> */}

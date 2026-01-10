@@ -33,7 +33,7 @@ namespace NetworkTools.Systems {
 
         private EntityQuery                              m_ToolPrefabQuery;
         private NameSystem                               m_NameSystem;
-        private NT_ContiguousEdgeSelectionToolSystem               m_NodeSelectionToolSystem;
+        private NT_ContiguousEdgeSelectionToolSystem     m_ContiguousEdgeSelectionToolSystem;
         private PrefabSystem                             m_PrefabSystem;
         private PrefixedLogger                           m_Log;
         private ToolSystem                               m_ToolSystem;
@@ -50,7 +50,7 @@ namespace NetworkTools.Systems {
 
             m_PrefabSystem            = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_ToolSystem              = World.GetOrCreateSystemManaged<ToolSystem>();
-            m_NodeSelectionToolSystem = World.GetOrCreateSystemManaged<NT_ContiguousEdgeSelectionToolSystem>();
+            m_ContiguousEdgeSelectionToolSystem = World.GetOrCreateSystemManaged<NT_ContiguousEdgeSelectionToolSystem>();
             m_NameSystem              = World.GetOrCreateSystemManaged<NameSystem>();
 
             m_ToolLookupBinding       = CreateBinding("UI_DATA", new ToolUILookup[] { });
@@ -58,6 +58,7 @@ namespace NetworkTools.Systems {
             m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES", new ToolSelectionData[] { });
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
+            CreateTrigger("APPLY_SLOPE", HandleApplySlope);
 
             m_ToolPrefabQuery = SystemAPI.QueryBuilder()
                                          .WithAll<NT_ToolData>()
@@ -77,7 +78,7 @@ namespace NetworkTools.Systems {
             m_SelectedPrefabBinding.Value = m_ToolSystem.activePrefab != null ? m_ToolSystem.activePrefab.GetPrefabID().GetName() : "";
 
             // Update selected entities binding
-            var selectedNodes        = m_NodeSelectionToolSystem.GetSelectedNodes();
+            var selectedNodes        = m_ContiguousEdgeSelectionToolSystem.GetSelectedNodes();
             var selectedEntitiesData = new ToolSelectionData[selectedNodes.Length];
 
             for (var i = 0; i < selectedNodes.Length; i++) {
@@ -112,6 +113,11 @@ namespace NetworkTools.Systems {
                     out var prefab)) {
                 m_ToolSystem.ActivatePrefabTool(prefab);
             }
+        }
+
+        private void HandleApplySlope() { 
+            m_Log.Debug("HandleApplySlope()");
+            m_ContiguousEdgeSelectionToolSystem.ApplySlopeToSelectedEdges();
         }
 
         /// <summary>

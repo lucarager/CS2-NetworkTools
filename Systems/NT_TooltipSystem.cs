@@ -46,107 +46,56 @@ namespace NetworkTools.Systems {
 
         /// <inheritdoc/>
         protected override void OnUpdate() {
-            // todo add groups
-            // todo split this way up!
-            var selectedNodes = m_NodeSelectionToolSystem.GetSelectedNodes();
-
-            for (var i = 0; i < selectedNodes.Length; i++) {
-                var nodeEntity = selectedNodes[i];
-                var node       = EntityManager.GetComponentData<Node>(nodeEntity);
-                var position   = WorldToTooltipPos(node.m_Position, out var isOnScreen);
-
-                var tooltip = new StringTooltip() {
-                    value = $"Node {i}"
-                };
+            foreach (var entity in SystemAPI.
+                QueryBuilder()
+                .WithAny<NT_Highlighted, NT_Eligible, NT_Selected, NT_SelectedFirst, NT_SelectedLast>()
+                .Build()
+                .ToEntityArray(Allocator.Temp)) {
+                var node = EntityManager.GetComponentData<Node>(entity);
+                var position = WorldToTooltipPos(node.m_Position, out var isOnScreen);
+                position.y += 15f;
 
                 var group = new TooltipGroup {
-                    position            = position,
-                    path                = $"NT_group{i}",
-                    horizontalAlignment = TooltipGroup.Alignment.Center,
-                    verticalAlignment   = TooltipGroup.Alignment.Center,
-                    category            = TooltipGroup.Category.Network,
-                    children = {
-                        tooltip,
-                    },
-                };
-
-                base.AddGroup(group);
-            }
-
-            foreach (var entity in SystemAPI.QueryBuilder().WithAll<NT_Highlighted>().Build().ToEntityArray(Allocator.Temp)) {
-                var node = EntityManager.GetComponentData<Node>(entity);
-                var position = WorldToTooltipPos(node.m_Position, out var isOnScreen);
-                position.y += 50f;
-
-                base.AddGroup(new TooltipGroup {
                     position = position,
                     path = $"NT_Highlighted_group_{entity}",
-                    horizontalAlignment = TooltipGroup.Alignment.Center,
-                    verticalAlignment = TooltipGroup.Alignment.Center,
+                    horizontalAlignment = TooltipGroup.Alignment.End,
+                    verticalAlignment = TooltipGroup.Alignment.End,
                     category = TooltipGroup.Category.Network,
-                    children = {
-                        new StringTooltip() {
-                            value = $"NT_Highlighted"
-                        },
-                    },
-                });
-            }
+                    children = {},
+                };
 
-            foreach (var entity in SystemAPI.QueryBuilder().WithAll<NT_Eligible>().Build().ToEntityArray(Allocator.Temp)) {
-                var node = EntityManager.GetComponentData<Node>(entity);
-                var position = WorldToTooltipPos(node.m_Position, out var isOnScreen);
-                position.y += 100f;
-
-                base.AddGroup(new TooltipGroup {
-                    position = position,
-                    path = $"NT_Eligible_group_{entity}",
-                    horizontalAlignment = TooltipGroup.Alignment.Center,
-                    verticalAlignment = TooltipGroup.Alignment.Center,
-                    category = TooltipGroup.Category.Network,
-                    children = {
-                        new StringTooltip() {
-                            value = $"NT_Eligible"
-                        },
-                    },
-                });
-            }
-
-            foreach (var entity in SystemAPI.QueryBuilder().WithAll<NT_SelectedFirst>().Build().ToEntityArray(Allocator.Temp)) {
-                var node = EntityManager.GetComponentData<Node>(entity);
-                var position = WorldToTooltipPos(node.m_Position, out var isOnScreen);
-                position.y += 150f;
-
-                base.AddGroup(new TooltipGroup {
-                    position = position,
-                    path = $"NT_SelectedFirst_group_{entity}",
-                    horizontalAlignment = TooltipGroup.Alignment.Center,
-                    verticalAlignment = TooltipGroup.Alignment.Center,
-                    category = TooltipGroup.Category.Network,
-                    children = {
-                        new StringTooltip() {
-                            value = $"NT_SelectedFirst"
-                        },
-                    },
-                });
-            }
-
-            foreach (var entity in SystemAPI.QueryBuilder().WithAll<NT_SelectedLast>().Build().ToEntityArray(Allocator.Temp)) {
-                var node = EntityManager.GetComponentData<Node>(entity);
-                var position = WorldToTooltipPos(node.m_Position, out var isOnScreen);
-                position.y += 200f;
-
-                base.AddGroup(new TooltipGroup {
-                    position = position,
-                    path = $"NT_SelectedLast_group_{entity}",
-                    horizontalAlignment = TooltipGroup.Alignment.Center,
-                    verticalAlignment = TooltipGroup.Alignment.Center,
-                    category = TooltipGroup.Category.Network,
-                    children = {
-                        new StringTooltip() {
-                            value = $"NT_SelectedLast"
-                        },
-                    },
-                });
+                if (EntityManager.HasComponent<NT_Highlighted>(entity)) {
+                    var tooltip = new StringTooltip() {
+                        value = "Highlighted",
+                    };
+                    group.children.Add(tooltip);
+                }
+                if (EntityManager.HasComponent<NT_Eligible>(entity)) {
+                    var tooltip = new StringTooltip() {
+                        value = "Eligible",
+                    };
+                    group.children.Add(tooltip);
+                }
+                if (EntityManager.HasComponent<NT_Selected>(entity)) {
+                    var tooltip = new StringTooltip() {
+                        value = "Selected",
+                    };
+                    group.children.Add(tooltip);
+                }
+                if (EntityManager.HasComponent<NT_SelectedFirst>(entity)) {
+                    var tooltip = new StringTooltip() {
+                        value = "Selected First",
+                    };
+                    group.children.Add(tooltip);
+                }
+                if (EntityManager.HasComponent<NT_SelectedLast>(entity)) {
+                    var tooltip = new StringTooltip() {
+                        value = "Selected Last",
+                    };
+                    group.children.Add(tooltip);
+                }
+               
+                base.AddGroup(group);
             }
         }
     }

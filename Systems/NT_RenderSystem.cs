@@ -7,6 +7,7 @@ namespace NetworkTools.Systems {
     #region Using Statements
 
     using System.Diagnostics.CodeAnalysis;
+    using Colossal.Mathematics;
     using Game;
     using Game.Common;
     using Game.Net;
@@ -27,6 +28,7 @@ namespace NetworkTools.Systems {
     /// </summary>
     public partial class NT_RenderSystem : GameSystemBase {
         private EntityQuery         m_NodeQuery;
+        private EntityQuery         m_EdgeQuery;
         private OverlayRenderSystem m_OverlayRenderSystem;
         private PreCullingSystem    m_PreCullingSystem;
         private PrefixedLogger      m_Log;
@@ -42,6 +44,13 @@ namespace NetworkTools.Systems {
 
             m_NodeQuery = SystemAPI.QueryBuilder()
                                    .WithAll<Node>()
+                                   .WithAny<NT_Highlighted, NT_Selected, NT_Eligible, NT_SelectedFirst, NT_SelectedLast>()
+                                   .WithNone<Deleted, Hidden>()
+                                   .Build();
+
+            m_EdgeQuery = SystemAPI.QueryBuilder()
+                                   .WithAll<Edge>()
+                                   .WithAny<NT_Highlighted, NT_Selected>()
                                    .WithNone<Deleted, Hidden>()
                                    .Build();
 
@@ -52,15 +61,18 @@ namespace NetworkTools.Systems {
         }
 
         /// <inheritdoc/>
-        /// Should we ever want to do overlay rendering, check out GyzmoSystem as reference.
         protected override void OnUpdate() {
             if (m_ToolSystem.activeTool is not NT_BaseToolSystem tool) {
                 return;
             }
 
             if (tool.ShowNodes) {
-                var drawJob = new DrawNodesJob {
-                    m_Buffer                         = m_OverlayRenderSystem.GetBuffer(out var bufferJobHandle),
+                var nodeBufferJobHandle = default(JobHandle);
+                var edgeBufferJobHandle = default(JobHandle);
+
+                // Draw nodes
+                var drawNodesJob = new DrawNodesJob {
+                    m_Buffer                         = m_OverlayRenderSystem.GetBuffer(out nodeBufferJobHandle),
                     m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
                     m_SelectedComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
                     m_EligibleComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Eligible>(),
@@ -69,22 +81,40 @@ namespace NetworkTools.Systems {
                     m_NodeComponentTypeHandle        = SystemAPI.GetComponentTypeHandle<Node>(),
                 };
 
-                var drawJobHandle = drawJob.ScheduleByRef(
+                var drawNodesJobHandle = drawNodesJob.ScheduleByRef(
                     m_NodeQuery,
                     JobHandle.CombineDependencies(
                         Dependency,
-                        bufferJobHandle
+                        nodeBufferJobHandle
                     ));
 
-                m_OverlayRenderSystem.AddBufferWriter(drawJobHandle);
-                drawJobHandle.Complete();
+                m_OverlayRenderSystem.AddBufferWriter(drawNodesJobHandle);
 
-                Dependency = drawJobHandle;
+                // Draw edges
+                var drawEdgesJob = new DrawEdgesJob {
+                    m_Buffer                         = m_OverlayRenderSystem.GetBuffer(out edgeBufferJobHandle),
+                    m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
+                    m_SelectedComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
+                    m_EdgeComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Edge>(),
+                    m_CurveComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Curve>(),
+                    m_NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
+                };
+
+                var drawEdgesJobHandle = drawEdgesJob.ScheduleByRef(
+                    m_EdgeQuery,
+                    JobHandle.CombineDependencies(
+                        drawNodesJobHandle,
+                        edgeBufferJobHandle
+                    ));
+
+                m_OverlayRenderSystem.AddBufferWriter(drawEdgesJobHandle);
+                
+                Dependency = drawEdgesJobHandle;
             }
         }
 
         /// <summary>
-        /// Job to draw parcel overlays.
+        /// Job to draw node overlays.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
         protected struct DrawNodesJob : IJobChunk {
@@ -94,7 +124,7 @@ namespace NetworkTools.Systems {
             [ReadOnly] public required ComponentTypeHandle<NT_Eligible>    m_EligibleComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_SelectedFirst> m_SelectedFirstComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_SelectedLast>  m_SelectedLastComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<Node>           m_NodeComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<Node> m_NodeComponentTypeHandle;
 
             /// <inheritdoc/>
             public void Execute(in ArchetypeChunk chunk,
@@ -163,6 +193,56 @@ namespace NetworkTools.Systems {
                         node.m_Position,
                         radius
                     );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Job to draw edge overlays.
+        /// </summary>
+        [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
+        protected struct DrawEdgesJob : IJobChunk {
+            [ReadOnly] public required OverlayRenderSystem.Buffer          m_Buffer;
+            [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_Selected>    m_SelectedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<Edge> m_EdgeComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<Curve> m_CurveComponentTypeHandle;
+            [ReadOnly] public required ComponentLookup<Node>               m_NodeLookup;
+
+            /// <inheritdoc/>
+            public void Execute(in ArchetypeChunk chunk,
+                                int               unfilteredChunkIndex,
+                                bool              useEnabledMask,
+                                in v128           chunkEnabledMask) {
+                var edgesArray = chunk.GetNativeArray(ref m_EdgeComponentTypeHandle);
+                var curvesArray = chunk.GetNativeArray(ref m_CurveComponentTypeHandle);
+
+                for (var i = 0; i < edgesArray.Length; i++) {
+                    var edge = edgesArray[i];
+                    var curve = curvesArray[i];
+
+                    // Check component flags
+                    var isHighlighted = chunk.Has(ref m_HighlightedComponentTypeHandle);
+                    var isSelected    = chunk.Has(ref m_SelectedComponentTypeHandle);
+
+                    // Determine visual style based on edge state
+                    Color color;
+                    float width;
+
+                    if (isSelected) {
+                        // Selected edge - pink/rose
+                        color = new Color(0.86f, 0.34f, 0.50f, 0.9f);
+                        width = 4f;
+                    } else if (isHighlighted) {
+                        // Hovered/highlighted edge - yellow/gold
+                        color = new Color(1f, 0.9f, 0.2f, 0.95f);
+                        width = 4f;
+                    } else {
+                        // Not highlighted or selected - don't render
+                        continue;
+                    }
+
+                    m_Buffer.DrawCurve(color, curve.m_Bezier, width);
                 }
             }
         }

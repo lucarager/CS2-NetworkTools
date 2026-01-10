@@ -31,4 +31,7 @@ export const GAME_TRIGGERS = {
     SELECT_TOOL: (tool: string) => {
         trigger(mod.id, "TRIGGER:SELECT_TOOL", tool);
     },
+    APPLY_SLOPE: () => {
+        trigger(mod.id, "TRIGGER:APPLY_SLOPE");
+    },
 };
