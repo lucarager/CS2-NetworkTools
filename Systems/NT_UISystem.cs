@@ -58,7 +58,7 @@ namespace NetworkTools.Systems {
             m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES", new ToolSelectionData[] { });
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
-            CreateTrigger("APPLY_SLOPE", HandleApplySlope);
+            CreateTrigger<string>("APPLY_SLOPE", HandleApplySlope);
 
             m_ToolPrefabQuery = SystemAPI.QueryBuilder()
                                          .WithAll<NT_ToolData>()
@@ -115,9 +115,17 @@ namespace NetworkTools.Systems {
             }
         }
 
-        private void HandleApplySlope() { 
-            m_Log.Debug("HandleApplySlope()");
-            m_ContiguousEdgeSelectionToolSystem.ApplySlopeToSelectedEdges();
+        private void HandleApplySlope(string templateName) { 
+            m_Log.Debug($"HandleApplySlope(templateName: {templateName})");
+            
+            var config = templateName?.ToLowerInvariant() switch {
+                "linear" => SlopeCurveConfig.Linear(),
+                "easeinout" => SlopeCurveConfig.EaseInOut(),
+                "parabolic" => SlopeCurveConfig.Parabolic(),
+                _ => SlopeCurveConfig.Linear()
+            };
+            
+            m_ContiguousEdgeSelectionToolSystem.ApplySlopeToSelectedEdges(config);
         }
 
         /// <summary>

@@ -147,8 +147,10 @@ namespace NetworkTools.Systems {
         }
 
         protected override void OnCreate() {
-            ShowNodes              = true;
-            m_ApplyAction          = NetworkToolsMod.Instance.Settings.GetAction(NetworkToolsModSettings.ApplyActionName);
+            ShowNodes = true;
+            ShowEdges = true;
+            ShowTooltipsSlopes = true;
+            m_ApplyAction = NetworkToolsMod.Instance.Settings.GetAction(NetworkToolsModSettings.ApplyActionName);
             m_SecondaryApplyAction = NetworkToolsMod.Instance.Settings.GetAction(NetworkToolsModSettings.SecondaryApplyActionName);
             m_SelectedNodes        = new NativeList<Entity>(4, Allocator.Persistent);
             m_EligibleNodes        = new NativeList<Entity>(64, Allocator.Persistent);
@@ -562,7 +564,7 @@ namespace NetworkTools.Systems {
             RemoveHighlight,
         }
 
-        public void ApplySlopeToSelectedEdges() {
+        public void ApplySlopeToSelectedEdges(SlopeCurveConfig curveConfig) {
             var buffer = new EntityCommandBuffer(Allocator.Temp);
 
             // Validation: At least two nodes selected
@@ -579,13 +581,15 @@ namespace NetworkTools.Systems {
             var endHeight = endNodeData.m_Position.y;
             var deltaHeight = endHeight - startHeight;
 
+            m_Log.Debug($"ApplySlopeToSelectedEdges: Using template {curveConfig.Template}");
+
             // Calculate total length of the path using the edge beziers
             var segmentLengths = new NativeList<float>(m_CurrentPathEdges.Length, Allocator.Temp);
             var totalLength = 0f;
 
             foreach (var edgeEntity in m_CurrentPathEdges) {
                 if (EntityManager.TryGetComponent<Curve>(edgeEntity, out var curve)) {
-                    var segmentLength = MathUtils.Length(curve.m_Bezier);
+                    var segmentLength = curve.m_Length;
                     segmentLengths.Add(segmentLength);
                     totalLength += segmentLength;
                 } else {
@@ -606,9 +610,10 @@ namespace NetworkTools.Systems {
 
             for (var i = 0; i < m_CurrentPathNodes.Length; i++) {
                 var ratio = distanceAlongPath / totalLength;
-                nodeHeights[i] = startHeight + (deltaHeight * ratio);
+                var curvedRatio = curveConfig.ApplyCurve(ratio);
+                nodeHeights[i] = startHeight + (deltaHeight * curvedRatio);
                 
-                m_Log.Debug($"Node {i}: distance={distanceAlongPath:F2}/{totalLength:F2}, ratio={ratio:F3}, height={nodeHeights[i]:F2}");
+                m_Log.Debug($"Node {i}: distance={distanceAlongPath:F2}/{totalLength:F2}, ratio={ratio:F3}, curvedRatio={curvedRatio:F3}, height={nodeHeights[i]:F2}");
                 
                 if (i < segmentLengths.Length) {
                     distanceAlongPath += segmentLengths[i];
@@ -616,6 +621,8 @@ namespace NetworkTools.Systems {
             }
 
             // Update each edge bezier with interpolated control point heights
+            distanceAlongPath = 0f;
+            
             for (var i = 0; i < m_CurrentPathEdges.Length; i++) {
                 var edgeEntity = m_CurrentPathEdges[i];
                 var edge = EntityManager.GetComponentData<Edge>(edgeEntity);
@@ -625,8 +632,7 @@ namespace NetworkTools.Systems {
                 }
 
                 var bezier = curve.m_Bezier;
-                var heightStart = nodeHeights[i];
-                var heightEnd = nodeHeights[i + 1];
+                var segmentLength = segmentLengths[i];
 
                 // Calculate parametric positions of control points based on horizontal distance
                 var horizontalA = new float3(bezier.a.x, 0f, bezier.a.z);
@@ -636,7 +642,7 @@ namespace NetworkTools.Systems {
 
                 var totalHorizontalDist = math.distance(horizontalA, horizontalD);
                 
-                // Handle edge case where start and end are at same horizontal position
+                // Calculate ratios for control points within the segment
                 float bRatio = 1f / 3f;
                 float cRatio = 2f / 3f;
                 
@@ -645,24 +651,42 @@ namespace NetworkTools.Systems {
                     cRatio = math.distance(horizontalA, horizontalC) / totalHorizontalDist;
                 }
 
-                // Clamp ratios to [0, 1] range
                 bRatio = math.clamp(bRatio, 0f, 1f);
                 cRatio = math.clamp(cRatio, 0f, 1f);
 
-                // Set heights with linear interpolation
-                bezier.a.y = heightStart;
-                bezier.b.y = math.lerp(heightStart, heightEnd, bRatio);
-                bezier.c.y = math.lerp(heightStart, heightEnd, cRatio);
-                bezier.d.y = heightEnd;
+                // Calculate distances along entire path for each bezier point
+                float distA = distanceAlongPath;
+                float distB = distanceAlongPath + (segmentLength * bRatio);
+                float distC = distanceAlongPath + (segmentLength * cRatio);
+                float distD = distanceAlongPath + segmentLength;
+
+                // Calculate ratios along entire path and apply curve
+                float ratioA = distA / totalLength;
+                float ratioB = distB / totalLength;
+                float ratioC = distC / totalLength;
+                float ratioD = distD / totalLength;
+
+                float curvedA = curveConfig.ApplyCurve(ratioA);
+                float curvedB = curveConfig.ApplyCurve(ratioB);
+                float curvedC = curveConfig.ApplyCurve(ratioC);
+                float curvedD = curveConfig.ApplyCurve(ratioD);
+
+                // Set heights using curved ratios
+                bezier.a.y = startHeight + (deltaHeight * curvedA);
+                bezier.b.y = startHeight + (deltaHeight * curvedB);
+                bezier.c.y = startHeight + (deltaHeight * curvedC);
+                bezier.d.y = startHeight + (deltaHeight * curvedD);
 
                 curve.m_Bezier = bezier;
                 buffer.SetComponent(edgeEntity, curve);
 
-                m_Log.Debug($"Edge {i}: heightStart={heightStart:F2}, heightEnd={heightEnd:F2}, bRatio={bRatio:F3}, cRatio={cRatio:F3}");
+                m_Log.Debug($"Edge {i}: a.y={bezier.a.y:F2}, b.y={bezier.b.y:F2}, c.y={bezier.c.y:F2}, d.y={bezier.d.y:F2}");
 
                 // Mark nodes as updated
                 Node_SetUpdated(buffer, edge.m_Start);
                 Node_SetUpdated(buffer, edge.m_End);
+
+                distanceAlongPath += segmentLength;
             }
 
             buffer.Playback(EntityManager);
@@ -670,7 +694,7 @@ namespace NetworkTools.Systems {
             segmentLengths.Dispose();
             nodeHeights.Dispose();
             
-            m_Log.Debug($"ApplySlopeToSelectedEdges: Applied slope from {startHeight:F2} to {endHeight:F2} over {totalLength:F2} units to {m_CurrentPathNodes.Length} nodes and {m_CurrentPathEdges.Length} edges.");
+            m_Log.Debug($"ApplySlopeToSelectedEdges: Applied {curveConfig.Template} slope from {startHeight:F2} to {endHeight:F2} over {totalLength:F2} units to {m_CurrentPathNodes.Length} nodes and {m_CurrentPathEdges.Length} edges.");
         }
 
         private void TryAddUpdate(in EntityCommandBuffer buffer, Entity e) {
@@ -881,49 +905,6 @@ namespace NetworkTools.Systems {
             return foundPath;
         }
 
-        ///// <summary>
-        ///// Transitions to STATE 2: Two nodes selected.
-        ///// Marks the last node with NT_Selected and NT_SelectedLast.
-        ///// Marks all intermediate nodes with NT_Selected.
-        ///// Removes all NT_Eligible and NT_Highlighted components.
-        ///// </summary>
-        ///// <param name="firstNode">The first selected node</param>
-        ///// <param name="lastNode">The last selected node</param>
-        //private void TransitionToState2(Entity firstNode, Entity lastNode) {
-        //    m_Log.Debug("TransitionToState2()");
-            
-        //    m_CurrentState = SelectionState.EndNodeSelected;
-            
-        //    // Add marker to last node
-        //    EntityManager.AddComponent<NT_SelectedLast>(lastNode);
-            
-        //    // Find path between first and last node
-        //    var path = new NativeList<Entity>(16, Allocator.Temp);
-        //    if (FindPathBetween(firstNode, lastNode, path)) {
-        //        // Mark all intermediate nodes as selected (excluding first and last which are already marked)
-        //        if (path.Length > 2) {
-        //            // Create array of intermediate nodes only
-        //            var intermediateNodes = new NativeArray<Entity>(path.Length - 2, Allocator.Temp);
-        //            for (int i = 0; i < intermediateNodes.Length; i++) {
-        //                intermediateNodes[i] = path[i + 1]; // Skip first node
-        //            }
-        //            EntityManager.AddComponent<NT_Selected>(intermediateNodes);
-        //            intermediateNodes.Dispose();
-        //        }
-                
-        //        m_Log.Debug($"TransitionToState2: Marked {path.Length - 2} intermediate nodes as selected");
-        //    }
-        //    path.Dispose();
-            
-        //    // Remove all NT_Eligible and NT_Highlighted components (batch operations)
-        //    EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
-        //    EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
-            
-        //    // Clear cached data
-        //    m_EligibleNodes.Clear();
-        //    m_CurrentPathNodes.Clear();
-        //}
-
         /// <summary>
         /// Updates highlighting for hovered path.
         /// Highlights both nodes and edges in the path from the last selected node to the hovered node.
@@ -949,6 +930,10 @@ namespace NetworkTools.Systems {
         private void ClearAllHighlights() {
             EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
             EntityManager.RemoveComponent<NT_Highlighted>(m_EdgesWithHighlightedQuery);
+        }
+
+        public void ApplySlopeToSelectedEdges() {
+            ApplySlopeToSelectedEdges(SlopeCurveConfig.Linear());
         }
     }
 }

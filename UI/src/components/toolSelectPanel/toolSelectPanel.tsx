@@ -14,14 +14,14 @@ export const ToolSelectPanel = () => {
 
     return (
         <div className={[styles.wrapper, panels.nt_panel].join(" ")}>
-            <div className={styles.row}>
+            <div className={styles.column}>
                 {toolUIDataBinding.map((tool, index) => {
                     return (
                         <Tooltip
                             key={index}
                             tooltip={tool.DisplayName}
                             delayTime={0}
-                            direction="down">
+                            direction="right">
                             <Button
                                 className={[
                                     styles.actionButton,
@@ -40,7 +40,7 @@ export const ToolSelectPanel = () => {
                 <div
                     className={styles.activeBar}
                     style={{
-                        transform: `translateX(${activeIndex * 100}%)`,
+                        transform: `translateY(${activeIndex * 100}%)`,
                         opacity: activeIndex === -1 ? 0 : 1,
                     }}></div>
             </div>

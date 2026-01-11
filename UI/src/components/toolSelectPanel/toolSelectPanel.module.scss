@@ -16,48 +16,43 @@ $color6: $bittersweet-shimmer-2;
 $color7: $bittersweet-shimmer-3;
 $opacityRest: 100%;
 $brighten: 10%;
+$color-nt-3: linear-gradient(to bottom, rgb(205, 56, 219) 0%,rgb(150, 69, 255) 100%);
 
 .wrapper {
     animation: slideIn 0.16s ease-out forwards;
 }
 
-.divider {
-    height: 100%;
-    width: 1rem;
-    margin: 0 8rem;
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.row {
+.column {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 4rem 14rem;
+    padding: 14rem 4rem;
     position: relative;
 
     & > * {
-        margin-right: 4rem;
+        margin-bottom: 4rem;
 
         &:last-child {
-            margin-right: 0;
+            margin-bottom: 0;
         }
     }
 }
 
 .activeBar {
     position: absolute;
-    bottom: 0;
-    left: 14rem;
-    width: 40rem;
-    height: 2rem;
-    background-color: #dd5781;
+    top: 14rem;
+    left: 0;
+    width: 2rem;
+    height: 40rem;
+    background: $color-nt-3;
     border-top-left-radius: 2rem;
-    border-top-right-radius: 2rem;
+    border-bottom-left-radius: 2rem;
+    border-top-right-radius: 0;
     transition: transform 0.2s ease-out;
 }
 
-.row .actionButton {
+.column .actionButton {
     $iconSize: 24rem;
 
     margin: 0;

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import styles from "./wrapper.module.scss";
 import { ToolActionPanel } from "components/toolActionPanel/toolActionPanel";
-import { ToolExtraPanel } from "components/toolExtraPanel/toolExtraPanel";
 import { ToolSelectPanel } from "components/toolSelectPanel/toolSelectPanel";
 import { Button } from "cs2/ui";
 const iconSrc = "coui://uil/Standard/Road.svg";
@@ -15,8 +14,8 @@ export const Wrapper = () => {
             <div className={styles.wrapper}>
                 {enabled && <ToolSelectPanel />}
                 {enabled && <ToolActionPanel />}
-                <div style={{ flex: 2 }}></div>
-                {enabled && <ToolExtraPanel />}
+                {/* <div style={{ flex: 2 }}></div> */}
+                {/* {enabled && <ToolExtraPanel />} */}
             </div>
         </>
     );

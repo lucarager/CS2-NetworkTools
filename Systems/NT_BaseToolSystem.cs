@@ -19,7 +19,21 @@ namespace NetworkTools.Systems {
         private         PrefabBase     m_Prefab;
         internal        PrefixedLogger m_Log;
         public override string         toolID => "NT_BaseToolSystem";
-        public          bool           ShowNodes = false;
+
+        /// <summary>
+        /// Tool requests rendering nodes
+        /// </summary>
+        public bool ShowNodes = false;
+
+        /// <summary>
+        /// Tool requests rendering edges
+        /// </summary>
+        public bool ShowEdges = false;
+
+        /// <summary>
+        /// Tool requests rendering tooltips of slopes for selected edges
+        /// </summary>
+        public bool ShowTooltipsSlopes = false;
 
         protected override void OnCreate() {
             Enabled = false;

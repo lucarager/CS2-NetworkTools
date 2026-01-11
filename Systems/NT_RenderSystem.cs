@@ -7,8 +7,10 @@ namespace NetworkTools.Systems {
     #region Using Statements
 
     using System.Diagnostics.CodeAnalysis;
+    using Colossal.Entities;
     using Colossal.Mathematics;
     using Game;
+    using Game.Audio.Radio;
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
@@ -18,7 +20,9 @@ namespace NetworkTools.Systems {
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
+    using Unity.Mathematics;
     using Utils;
+    using static Colossal.IO.AssetDatabase.AtlasFrame;
     using Color = UnityEngine.Color;
 
     #endregion
@@ -66,19 +70,22 @@ namespace NetworkTools.Systems {
                 return;
             }
 
-            if (tool.ShowNodes) {
-                var nodeBufferJobHandle = default(JobHandle);
-                var edgeBufferJobHandle = default(JobHandle);
+            var nodeBufferJobHandle = default(JobHandle);
+            var edgeBufferJobHandle = default(JobHandle);
+            JobHandle lastJobHandle = Dependency;
 
+            if (tool.ShowNodes) {
                 // Draw nodes
                 var drawNodesJob = new DrawNodesJob {
                     m_Buffer                         = m_OverlayRenderSystem.GetBuffer(out nodeBufferJobHandle),
+                    m_EntityTypeHandle               = SystemAPI.GetEntityTypeHandle(),
                     m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
                     m_SelectedComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
                     m_EligibleComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Eligible>(),
                     m_SelectedFirstComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_SelectedFirst>(),
                     m_SelectedLastComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<NT_SelectedLast>(),
-                    m_NodeComponentTypeHandle        = SystemAPI.GetComponentTypeHandle<Node>(),
+                    m_NodeComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Node>(),
+                    m_NodeGeometryComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NodeGeometry>(),
                 };
 
                 var drawNodesJobHandle = drawNodesJob.ScheduleByRef(
@@ -89,7 +96,10 @@ namespace NetworkTools.Systems {
                     ));
 
                 m_OverlayRenderSystem.AddBufferWriter(drawNodesJobHandle);
+                lastJobHandle = drawNodesJobHandle;
+            }
 
+            if (tool.ShowEdges) {
                 // Draw edges
                 var drawEdgesJob = new DrawEdgesJob {
                     m_Buffer                         = m_OverlayRenderSystem.GetBuffer(out edgeBufferJobHandle),
@@ -103,14 +113,15 @@ namespace NetworkTools.Systems {
                 var drawEdgesJobHandle = drawEdgesJob.ScheduleByRef(
                     m_EdgeQuery,
                     JobHandle.CombineDependencies(
-                        drawNodesJobHandle,
+                        lastJobHandle,
                         edgeBufferJobHandle
                     ));
 
                 m_OverlayRenderSystem.AddBufferWriter(drawEdgesJobHandle);
-                
-                Dependency = drawEdgesJobHandle;
+                lastJobHandle = drawEdgesJobHandle;
             }
+                
+            Dependency = lastJobHandle;
         }
 
         /// <summary>
@@ -125,17 +136,22 @@ namespace NetworkTools.Systems {
             [ReadOnly] public required ComponentTypeHandle<NT_SelectedFirst> m_SelectedFirstComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_SelectedLast>  m_SelectedLastComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Node> m_NodeComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NodeGeometry> m_NodeGeometryComponentTypeHandle;
+            [ReadOnly] public required EntityTypeHandle m_EntityTypeHandle;
 
             /// <inheritdoc/>
             public void Execute(in ArchetypeChunk chunk,
                                 int               unfilteredChunkIndex,
                                 bool              useEnabledMask,
                                 in v128           chunkEnabledMask) {
+                var entitiesArray = chunk.GetNativeArray(m_EntityTypeHandle);
                 var nodesArray = chunk.GetNativeArray(ref m_NodeComponentTypeHandle);
+                var nodeGeometriesArray = chunk.GetNativeArray(ref m_NodeGeometryComponentTypeHandle);
 
-                for (var i = 0; i < nodesArray.Length; i++) {
+                for (var i = 0; i < entitiesArray.Length; i++) {
+                    var entity = entitiesArray[i];
                     var node = nodesArray[i];
-                    
+
                     // Check component flags
                     var isHighlighted   = chunk.Has(ref m_HighlightedComponentTypeHandle);
                     var isSelected      = chunk.Has(ref m_SelectedComponentTypeHandle);
@@ -149,36 +165,37 @@ namespace NetworkTools.Systems {
                     float radius;
                     float borderWidth;
 
-                    if (isSelectedFirst) {
-                        // First selected node - bright green
-                        fillColor   = new Color(0.2f, 1f, 0.2f, 0.6f);
-                        borderColor = new Color(0.2f, 1f, 0.2f, 1f);
-                        radius      = 12f;
-                        borderWidth = 0.5f;
-                    } else if (isSelectedLast) {
-                        // Last selected node - bright blue
-                        fillColor   = new Color(0.2f, 0.5f, 1f, 0.6f);
-                        borderColor = new Color(0.2f, 0.5f, 1f, 1f);
-                        radius      = 12f;
-                        borderWidth = 0.5f;
+                    var nodeDiameter = 1f;
+                    if (chunk.Has(ref m_NodeGeometryComponentTypeHandle)) {
+                        var nodeGeometry = nodeGeometriesArray[i];
+                        nodeDiameter = MathUtils.Size(nodeGeometry.m_Bounds).x + 1f;
+                    }
+                    var nodeBorderWidth = math.min(2f, nodeDiameter);
+
+                    if (isSelectedFirst || isSelectedLast) {
+                        // First or last path node - white/bright
+                        fillColor = new Color(1f, 1f, 1f, 0.5f);
+                        borderColor = new Color(1f, 1f, 1f, 1f);
+                        radius      = nodeDiameter;
+                        borderWidth = nodeBorderWidth;
                     } else if (isSelected) {
-                        // Intermediate path nodes - pink/rose
-                        fillColor   = new Color(0.86f, 0.34f, 0.50f, 0.5f);
-                        borderColor = new Color(0.86f, 0.34f, 0.50f, 0.9f);
-                        radius      = 10f;
-                        borderWidth = 0.4f;
+                        // Intermediate path nodes - small white/bright
+                        fillColor = new Color(1f, 1f, 1f, 1f);
+                        borderColor = new Color(1f, 1f, 1f, 1f);
+                        radius      = 2f;
+                        borderWidth = 2f;
                     } else if (isHighlighted) {
-                        // Hovered eligible node or path nodes - yellow/gold
-                        fillColor   = new Color(1f, 0.9f, 0.2f, 0.5f);
-                        borderColor = new Color(1f, 0.9f, 0.2f, 0.95f);
-                        radius      = 10f;
-                        borderWidth = 0.4f;
+                        // Hovered eligible node or path nodes - primary purple/subtle
+                        fillColor = new Color(0.58f, 0.27f, 1f, 0.3f);
+                        borderColor = new Color(0.58f, 0.27f, 1f, 0.5f);
+                        radius = nodeDiameter;
+                        borderWidth = nodeBorderWidth;
                     } else if (isEligible) {
                         // Eligible but not hovered - white/subtle
                         fillColor   = new Color(1f, 1f, 1f, 0.2f);
                         borderColor = new Color(1f, 1f, 1f, 0.6f);
-                        radius      = 8f;
-                        borderWidth = 0.3f;
+                        radius      = nodeDiameter;
+                        borderWidth = nodeBorderWidth;
                     } else {
                         // Not eligible - don't render
                         continue;
@@ -230,12 +247,12 @@ namespace NetworkTools.Systems {
                     float width;
 
                     if (isSelected) {
-                        // Selected edge - pink/rose
-                        color = new Color(0.86f, 0.34f, 0.50f, 0.9f);
+                        // Selected edge - primary purple/bright
+                        color = new Color(0.58f, 0.27f, 1f, 1f);
                         width = 4f;
                     } else if (isHighlighted) {
-                        // Hovered/highlighted edge - yellow/gold
-                        color = new Color(1f, 0.9f, 0.2f, 0.95f);
+                        // Hovered/highlighted edge - primary purple/subtle
+                        color = new Color(0.58f, 0.27f, 1f, 0.3f);
                         width = 4f;
                     } else {
                         // Not highlighted or selected - don't render
