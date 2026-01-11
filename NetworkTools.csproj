@@ -103,6 +103,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CS2-ModdingTools" Version="1.0.5" />
+		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
 		<PackageReference Include="PolySharp" Version="1.15.0">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
