@@ -162,7 +162,7 @@ namespace NetworkTools.Systems {
                     // Determine visual style based on node state
                     Color fillColor;
                     Color borderColor;
-                    float radius;
+                    float diameter;
                     float borderWidth;
 
                     var nodeDiameter = 1f;
@@ -171,30 +171,34 @@ namespace NetworkTools.Systems {
                         nodeDiameter = MathUtils.Size(nodeGeometry.m_Bounds).x + 1f;
                     }
                     var nodeBorderWidth = math.min(2f, nodeDiameter);
+                    var position = node.m_Position;
+
+                    // Lift node up slightly so it shows over other elements
+                    position.y += 0.2f;
 
                     if (isSelectedFirst || isSelectedLast) {
                         // First or last path node - white/bright
                         fillColor = new Color(1f, 1f, 1f, 0.5f);
                         borderColor = new Color(1f, 1f, 1f, 1f);
-                        radius      = nodeDiameter;
+                        diameter      = nodeDiameter;
                         borderWidth = nodeBorderWidth;
                     } else if (isSelected) {
                         // Intermediate path nodes - small white/bright
                         fillColor = new Color(1f, 1f, 1f, 1f);
                         borderColor = new Color(1f, 1f, 1f, 1f);
-                        radius      = 2f;
-                        borderWidth = 2f;
+                        diameter      = 2f;
+                        borderWidth = 0.1f;
                     } else if (isHighlighted) {
                         // Hovered eligible node or path nodes - primary purple/subtle
                         fillColor = new Color(0.58f, 0.27f, 1f, 0.3f);
                         borderColor = new Color(0.58f, 0.27f, 1f, 0.5f);
-                        radius = nodeDiameter;
+                        diameter = nodeDiameter;
                         borderWidth = nodeBorderWidth;
                     } else if (isEligible) {
                         // Eligible but not hovered - white/subtle
                         fillColor   = new Color(1f, 1f, 1f, 0.2f);
                         borderColor = new Color(1f, 1f, 1f, 0.6f);
-                        radius      = nodeDiameter;
+                        diameter      = nodeDiameter;
                         borderWidth = nodeBorderWidth;
                     } else {
                         // Not eligible - don't render
@@ -205,10 +209,10 @@ namespace NetworkTools.Systems {
                         borderColor,
                         fillColor,
                         borderWidth,
-                        OverlayRenderSystem.StyleFlags.Projected,
-                        default,
-                        node.m_Position,
-                        radius
+                        0,
+                        new float2(0, 1),
+                        position,
+                        diameter
                     );
                 }
             }
