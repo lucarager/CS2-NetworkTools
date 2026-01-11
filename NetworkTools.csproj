@@ -16,6 +16,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Content Include="UI\.vscode\launch.json" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Reference Include="Colossal.TestFramework">
 			<Private>false</Private>
 		</Reference>
@@ -99,16 +103,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Remove="UI\**" />
-		<EmbeddedResource Remove="UI\**" />
-		<None Remove="UI\**" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="PolySharp" Version="1.15.0">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="UI\src\mods\" />
 	</ItemGroup>
 
 	<Target Name="BuildUI" AfterTargets="AfterBuild">
