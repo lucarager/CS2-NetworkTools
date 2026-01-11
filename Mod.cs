@@ -11,6 +11,7 @@ namespace NetworkTools {
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using Colossal;
     using Colossal.IO.AssetDatabase;
     using Colossal.Json;
@@ -22,6 +23,8 @@ namespace NetworkTools {
     using Game;
     using Game.Modding;
     using Game.SceneFlow;
+    using HarmonyLib;
+    using NetworkTools.Utils;
     using Newtonsoft.Json;
     using Settings;
     using Systems;
@@ -34,6 +37,8 @@ namespace NetworkTools {
     /// Mod entry point.
     /// </summary>
     public class NetworkToolsMod : IMod {
+        private const string HarmonyPatchId = $"{nameof(NetworkTools)}.{nameof(NetworkToolsMod)}";
+
         /// <summary>
         /// The mod's default actionName.
         /// </summary>
@@ -43,6 +48,11 @@ namespace NetworkTools {
         /// An id used for bindings between UI and C#.
         /// </summary>
         public static readonly string Id = "NetworkTools";
+
+        /// <summary>
+        /// Harmony instance used for patching vanilla methods.
+        /// </summary>
+        private Harmony m_Harmony;
 
         /// <summary>
         /// Sets mod to test mode
@@ -58,6 +68,11 @@ namespace NetworkTools {
         /// Gets the instance reference.
         /// </summary>
         public static NetworkToolsMod Instance { get; private set; }
+
+        /// <summary>
+        /// Prefixed logger for module-level logging.
+        /// </summary>
+        private PrefixedLogger m_Log;
 
         /// <summary>
         /// Gets the mod's settings configuration.
@@ -81,12 +96,16 @@ namespace NetworkTools {
             Instance = this;
 
             // Initialize logger.
-            Log = LogManager.GetLogger(ModName);
+            Log = LogManager
+                  .GetLogger(ModName)
+                  .SetShowsErrorsInUI(false);
 #if IS_DEBUG
-            Log.Info("[NetworkTools] Setting logging level to Debug");
-            Log.effectivenessLevel = Level.Debug;
+            Log = Log
+                  .SetBacktraceEnabled(true)
+                  .SetEffectiveness(Level.All);
 #endif
-            Log.Info($"[NetworkTools] Loading {ModName} version {Assembly.GetExecutingAssembly().GetName().Version}");
+            m_Log = new PrefixedLogger(nameof(NetworkToolsMod));
+            m_Log.Info($"Loading {ModName} version {Assembly.GetExecutingAssembly().GetName().Version}");
 
             // Initialize Settings
             Settings = new NetworkToolsModSettings(this);
@@ -119,6 +138,9 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_RenderSystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<NT_TooltipSystem>(SystemUpdatePhase.UITooltip);
 
+            // Harmony
+            InitializeHarmonyPatches();
+
             // Add tests
             AddTests();
 
@@ -146,22 +168,42 @@ namespace NetworkTools {
             }
         }
 
+        /// <summary>
+        /// Initializes Harmony patches for the assembly and logs all patched methods.
+        /// </summary>
+        private void InitializeHarmonyPatches() {
+            m_Log.Debug("InitializeHarmonyPatches()");
+
+            m_Harmony = new Harmony(HarmonyPatchId);
+            m_Harmony.PatchAll(typeof(NetworkToolsMod).Assembly);
+            var patchedMethods = m_Harmony.GetPatchedMethods().ToArray();
+
+            foreach (var patchedMethod in patchedMethods) {
+                m_Log.Debug($"InitializeHarmonyPatches() -- Patched method: {patchedMethod.Module.ScopeName}:{patchedMethod.Name}");
+            }
+        }
+
         private void GenerateLanguageFile() {
-            Log.Info("[NetworkTools] Exporting localization");
+            m_Log.Debug("GenerateLanguageFile()");
             var localeDict = new EnUsConfig(Settings).ReadEntries(new List<IDictionaryEntryError>(), new Dictionary<string, int>())
                                                      .ToDictionary(pair => pair.Key, pair => pair.Value);
             var str = JsonConvert.SerializeObject(localeDict, Formatting.Indented);
             try {
-                var path = "C:\\Users\\lucar\\source\\repos\\NetworkTools\\lang\\en-US.json";
-                Log.Info($"[NetworkTools] Exporting to {path}");
-                File.WriteAllText(path, str);
-                path = "C:\\Users\\lucar\\source\\repos\\NetworkTools\\UI\\src\\lang\\en-US.json";
-                Log.Info($"[NetworkTools] Exporting to {path}");
-                File.WriteAllText(path, str);
+                var path = GetThisFilePath();
+                var directory = Path.GetDirectoryName(path);
+                var exportPath = $@"{directory}/L10n/lang/en-US.json";
+                File.WriteAllText(exportPath, str);
             } catch (Exception ex) {
-                Log.Error(ex.ToString());
+                m_Log.Error(ex.ToString());
             }
         }
+
+        /// <summary>
+        /// Gets the file path of the calling source file using the CallerFilePath attribute.
+        /// </summary>
+        /// <param name="path">The path provided by the compiler via CallerFilePath attribute.</param>
+        /// <returns>The file path of the calling code.</returns>
+        private static string GetThisFilePath([CallerFilePath] string path = null) { return path; }
 
         private static void AddTests() {
             var log = LogManager.GetLogger(ModName);
