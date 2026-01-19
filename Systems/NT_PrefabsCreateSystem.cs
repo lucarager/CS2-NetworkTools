@@ -95,7 +95,7 @@ namespace NetworkTools.Systems {
             }
 
             CreateToolPrefab("Add Node", "add.svg", new NT_Select());
-            CreateToolPrefab("Remove Node", "remove.svg", new NT_Select());
+            CreateToolPrefab("Remove Node", "remove.svg", new NT_RemoveNode());
             CreateToolPrefab("Create Supernode", "super.svg", new NT_Select());
             CreateToolPrefab("Slope Editor", "slope.svg", new NT_Select());
             CreateToolPrefab("Curve Editor", "curve.svg", new NT_Select());
