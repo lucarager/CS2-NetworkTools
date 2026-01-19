@@ -91,7 +91,7 @@ namespace NetworkTools.Systems {
     /// - The *SelectionState* handles user interactions for selecting nodes and edges. This happens during the `Configuring` phase of the OperationState.
     /// 
     /// </summary>
-    public partial class NT_CEToolSystem : NT_BaseToolSystem {
+    public partial class NT_CeToolSystem : NT_BaseToolSystem {
         /// <summary>
         /// Maximum distance to select a node when selecting near an edge
         /// </summary>

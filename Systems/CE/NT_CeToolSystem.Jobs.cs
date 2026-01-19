@@ -25,7 +25,7 @@ namespace NetworkTools.Systems {
 
     #endregion
 
-    public partial class NT_RemoveNodeSystem {
+    public partial class NT_CeToolSystem {
 #if BURST
         [BurstCompile]
 #endif

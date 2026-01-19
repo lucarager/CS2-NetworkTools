@@ -17,7 +17,7 @@ namespace NetworkTools.Systems {
 
     #endregion
 
-    public partial class NT_RemoveNodeSystem {
+    public partial class NT_CeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
             m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_Select>(prefab)}");
             var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_Select>(prefab);

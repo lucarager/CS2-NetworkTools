@@ -17,7 +17,7 @@ namespace NetworkTools.Systems {
 
     #endregion
 
-    public partial class NT_RemoveNodeSystem {
+    public partial class NT_CeToolSystem {
         private JobHandle UpdateDefinitions(JobHandle inputDeps) {
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 

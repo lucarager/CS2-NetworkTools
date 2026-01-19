@@ -132,7 +132,7 @@ namespace NetworkTools {
 
             // Activate Systems
             updateSystem.UpdateAt<NT_PrefabsCreateSystem>(SystemUpdatePhase.PrefabUpdate);
-            updateSystem.UpdateAt<NT_RemoveNodeSystem>(SystemUpdatePhase.ToolUpdate);
+            updateSystem.UpdateAt<NT_CeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_RenderSystem>(SystemUpdatePhase.Rendering);

@@ -33,7 +33,7 @@ namespace NetworkTools.Systems {
 
         private EntityQuery                              m_ToolPrefabQuery;
         private NameSystem                               m_NameSystem;
-        private NT_CeToolSystem     m_ContiguousEdgeSelectionToolSystem;
+        private NT_CeToolSystem m_ContiguousEdgeSelectionToolSystem;
         private PrefabSystem                             m_PrefabSystem;
         private PrefixedLogger                           m_Log;
         private ToolSystem                               m_ToolSystem;
