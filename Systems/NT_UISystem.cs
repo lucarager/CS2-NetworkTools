@@ -33,13 +33,14 @@ namespace NetworkTools.Systems {
 
         private EntityQuery                              m_ToolPrefabQuery;
         private NameSystem                               m_NameSystem;
-        private NT_ContiguousEdgeSelectionToolSystem     m_ContiguousEdgeSelectionToolSystem;
+        private NT_CeToolSystem     m_ContiguousEdgeSelectionToolSystem;
         private PrefabSystem                             m_PrefabSystem;
         private PrefixedLogger                           m_Log;
         private ToolSystem                               m_ToolSystem;
         private ValueBindingHelper<ToolSelectionData[]> m_SelectedEntitiesBinding;
         private ValueBindingHelper<string>               m_SelectedPrefabBinding;
         private ValueBindingHelper<ToolUILookup[]>       m_ToolLookupBinding;
+        private ValueBindingHelper<SlopeConfigData>      m_SlopeConfigBinding;
 
         /// <inheritdoc/>
         protected override void OnCreate() {
@@ -50,12 +51,13 @@ namespace NetworkTools.Systems {
 
             m_PrefabSystem            = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_ToolSystem              = World.GetOrCreateSystemManaged<ToolSystem>();
-            m_ContiguousEdgeSelectionToolSystem = World.GetOrCreateSystemManaged<NT_ContiguousEdgeSelectionToolSystem>();
+            m_ContiguousEdgeSelectionToolSystem = World.GetOrCreateSystemManaged<NT_CeToolSystem>();
             m_NameSystem              = World.GetOrCreateSystemManaged<NameSystem>();
 
             m_ToolLookupBinding       = CreateBinding("UI_DATA", new ToolUILookup[] { });
             m_SelectedPrefabBinding   = CreateBinding("SELECTED_PREFAB", "");
             m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES", new ToolSelectionData[] { });
+            m_SlopeConfigBinding      = CreateBinding("SLOPE_CONFIG", SlopeConfigData.Default(), HandleUpdateSlopeConfig, new ValueWriter<SlopeConfigData>(), new ValueReader<SlopeConfigData>());
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
             CreateTrigger<string>("APPLY_SLOPE", HandleApplySlope);
@@ -103,6 +105,18 @@ namespace NetworkTools.Systems {
             return SelectedEntityType.Unknown;
         }
 
+        private void HandleUpdateSlopeConfig(SlopeConfigData configData) {
+            m_Log.Debug($"HandleUpdateSlopeConfig(template: {configData.Template})");
+            m_SlopeConfigBinding.Value = configData;
+            var config = configData.Template?.ToLowerInvariant() switch {
+                "linear" => SlopeCurveConfig.Linear(),
+                "easeinout" => SlopeCurveConfig.EaseInOut(configData.EaseInLength, configData.EaseOutLength),
+                "parabolic" => SlopeCurveConfig.Parabolic(configData.ArchHeight, configData.ArchPosition),
+                _ => SlopeCurveConfig.Linear()
+            };
+            m_ContiguousEdgeSelectionToolSystem.SetTransformationConfig(config);
+        }
+
         private void HandleSelectTool(string id) {
             m_Log.Debug($"HandleSelectTool(id: {id})");
 
@@ -118,14 +132,15 @@ namespace NetworkTools.Systems {
         private void HandleApplySlope(string templateName) { 
             m_Log.Debug($"HandleApplySlope(templateName: {templateName})");
             
-            var config = templateName?.ToLowerInvariant() switch {
-                "linear" => SlopeCurveConfig.Linear(),
-                "easeinout" => SlopeCurveConfig.EaseInOut(),
-                "parabolic" => SlopeCurveConfig.Parabolic(),
-                _ => SlopeCurveConfig.Linear()
-            };
-            
-            m_ContiguousEdgeSelectionToolSystem.ApplySlopeToSelectedEdges(config);
+            //var configData = m_SlopeConfigBinding.Value;
+            //var config = configData.Template?.ToLowerInvariant() switch {
+            //    "linear" => SlopeCurveConfig.Linear(),
+            //    "easeinout" => SlopeCurveConfig.EaseInOut(configData.EaseInLength, configData.EaseOutLength),
+            //    "parabolic" => SlopeCurveConfig.Parabolic(configData.ArchHeight, configData.ArchPosition),
+            //    _ => SlopeCurveConfig.Linear()
+            //};
+
+            m_ContiguousEdgeSelectionToolSystem.RequestApply();
         }
 
         /// <summary>
@@ -181,6 +196,82 @@ namespace NetworkTools.Systems {
                 writer.Write(m_EntityName);
 
                 writer.TypeEnd();
+            }
+        }
+
+        /// <summary>
+        /// Struct to store and synchronize slope configuration parameters with the UI.
+        /// </summary>
+        public struct SlopeConfigData : IJsonWritable, IJsonReadable {
+            public string Template;
+            public float EaseInLength;
+            public float EaseOutLength;
+            public float ArchHeight;
+            public float ArchPosition;
+
+            /// <summary>
+            /// Creates default configuration with Linear template.
+            /// </summary>
+            public static SlopeConfigData Default() => new() {
+                Template = "linear",
+                EaseInLength = 0.25f,
+                EaseOutLength = 0.25f,
+                ArchHeight = 0.5f,
+                ArchPosition = 0.5f
+            };
+
+            /// <inheritdoc/>
+            public void Write(IJsonWriter writer) {
+                writer.TypeBegin(GetType().FullName);
+
+                writer.PropertyName("template");
+                writer.Write(Template);
+
+                writer.PropertyName("easeInLength");
+                writer.Write(EaseInLength);
+
+                writer.PropertyName("easeOutLength");
+                writer.Write(EaseOutLength);
+
+                writer.PropertyName("archHeight");
+                writer.Write(ArchHeight);
+
+                writer.PropertyName("archPosition");
+                writer.Write(ArchPosition);
+
+                writer.TypeEnd();
+            }
+
+            /// <inheritdoc/>
+            public void Read(IJsonReader reader) {
+                reader.ReadMapBegin();
+
+                if (reader.ReadProperty("template")) {
+                    reader.Read(out string template);
+                    Template = template;
+                }
+
+                if (reader.ReadProperty("easeInLength")) {
+                    reader.Read(out float easeInLength);
+                    EaseInLength = easeInLength;
+                }
+
+                if (reader.ReadProperty("easeOutLength")) {
+                    reader.Read(out float easeOutLength);
+                    EaseOutLength = easeOutLength;
+                }
+
+                if (reader.ReadProperty("archHeight")) {
+                    reader.Read(out float archHeight);
+                    ArchHeight = archHeight;
+                }
+
+                if (reader.ReadProperty("archPosition")) {
+                    reader.Read(out float archPosition);
+                    ArchPosition = archPosition;
+                }
+
+                reader.ReadMapEnd();
             }
         }
     }

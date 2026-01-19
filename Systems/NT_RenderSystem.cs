@@ -7,22 +7,20 @@ namespace NetworkTools.Systems {
     #region Using Statements
 
     using System.Diagnostics.CodeAnalysis;
-    using Colossal.Entities;
     using Colossal.Mathematics;
     using Game;
-    using Game.Audio.Radio;
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
     using Game.Rendering;
     using Game.Tools;
+    using Unity.Burst;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
     using Utils;
-    using static Colossal.IO.AssetDatabase.AtlasFrame;
     using Color = UnityEngine.Color;
 
     #endregion
@@ -128,6 +126,7 @@ namespace NetworkTools.Systems {
         /// Job to draw node overlays.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
+        [BurstCompile]
         protected struct DrawNodesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer          m_Buffer;
             [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
@@ -170,11 +169,12 @@ namespace NetworkTools.Systems {
                         var nodeGeometry = nodeGeometriesArray[i];
                         nodeDiameter = MathUtils.Size(nodeGeometry.m_Bounds).x + 1f;
                     }
+                    nodeDiameter = math.max(16f, nodeDiameter);
                     var nodeBorderWidth = math.min(2f, nodeDiameter);
                     var position = node.m_Position;
 
                     // Lift node up slightly so it shows over other elements
-                    position.y += 0.2f;
+                    position.y += 0.5f;
 
                     if (isSelectedFirst || isSelectedLast) {
                         // First or last path node - white/bright
@@ -186,7 +186,7 @@ namespace NetworkTools.Systems {
                         // Intermediate path nodes - small white/bright
                         fillColor = new Color(1f, 1f, 1f, 1f);
                         borderColor = new Color(1f, 1f, 1f, 1f);
-                        diameter      = 2f;
+                        diameter = 2f;
                         borderWidth = 0.1f;
                     } else if (isHighlighted) {
                         // Hovered eligible node or path nodes - primary purple/subtle
@@ -222,6 +222,7 @@ namespace NetworkTools.Systems {
         /// Job to draw edge overlays.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
+        [BurstCompile]
         protected struct DrawEdgesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer          m_Buffer;
             [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
