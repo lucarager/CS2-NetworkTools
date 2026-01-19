@@ -27,6 +27,18 @@ namespace NetworkTools.Extensions {
             return helper;
         }
 
+        public ValueBindingHelper<T> CreateBinding<T>(string key, T initialValue, Action<T> updateCallBack = null, IWriter<T> customWriter = null, IReader<T> customReader = null) {
+            var helper = new ValueBindingHelper<T>(
+                new(NetworkToolsMod.Id, $"BINDING:{key}", initialValue, customWriter), 
+                updateCallBack);
+            var trigger = new TriggerBinding<T>(NetworkToolsMod.Id, $"TRIGGER:{key}", helper.UpdateCallback, customReader);
+
+            AddBinding(helper.Binding);
+            AddBinding(trigger);
+
+            return helper;
+        }
+
         public ValueBindingHelper<T> CreateBinding<T>(string key, string setterKey, T initialValue, Action<T> updateCallBack = null) {
             var helper = new ValueBindingHelper<T>(new(NetworkToolsMod.Id, $"BINDING:{key}", initialValue, new GenericUIWriter<T>()), updateCallBack);
             var trigger = new TriggerBinding<T>(NetworkToolsMod.Id, $"TRIGGER:{setterKey}", helper.UpdateCallback, new GenericUIReader<T>());

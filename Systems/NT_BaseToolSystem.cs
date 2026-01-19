@@ -6,7 +6,6 @@
 namespace NetworkTools.Systems {
     #region Using Statements
 
-    using Game.Input;
     using Game.Prefabs;
     using Game.Tools;
     using Unity.Jobs;

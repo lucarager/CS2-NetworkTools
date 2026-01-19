@@ -77,7 +77,7 @@ namespace NetworkTools {
         /// <summary>
         /// Gets the mod's settings configuration.
         /// </summary>
-        internal NetworkToolsModSettings Settings { get; private set; }
+        internal NT_Settings Settings { get; private set; }
 
         /// <summary>
         /// Gets the mod's informational version
@@ -108,7 +108,7 @@ namespace NetworkTools {
             m_Log.Info($"Loading {ModName} version {Assembly.GetExecutingAssembly().GetName().Version}");
 
             // Initialize Settings
-            Settings = new NetworkToolsModSettings(this);
+            Settings = new NT_Settings(this);
 
             // Load i18n
             GameManager.instance.localizationManager.AddSource("en-US", new EnUsConfig(Settings));
@@ -125,14 +125,14 @@ namespace NetworkTools {
             Settings.RegisterInOptionsUI();
 
             // Load saved settings.
-            AssetDatabase.global.LoadSettings("NetworkTools", Settings, new NetworkToolsModSettings(this));
+            AssetDatabase.global.LoadSettings("NetworkTools", Settings, new NT_Settings(this));
 
             // Apply input bindings.
             Settings.RegisterKeyBindings();
 
             // Activate Systems
             updateSystem.UpdateAt<NT_PrefabsCreateSystem>(SystemUpdatePhase.PrefabUpdate);
-            updateSystem.UpdateAt<NT_ContiguousEdgeSelectionToolSystem>(SystemUpdatePhase.ToolUpdate);
+            updateSystem.UpdateAt<NT_RemoveNodeSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_RenderSystem>(SystemUpdatePhase.Rendering);
