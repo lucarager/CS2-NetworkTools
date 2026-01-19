@@ -16,13 +16,13 @@ namespace NetworkTools.Settings {
     /// </summary>
     public class EnUsConfig : IDictionarySource {
         private readonly Dictionary<string, string> m_Localization;
-        private readonly NetworkToolsModSettings    m_Setting;
+        private readonly NT_Settings    m_Setting;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnUsConfig"/> class.
         /// </summary>
         /// <param name="setting">NetworkToolsModSettings.</param>
-        public EnUsConfig(NetworkToolsModSettings setting) {
+        public EnUsConfig(NT_Settings setting) {
             m_Setting = setting;
 
             m_Localization = new Dictionary<string, string> {
@@ -31,19 +31,19 @@ namespace NetworkTools.Settings {
                 // Sections
 
                 // Groups
-                { m_Setting.GetOptionGroupLocaleID(nameof(NetworkToolsModSettings.KeybindingsGroup)), "Key Bindings" },
-                { m_Setting.GetOptionGroupLocaleID(nameof(NetworkToolsModSettings.AboutGroup)), "About" },
+                { m_Setting.GetOptionGroupLocaleID(nameof(NT_Settings.KeybindingsGroup)), "Key Bindings" },
+                { m_Setting.GetOptionGroupLocaleID(nameof(NT_Settings.AboutGroup)), "About" },
 
                 // About
-                { m_Setting.GetOptionLabelLocaleID(nameof(NetworkToolsModSettings.Version)), "Version" },
-                { m_Setting.GetOptionLabelLocaleID(nameof(NetworkToolsModSettings.InformationalVersion)), "Informational Version" },
-                { m_Setting.GetOptionLabelLocaleID(nameof(NetworkToolsModSettings.Credits)), string.Empty },
-                { m_Setting.GetOptionLabelLocaleID(nameof(NetworkToolsModSettings.Github)), "GitHub" }, {
-                    m_Setting.GetOptionDescLocaleID(nameof(NetworkToolsModSettings.Github)),
+                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Version)), "Version" },
+                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.InformationalVersion)), "Informational Version" },
+                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Credits)), string.Empty },
+                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Github)), "GitHub" }, {
+                    m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Github)),
                     "Opens a browser window to https://github.com/lucarager/CS2-NetworkTools"
                 },
-                { m_Setting.GetOptionLabelLocaleID(nameof(NetworkToolsModSettings.Discord)), "Discord" },
-                { m_Setting.GetOptionDescLocaleID(nameof(NetworkToolsModSettings.Discord)), "Opens link to join the CS:2 Modding Discord" },
+                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Discord)), "Discord" },
+                { m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Discord)), "Opens link to join the CS:2 Modding Discord" },
             };
         }
 

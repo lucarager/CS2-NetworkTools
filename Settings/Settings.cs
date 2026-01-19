@@ -23,7 +23,7 @@ namespace NetworkTools.Settings {
     [FileLocation(NetworkToolsMod.ModName)]
     [SettingsUIGroupOrder(KeybindingsGroup, AboutGroup)]
     [SettingsUIShowGroupName(KeybindingsGroup, AboutGroup)]
-    public class NetworkToolsModSettings : ModSetting {
+    public class NT_Settings : ModSetting {
         public const  string AboutGroup               = "AboutGroup";
         private const string Credit                   = "Made with <3 by Luca.";
         public const  string KeybindingsGroup         = "KeybindingsGroup";
@@ -77,10 +77,10 @@ namespace NetworkTools.Settings {
         public string Version => NetworkToolsMod.Version;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NetworkToolsModSettings"/> class.
+        /// Initializes a new instance of the <see cref="NT_Settings"/> class.
         /// </summary>
         /// <param name="mod"><see cref="IMod"/> instance.</param>
-        public NetworkToolsModSettings(IMod mod)
+        public NT_Settings(IMod mod)
             : base(mod) { }
 
         /// <summary>
