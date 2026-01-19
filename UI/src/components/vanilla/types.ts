@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from "react";
-import { Entity, UniqueFocusKey } from "cs2/bindings";
+import { FloatSliderField, UniqueFocusKey } from "cs2/bindings";
 import { HTMLAttributes } from "react";
 import { InfoRowProps, InfoSectionProps } from "cs2/ui";
 
@@ -15,8 +15,23 @@ export interface IVanillaComponents {
     PageSelector: React.FC<PageSelectorProps>;
     Page: React.FC<any>;
     PageSwitcher: React.FC<PropsWithChildren<PageSwitcherProps>>;
+    FloatSliderField: React.FC<FLoatSliderProps>;
     focusEntity: any;
     [key: string]: React.FC<any>;
+}
+
+export interface FLoatSliderProps {
+    label: string;
+    value: number;
+    min: number;
+    max: number;
+    onChange: (x: number) => void;
+    fractionDigits?: number;
+    disabled?: boolean;
+    tooltip?: string | JSX.Element | null;
+    onChangeStart?: () => void;
+    onChangeEnd?: () => void;
+    className?: any;
 }
 
 export interface PageSelectorProps {

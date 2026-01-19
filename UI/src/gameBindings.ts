@@ -21,10 +21,25 @@ export type ToolSelectionData = {
     Name: string;
 };
 
+export type SlopeConfigData = {
+    template: string;
+    easeInLength: number;
+    easeOutLength: number;
+    archHeight: number;
+    archPosition: number;
+};
+
 export const GAME_BINDINGS = {
     UI_DATA: new TwoWayBinding<ToolUIData[]>("UI_DATA", []),
     SELECTED_ENTITIES: new TwoWayBinding<ToolSelectionData[]>("SELECTED_ENTITIES", []),
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
+    SLOPE_CONFIG: new TwoWayBinding<SlopeConfigData>("SLOPE_CONFIG", {
+        template: "linear",
+        easeInLength: 0.25,
+        easeOutLength: 0.25,
+        archHeight: 0.5,
+        archPosition: 0.5,
+    }),
 };
 
 export const GAME_TRIGGERS = {

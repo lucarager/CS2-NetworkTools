@@ -28,20 +28,28 @@ const modulePaths = [
     },
     {
         path: "game-ui/menu/components/whats-new-panel/page-selector/page-selector.tsx",
-        components: ["PageSelector"]
+        components: ["PageSelector"],
     },
     {
         path: "game-ui/common/animations/paging/page-switcher.tsx",
-        components: ["PageSwitcher", "Page"]
+        components: ["PageSwitcher", "Page"],
     },
     {
         path: "game-ui/common/scrolling/scrollable.tsx",
-        components: ["Scrollable"]
+        components: ["Scrollable"],
     },
     {
         path: "game-ui/game/data-binding/camera-bindings.ts",
-        components: ["focusEntity"]
+        components: ["focusEntity"],
     },
+    {
+        path: "game-ui/common/input/text/text-input.tsx",
+        components: ["TextInput"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/number-slider-field.tsx",
+        components: ["NumberSliderField", "FloatSliderField"],
+    }
 ];
 
 const themePaths = [
@@ -92,7 +100,11 @@ const themePaths = [
     {
         path: "game-ui/menu/components/whats-new-panel/whats-new-tab/whats-new-tab.module.scss",
         name: "whatsNewTab",
-    }
+    },
+    {
+        path: "game-ui/editor/widgets/item/editor-item.module.scss",
+        name: "textInput",
+    },
 ];
 
 export const VC = {} as IVanillaComponents;

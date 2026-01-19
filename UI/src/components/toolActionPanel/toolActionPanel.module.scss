@@ -1,8 +1,8 @@
-@use '../shared/animations.module.scss' as *;
+@use "../shared/animations.module.scss" as *;
 
 .wrapper {
     position: relative;
-    min-width: 250rem;
+    min-width: 350rem;
 }
 
 .panel {
@@ -28,7 +28,7 @@
 .col {
     display: flex;
     flex-direction: column;
-    padding: 8rem 14rem;
+    padding: 10rem 16rem;
     flex: 2;
 }
 
@@ -41,19 +41,27 @@
 }
 
 .helper {
-    color: rgba(255, 255, 255, 0.6);
-    width: 100%;
-    align-items: center;
+    font-size: var(--fontSizeS);
+    line-height: 1.25em;
+    color: rgba(255, 255, 255, 0.75);
 }
 
-.controlRow {
+.sliderField {
+    width: 100%;
+    padding: 2rem 8rem;
+
+    input {
+        display: none;
+    }
+}
+
+.controlRow .controlRowInner {
     display: flex;
     flex-direction: row;
+    align-items: center;
 
-    .label {
-        color: white;
-        margin-right: 4rem;
-        width: 80rem;
+    .paramLabel {
+        flex: 2;
     }
 }
 
@@ -61,14 +69,17 @@
     display: flex;
     flex-direction: row;
 
-    & > button {
-        margin: 0 4rem;
+    & > button + button {
+        margin-left: 4rem;
     }
 }
 
 .actions {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
 
     & > * {
         margin: 0 4rem;
@@ -99,4 +110,29 @@
 
 .toolTitle {
     color: white;
+}
+
+.parameterControl {
+    display: flex;
+    flex-direction: row;
+    margin-top: 8rem;
+    margin-bottom: 4rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.paramLabel {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 33%;
+    font-size: var(--fontSizeS);
+    line-height: 1.25em;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.textInput {
+    width: 100rem;
 }
