@@ -10,5 +10,11 @@ namespace Game.Prefabs {
 
     #endregion
 
-    public struct NT_Selected : IComponentData { }
+    /// <summary>
+    /// Marks an entity as selected with its position in the selection path.
+    /// PathIndex indicates the order of traversal (0 = start, increasing towards end).
+    /// </summary>
+    public struct NT_Selected : IComponentData {
+        public int PathIndex;
+    }
 }

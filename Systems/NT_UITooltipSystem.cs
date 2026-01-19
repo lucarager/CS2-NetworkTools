@@ -3,6 +3,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
+using Colossal.Entities;
+
 namespace NetworkTools.Systems {
     #region Using Statements
 
@@ -103,8 +105,25 @@ namespace NetworkTools.Systems {
                     activeEdges.Add(edgeEntity);
 
                     var edge = EntityManager.GetComponentData<Edge>(edgeEntity);
-                    var startNode = EntityManager.GetComponentData<Node>(edge.m_Start);
-                    var endNode = EntityManager.GetComponentData<Node>(edge.m_End);
+
+                    // Determine actual traversal direction using PathIndex
+                    Entity actualStart, actualEnd;
+                    if (EntityManager.TryGetComponent<NT_Selected>(edge.m_Start, out var startSel) &&
+                        EntityManager.TryGetComponent<NT_Selected>(edge.m_End, out var endSel)) {
+                        if (startSel.PathIndex < endSel.PathIndex) {
+                            actualStart = edge.m_Start;
+                            actualEnd = edge.m_End;
+                        } else {
+                            actualStart = edge.m_End;
+                            actualEnd = edge.m_Start;
+                        }
+                    } else {
+                        actualStart = edge.m_Start;
+                        actualEnd = edge.m_End;
+                    }
+
+                    var startNode = EntityManager.GetComponentData<Node>(actualStart);
+                    var endNode = EntityManager.GetComponentData<Node>(actualEnd);
                     var yStart = startNode.m_Position.y;
                     var yEnd = endNode.m_Position.y;
                     var deltaY = yEnd - yStart;

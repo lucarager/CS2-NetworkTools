@@ -414,6 +414,9 @@ namespace NetworkTools.Systems {
                 }
             }
 
+            // Update all path indices to ensure they're consecutive and correct
+            UpdatePathIndices();
+
             // Remove NT_Eligible from ALL nodes (we will recalculate based on state)
             EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
 
@@ -469,6 +472,9 @@ namespace NetworkTools.Systems {
                             m_CurrentPathEdges.RemoveAt(m_CurrentPathEdges.Length - 1);
                         }
                     }
+
+                    // Update all remaining path indices to be consecutive
+                    UpdatePathIndices();
 
                     if (m_SelectedNodes.Length >= 2) {
                         // Mark the new last node if we still have at least 2
@@ -541,6 +547,19 @@ namespace NetworkTools.Systems {
         private void AddHighlight(Entity entity) { EntityManager.AddComponent<NT_Highlighted>(entity); }
 
         private void RemoveHighlight(Entity entity) { EntityManager.RemoveComponent<NT_Highlighted>(entity); }
+
+        /// <summary>
+        /// Updates the PathIndex for all nodes in m_CurrentPathNodes to reflect their position in the path.
+        /// This should be called after any add/remove operation to keep indices synchronized.
+        /// </summary>
+        private void UpdatePathIndices() {
+            for (var i = 0; i < m_CurrentPathNodes.Length; i++) {
+                var node = m_CurrentPathNodes[i];
+                if (EntityManager.HasComponent<NT_Selected>(node)) {
+                    EntityManager.SetComponentData(node, new NT_Selected { PathIndex = i });
+                }
+            }
+        }
 
         public override void InitializeRaycast() {
             base.InitializeRaycast();
