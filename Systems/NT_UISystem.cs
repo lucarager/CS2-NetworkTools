@@ -91,6 +91,8 @@ namespace NetworkTools.Systems {
             }
 
             m_SelectedEntitiesBinding.Value = selectedEntitiesData;
+
+            base.OnUpdate();
         }
 
         private SelectedEntityType DetermineEntityType(Entity entity) {

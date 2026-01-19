@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from "react";
-import { FloatSliderField, UniqueFocusKey } from "cs2/bindings";
+import { LocalizedString, UniqueFocusKey, WidgetType } from "cs2/bindings";
 import { HTMLAttributes } from "react";
 import { InfoRowProps, InfoSectionProps } from "cs2/ui";
 
@@ -17,7 +17,57 @@ export interface IVanillaComponents {
     PageSwitcher: React.FC<PropsWithChildren<PageSwitcherProps>>;
     FloatSliderField: React.FC<FLoatSliderProps>;
     focusEntity: any;
-    [key: string]: React.FC<any>;
+    tooltipComponents: {
+        [x in TooltipType]: {
+            ({ props }: { props: any }): any;
+            displayName: any;
+        };
+    };
+    [key: string]: React.FC<any> | any;
+}
+
+
+export type Widget = {
+    path: string;
+    children: Tooltip[];
+};
+
+export type Tooltip = Widget & {
+    props: {
+        __Type: TooltipType;
+        disbled: boolean;
+        hidden: boolean;
+        color: string;
+        label: LocalizedString;
+        icon?: string;
+        value?: number;
+        unit?: string;
+        signed?: boolean;
+    },
+}
+
+export type TooltipGroup = Widget & {
+    props: {
+        disbled: boolean;
+        hidden: boolean;
+        position: {
+            x: number;
+            y: number;
+        },
+        horizontalAlignment: "left" | "center" | "right";
+        verticalAlignment: "top" | "center" | "bottom";
+        category: string;
+    },
+};
+
+export enum TooltipType {
+    "Game.UI.Tooltip.NumberTooltip",
+    "Game.UI.Tooltip.ProgressTooltip",
+    "Game.UI.Tooltip.StringTooltip",
+    "Game.UI.Tooltip.NameTooltip",
+    "Game.UI.Tooltip.NotificationTooltip",
+    "Game.UI.Tooltip.ZoningEvaluationTooltip",
+    "Game.UI.Tooltip.InputHintTooltip",
 }
 
 export interface FLoatSliderProps {

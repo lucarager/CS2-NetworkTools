@@ -68,7 +68,7 @@ export const ToolActionPanel = () => {
                             <div className={styles.col}>
                                 <div className={styles.controlRow}>
                                     <div className={styles.controlRowInner}>
-                                        <span className={styles.paramLabel}>Preset</span>
+                                        <span className={styles.paramLabel}>Mode</span>
                                         <div className={styles.buttonRow}>
                                             {PRESETS.map((preset) => (
                                                 <Button

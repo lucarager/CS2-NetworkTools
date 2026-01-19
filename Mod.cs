@@ -136,7 +136,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_RenderSystem>(SystemUpdatePhase.Rendering);
-            updateSystem.UpdateAt<NT_TooltipSystem>(SystemUpdatePhase.UITooltip);
+            updateSystem.UpdateAt<NT_UITooltipSystem>(SystemUpdatePhase.UIUpdate);
 
             // Harmony
             InitializeHarmonyPatches();

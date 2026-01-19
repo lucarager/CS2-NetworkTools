@@ -49,6 +49,10 @@ const modulePaths = [
     {
         path: "game-ui/editor/widgets/fields/number-slider-field.tsx",
         components: ["NumberSliderField", "FloatSliderField"],
+    },
+    {
+        path: "game-ui/common/tooltip/tooltip-renderer/tooltip-renderer.tsx",
+        components: ["TooltipRenderer", "BoundTooltipGroup", "tooltipComponents"],
     }
 ];
 

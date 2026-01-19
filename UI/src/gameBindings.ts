@@ -1,7 +1,7 @@
 import { trigger } from "cs2/api";
 import mod from "../mod.json";
 import { TwoWayBinding } from "utils/bidirectionalBinding";
-import { Entity } from "cs2/bindings";
+import { Entity, LocalizedString, WidgetType } from "cs2/bindings";
 
 export type ToolUIData = {
     DisplayName: string;
