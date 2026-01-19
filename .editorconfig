@@ -2516,3 +2516,6 @@ resharper_zero_index_from_end_highlighting = warning
 # Standard properties
 end_of_line = native
 insert_final_newline = false
+
+# IDE0161: Convert to file-scoped namespace
+dotnet_diagnostic.IDE0161.severity = none
