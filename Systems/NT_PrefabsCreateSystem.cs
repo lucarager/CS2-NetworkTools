@@ -94,7 +94,7 @@ namespace NetworkTools.Systems {
                 prefabBaseDict[key] = prefabBase;
             }
 
-            CreateToolPrefab("Add Node", "add.svg", new NT_Select());
+            CreateToolPrefab("Add Node", "add.svg", new NT_AddNode());
             CreateToolPrefab("Remove Node", "remove.svg", new NT_RemoveNode());
             CreateToolPrefab("Create Supernode", "super.svg", new NT_Select());
             CreateToolPrefab("Slope Editor", "slope.svg", new NT_Select());

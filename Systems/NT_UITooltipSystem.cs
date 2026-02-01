@@ -94,7 +94,8 @@ namespace NetworkTools.Systems {
             // Tooltips for segments
             if (tool.ShowTooltipsSlopes) {
                 foreach (var edgeEntity in m_SelectedEdgesQuery.ToEntityArray(Allocator.Temp)) {
-                    var curve = EntityManager.GetComponentData<Curve>(edgeEntity);
+                    var curve       = EntityManager.GetComponentData<Curve>(edgeEntity);
+                    var isTemp      = EntityManager.HasComponent<Temp>(edgeEntity);
                     var curveLength = curve.m_Length;
 
                     // Ignore short segments
@@ -122,11 +123,11 @@ namespace NetworkTools.Systems {
                         actualEnd = edge.m_End;
                     }
 
-                    var startNode = EntityManager.GetComponentData<Node>(actualStart);
-                    var endNode = EntityManager.GetComponentData<Node>(actualEnd);
-                    var yStart = startNode.m_Position.y;
-                    var yEnd = endNode.m_Position.y;
-                    var deltaY = yEnd - yStart;
+                    var startNode    = EntityManager.GetComponentData<Node>(actualStart);
+                    var endNode      = EntityManager.GetComponentData<Node>(actualEnd);
+                    var yStart       = startNode.m_Position.y;
+                    var yEnd         = endNode.m_Position.y;
+                    var deltaY       = yEnd - yStart;
                     var slopePercent = deltaY / curveLength * 100f;
 
                     var newPosition = WorldToTooltipPos(MathUtils.Position(curve.m_Bezier, 0.5f), out var isOnscreen);
@@ -138,6 +139,7 @@ namespace NetworkTools.Systems {
                             unit = "percentageSingleFraction",
                             signed = true,
                             value = slopePercent,
+                            color = isTemp ? TooltipColor.Success : TooltipColor.Info,
                         };
 
                         tooltipGroup = new TooltipGroup {

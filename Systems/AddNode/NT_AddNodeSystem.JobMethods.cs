@@ -4,6 +4,7 @@
 // </copyright>
 
 namespace NetworkTools.Systems {
+    using Game;
     #region Using Statements
 
     using Game.Common;
@@ -12,12 +13,13 @@ namespace NetworkTools.Systems {
     using Game.Prefabs;
     using Game.Simulation;
     using Game.Tools;
+    using Game.Zones;
     using Unity.Entities;
     using Unity.Jobs;
 
     #endregion
 
-    public partial class NT_RemoveNodeSystem {
+    public partial class NT_AddNodeSystem {
         private JobHandle UpdateDefinitions(JobHandle inputDeps) {
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
@@ -74,6 +76,12 @@ namespace NetworkTools.Systems {
             m_OperationState = OperationState.Idle();
 
             return inputDeps;
+        }
+
+        private JobHandle SnapControlPoints(JobHandle inputDeps, ) {
+            this.m_TerrainSystem.AddCPUHeightReader(jobHandle6);
+            this.m_WaterSystem.AddSurfaceReader(jobHandle6);
+            return jobHandle6;
         }
     }
 }

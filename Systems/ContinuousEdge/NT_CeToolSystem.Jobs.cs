@@ -110,8 +110,6 @@ namespace NetworkTools.Systems {
                     ECB.AddComponent<Updated>(definitionEntity);
 
                     // NetCourse
-                    var curStartNode        = NodeLookup[edge.m_Start];
-                    var curEndNode          = NodeLookup[edge.m_End];
                     var adjustedBezier      = curve.m_Bezier;
                     var segmentLength       = segmentLengths[i];
                     var totalHorizontalDist = curve.m_Length;
@@ -146,7 +144,7 @@ namespace NetworkTools.Systems {
                     var ratioC = distC / totalLength;
                     var ratioD = distD / totalLength;
 
-                    // Apply curve
+                    // Apply curves
                     var curvedA = CurveConfig.ApplyCurve(ratioA);
                     var curvedB = CurveConfig.ApplyCurve(ratioB);
                     var curvedC = CurveConfig.ApplyCurve(ratioC);

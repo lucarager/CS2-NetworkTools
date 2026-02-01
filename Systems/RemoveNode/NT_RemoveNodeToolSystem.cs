@@ -25,7 +25,7 @@ namespace NetworkTools.Systems {
     /// <summary>
     /// # Remove Node System
     /// </summary>
-    public partial class NT_RemoveNodeSystem : NT_BaseToolSystem {
+    public partial class NT_RemoveNodeToolSystem : NT_BaseToolSystem {
         /// <summary>
         /// Maximum distance to select a node when selecting near an edge
         /// </summary>

@@ -17,10 +17,10 @@ namespace NetworkTools.Systems {
 
     #endregion
 
-    public partial class NT_RemoveNodeSystem {
+    public partial class NT_AddNodeSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_RemoveNode>(prefab)}");
-            var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_RemoveNode>(prefab);
+            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_AddNode>(prefab)}");
+            var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_AddNode>(prefab);
 
             if (!validRequest) {
                 return false;

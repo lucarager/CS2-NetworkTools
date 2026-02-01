@@ -36,8 +36,8 @@ namespace NetworkTools.Systems {
     /// Tracks the state of the current transformation operation.
     /// </summary>
     public struct OperationState {
-        public OperationPhase   Phase;
-        public SlopeCurveConfig Config;
+        public  OperationPhase   Phase;
+        public  SlopeCurveConfig Config;
 
         /// <summary>
         /// Whether this operation can show a preview (has sufficient selection).
@@ -109,6 +109,7 @@ namespace NetworkTools.Systems {
         private EntityQuery m_NodesWithSelectedFirstQuery;
         private EntityQuery m_NodesWithSelectedLastQuery;
         private EntityQuery m_NodesWithSelectedQuery;
+        private bool        m_RegisteredWithAnarchy;
 
         /// <summary>
         /// Caches the last hit position
@@ -626,16 +627,15 @@ namespace NetworkTools.Systems {
                     continue;
                 }
 
-                var bezier        = curve.m_Bezier;
-                var segmentLength = segmentLengths[i];
+                var adjustedBezier      = curve.m_Bezier;
+                var segmentLength       = segmentLengths[i];
+                var totalHorizontalDist = curve.m_Length;
 
                 // Calculate parametric positions of control points based on horizontal distance
-                var horizontalA = new float3(bezier.a.x, 0f, bezier.a.z);
-                var horizontalB = new float3(bezier.b.x, 0f, bezier.b.z);
-                var horizontalC = new float3(bezier.c.x, 0f, bezier.c.z);
-                var horizontalD = new float3(bezier.d.x, 0f, bezier.d.z);
-
-                var totalHorizontalDist = math.distance(horizontalA, horizontalD);
+                var horizontalA = new float3(adjustedBezier.a.x, 0f, adjustedBezier.a.z);
+                var horizontalB = new float3(adjustedBezier.b.x, 0f, adjustedBezier.b.z);
+                var horizontalC = new float3(adjustedBezier.c.x, 0f, adjustedBezier.c.z);
+                var horizontalD = new float3(adjustedBezier.d.x, 0f, adjustedBezier.d.z);
 
                 // Calculate ratios for control points within the segment
                 var bRatio = 1f / 3f;
@@ -661,21 +661,20 @@ namespace NetworkTools.Systems {
                 var ratioC = distC / totalLength;
                 var ratioD = distD / totalLength;
 
+                // Apply curves
                 var curvedA = curveConfig.ApplyCurve(ratioA);
                 var curvedB = curveConfig.ApplyCurve(ratioB);
                 var curvedC = curveConfig.ApplyCurve(ratioC);
                 var curvedD = curveConfig.ApplyCurve(ratioD);
 
                 // Set heights using curved ratios
-                bezier.a.y = startHeight + deltaHeight * curvedA;
-                bezier.b.y = startHeight + deltaHeight * curvedB;
-                bezier.c.y = startHeight + deltaHeight * curvedC;
-                bezier.d.y = startHeight + deltaHeight * curvedD;
+                adjustedBezier.a.y = startHeight + deltaHeight * curvedA;
+                adjustedBezier.b.y = startHeight + deltaHeight * curvedB;
+                adjustedBezier.c.y = startHeight + deltaHeight * curvedC;
+                adjustedBezier.d.y = startHeight + deltaHeight * curvedD;
 
-                curve.m_Bezier = bezier;
+                curve.m_Bezier = adjustedBezier;
                 buffer.SetComponent(edgeEntity, curve);
-
-                m_Log.Debug($"Edge {i}: a.y={bezier.a.y:F2}, b.y={bezier.b.y:F2}, c.y={bezier.c.y:F2}, d.y={bezier.d.y:F2}");
 
                 // Mark nodes as updated
                 Node_SetUpdated(buffer, edge.m_Start);
@@ -698,11 +697,11 @@ namespace NetworkTools.Systems {
             buffer.AddComponent<BatchesUpdated>(e);
         }
 
-        private bool Node_SetUpdated(in EntityCommandBuffer buffer, Entity e) {
+        private void Node_SetUpdated(in EntityCommandBuffer buffer, Entity e) {
             TryAddUpdate(buffer, e);
 
             if (!EntityManager.TryGetBuffer<ConnectedEdge>(e, true, out var cBuffer)) {
-                return true;
+                return;
             }
 
             for (var i = 0; i < cBuffer.Length; i++) {
@@ -725,8 +724,6 @@ namespace NetworkTools.Systems {
 
                 TryAddUpdate(buffer, aggregated.m_Aggregate);
             }
-
-            return true;
         }
 
         /// <summary>
