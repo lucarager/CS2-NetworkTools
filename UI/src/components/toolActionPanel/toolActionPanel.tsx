@@ -1,189 +1,36 @@
 import React from "react";
 import styles from "./toolActionPanel.module.scss";
 import panels from "../shared/panels.module.scss";
-import { GAME_BINDINGS, GAME_TRIGGERS, SlopeConfigData } from "gameBindings";
+import { GAME_BINDINGS } from "gameBindings";
 import { useValue } from "cs2/api";
-import { Button } from "cs2/ui";
-import { VC, VF, VT } from "components/vanilla/Components";
-import { c } from "utils/classes";
-import { useLocalization } from "cs2/l10n";
+import { Slope } from "./slope";
 
-const PRESETS = [
-    { label: "Linear", id: "linear", icon: "coui://nt/Presets/Slope/Linear.svg" },
-    { label: "Eased", id: "easeinout", icon: "coui://nt/Presets/Slope/Eased.svg" },
-    { label: "Parabolic", id: "parabolic", icon: "coui://nt/Presets/Slope/Parabolic.svg" },
-];
+// Registry of tool components mapped by tool ID
+const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
+    "Slope Tools": Slope,
+};
 
 export const ToolActionPanel = () => {
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
-    const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
     const toolUIDataBinding = useValue(GAME_BINDINGS.UI_DATA.binding);
-    const slopeConfig = useValue(GAME_BINDINGS.SLOPE_CONFIG.binding);
     const activeIndex = toolUIDataBinding.findIndex((t) => t.ID === selectedBinding);
-    const { translate } = useLocalization();
 
-    const handleParameterChange = (param: keyof SlopeConfigData, value: string | number) => {
-        const newConfig: SlopeConfigData = {
-            ...slopeConfig,
-            [param]: value,
-        };
-        GAME_BINDINGS.SLOPE_CONFIG.set(newConfig);
-    };
+    if (activeIndex === -1) {
+        return <div className={styles.wrapper}></div>;
+    }
+
+    console.log("Rendering ToolActionPanel for tool:", selectedBinding);
+
+    const ToolComponent = TOOL_COMPONENTS[selectedBinding];
 
     return (
         <div className={styles.wrapper}>
-            {activeIndex !== -1 && (
-                <div className={[panels.nt_panel, styles.panel].join(" ")} key={selectedBinding}>
-                    <div className={styles.row}>
-                        <span className={styles.toolTitle}>{selectedBinding}</span>
-                    </div>
-                    {/* Node Selection */}
-                    <div className={styles.divider}></div>
-                    <div className={styles.col}>
-                        {selectedEntitiesBinding.length == 0 && (
-                            <span className={styles.helper}>No nodes selected.</span>
-                        )}
-                        {selectedEntitiesBinding.length > 0 && (
-                            <div>
-                                {selectedEntitiesBinding.map((s, i) => (
-                                    <div key={i} className={styles.selectedEntity}>
-                                        {s.Name}
-                                        <VC.ToolButton
-                                            src={"Media/Game/Icons/MapMarker.svg"}
-                                            onSelect={() => VC.focusEntity(s.Entity)}
-                                            multiSelect={false}
-                                            className={VT.toolButton.button}
-                                            focusKey={VF.FOCUS_DISABLED}
-                                            tooltip={"Focus on Entity"}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    {/* Extra Controls */}
-                    {selectedEntitiesBinding.length >= 2 && (
-                        <>
-                            <div className={styles.divider}></div>
-                            <div className={styles.col}>
-                                <div className={styles.controlRow}>
-                                    <div className={styles.controlRowInner}>
-                                        <span className={styles.paramLabel}>Mode</span>
-                                        <div className={styles.buttonRow}>
-                                            {PRESETS.map((preset) => (
-                                                <Button
-                                                    key={preset.id}
-                                                    variant="primary"
-                                                    className={c(
-                                                        styles.iconButton,
-                                                        slopeConfig.template === preset.id
-                                                            ? styles.iconButton__active
-                                                            : null,
-                                                    )}
-                                                    tooltipLabel={preset.label}
-                                                    onSelect={() =>
-                                                        handleParameterChange("template", preset.id)
-                                                    }>
-                                                    <img
-                                                        src={preset.icon}
-                                                        className={styles.icon}
-                                                    />
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {slopeConfig.template && (
-                                <>
-                                    {/* EaseInOut Parameters */}
-                                    {slopeConfig.template === "easeinout" && (
-                                        <>
-                                            <div className={styles.sliderField}>
-                                                <VC.FloatSliderField
-                                                    value={slopeConfig.easeInLength}
-                                                    label={"Start easing strength"}
-                                                    min={0}
-                                                    max={0.5}
-                                                    fractionDigits={3}
-                                                    onChange={(e: number) => {
-                                                        handleParameterChange("easeInLength", e);
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className={styles.sliderField}>
-                                                <VC.FloatSliderField
-                                                    value={slopeConfig.easeOutLength}
-                                                    label={"End easing strength"}
-                                                    min={0}
-                                                    max={0.5}
-                                                    fractionDigits={3}
-                                                    onChange={(e: number) => {
-                                                        handleParameterChange("easeOutLength", e);
-                                                    }}
-                                                />
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {/* Parabolic Parameters */}
-                                    {slopeConfig.template === "parabolic" && (
-                                        <>
-                                            <div className={styles.controlRow}>
-                                                <VC.FloatSliderField
-                                                    value={slopeConfig.archHeight}
-                                                    label={"Arch Height"}
-                                                    min={-1}
-                                                    max={1}
-                                                    fractionDigits={3}
-                                                    onChange={(e: number) => {
-                                                        handleParameterChange("archHeight", e);
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className={styles.controlRow}>
-                                                <VC.FloatSliderField
-                                                    value={slopeConfig.archPosition}
-                                                    label={"Arch Position"}
-                                                    min={0.1}
-                                                    max={0.9}
-                                                    fractionDigits={3}
-                                                    onChange={(e: number) => {
-                                                        handleParameterChange("archPosition", e);
-                                                    }}
-                                                />
-                                            </div>
-                                        </>
-                                    )}
-                                </>
-                            )}
-                        </>
-                    )}
-                    {/* Primary Controls */}
-                    <div className={styles.divider}></div>
-                    <div className={styles.row}>
-                        <div className={styles.actions}>
-                            {selectedEntitiesBinding.length < 2 && (
-                                <span className={styles.helper}>Select at least two nodes.</span>
-                            )}
-                            {selectedEntitiesBinding.length >= 2 && (
-                                <Button
-                                    variant="primary"
-                                    className={styles.applyButton}
-                                    disabled={
-                                        selectedEntitiesBinding.length < 2 ||
-                                        !slopeConfig.template
-                                    }
-                                    onSelect={() =>
-                                        GAME_TRIGGERS.APPLY_SLOPE(slopeConfig.template)
-                                    }>
-                                    Apply Slope
-                                </Button>
-                            )}
-                        </div>
-                    </div>
+            <div className={[panels.nt_panel, styles.panel].join(" ")} key={selectedBinding}>
+                <div className={styles.row}>
+                    <span className={styles.toolTitle}>{selectedBinding}</span>
                 </div>
-            )}
+                {ToolComponent && <ToolComponent toolId={selectedBinding} />}
+            </div>
         </div>
     );
 };

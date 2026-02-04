@@ -25,7 +25,7 @@ namespace NetworkTools.Systems {
 
     #endregion
 
-    public partial class NT_CeToolSystem {
+    public partial class NT_SlopeToolSystem {
 #if BURST
         [BurstCompile]
 #endif

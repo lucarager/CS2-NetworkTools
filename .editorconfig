@@ -53,7 +53,7 @@ csharp_style_prefer_utf8_string_literals = true:suggestion
 csharp_style_var_elsewhere = true:suggestion
 csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
-csharp_using_directive_placement = outside_namespace:silent
+csharp_using_directive_placement = inside_namespace:silent
 dotnet_diagnostic.bc40000.severity = warning
 dotnet_diagnostic.bc400005.severity = warning
 dotnet_diagnostic.bc40008.severity = warning
@@ -2518,4 +2518,4 @@ end_of_line = native
 insert_final_newline = false
 
 # IDE0161: Convert to file-scoped namespace
-dotnet_diagnostic.IDE0161.severity = none
+dotnet_diagnostic.ide0161.severity = none

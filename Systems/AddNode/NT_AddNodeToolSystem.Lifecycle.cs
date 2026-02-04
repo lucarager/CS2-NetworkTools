@@ -1,30 +1,33 @@
 ﻿// <copyright file="NT_CEToolSystem.Lifecycle.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// Licensed under the MIT license. See LICENSE file in the project root for full license
+// information.
 // </copyright>
 
 namespace NetworkTools.Systems {
-    #region Using Statements
-
+    using Colossal.Entities;
+    using Game.Common;
+    using Game.Input;
     using Game.Net;
+    using Game.Notifications;
     using Game.Prefabs;
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
-    using Settings;
+    using NetworkTools.Settings;
     using Unity.Collections;
     using Unity.Entities;
+    using Unity.Jobs;
+    using Unity.Mathematics;
+    using NetworkTools.Settings;
 
-    #endregion
-
-    public partial class NT_AddNodeSystem {
+    public partial class NT_AddNodeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
             m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_AddNode>(prefab)}");
-            var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_AddNode>(prefab);
+            var validRequest = prefab is NT_ToolPrefab &&
+                               m_PrefabSystem.HasComponent<NT_AddNode>(prefab);
 
-            if (!validRequest) {
-                return false;
-            }
+            if (!validRequest) return false;
 
             m_Prefab = prefab;
             return true;
@@ -34,32 +37,38 @@ namespace NetworkTools.Systems {
 
         protected override void OnCreate() {
             // Systems & Tools
-            m_Barrier             = World.GetOrCreateSystemManaged<ToolOutputBarrier>();
-            m_TerrainSystem       = World.GetOrCreateSystemManaged<TerrainSystem>();
-            m_OverlayRenderSystem = World.GetOrCreateSystemManaged<OverlayRenderSystem>();
+            m_Barrier       = World.GetOrCreateSystemManaged<ToolOutputBarrier>();
+            m_TerrainSystem = World.GetOrCreateSystemManaged<TerrainSystem>();
+            m_OverlayRenderSystem =
+                World.GetOrCreateSystemManaged<OverlayRenderSystem>();
 
             // Configuration
             ShowNodes = true;
 
             // Actions
-            m_ApplyAction          = NetworkToolsMod.Instance.Settings.GetAction("ApplyActionName");
+            m_ApplyAction = NetworkToolsMod.Instance.Settings.GetAction(NetworkTools.Settings.NT_Settings.ApplyActionStr);
 
             // Data Structures
-            m_LastHoveredEntity = new NativeReference<Entity>(Allocator.Persistent);
-            m_LastRaycastEntity = new NativeReference<Entity>(Allocator.Persistent);
+            m_LastHoveredEntity =
+                new NativeReference<Entity>(Allocator
+                                                                                  .Persistent);
+            m_LastRaycastEntity =
+                new NativeReference<Entity>(Allocator
+                                                                                  .Persistent);
 
             // Queries
             m_DefinitionQuery = GetDefinitionQuery();
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
-                                                   .WithAll<Node>()
-                                                   .WithNone<NT_Eligible>()
-                                                   .Build();
+                                               .WithAll<Node>()
+                                               .WithNone<NT_Eligible>()
+                                               .Build();
             m_NodesWithEligibleQuery = SystemAPI.QueryBuilder()
-                                                .WithAll<Node, NT_Eligible>()
-                                                .Build();
+                                            .WithAll<Node, NT_Eligible>()
+                                            .Build();
             m_NodesWithHighlightedQuery = SystemAPI.QueryBuilder()
-                                                   .WithAll<Node, NT_Highlighted>()
-                                                   .Build();
+                                               .WithAll<Node,
+                                                   NT_Highlighted>()
+                                               .Build();
 
             base.OnCreate();
         }
@@ -72,7 +81,7 @@ namespace NetworkTools.Systems {
         }
 
         protected override void OnStartRunning() {
-            m_OperationState  = OperationState.Idle();
+            m_OperationState = OperationState.Idle();
 
             m_ApplyAction.shouldBeEnabled = true;
         }

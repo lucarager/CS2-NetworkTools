@@ -4,7 +4,6 @@
 // </copyright>
 
 namespace NetworkTools.Systems {
-    using Game;
     #region Using Statements
 
     using Game.Common;
@@ -13,19 +12,20 @@ namespace NetworkTools.Systems {
     using Game.Prefabs;
     using Game.Simulation;
     using Game.Tools;
-    using Game.Zones;
     using Unity.Entities;
     using Unity.Jobs;
 
     #endregion
 
-    public partial class NT_AddNodeSystem {
+    public partial class NT_SlopeToolSystem {
         private JobHandle UpdateDefinitions(JobHandle inputDeps) {
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
             var createDefinitionJobHandle = new CreateDefinitionJob
             {
-                ControlPoint           = m_LastHoveredEntity,
+                SelectedNodes          = m_SelectedNodes,
+                CurrentPathEdges       = m_CurrentPathEdges,
+                CurrentPathNodes       = m_CurrentPathNodes,
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
                 EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),
@@ -46,8 +46,11 @@ namespace NetworkTools.Systems {
         }
 
         private JobHandle Update(JobHandle inputDeps) {
-            // Check if we can reuse existing temp entities
             var canReuse = false;
+
+            // Check if we can reuse existing temp entities
+            // This will be true if the selected nodes and operation config didn't change
+
 
             if (canReuse) {
                 applyMode = ApplyMode.None;
@@ -70,18 +73,12 @@ namespace NetworkTools.Systems {
             applyMode = ApplyMode.Clear;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
-            //ApplySlopeToSelectedEdges(m_OperationState.Config);
+            ApplySlopeToSelectedEdges(m_OperationState.Config);
 
             // Clear state to completely blank
             m_OperationState = OperationState.Idle();
 
             return inputDeps;
-        }
-
-        private JobHandle SnapControlPoints(JobHandle inputDeps, ) {
-            this.m_TerrainSystem.AddCPUHeightReader(jobHandle6);
-            this.m_WaterSystem.AddSurfaceReader(jobHandle6);
-            return jobHandle6;
         }
     }
 }

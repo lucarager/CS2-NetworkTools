@@ -21,25 +21,26 @@ namespace NetworkTools.Settings {
     /// The mod's settings.
     /// </summary>
     [FileLocation(NetworkToolsMod.ModName)]
-    [SettingsUIGroupOrder(KeybindingsGroup, AboutGroup)]
-    [SettingsUIShowGroupName(KeybindingsGroup, AboutGroup)]
+    [SettingsUIGroupOrder(KeybindingsGroupStr, AboutGroupStr)]
+    [SettingsUIShowGroupName(KeybindingsGroupStr, AboutGroupStr)]
     public class NT_Settings : ModSetting {
-        public const  string AboutGroup               = "AboutGroup";
-        private const string Credit                   = "Made with <3 by Luca.";
-        public const  string KeybindingsGroup         = "KeybindingsGroup";
-        public const  string ApplyActionName          = "ApplyActionName";
-        public const  string SecondaryApplyActionName = "SecondaryApplyActionName";
+        private const string CreditStr               = "Made with <3 by Luca.";
+        public const  string KeybindingsGroupStr     = "KeybindingsGroupStr";
+        public const  string AboutGroupStr           = "AboutGroupStr";
+        public const  string ApplyActionStr          = nameof(ApplyMimic);
+        public const  string SecondaryApplyActionStr = nameof(SecondaryApplyMimic);
+        public const  string ToggleToolPanelStr      = nameof(ToggleToolPanel);
 
-        [SettingsUIMouseBinding(BindingMouse.Left, ApplyActionName)]
+        [SettingsUIMouseBinding(BindingMouse.Left, ApplyActionStr)]
         public ProxyBinding ApplyMimic { get; set; }
 
-        [SettingsUIMouseBinding(BindingMouse.Right, SecondaryApplyActionName)]
+        [SettingsUIMouseBinding(BindingMouse.Right, SecondaryApplyActionStr)]
         public ProxyBinding SecondaryApplyMimic { get; set; }
 
-        [SettingsUIHidden]
-        public bool AllowSpawn { get; set; }
+        [SettingsUIKeyboardBinding(BindingKeyboard.T, ToggleToolPanelStr, ctrl: true)]
+        public ProxyBinding ToggleToolPanel { get; set; }
 
-        [SettingsUISection(AboutGroup)]
+        [SettingsUISection(AboutGroupStr)]
         public bool Discord {
             set {
                 try {
@@ -50,7 +51,7 @@ namespace NetworkTools.Settings {
             }
         }
 
-        [SettingsUISection(AboutGroup)]
+        [SettingsUISection(AboutGroupStr)]
         public bool Github {
             set {
                 try {
@@ -63,17 +64,14 @@ namespace NetworkTools.Settings {
 
         [SettingsUIHidden]
         public bool ModalFirstLaunch { get; set; }
+        
+        [SettingsUISection(AboutGroupStr)]
+        public string Credits => CreditStr;
 
-        [SettingsUIHidden]
-        public bool RenderParcels { get; set; }
-
-        [SettingsUISection(AboutGroup)]
-        public string Credits => Credit;
-
-        [SettingsUISection(AboutGroup)]
+        [SettingsUISection(AboutGroupStr)]
         public string InformationalVersion => NetworkToolsMod.InformationalVersion;
 
-        [SettingsUISection(AboutGroup)]
+        [SettingsUISection(AboutGroupStr)]
         public string Version => NetworkToolsMod.Version;
 
         /// <summary>
@@ -88,8 +86,6 @@ namespace NetworkTools.Settings {
         /// </summary>
         public override void SetDefaults() {
             ModalFirstLaunch = false;
-            RenderParcels    = false;
-            AllowSpawn       = true;
         }
 
         /// <summary>

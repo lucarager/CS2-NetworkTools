@@ -8,9 +8,7 @@ namespace NetworkTools.Systems {
 
     using Game.Common;
     using Game.Net;
-    using Game.Objects;
     using Game.Prefabs;
-    using Game.Simulation;
     using Game.Tools;
     using Unity.Entities;
     using Unity.Jobs;
@@ -23,14 +21,14 @@ namespace NetworkTools.Systems {
 
             var createDefinitionJobHandle = new CreateDefinitionJob
             {
-                ControlPoint           = m_LastHoveredEntity,
+                HoveredNode            = m_LastHoveredEntity,
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
                 EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),
                 PrefabRefLookup        = SystemAPI.GetComponentLookup<PrefabRef>(true),
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
+                ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 TerrainHeight          = m_TerrainSystem.GetHeightData(false),
-                CurveConfig            = m_OperationState.Config,
                 ECB                    = m_Barrier.CreateCommandBuffer(),
                 RenderBuffer           = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle),
             }.Schedule(JobHandle.CombineDependencies(
@@ -43,9 +41,13 @@ namespace NetworkTools.Systems {
             return createDefinitionJobHandle;
         }
 
-        private JobHandle Update(JobHandle inputDeps) {
-            // Check if we can reuse existing temp entities
-            var canReuse = false;
+        private JobHandle Update(JobHandle inputDeps, bool updateNeeded) {
+            // Guard
+            if (m_LastHoveredEntity.Value == Entity.Null) {
+                return inputDeps;
+            }
+
+            var canReuse = !updateNeeded;
 
             if (canReuse) {
                 applyMode = ApplyMode.None;
@@ -65,10 +67,14 @@ namespace NetworkTools.Systems {
         }
 
         private JobHandle Apply(JobHandle inputDeps) {
-            applyMode = ApplyMode.Clear;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
+            // Guard
+            if (m_LastHoveredEntity.Value == Entity.Null) {
+                return inputDeps;
+            }
 
-            //ApplySlopeToSelectedEdges(m_OperationState.Config);
+            applyMode = ApplyMode.Apply;
+            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
+            inputDeps = UpdateDefinitions(inputDeps);
 
             // Clear state to completely blank
             m_OperationState = OperationState.Idle();

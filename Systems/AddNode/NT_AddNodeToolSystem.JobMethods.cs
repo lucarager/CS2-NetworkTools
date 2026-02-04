@@ -1,6 +1,7 @@
 ﻿// <copyright file="NT_NodeSelectionToolSystem.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// Licensed under the MIT license. See LICENSE file in the project root for full license
+// information.
 // </copyright>
 
 namespace NetworkTools.Systems {
@@ -8,37 +9,32 @@ namespace NetworkTools.Systems {
 
     using Game.Common;
     using Game.Net;
-    using Game.Objects;
     using Game.Prefabs;
-    using Game.Simulation;
     using Game.Tools;
     using Unity.Entities;
     using Unity.Jobs;
 
     #endregion
 
-    public partial class NT_CeToolSystem {
+    public partial class NT_AddNodeToolSystem {
         private JobHandle UpdateDefinitions(JobHandle inputDeps) {
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
-            var createDefinitionJobHandle = new CreateDefinitionJob
-            {
-                SelectedNodes          = m_SelectedNodes,
-                CurrentPathEdges       = m_CurrentPathEdges,
-                CurrentPathNodes       = m_CurrentPathNodes,
-                NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
-                CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
-                EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),
-                PrefabRefLookup        = SystemAPI.GetComponentLookup<PrefabRef>(true),
+            var createDefinitionJobHandle = new CreateDefinitionJob {
+                ControlPoint = m_LastHoveredEntity,
+                NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
+                CurveLookup = SystemAPI.GetComponentLookup<Curve>(true),
+                EdgeLookup = SystemAPI.GetComponentLookup<Edge>(true),
+                PrefabRefLookup = SystemAPI.GetComponentLookup<PrefabRef>(true),
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
-                TerrainHeight          = m_TerrainSystem.GetHeightData(false),
-                CurveConfig            = m_OperationState.Config,
-                ECB                    = m_Barrier.CreateCommandBuffer(),
-                RenderBuffer           = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle),
+                TerrainHeight = m_TerrainSystem.GetHeightData(),
+                CurveConfig = m_OperationState.Config,
+                ECB = m_Barrier.CreateCommandBuffer(),
+                RenderBuffer = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle)
             }.Schedule(JobHandle.CombineDependencies(
-                           inputDeps,
-                           renderBufferJobHandle
-                       ));
+                                                     inputDeps,
+                                                     renderBufferJobHandle
+                                                    ));
             m_TerrainSystem.AddCPUHeightReader(createDefinitionJobHandle);
             m_Barrier.AddJobHandleForProducer(createDefinitionJobHandle);
 
@@ -70,11 +66,17 @@ namespace NetworkTools.Systems {
             applyMode = ApplyMode.Clear;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
-            ApplySlopeToSelectedEdges(m_OperationState.Config);
+            //ApplySlopeToSelectedEdges(m_OperationState.Config);
 
             // Clear state to completely blank
             m_OperationState = OperationState.Idle();
 
+            return inputDeps;
+        }
+
+        private JobHandle SnapControlPoints(JobHandle inputDeps) {
+            //this.m_TerrainSystem.AddCPUHeightReader(jobHandle6);
+            //this.m_WaterSystem.AddSurfaceReader(jobHandle6);
             return inputDeps;
         }
     }

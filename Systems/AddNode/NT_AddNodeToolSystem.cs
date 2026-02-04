@@ -25,7 +25,7 @@ namespace NetworkTools.Systems {
     /// <summary>
     /// # Remove Node System
     /// </summary>
-    public partial class NT_AddNodeSystem : NT_BaseToolSystem {
+    public partial class NT_AddNodeToolSystem : NT_BaseToolSystem {
         /// <summary>
         /// Maximum distance to select a node when selecting near an edge
         /// </summary>
@@ -90,7 +90,7 @@ namespace NetworkTools.Systems {
                 m_LastHoveredEntity.Value = controlPoint.m_OriginalEntity;
 
                 // Snap
-                SnapControlPoints(inputDeps, m_LastHoveredEntity.Value);
+                SnapControlPoints(inputDeps);
 
                 // Handle clicking
                 //if (m_ApplyAction.WasPressedThisFrame()) {
@@ -105,7 +105,9 @@ namespace NetworkTools.Systems {
             // Debug
             var buffer = m_OverlayRenderSystem.GetBuffer(out var deps);
             inputDeps = JobHandle.CombineDependencies(inputDeps, deps);
-            buffer.DrawCircle(UnityEngine.Color.white, controlPoint.m_Position, 3f);
+            if (controlPoint.m_OriginalEntity != Entity.Null) {
+                buffer.DrawCircle(UnityEngine.Color.white, controlPoint.m_Position, 3f);
+            }
 
             // Handle temp entities
             return HandleTempEntities(inputDeps);

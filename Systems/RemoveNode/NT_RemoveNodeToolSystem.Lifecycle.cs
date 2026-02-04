@@ -11,9 +11,9 @@ namespace NetworkTools.Systems {
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
-    using Settings;
     using Unity.Collections;
     using Unity.Entities;
+    using Unity.Jobs;
 
     #endregion
 
@@ -39,10 +39,11 @@ namespace NetworkTools.Systems {
             m_OverlayRenderSystem = World.GetOrCreateSystemManaged<OverlayRenderSystem>();
 
             // Configuration
-            ShowNodes = true;
+            ShowNodes                = true;
+            DisableVanillaValidation = true;
 
             // Actions
-            m_ApplyAction          = NetworkToolsMod.Instance.Settings.GetAction("ApplyActionName");
+            m_ApplyAction          = NetworkToolsMod.Instance.Settings.GetAction(NetworkTools.Settings.NT_Settings.ApplyActionStr);
 
             // Data Structures
             m_LastHoveredEntity = new NativeReference<Entity>(Allocator.Persistent);
@@ -74,7 +75,38 @@ namespace NetworkTools.Systems {
         protected override void OnStartRunning() {
             m_OperationState  = OperationState.Idle();
 
+            // Add NT_Eligible only to nodes with exactly 2 connected edges (non-intersection, non-endpoint)
+            MarkEligibleNodes();
+
             m_ApplyAction.shouldBeEnabled = true;
+        }
+
+        /// <summary>
+        /// Marks nodes as eligible for removal if they have exactly 2 connected edges.
+        /// These are intermediate nodes that can be removed by merging their two edges.
+        /// </summary>
+        private void MarkEligibleNodes() {
+            var nodeQuery = SystemAPI.QueryBuilder()
+                                     .WithAll<Node>()
+                                     .WithNone<NT_Eligible>()
+                                     .Build();
+
+            var nodeEntities = nodeQuery.ToEntityArray(Allocator.Temp);
+
+            foreach (var nodeEntity in nodeEntities) {
+                if (!EntityManager.HasBuffer<ConnectedEdge>(nodeEntity)) {
+                    continue;
+                }
+
+                var connectedEdges = EntityManager.GetBuffer<ConnectedEdge>(nodeEntity);
+                
+                // Only nodes with exactly 2 connected edges are eligible for removal
+                if (connectedEdges.Length == 2) {
+                    EntityManager.AddComponent<NT_Eligible>(nodeEntity);
+                }
+            }
+
+            nodeEntities.Dispose();
         }
 
         protected override void OnStopRunning() {

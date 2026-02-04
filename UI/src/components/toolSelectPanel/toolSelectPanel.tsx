@@ -8,26 +8,29 @@ import panels from "../shared/panels.module.scss";
 
 export const ToolSelectPanel = () => {
     const toolUIDataBinding = useValue(GAME_BINDINGS.UI_DATA.binding);
+    const tools = toolUIDataBinding.sort((a, b) => a.Index - b.Index);
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
     const { translate } = useLocalization();
-    const activeIndex = toolUIDataBinding.findIndex((t) => t.ID === selectedBinding);
+    const activeIndex = tools.findIndex((t) => t.ID === selectedBinding);
 
     return (
         <div className={[styles.wrapper, panels.nt_panel].join(" ")}>
             <div className={styles.column}>
-                {toolUIDataBinding.map((tool, index) => {
+                {tools.map((tool, index) => {
                     return (
                         <Tooltip
                             key={index}
-                            tooltip={tool.DisplayName}
+                            tooltip={`${tool.DisplayName}${tool.Active ? "" : ` (Coming soon!)`}`}
                             delayTime={0}
                             direction="right">
                             <Button
                                 className={[
                                     styles.actionButton,
+                                    tool.Active ? "" : styles.actionButton__inactive,
                                     tool.ID == selectedBinding ? styles.actionButton__active : "",
                                 ].join(" ")}
                                 variant="flat"
+                                // disabled={!tool.Active}
                                 onSelect={() => GAME_TRIGGERS.SELECT_TOOL(tool.ID)}>
                                 <img
                                     src={`coui://nt/Icons/${tool.ID == selectedBinding ? "Active" : "Normal"}/${tool.Icon}`}

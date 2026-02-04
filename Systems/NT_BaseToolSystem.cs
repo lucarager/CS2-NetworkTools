@@ -15,8 +15,9 @@ namespace NetworkTools.Systems {
 
     public abstract partial class NT_BaseToolSystem : ToolBaseSystem {
 
-        private         PrefabBase     m_Prefab;
-        internal        PrefixedLogger m_Log;
+        private  PrefabBase       m_Prefab;
+        internal PrefixedLogger   m_Log;
+        private  ValidationSystem m_ValidationSystem;
         public override string         toolID => "NT_BaseToolSystem";
 
         /// <summary>
@@ -34,10 +35,17 @@ namespace NetworkTools.Systems {
         /// </summary>
         public bool ShowTooltipsSlopes = false;
 
+        /// <summary>
+        /// Tool requests disabling vanilla validation during lifecycle
+        /// </summary>
+        public bool DisableVanillaValidation = false;
+
         protected override void OnCreate() {
             Enabled = false;
             m_Log   = new PrefixedLogger(nameof(NT_BaseToolSystem));
             m_Log.Debug("OnCreate()");
+
+            m_ValidationSystem = World.GetOrCreateSystemManaged<ValidationSystem>();
 
             base.OnCreate();
         }
@@ -51,5 +59,17 @@ namespace NetworkTools.Systems {
         public void RequestDisable() { m_ToolSystem.activeTool = m_DefaultToolSystem; }
 
         protected override JobHandle OnUpdate(JobHandle inputDeps) { return inputDeps; }
+
+        protected override void OnStartRunning() {
+            if (DisableVanillaValidation) {
+                m_ValidationSystem.Enabled = false;
+            }
+        }
+
+        protected override void OnStopRunning() {
+            if (DisableVanillaValidation) {
+                m_ValidationSystem.Enabled = true;
+            }
+        }
     }
 }

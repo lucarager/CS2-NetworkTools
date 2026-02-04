@@ -19,7 +19,7 @@ $brighten: 10%;
 $color-nt-3: linear-gradient(to bottom, rgb(205, 56, 219) 0%,rgb(150, 69, 255) 100%);
 
 .wrapper {
-    animation: slideIn 0.16s ease-out forwards;
+    animation: slideInLeft 0.16s ease-out forwards;
 }
 
 .column {
@@ -76,5 +76,14 @@ $color-nt-3: linear-gradient(to bottom, rgb(205, 56, 219) 0%,rgb(150, 69, 255) 1
 
     &:active {
         background: rgba(255, 255, 255, 0.3);
+    }
+
+
+    &__inactive {
+        filter: grayscale(100%) opacity(50%);
+
+        &:hover {
+            background: inherit;
+        }
     }
 }

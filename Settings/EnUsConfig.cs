@@ -16,7 +16,7 @@ namespace NetworkTools.Settings {
     /// </summary>
     public class EnUsConfig : IDictionarySource {
         private readonly Dictionary<string, string> m_Localization;
-        private readonly NT_Settings    m_Setting;
+        private readonly NT_Settings                m_Setting;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EnUsConfig"/> class.
@@ -28,11 +28,22 @@ namespace NetworkTools.Settings {
             m_Localization = new Dictionary<string, string> {
                 { m_Setting.GetSettingsLocaleID(), NetworkToolsMod.Id },
 
+                // Actions
+                { m_Setting.GetOptionLabelLocaleID(NT_Settings.ApplyActionStr), "ApplyActionStr Options Label" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.ApplyActionStr), "ApplyActionStr Binding Key" },
+                { m_Setting.GetOptionDescLocaleID(NT_Settings.ApplyActionStr), "ApplyActionStr Description" },
+                { m_Setting.GetOptionLabelLocaleID(NT_Settings.SecondaryApplyActionStr), "SecondaryApplyActionStr Options Label" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.SecondaryApplyActionStr), "SecondaryApplyActionStr Binding Key" },
+                { m_Setting.GetOptionDescLocaleID(NT_Settings.SecondaryApplyActionStr), "SecondaryApplyActionStr Description" },
+                { m_Setting.GetOptionLabelLocaleID(NT_Settings.ToggleToolPanelStr), "ToggleToolPanelStr Options Label" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.ToggleToolPanelStr), "ToggleToolPanelStr Binding Key" },
+                { m_Setting.GetOptionDescLocaleID(NT_Settings.ToggleToolPanelStr), "ToggleToolPanelStr Description" },
+
                 // Sections
 
                 // Groups
-                { m_Setting.GetOptionGroupLocaleID(nameof(NT_Settings.KeybindingsGroup)), "Key Bindings" },
-                { m_Setting.GetOptionGroupLocaleID(nameof(NT_Settings.AboutGroup)), "About" },
+                { m_Setting.GetOptionGroupLocaleID(NT_Settings.KeybindingsGroupStr), "Key Bindings" },
+                { m_Setting.GetOptionGroupLocaleID(NT_Settings.AboutGroupStr), "About" },
 
                 // About
                 { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Version)), "Version" },

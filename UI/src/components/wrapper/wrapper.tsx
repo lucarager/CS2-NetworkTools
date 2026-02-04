@@ -2,20 +2,20 @@ import React, { useState } from "react";
 import styles from "./wrapper.module.scss";
 import { ToolActionPanel } from "components/toolActionPanel/toolActionPanel";
 import { ToolSelectPanel } from "components/toolSelectPanel/toolSelectPanel";
-import { Button } from "cs2/ui";
-const iconSrc = "coui://uil/Standard/Road.svg";
+import { Button, Tooltip } from "cs2/ui";
+import iconSrc from "../../assets/logo.svg";
 
 export const Wrapper = () => {
-    const [enabled, setIsEnabled] = useState(true);
+    const [enabled, setIsEnabled] = useState(false);
 
     return (
         <>
-            <Button variant="floating" onSelect={() => setIsEnabled(!enabled)} src={iconSrc} />
+            <Tooltip tooltip={`Network Tools`} delayTime={0} direction="down">
+                <Button variant="floating" onSelect={() => setIsEnabled(!enabled)} src={iconSrc} />
+            </Tooltip>
             <div className={styles.wrapper}>
                 {enabled && <ToolSelectPanel />}
                 {enabled && <ToolActionPanel />}
-                {/* <div style={{ flex: 2 }}></div> */}
-                {/* {enabled && <ToolExtraPanel />} */}
             </div>
         </>
     );

@@ -24,10 +24,10 @@ namespace NetworkTools {
     using Game.Modding;
     using Game.SceneFlow;
     using HarmonyLib;
+    using NetworkTools.Systems;
     using NetworkTools.Utils;
     using Newtonsoft.Json;
     using Settings;
-    using Systems;
     using UnityEngine;
     using StreamReader = System.IO.StreamReader;
 
@@ -133,7 +133,7 @@ namespace NetworkTools {
             // Activate Systems
             updateSystem.UpdateAt<NT_PrefabsCreateSystem>(SystemUpdatePhase.PrefabUpdate);
             // Tools
-            updateSystem.UpdateAt<NT_CeToolSystem>(SystemUpdatePhase.ToolUpdate);
+            updateSystem.UpdateAt<NT_SlopeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_RemoveNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             // UI

@@ -15,6 +15,8 @@ namespace Game.Prefabs {
         public string DisplayName;
         public string Description;
         public string Icon;
+        public bool   Active;
+        public int    Index;
 
         public override void GetPrefabComponents(HashSet<ComponentType> components) {
             base.GetPrefabComponents(components);

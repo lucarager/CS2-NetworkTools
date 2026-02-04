@@ -6,7 +6,6 @@
 namespace NetworkTools.Systems {
     #region Using Statements
 
-    using Colossal.Entities;
     using Game.Common;
     using Game.Input;
     using Game.Net;
@@ -38,7 +37,7 @@ namespace NetworkTools.Systems {
         private EntityQuery m_NodesWithEligibleQuery;
         private EntityQuery m_NodesWithHighlightedQuery;
         private EntityQuery m_NodesWithoutEligibleQuery;
-        
+
         /// <summary>
         /// Apply action (usually left click)
         /// </summary>
@@ -77,10 +76,13 @@ namespace NetworkTools.Systems {
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
 
+            var updateNeeded = false;
+
             // Get raycast result
             if (GetRaycastResult(out var controlPoint)) {
                 // We hit something
                 var newEntityWasHit = m_LastHoveredEntity.Value != controlPoint.m_OriginalEntity;
+                updateNeeded = newEntityWasHit;
 
                 if (newEntityWasHit) {
                     HandleHover(controlPoint);
@@ -91,7 +93,7 @@ namespace NetworkTools.Systems {
 
                 // Handle clicking
                 if (m_ApplyAction.WasPressedThisFrame()) {
-                    HandleApply(controlPoint.m_OriginalEntity);
+                    HandleApply();
                 }
             } else {
                 // No entity under cursor
@@ -99,42 +101,47 @@ namespace NetworkTools.Systems {
             }
 
             // Handle temp entities
-            return HandleTempEntities(inputDeps);
+            return HandleTempEntities(inputDeps, updateNeeded);
         }
 
-        private void HandleApply(Entity controlPointEntity) {
-
+        private void HandleApply() {
+            m_OperationState.Phase = OperationPhase.Ready;
         }
 
         /// <summary>
-        /// Runs various jobs depending on whether we need to Update, Apply, or Cancel temp entities
+        /// Runs various jobs depending on whether we need to Update, Apply, or Cancel temp entities.
+        /// For the remove node tool, we show preview when hovering over a valid node.
         /// </summary>
         /// <param name="inputDeps"></param>
+        /// <param name="updateNeeded"></param>
         /// <returns>inputDeps</returns>
-        private JobHandle HandleTempEntities(JobHandle inputDeps) {
-            return m_OperationState.Phase switch
-            {
-                // No temp entities needed
-                OperationPhase.Idle or OperationPhase.Configuring => inputDeps,
-                // Preview temp entities
-                OperationPhase.Ready => Update(inputDeps),
-                // Apply real entities
-                OperationPhase.Applying => Apply(inputDeps),
-                // Clear otherwise
-                _ => Clear(inputDeps),
+        private JobHandle HandleTempEntities(JobHandle inputDeps, bool updateNeeded) {
+            return m_OperationState.Phase switch {
+                OperationPhase.Configuring =>
+                    // Show preview when hovering over a valid (eligible) node
+                    Update(inputDeps, updateNeeded),
+                OperationPhase.Ready =>
+                    // Apply removal
+                    Apply(inputDeps),
+                OperationPhase.Idle =>
+                    // Clear preview when not hovering
+                    Clear(inputDeps),
+                _ => Clear(inputDeps)
             };
         }
 
         private void HandleNoHover() {
             m_LastHoveredEntity.Value = Entity.Null;
+            m_OperationState.Phase    = OperationPhase.Idle;
             ClearAllHighlights();
         }
 
         private void UpdateActions() {
-            m_ApplyAction.shouldBeEnabled          = true;
+            m_ApplyAction.shouldBeEnabled = true;
         }
 
         private void HandleHover(ControlPoint controlPoint) {
+            m_OperationState.Phase = OperationPhase.Configuring;
             SwapHighlitedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity);
         }
 

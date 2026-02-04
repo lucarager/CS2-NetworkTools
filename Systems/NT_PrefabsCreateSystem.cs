@@ -25,11 +25,12 @@ namespace NetworkTools.Systems {
         // Systems & References
         private static PrefabSystem m_PrefabSystem;
 
+        private int m_InstalledTools = 0;
+
         /// <summary>
         /// Configuration for vanilla prefabas to load for further processing.
         /// </summary>
         private readonly Dictionary<string, PrefabID> m_SourcePrefabsDict = new() {
-            { "uiAssetCategory", new PrefabID("UIAssetCategoryPrefab", "ZonesOffice") },
         };
 
         private Dictionary<PrefabBase, Entity> m_PrefabEntities;
@@ -94,23 +95,25 @@ namespace NetworkTools.Systems {
                 prefabBaseDict[key] = prefabBase;
             }
 
-            CreateToolPrefab("Add Node", "add.svg", new NT_AddNode());
-            CreateToolPrefab("Remove Node", "remove.svg", new NT_RemoveNode());
-            CreateToolPrefab("Create Supernode", "super.svg", new NT_Select());
-            CreateToolPrefab("Slope Editor", "slope.svg", new NT_Select());
-            CreateToolPrefab("Curve Editor", "curve.svg", new NT_Select());
-            CreateToolPrefab("Connect", "connect.svg", new NT_Select());
-            CreateToolPrefab("Adv. Parallel", "parallel.svg", new NT_Select());
+            CreateToolPrefab("Add Node", "add.svg", new NT_AddNode(), false);
+            CreateToolPrefab("Remove Node", "remove.svg", new NT_RemoveNode(), false);
+            CreateToolPrefab("Create Supernode", "super.svg", new NT_Select(), false);
+            CreateToolPrefab("Slope Tools", "slope.svg", new NT_Slope(), true);
+            CreateToolPrefab("Curve Tools", "curve.svg", new NT_Select(), false);
+            CreateToolPrefab("Connect", "connect.svg", new NT_Select(), false);
+            CreateToolPrefab("Adv. Parallel", "parallel.svg", new NT_Select(), false);
 
             m_Log.Debug($"{logMethodPrefix} Completed.");
         }
 
-        private bool CreateToolPrefab<T>(string name, string icon, T component) where T : unmanaged, IComponentData {
+        private bool CreateToolPrefab<T>(string name, string icon, T component, bool active) where T : unmanaged, IComponentData {
             var toolPrefabBase = ScriptableObject.CreateInstance<NT_ToolPrefab>();
             toolPrefabBase.name        = name;
             toolPrefabBase.DisplayName = name;
             toolPrefabBase.Description = "DESCRIPTION";
             toolPrefabBase.Icon        = icon;
+            toolPrefabBase.Active      = active;
+            toolPrefabBase.Index       = m_InstalledTools++;
 
             var success = m_PrefabSystem.AddPrefab(toolPrefabBase);
 

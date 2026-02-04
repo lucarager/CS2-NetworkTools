@@ -56,7 +56,9 @@ namespace NetworkTools.Systems {
             return new OperationState
             {
                 Phase  = OperationPhase.Idle,
-                Config = new SlopeCurveConfig(),
+                Config = new SlopeCurveConfig {
+                    Template = SlopeTemplate.Linear
+                },
             };
         }
 
@@ -91,7 +93,7 @@ namespace NetworkTools.Systems {
     /// - The *SelectionState* handles user interactions for selecting nodes and edges. This happens during the `Configuring` phase of the OperationState.
     /// 
     /// </summary>
-    public partial class NT_CeToolSystem : NT_BaseToolSystem {
+    public partial class NT_SlopeToolSystem : NT_BaseToolSystem {
         /// <summary>
         /// Maximum distance to select a node when selecting near an edge
         /// </summary>
@@ -99,6 +101,7 @@ namespace NetworkTools.Systems {
 
         private TerrainSystem       m_TerrainSystem;
         private OverlayRenderSystem m_OverlayRenderSystem;
+        private ValidationSystem    m_ValidationSystem;
 
         private EntityQuery m_DefinitionQuery;
         private EntityQuery m_EdgesWithHighlightedQuery;
@@ -184,7 +187,7 @@ namespace NetworkTools.Systems {
         /// <summary>
         /// Current selection state (Happens during Configuring phase of OperationState)
         /// 
-        /// ## State machine:
+        /// ## m_OperationState machine:
         /// 
         /// ### NoSelection
         /// - All network nodes in the game have NT_Eligible component
@@ -593,15 +596,14 @@ namespace NetworkTools.Systems {
 
             m_Log.Debug($"ApplySlopeToSelectedEdges: Using template {curveConfig.Template}");
 
-            // Calculate total length of the path using the edge beziers
+            // === Phase 1: Calculate segment lengths and total path length ===
             var segmentLengths = new NativeList<float>(m_CurrentPathEdges.Length, Allocator.Temp);
             var totalLength    = 0f;
 
             foreach (var edgeEntity in m_CurrentPathEdges) {
                 if (EntityManager.TryGetComponent<Curve>(edgeEntity, out var curve)) {
-                    var segmentLength = curve.m_Length;
-                    segmentLengths.Add(segmentLength);
-                    totalLength += segmentLength;
+                    segmentLengths.Add(curve.m_Length);
+                    totalLength += curve.m_Length;
                 } else {
                     segmentLengths.Add(0f);
                 }
@@ -614,11 +616,33 @@ namespace NetworkTools.Systems {
                 return;
             }
 
-            // Calculate node heights based on their position along the path
-            var nodeHeights       = new NativeArray<float>(m_CurrentPathNodes.Length, Allocator.Temp);
+            // === Phase 2: Pre-calculate new and old heights for all path nodes ===
+            var nodeNewHeights = new NativeHashMap<Entity, float>(m_CurrentPathNodes.Length, Allocator.Temp);
+            var nodeOldHeights = new NativeHashMap<Entity, float>(m_CurrentPathNodes.Length, Allocator.Temp);
             var distanceAlongPath = 0f;
 
-            // Update each edge bezier with interpolated control point heights
+            // First node is at the start of the path
+            var firstNodeData = EntityManager.GetComponentData<Node>(m_CurrentPathNodes[0]);
+            nodeNewHeights[m_CurrentPathNodes[0]] = startHeight;
+            nodeOldHeights[m_CurrentPathNodes[0]] = firstNodeData.m_Position.y;
+
+            // Calculate heights for remaining nodes based on cumulative distance
+            for (var i = 0; i < m_CurrentPathEdges.Length; i++) {
+                distanceAlongPath += segmentLengths[i];
+                var ratio       = distanceAlongPath / totalLength;
+                var curvedRatio = curveConfig.ApplyCurve(ratio);
+                var newHeight   = startHeight + deltaHeight * curvedRatio;
+
+                // The node at the end of this edge segment
+                var nodeEntity = m_CurrentPathNodes[i + 1];
+                nodeNewHeights[nodeEntity] = newHeight;
+
+                var nodeData = EntityManager.GetComponentData<Node>(nodeEntity);
+                nodeOldHeights[nodeEntity] = nodeData.m_Position.y;
+            }
+
+            // === Phase 3: Update path edges using pre-calculated node heights ===
+            distanceAlongPath = 0f;
             for (var i = 0; i < m_CurrentPathEdges.Length; i++) {
                 var edgeEntity = m_CurrentPathEdges[i];
                 var edge       = EntityManager.GetComponentData<Edge>(edgeEntity);
@@ -635,7 +659,6 @@ namespace NetworkTools.Systems {
                 var horizontalA = new float3(adjustedBezier.a.x, 0f, adjustedBezier.a.z);
                 var horizontalB = new float3(adjustedBezier.b.x, 0f, adjustedBezier.b.z);
                 var horizontalC = new float3(adjustedBezier.c.x, 0f, adjustedBezier.c.z);
-                var horizontalD = new float3(adjustedBezier.d.x, 0f, adjustedBezier.d.z);
 
                 // Calculate ratios for control points within the segment
                 var bRatio = 1f / 3f;
@@ -649,29 +672,23 @@ namespace NetworkTools.Systems {
                 bRatio = math.clamp(bRatio, 0f, 1f);
                 cRatio = math.clamp(cRatio, 0f, 1f);
 
-                // Calculate distances along entire path for each bezier point
-                var distA = distanceAlongPath;
+                // Calculate distances along entire path for b and c control points
                 var distB = distanceAlongPath + segmentLength * bRatio;
                 var distC = distanceAlongPath + segmentLength * cRatio;
-                var distD = distanceAlongPath + segmentLength;
 
-                // Calculate ratios along entire path and apply curve
-                var ratioA = distA / totalLength;
-                var ratioB = distB / totalLength;
-                var ratioC = distC / totalLength;
-                var ratioD = distD / totalLength;
-
-                // Apply curves
-                var curvedA = curveConfig.ApplyCurve(ratioA);
+                // Calculate ratios along entire path and apply curve for control points
+                var ratioB  = distB / totalLength;
+                var ratioC  = distC / totalLength;
                 var curvedB = curveConfig.ApplyCurve(ratioB);
                 var curvedC = curveConfig.ApplyCurve(ratioC);
-                var curvedD = curveConfig.ApplyCurve(ratioD);
 
-                // Set heights using curved ratios
-                adjustedBezier.a.y = startHeight + deltaHeight * curvedA;
+                // Set endpoint heights from pre-calculated node heights
+                adjustedBezier.a.y = nodeNewHeights[m_CurrentPathNodes[i]];
+                adjustedBezier.d.y = nodeNewHeights[m_CurrentPathNodes[i + 1]];
+
+                // Set control point heights using interpolated curve values
                 adjustedBezier.b.y = startHeight + deltaHeight * curvedB;
                 adjustedBezier.c.y = startHeight + deltaHeight * curvedC;
-                adjustedBezier.d.y = startHeight + deltaHeight * curvedD;
 
                 curve.m_Bezier = adjustedBezier;
                 buffer.SetComponent(edgeEntity, curve);
@@ -683,13 +700,77 @@ namespace NetworkTools.Systems {
                 distanceAlongPath += segmentLength;
             }
 
+            // === Phase 4: Update non-path edges at intersection nodes ===
+            var pathEdgeSet = new NativeHashSet<Entity>(m_CurrentPathEdges.Length, Allocator.Temp);
+            foreach (var edge in m_CurrentPathEdges) {
+                pathEdgeSet.Add(edge);
+            }
+
+            foreach (var nodeEntity in m_CurrentPathNodes) {
+                if (!EntityManager.TryGetBuffer<ConnectedEdge>(nodeEntity, true, out var connectedEdges)) {
+                    continue;
+                }
+
+                // Only process intersection nodes (more than 2 connected edges)
+                if (connectedEdges.Length <= 2) {
+                    continue;
+                }
+
+                var newNodeHeight = nodeNewHeights[nodeEntity];
+                var oldNodeHeight = nodeOldHeights[nodeEntity];
+                var heightDelta   = newNodeHeight - oldNodeHeight;
+
+                // Skip if no significant height change
+                if (math.abs(heightDelta) < 0.001f) {
+                    continue;
+                }
+
+                for (var i = 0; i < connectedEdges.Length; i++) {
+                    var edgeEntity = connectedEdges[i].m_Edge;
+
+                    // Skip edges that are part of the selected path
+                    if (pathEdgeSet.Contains(edgeEntity)) {
+                        continue;
+                    }
+
+                    if (!EntityManager.TryGetComponent<Edge>(edgeEntity, out var edge)) {
+                        continue;
+                    }
+
+                    if (!EntityManager.TryGetComponent<Curve>(edgeEntity, out var curve)) {
+                        continue;
+                    }
+
+                    var adjustedBezier = curve.m_Bezier;
+
+                    // Adjust the endpoint and adjacent control point that connects to this intersection
+                    // This preserves the original slope/tangent of the non-path edge
+                    if (edge.m_Start == nodeEntity) {
+                        // Edge starts at intersection - adjust a and b by the same delta
+                        adjustedBezier.a.y += heightDelta;
+                        adjustedBezier.b.y += heightDelta;
+                    } else if (edge.m_End == nodeEntity) {
+                        // Edge ends at intersection - adjust d and c by the same delta
+                        adjustedBezier.d.y += heightDelta;
+                        adjustedBezier.c.y += heightDelta;
+                    }
+
+                    curve.m_Bezier = adjustedBezier;
+                    buffer.SetComponent(edgeEntity, curve);
+
+                    // Mark edge and its nodes as updated
+                    TryAddUpdate(buffer, edgeEntity);
+                    TryAddUpdate(buffer, edge.m_Start);
+                    TryAddUpdate(buffer, edge.m_End);
+                }
+            }
+
             buffer.Playback(EntityManager);
             buffer.Dispose();
             segmentLengths.Dispose();
-            nodeHeights.Dispose();
-
-            m_Log.Debug(
-                $"ApplySlopeToSelectedEdges: Applied {curveConfig.Template} slope from {startHeight:F2} to {endHeight:F2} over {totalLength:F2} units to {m_CurrentPathNodes.Length} nodes and {m_CurrentPathEdges.Length} edges.");
+            nodeNewHeights.Dispose();
+            nodeOldHeights.Dispose();
+            pathEdgeSet.Dispose();
         }
 
         private void TryAddUpdate(in EntityCommandBuffer buffer, Entity e) {
