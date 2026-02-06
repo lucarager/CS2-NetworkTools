@@ -25,7 +25,7 @@ export type ToolSelectionData = {
 };
 
 export type SlopeConfigData = {
-    template: string;
+    template: "parabolic" | "easeinout" | "linear";
     easeInLength: number;
     easeOutLength: number;
     archHeight: number;

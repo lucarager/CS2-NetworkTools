@@ -46,13 +46,13 @@ namespace NetworkTools.Systems {
 
             m_NodeQuery = SystemAPI.QueryBuilder()
                                    .WithAll<Node>()
-                                   .WithAny<NT_Highlighted, NT_Selected, NT_Eligible, NT_SelectedFirst, NT_SelectedLast>()
+                                   .WithAny<NetworkTools.Components.NT_Highlighted, NetworkTools.Components.NT_Selected, NetworkTools.Components.NT_Eligible, NetworkTools.Components.NT_SelectedFirst, NetworkTools.Components.NT_SelectedLast>()
                                    .WithNone<Deleted, Hidden>()
                                    .Build();
 
             m_EdgeQuery = SystemAPI.QueryBuilder()
                                    .WithAll<Edge>()
-                                   .WithAny<NT_Highlighted, NT_Selected>()
+                                   .WithAny<NetworkTools.Components.NT_Highlighted, NetworkTools.Components.NT_Selected>()
                                    .WithNone<Deleted, Hidden>()
                                    .Build();
 
@@ -77,11 +77,11 @@ namespace NetworkTools.Systems {
                 var drawNodesJob = new DrawNodesJob {
                     m_Buffer                         = m_OverlayRenderSystem.GetBuffer(out nodeBufferJobHandle),
                     m_EntityTypeHandle               = SystemAPI.GetEntityTypeHandle(),
-                    m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
-                    m_SelectedComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
-                    m_EligibleComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Eligible>(),
-                    m_SelectedFirstComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_SelectedFirst>(),
-                    m_SelectedLastComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<NT_SelectedLast>(),
+                    m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NetworkTools.Components.NT_Highlighted>(),
+                    m_SelectedComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NetworkTools.Components.NT_Selected>(),
+                    m_EligibleComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NetworkTools.Components.NT_Eligible>(),
+                    m_SelectedFirstComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NetworkTools.Components.NT_SelectedFirst>(),
+                    m_SelectedLastComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<NetworkTools.Components.NT_SelectedLast>(),
                     m_NodeComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Node>(),
                     m_NodeGeometryComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NodeGeometry>(),
                 };
@@ -101,8 +101,8 @@ namespace NetworkTools.Systems {
                 // Draw edges
                 var drawEdgesJob = new DrawEdgesJob {
                     m_Buffer                         = m_OverlayRenderSystem.GetBuffer(out edgeBufferJobHandle),
-                    m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
-                    m_SelectedComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
+                    m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NetworkTools.Components.NT_Highlighted>(),
+                    m_SelectedComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NetworkTools.Components.NT_Selected>(),
                     m_EdgeComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Edge>(),
                     m_CurveComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Curve>(),
                     m_NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
@@ -129,11 +129,11 @@ namespace NetworkTools.Systems {
         [BurstCompile]
         protected struct DrawNodesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer          m_Buffer;
-            [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NT_Selected>    m_SelectedComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NT_Eligible>    m_EligibleComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NT_SelectedFirst> m_SelectedFirstComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NT_SelectedLast>  m_SelectedLastComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_Highlighted> m_HighlightedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_Selected>    m_SelectedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_Eligible>    m_EligibleComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_SelectedFirst> m_SelectedFirstComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_SelectedLast>  m_SelectedLastComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Node> m_NodeComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NodeGeometry> m_NodeGeometryComponentTypeHandle;
             [ReadOnly] public required EntityTypeHandle m_EntityTypeHandle;
@@ -225,8 +225,8 @@ namespace NetworkTools.Systems {
         [BurstCompile]
         protected struct DrawEdgesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer          m_Buffer;
-            [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NT_Selected>    m_SelectedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_Highlighted> m_HighlightedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_Selected>    m_SelectedComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Edge> m_EdgeComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Curve> m_CurveComponentTypeHandle;
             [ReadOnly] public required ComponentLookup<Node>               m_NodeLookup;

@@ -30,7 +30,7 @@ namespace NetworkTools.Systems {
         /// </summary>
         private const float MaxDistanceToSelect = 16f;
 
-        private TerrainSystem       m_TerrainSystem;
+        private TerrainSystem m_TerrainSystem;
         private OverlayRenderSystem m_OverlayRenderSystem;
 
         private EntityQuery m_DefinitionQuery;
@@ -95,7 +95,8 @@ namespace NetworkTools.Systems {
                 if (m_ApplyAction.WasPressedThisFrame()) {
                     HandleApply();
                 }
-            } else {
+            }
+            else {
                 // No entity under cursor
                 HandleNoHover();
             }
@@ -105,7 +106,7 @@ namespace NetworkTools.Systems {
         }
 
         private void HandleApply() {
-            m_OperationState.Phase = OperationPhase.Ready;
+            m_OperationState.Phase = OperationPhase.Applying;
         }
 
         /// <summary>
@@ -117,10 +118,10 @@ namespace NetworkTools.Systems {
         /// <returns>inputDeps</returns>
         private JobHandle HandleTempEntities(JobHandle inputDeps, bool updateNeeded) {
             return m_OperationState.Phase switch {
-                OperationPhase.Configuring =>
+                OperationPhase.Ready =>
                     // Show preview when hovering over a valid (eligible) node
                     Update(inputDeps, updateNeeded),
-                OperationPhase.Ready =>
+                OperationPhase.Applying =>
                     // Apply removal
                     Apply(inputDeps),
                 OperationPhase.Idle =>
@@ -141,8 +142,8 @@ namespace NetworkTools.Systems {
         }
 
         private void HandleHover(ControlPoint controlPoint) {
-            m_OperationState.Phase = OperationPhase.Configuring;
-            SwapHighlitedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity);
+            m_OperationState.Phase = OperationPhase.Ready;
+            SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity);
         }
 
         protected override bool GetRaycastResult(out ControlPoint controlPoint) {
@@ -156,30 +157,32 @@ namespace NetworkTools.Systems {
         }
 
         private ControlPoint FilterRaycastResult(Entity entity, RaycastHit hit) {
-            var controlPoint    = default(ControlPoint);
+            var controlPoint = default(ControlPoint);
             var candidateEntity = Entity.Null;
 
             // If we hit an edge, find the closest node instead
             if (EntityManager.HasComponent<Edge>(entity)) {
                 // todo make job
                 // Find the closest node to the hit position
-                var edge            = EntityManager.GetComponentData<Edge>(entity);
-                var startNode       = EntityManager.GetComponentData<Node>(edge.m_Start);
+                var edge = EntityManager.GetComponentData<Edge>(entity);
+                var startNode = EntityManager.GetComponentData<Node>(edge.m_Start);
                 var distanceToStart = math.distance(hit.m_Position, startNode.m_Position);
-                var endNode         = EntityManager.GetComponentData<Node>(edge.m_End);
-                var distanceToEnd   = math.distance(hit.m_Position, endNode.m_Position);
+                var endNode = EntityManager.GetComponentData<Node>(edge.m_End);
+                var distanceToEnd = math.distance(hit.m_Position, endNode.m_Position);
 
                 if (distanceToStart < MaxDistanceToSelect && distanceToStart < distanceToEnd) {
                     candidateEntity = edge.m_Start;
-                } else if (distanceToEnd < MaxDistanceToSelect && distanceToEnd < distanceToStart) {
+                }
+                else if (distanceToEnd < MaxDistanceToSelect && distanceToEnd < distanceToStart) {
                     candidateEntity = edge.m_End;
                 }
-            } else {
+            }
+            else {
                 candidateEntity = entity;
             }
 
             // Check that the entity we're hitting is eligible
-            if (EntityManager.HasComponent<NT_Eligible>(candidateEntity)) {
+            if (EntityManager.HasComponent<Components.NT_Eligible>(candidateEntity)) {
                 controlPoint = new ControlPoint(candidateEntity, hit);
             }
 
@@ -192,32 +195,38 @@ namespace NetworkTools.Systems {
         /// </summary>
         /// <param name="oldEntity">Entity to remove highlighting from</param>
         /// <param name="newEntity">Entity to add highlighting to</param>
-        private void SwapHighlitedEntities(Entity oldEntity, Entity newEntity) {
+        private void SwapHighlightedEntities(Entity oldEntity, Entity newEntity) {
             RemoveHighlight(oldEntity);
             AddHighlight(newEntity);
         }
 
-        private void AddHighlight(Entity entity) { EntityManager.AddComponent<NT_Highlighted>(entity); }
+        private void AddHighlight(Entity entity) {
+            EntityManager.AddComponent<Components.NT_Highlighted>(entity);
+        }
 
-        private void RemoveHighlight(Entity entity) { EntityManager.RemoveComponent<NT_Highlighted>(entity); }
+        private void RemoveHighlight(Entity entity) {
+            EntityManager.RemoveComponent<Components.NT_Highlighted>(entity);
+        }
 
         public override void InitializeRaycast() {
             base.InitializeRaycast();
 
-            m_ToolRaycastSystem.collisionMask   = CollisionMask.OnGround | CollisionMask.Overground | CollisionMask.Underground;
+            m_ToolRaycastSystem.collisionMask =
+                CollisionMask.OnGround | CollisionMask.Overground | CollisionMask.Underground;
             m_ToolRaycastSystem.typeMask        = TypeMask.Net;
             m_ToolRaycastSystem.netLayerMask    = Layer.All;
             m_ToolRaycastSystem.iconLayerMask   = IconLayerMask.None;
             m_ToolRaycastSystem.utilityTypeMask = UtilityTypes.None;
-            m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset | RaycastFlags.SubElements |
-                                               RaycastFlags.Cargo   | RaycastFlags.Passenger;
+            m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset |
+                                               RaycastFlags.SubElements |
+                                               RaycastFlags.Cargo | RaycastFlags.Passenger;
         }
 
         /// <summary>
         /// Clears all NT_Highlighted components from nodes and edges (batch operation).
         /// </summary>
         private void ClearAllHighlights() {
-            EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
+            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
         }
     }
 }

@@ -55,6 +55,11 @@ namespace NetworkTools.Systems {
         private NativeReference<Entity> m_LastHoveredEntity;
 
         /// <summary>
+        /// Caches the last control point data for job scheduling
+        /// </summary>
+        private ControlPoint m_LastControlPoint;
+
+        /// <summary>
         /// Caches the last raycast entity to detect changes
         /// </summary>
         private NativeReference<Entity> m_LastRaycastEntity;
@@ -77,29 +82,26 @@ namespace NetworkTools.Systems {
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
 
+            var updateNeeded = false;
+
             // Get raycast result
             if (GetRaycastResult(out var controlPoint)) {
                 // We hit something
                 var newEntityWasHit = m_LastHoveredEntity.Value != controlPoint.m_OriginalEntity;
+                updateNeeded = newEntityWasHit;
 
-                //if (newEntityWasHit) {
-                //    HandleHover(controlPoint);
-                //}
-
-                // Update Cache
-                m_LastHoveredEntity.Value = controlPoint.m_OriginalEntity;
+                HandleHover(controlPoint);
 
                 // Snap
-                SnapControlPoints(inputDeps);
+                //SnapControlPoints(inputDeps);
 
                 // Handle clicking
-                //if (m_ApplyAction.WasPressedThisFrame()) {
-                //    HandleApply(controlPoint.m_OriginalEntity);
-                //}
+                if (m_ApplyAction.WasPressedThisFrame()) {
+                    HandleApply(controlPoint.m_OriginalEntity);
+                }
             } else {
                 // No entity under cursor
-                m_LastHoveredEntity.Value = Entity.Null;
-                //HandleNoHover();
+                HandleNoHover();
             }
 
             // Debug
@@ -110,11 +112,11 @@ namespace NetworkTools.Systems {
             }
 
             // Handle temp entities
-            return HandleTempEntities(inputDeps);
+            return HandleTempEntities(inputDeps, updateNeeded);
         }
 
         private void HandleApply(Entity controlPointEntity) {
-
+            m_OperationState.Phase = OperationPhase.Ready;
         }
 
         /// <summary>
@@ -122,13 +124,13 @@ namespace NetworkTools.Systems {
         /// </summary>
         /// <param name="inputDeps"></param>
         /// <returns>inputDeps</returns>
-        private JobHandle HandleTempEntities(JobHandle inputDeps) {
+        private JobHandle HandleTempEntities(JobHandle inputDeps, bool updateNeeded) {
             return m_OperationState.Phase switch
             {
                 // No temp entities needed
-                OperationPhase.Idle or OperationPhase.Configuring => inputDeps,
+                OperationPhase.Idle => inputDeps,
                 // Preview temp entities
-                OperationPhase.Ready => Update(inputDeps),
+                OperationPhase.Ready or OperationPhase.Configuring => Update(inputDeps, updateNeeded),
                 // Apply real entities
                 OperationPhase.Applying => Apply(inputDeps),
                 // Clear otherwise
@@ -137,16 +139,22 @@ namespace NetworkTools.Systems {
         }
 
         private void HandleNoHover() {
+            RemoveHighlight(m_LastHoveredEntity.Value);
             m_LastHoveredEntity.Value = Entity.Null;
-            ClearAllHighlights();
+            m_LastControlPoint        = default;
+            m_OperationState.Phase    = OperationPhase.Idle;
         }
 
         private void UpdateActions() {
-            m_ApplyAction.shouldBeEnabled          = true;
+            m_ApplyAction.shouldBeEnabled = true;
         }
 
         private void HandleHover(ControlPoint controlPoint) {
-            SwapHighlitedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity);
+            AddHighlight(controlPoint.m_OriginalEntity);
+            // Update Cache
+            m_LastHoveredEntity.Value = controlPoint.m_OriginalEntity;
+            m_LastControlPoint        = controlPoint;
+            m_OperationState.Phase    = OperationPhase.Configuring;
         }
 
         protected override bool GetRaycastResult(out ControlPoint controlPoint) {
@@ -162,29 +170,41 @@ namespace NetworkTools.Systems {
         private ControlPoint FilterRaycastResult(Entity entity, RaycastHit hit) {
             var controlPoint    = default(ControlPoint);
             var candidateEntity = Entity.Null;
+            var curvePosition   = 0f;
 
-            // If we hit an edge, find the closest node instead
-            if (EntityManager.HasComponent<Edge>(entity)) {
+            // If we hit a node, find the closest edge instead
+            if (EntityManager.HasComponent<Node>(entity)) {
                 // todo make job
-                // Find the closest node to the hit position
-                var edge            = EntityManager.GetComponentData<Edge>(entity);
-                var startNode       = EntityManager.GetComponentData<Node>(edge.m_Start);
-                var distanceToStart = math.distance(hit.m_Position, startNode.m_Position);
-                var endNode         = EntityManager.GetComponentData<Node>(edge.m_End);
-                var distanceToEnd   = math.distance(hit.m_Position, endNode.m_Position);
+                // Find the closest edge to the hit position from connected edges
+                if (EntityManager.TryGetBuffer<ConnectedEdge>(entity, true, out var connectedEdges)) {
+                    var bestDistance = MaxDistanceToSelect;
 
-                if (distanceToStart < MaxDistanceToSelect && distanceToStart < distanceToEnd) {
-                    candidateEntity = edge.m_Start;
-                } else if (distanceToEnd < MaxDistanceToSelect && distanceToEnd < distanceToStart) {
-                    candidateEntity = edge.m_End;
+                    for (var i = 0; i < connectedEdges.Length; i++) {
+                        var edgeEntity = connectedEdges[i].m_Edge;
+                        if (!EntityManager.TryGetComponent<Curve>(edgeEntity, out var curve)) {
+                            continue;
+                        }
+
+                        var distance = Colossal.Mathematics.MathUtils.Distance(curve.m_Bezier.xz, hit.m_Position.xz, out var t);
+                        if (distance < bestDistance) {
+                            bestDistance    = distance;
+                            candidateEntity = edgeEntity;
+                            curvePosition   = t;
+                        }
+                    }
                 }
-            } else {
+            } else if (EntityManager.HasComponent<Edge>(entity)) {
+                // Edge hit directly, compute curve position
                 candidateEntity = entity;
+                if (EntityManager.TryGetComponent<Curve>(entity, out var curve)) {
+                    Colossal.Mathematics.MathUtils.Distance(curve.m_Bezier.xz, hit.m_Position.xz, out curvePosition);
+                }
             }
 
             // Check that the entity we're hitting is eligible
-            if (EntityManager.HasComponent<NT_Eligible>(candidateEntity)) {
+            if (candidateEntity != Entity.Null) {
                 controlPoint = new ControlPoint(candidateEntity, hit);
+                controlPoint.m_CurvePosition = curvePosition;
             }
 
             return controlPoint;
@@ -201,9 +221,9 @@ namespace NetworkTools.Systems {
             AddHighlight(newEntity);
         }
 
-        private void AddHighlight(Entity entity) { EntityManager.AddComponent<NT_Highlighted>(entity); }
+        private void AddHighlight(Entity entity) { EntityManager.AddComponent<NetworkTools.Components.NT_Highlighted>(entity); }
 
-        private void RemoveHighlight(Entity entity) { EntityManager.RemoveComponent<NT_Highlighted>(entity); }
+        private void RemoveHighlight(Entity entity) { EntityManager.RemoveComponent<NetworkTools.Components.NT_Highlighted>(entity); }
 
         public override void InitializeRaycast() {
             base.InitializeRaycast();
@@ -221,7 +241,7 @@ namespace NetworkTools.Systems {
         /// Clears all NT_Highlighted components from nodes and edges (batch operation).
         /// </summary>
         private void ClearAllHighlights() {
-            EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
+            EntityManager.RemoveComponent<NetworkTools.Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
         }
     }
 }

@@ -21,16 +21,18 @@ namespace NetworkTools.Systems {
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
             var createDefinitionJobHandle = new CreateDefinitionJob {
-                ControlPoint = m_LastHoveredEntity,
+                EdgeEntity = m_LastControlPoint.m_OriginalEntity,
+                HitPosition = m_LastControlPoint.m_HitPosition,
+                CurvePosition = m_LastControlPoint.m_CurvePosition,
                 NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup = SystemAPI.GetComponentLookup<Curve>(true),
                 EdgeLookup = SystemAPI.GetComponentLookup<Edge>(true),
                 PrefabRefLookup = SystemAPI.GetComponentLookup<PrefabRef>(true),
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
-                TerrainHeight = m_TerrainSystem.GetHeightData(),
-                CurveConfig = m_OperationState.Config,
+                ConnectedEdgeLookup = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
+                TerrainHeight = m_TerrainSystem.GetHeightData(false),
                 ECB = m_Barrier.CreateCommandBuffer(),
-                RenderBuffer = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle)
+                RenderBuffer = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle),
             }.Schedule(JobHandle.CombineDependencies(
                                                      inputDeps,
                                                      renderBufferJobHandle
@@ -41,14 +43,18 @@ namespace NetworkTools.Systems {
             return createDefinitionJobHandle;
         }
 
-        private JobHandle Update(JobHandle inputDeps) {
-            // Check if we can reuse existing temp entities
-            var canReuse = false;
-
-            if (canReuse) {
-                applyMode = ApplyMode.None;
+        private JobHandle Update(JobHandle inputDeps, bool updateNeeded) {
+            // Guard
+            if (m_LastHoveredEntity.Value == Entity.Null) {
                 return inputDeps;
             }
+
+            var canReuse = !updateNeeded;
+
+            //if (canReuse) {
+            //    applyMode = ApplyMode.None;
+            //    return inputDeps;
+            //}
 
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
@@ -63,20 +69,18 @@ namespace NetworkTools.Systems {
         }
 
         private JobHandle Apply(JobHandle inputDeps) {
-            applyMode = ApplyMode.Clear;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
+            // Guard
+            if (m_LastHoveredEntity.Value == Entity.Null) {
+                return inputDeps;
+            }
 
-            //ApplySlopeToSelectedEdges(m_OperationState.Config);
+            applyMode = ApplyMode.Apply;
+            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
+            inputDeps = UpdateDefinitions(inputDeps);
 
             // Clear state to completely blank
             m_OperationState = OperationState.Idle();
 
-            return inputDeps;
-        }
-
-        private JobHandle SnapControlPoints(JobHandle inputDeps) {
-            //this.m_TerrainSystem.AddCPUHeightReader(jobHandle6);
-            //this.m_WaterSystem.AddSurfaceReader(jobHandle6);
             return inputDeps;
         }
     }

@@ -6,10 +6,10 @@ import { Button } from "cs2/ui";
 import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
 
-const PRESETS = [
+const MODES = [
     { label: "Linear", id: "linear", icon: "coui://nt/Presets/Slope/Linear.svg" },
     { label: "Eased", id: "easeinout", icon: "coui://nt/Presets/Slope/Eased.svg" },
-    { label: "Parabolic", id: "parabolic", icon: "coui://nt/Presets/Slope/Parabolic.svg" },
+    // { label: "Parabolic", id: "parabolic", icon: "coui://nt/Presets/Slope/Parabolic.svg" },
 ];
 
 interface SlopeProps {
@@ -63,7 +63,7 @@ export const Slope: React.FC<SlopeProps> = () => {
                             <div className={styles.controlRowInner}>
                                 <span className={styles.paramLabel}>Mode</span>
                                 <div className={styles.buttonRow}>
-                                    {PRESETS.map((preset) => (
+                                    {MODES.map((preset) => (
                                         <Button
                                             key={preset.id}
                                             variant="primary"

@@ -80,7 +80,7 @@ namespace NetworkTools.Systems {
 
                 // Delete both edges (both must be deleted for the node to be removed)
                 //ProcessEdgeDeletionDef(edge1Entity, edge1);
-                //ProcessEdgeDeletionDef(edge2Entity, edge2);
+                ProcessEdgeDeletionDef(edge2Entity, edge2);
 
                 // Delete the node being removed
                 //ProcessNodeDeletionDef(nodeToRemove);

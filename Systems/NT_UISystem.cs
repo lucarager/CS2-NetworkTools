@@ -60,7 +60,6 @@ namespace NetworkTools.Systems {
             m_ToolLookupBinding       = CreateBinding("UI_DATA", new ToolUILookup[] { });
             m_SelectedPrefabBinding   = CreateBinding("SELECTED_PREFAB", "");
             m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES", new ToolSelectionData[] { });
-            // todo reset this on tool change
             m_SlopeConfigBinding      = CreateBinding("SLOPE_CONFIG", SlopeConfigData.Default(), HandleUpdateSlopeConfig, new ValueWriter<SlopeConfigData>(), new ValueReader<SlopeConfigData>());
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
@@ -70,7 +69,7 @@ namespace NetworkTools.Systems {
             m_ToggleToolPanelAction = NetworkToolsMod.Instance.Settings.GetAction(NT_Settings.ToggleToolPanelStr);
 
             m_ToolPrefabQuery = SystemAPI.QueryBuilder()
-                                         .WithAll<NT_ToolData>()
+                                         .WithAll<NetworkTools.Components.NT_ToolData>()
                                          .Build();
 
             // Always enable

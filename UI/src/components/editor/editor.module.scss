@@ -1,12 +1,21 @@
-.wrapper {
+.editorWrapper {
     position: absolute;
-    left: 0;
-    top: 50rem;
-    height: 100vh;
+    left: 15rem;
+    top: 50%;
+    transform: translateY(-50%);
     padding-bottom: 188rem;
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
     align-items: flex-start;
     pointer-events: none;
+}
+
+.buttonWrapper {
+    display: flex;
+    position: absolute;
+    bottom: 70rem;
+    left: 15rem;
+    z-index: 1000;
+    pointer-events: auto;
 }

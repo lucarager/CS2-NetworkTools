@@ -47,52 +47,88 @@ namespace NetworkTools.Systems {
             public required            EntityCommandBuffer               ECB;
 
             public void Execute() {
-                var startNode      = SelectedNodes[0];
-                var endNode        = SelectedNodes[^1];
-                var startNodeInfo  = NodeLookup[startNode];
-                var endNodeInfo    = NodeLookup[endNode];
-                var startHeight    = startNodeInfo.m_Position.y;
-                var endHeight      = endNodeInfo.m_Position.y;
-                var deltaHeight    = endHeight - startHeight;
+                var startNode     = SelectedNodes[0];
+                var endNode       = SelectedNodes[^1];
+                var startNodeInfo = NodeLookup[startNode];
+                var endNodeInfo   = NodeLookup[endNode];
+                var startHeight   = startNodeInfo.m_Position.y;
+                var endHeight     = endNodeInfo.m_Position.y;
+                var deltaHeight   = endHeight - startHeight;
 
-                // Calculate total length of the path using the edge beziers
-                var segmentLengths = new NativeList<float>(CurrentPathEdges.Length, Allocator.Temp);
-                var totalLength    = 0f;
+                // === Phase 1: Gather edge metadata and calculate total path length ===
+                var edgeCount   = CurrentPathEdges.Length;
+                var edgeData    = new NativeArray<EdgeSlopeData>(edgeCount, Allocator.Temp);
+                var totalLength = 0f;
 
-                foreach (var edgeEntity in CurrentPathEdges) {
-                    if (CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
-                        var segmentLength = curve.m_Length;
-                        segmentLengths.Add(segmentLength);
-                        totalLength += segmentLength;
-                    } else {
-                        segmentLengths.Add(0f);
+                for (var i = 0; i < edgeCount; i++) {
+                    var edgeEntity = CurrentPathEdges[i];
+                    var data       = new EdgeSlopeData();
+
+                    if (!EdgeLookup.TryGetComponent(edgeEntity, out var edge)) {
+                        edgeData[i] = data;
+                        continue;
                     }
+
+                    // Determine if edge direction matches path direction
+                    var currentNode = CurrentPathNodes[i];
+                    data.IsForward = edge.m_Start == currentNode;
+
+                    if (CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
+                        data.Length = curve.m_Length;
+
+                        // Calculate control point ratios in path order
+                        SlopeCalculator.CalculateControlPointRatios(
+                            curve.m_Bezier,
+                            data.Length,
+                            data.IsForward,
+                            out data.CtrlStartRatio,
+                            out data.CtrlEndRatio);
+                    }
+
+                    edgeData[i] = data;
+                    totalLength += data.Length;
                 }
 
                 if (totalLength <= 0f) {
-                    segmentLengths.Dispose();
+                    edgeData.Dispose();
                     return;
                 }
 
-                // Now that we have the heights, we can process each edge and adjust their curves
-                var distanceAlongPath = 0f;
+                // === Phase 2: Calculate and apply heights to path edges ===
+                var cumulativeDistance = 0f;
 
-                for (var i = 0; i < CurrentPathEdges.Length; i++) {
+                for (var i = 0; i < edgeCount; i++) {
                     var edgeEntity = CurrentPathEdges[i];
+                    var data       = edgeData[i];
 
-                    // NetCourse
                     if (!CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
+                        cumulativeDistance += data.Length;
                         continue;
                     }
 
                     if (!EdgeLookup.TryGetComponent(edgeEntity, out var edge)) {
+                        cumulativeDistance += data.Length;
                         continue;
                     }
+
+                    // Calculate heights using shared utility
+                    var heights = SlopeCalculator.CalculateEdgeHeights(
+                        cumulativeDistance,
+                        data.Length,
+                        data.CtrlStartRatio,
+                        data.CtrlEndRatio,
+                        totalLength,
+                        startHeight,
+                        deltaHeight,
+                        CurveConfig);
+
+                    // Apply heights to bezier using shared utility
+                    var adjustedBezier = SlopeCalculator.ApplyHeightsToBezier(curve.m_Bezier, heights, data.IsForward);
 
                     // Entity to hold definitions for this edge
                     var definitionEntity = ECB.CreateEntity();
 
-                    // CD
+                    // CreationDefinition
                     var creationDefinition = new CreationDefinition {
                         m_Original = edgeEntity,
                         m_Flags    = CreationFlags.Recreate | CreationFlags.Parent,
@@ -108,59 +144,6 @@ namespace NetworkTools.Systems {
 
                     ECB.AddComponent(definitionEntity, creationDefinition);
                     ECB.AddComponent<Updated>(definitionEntity);
-
-                    // NetCourse
-                    var adjustedBezier      = curve.m_Bezier;
-                    var segmentLength       = segmentLengths[i];
-                    var totalHorizontalDist = curve.m_Length;
-
-                    // Calculate parametric positions of control points based on horizontal distance
-                    var horizontalA = new float3(adjustedBezier.a.x, 0f, adjustedBezier.a.z);
-                    var horizontalB = new float3(adjustedBezier.b.x, 0f, adjustedBezier.b.z);
-                    var horizontalC = new float3(adjustedBezier.c.x, 0f, adjustedBezier.c.z);
-                    var horizontalD = new float3(adjustedBezier.d.x, 0f, adjustedBezier.d.z);
-
-                    // Calculate ratios for control points within the segment
-                    var bRatio = 1f / 3f;
-                    var cRatio = 2f / 3f;
-
-                    if (totalHorizontalDist > 0.01f) {
-                        bRatio = math.distance(horizontalA, horizontalB) / totalHorizontalDist;
-                        cRatio = math.distance(horizontalA, horizontalC) / totalHorizontalDist;
-                    }
-
-                    bRatio = math.clamp(bRatio, 0f, 1f);
-                    cRatio = math.clamp(cRatio, 0f, 1f);
-
-                    // Calculate distances along entire path for each bezier point
-                    var distA = distanceAlongPath;
-                    var distB = distanceAlongPath + segmentLength * bRatio;
-                    var distC = distanceAlongPath + segmentLength * cRatio;
-                    var distD = distanceAlongPath + segmentLength;
-
-                    // Calculate ratios along entire path 
-                    var ratioA = distA / totalLength;
-                    var ratioB = distB / totalLength;
-                    var ratioC = distC / totalLength;
-                    var ratioD = distD / totalLength;
-
-                    // Apply curves
-                    var curvedA = CurveConfig.ApplyCurve(ratioA);
-                    var curvedB = CurveConfig.ApplyCurve(ratioB);
-                    var curvedC = CurveConfig.ApplyCurve(ratioC);
-                    var curvedD = CurveConfig.ApplyCurve(ratioD);
-
-                    // Set heights using curved ratios
-                    adjustedBezier.a.y = startHeight + deltaHeight * curvedA;
-                    adjustedBezier.b.y = startHeight + deltaHeight * curvedB;
-                    adjustedBezier.c.y = startHeight + deltaHeight * curvedC;
-                    adjustedBezier.d.y = startHeight + deltaHeight * curvedD;
-
-                    //RenderBuffer.DrawCircle(Color.white, adjustedBezier.a, 2f);
-                    //RenderBuffer.DrawCircle(Color.red, adjustedBezier.b, 2f);
-                    //RenderBuffer.DrawCircle(Color.blue, adjustedBezier.c, 2f);
-                    //RenderBuffer.DrawCircle(Color.green, adjustedBezier.d, 2f);
-                    //RenderBuffer.DrawDashedCurve(Color.black, adjustedBezier, 1f, 1f, 1f);
 
                     // Create NetCourse component
                     var netCourse = new NetCourse {
@@ -181,7 +164,7 @@ namespace NetworkTools.Systems {
                         m_EndPosition = new CoursePos {
                             m_Entity        = Entity.Null,
                             m_Position      = adjustedBezier.d,
-                            m_Rotation      = NetUtils.GetNodeRotation(MathUtils.StartTangent(adjustedBezier)),
+                            m_Rotation      = NetUtils.GetNodeRotation(MathUtils.EndTangent(adjustedBezier)),
                             m_CourseDelta   = 1,
                             m_Elevation     = default,
                             m_Flags         = 0,
@@ -190,25 +173,14 @@ namespace NetworkTools.Systems {
                         },
                     };
 
-                    //// Adjust elevation
-                    //var startDifferential = TerrainUtils.SampleHeight(ref TerrainHeight, netCourse.m_StartPosition.m_Position) - netCourse.m_StartPosition.m_Position.y;
-                    //if (Mathf.Abs(startDifferential) > 4f) {
-                    //    netCourse.m_StartPosition.m_Elevation = startDifferential;
-                    //}
-
-                    //var endDifferential = TerrainUtils.SampleHeight(ref TerrainHeight, netCourse.m_EndPosition.m_Position) - netCourse.m_EndPosition.m_Position.y;
-                    //if (Mathf.Abs(endDifferential) > 4f) {
-                    //    netCourse.m_EndPosition.m_Elevation = endDifferential;
-                    //}
-
                     ECB.AddComponent(definitionEntity, netCourse);
 
                     // Progress along the path
-                    distanceAlongPath += segmentLength;
+                    cumulativeDistance += data.Length;
                 }
 
                 // Dispose temporary collections
-                segmentLengths.Dispose();
+                edgeData.Dispose();
             }
         }
     }

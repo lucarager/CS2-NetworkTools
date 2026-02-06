@@ -21,8 +21,7 @@ namespace NetworkTools.Systems {
         private JobHandle UpdateDefinitions(JobHandle inputDeps) {
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
-            var createDefinitionJobHandle = new CreateDefinitionJob
-            {
+            var createDefinitionJobHandle = new CreateDefinitionJob {
                 SelectedNodes          = m_SelectedNodes,
                 CurrentPathEdges       = m_CurrentPathEdges,
                 CurrentPathNodes       = m_CurrentPathNodes,
@@ -34,28 +33,24 @@ namespace NetworkTools.Systems {
                 TerrainHeight          = m_TerrainSystem.GetHeightData(false),
                 CurveConfig            = m_OperationState.Config,
                 ECB                    = m_Barrier.CreateCommandBuffer(),
-                RenderBuffer           = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle),
-            }.Schedule(JobHandle.CombineDependencies(
-                           inputDeps,
-                           renderBufferJobHandle
-                       ));
+                RenderBuffer           = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle)
+            }.Schedule(JobHandle.CombineDependencies(inputDeps,
+                renderBufferJobHandle));
             m_TerrainSystem.AddCPUHeightReader(createDefinitionJobHandle);
             m_Barrier.AddJobHandleForProducer(createDefinitionJobHandle);
 
             return createDefinitionJobHandle;
         }
 
-        private JobHandle Update(JobHandle inputDeps) {
-            var canReuse = false;
+        private JobHandle Update(JobHandle inputDeps, bool updateNeeded) {
+            var canReuse = !updateNeeded;
 
             // Check if we can reuse existing temp entities
             // This will be true if the selected nodes and operation config didn't change
-
-
-            if (canReuse) {
-                applyMode = ApplyMode.None;
-                return inputDeps;
-            }
+            //if (canReuse) {
+            //    applyMode = ApplyMode.None;
+            //    return inputDeps;
+            //}
 
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
@@ -76,7 +71,27 @@ namespace NetworkTools.Systems {
             ApplySlopeToSelectedEdges(m_OperationState.Config);
 
             // Clear state to completely blank
-            m_OperationState = OperationState.Idle();
+            m_OperationState.Phase = OperationPhase.Idle;
+            // Batch remove all marker components using cached queries
+            // todo move this to a utility
+            EntityManager.RemoveComponent<Components.NT_Selected>(m_NodesWithSelectedQuery);
+            EntityManager.RemoveComponent<Components.NT_Selected>(m_EdgesWithSelectedQuery);
+            EntityManager.RemoveComponent<Components.NT_Eligible>(m_NodesWithEligibleQuery);
+            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
+            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_EdgesWithHighlightedQuery);
+            EntityManager
+                .RemoveComponent<Components.NT_SelectedFirst>(m_NodesWithSelectedFirstQuery);
+            EntityManager
+                .RemoveComponent<Components.NT_SelectedLast>(m_NodesWithSelectedLastQuery);
+
+            // Clear internal state
+            m_SelectedNodes.Clear();
+            m_EligibleNodes.Clear();
+            m_CurrentPathNodes.Clear();
+            m_CurrentPathEdges.Clear();
+
+            // Reset
+            StateTransitionNoNodes();
 
             return inputDeps;
         }

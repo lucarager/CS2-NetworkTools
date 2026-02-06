@@ -13,10 +13,11 @@ export const TooltipRenderer = () => {
         <div className={styles.wrapper}>
             {tooltipGroups.map((group, index) => (
                 <div
-                    key={index}
+                    key={group.path}
                     className={styles.tooltipGroup}
                     style={{
                         transform: `translate(${group.props.position.x}px, ${group.props.position.y}px)`,
+                        zIndex: group.path.endsWith("*") ? 9999 : 0,
                     }}>
                     {group.children.map(
                         (tooltip, tIndex) =>

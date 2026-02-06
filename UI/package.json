@@ -5,10 +5,15 @@
         "node": ">=18"
     },
     "scripts": {
-        "prebuild": "npm install",
+        "setpath-mod": "cross-env BUILD_PATH=mod",
+        "setpath-cs2": "cross-env BUILD_PATH=cs2",
+        "prebuild": "npm install --no-audit --no-fund",
         "build": "webpack",
         "build-dev": "webpack --mode development",
+        "build-cs2": "cross-env BUILD_PATH=cs2 webpack --mode development",
         "dev": "webpack --mode development --watch",
+        "dev-release": "webpack --watch",
+        "dev-cs2": "cross-env BUILD_PATH=cs2 webpack --watch --env cs2",
         "tsc": "tsc",
         "update": "npx create-csii-ui-mod update",
         "clean": "npx create-csii-ui-mod clean",

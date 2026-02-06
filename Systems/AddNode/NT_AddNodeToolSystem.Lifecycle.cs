@@ -23,9 +23,9 @@ namespace NetworkTools.Systems {
 
     public partial class NT_AddNodeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_AddNode>(prefab)}");
+            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NetworkTools.Components.NT_AddNode>(prefab)}");
             var validRequest = prefab is NT_ToolPrefab &&
-                               m_PrefabSystem.HasComponent<NT_AddNode>(prefab);
+                               m_PrefabSystem.HasComponent<NetworkTools.Components.NT_AddNode>(prefab);
 
             if (!validRequest) return false;
 
@@ -60,14 +60,14 @@ namespace NetworkTools.Systems {
             m_DefinitionQuery = GetDefinitionQuery();
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
                                                .WithAll<Node>()
-                                               .WithNone<NT_Eligible>()
+                                               .WithNone<NetworkTools.Components.NT_Eligible>()
                                                .Build();
             m_NodesWithEligibleQuery = SystemAPI.QueryBuilder()
-                                            .WithAll<Node, NT_Eligible>()
+                                            .WithAll<Node, NetworkTools.Components.NT_Eligible>()
                                             .Build();
             m_NodesWithHighlightedQuery = SystemAPI.QueryBuilder()
                                                .WithAll<Node,
-                                                   NT_Highlighted>()
+                                                   NetworkTools.Components.NT_Highlighted>()
                                                .Build();
 
             base.OnCreate();
@@ -84,6 +84,8 @@ namespace NetworkTools.Systems {
             m_OperationState = OperationState.Idle();
 
             m_ApplyAction.shouldBeEnabled = true;
+
+            base.OnStartRunning();
         }
 
         protected override void OnStopRunning() {
@@ -93,8 +95,10 @@ namespace NetworkTools.Systems {
             m_Log.Debug("OnStopRunning: Cleaning up state components");
 
             // Batch remove all marker components using cached queries
-            EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
-            EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
+            EntityManager.RemoveComponent<NetworkTools.Components.NT_Eligible>(m_NodesWithEligibleQuery);
+            EntityManager.RemoveComponent<NetworkTools.Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
+
+            base.OnStopRunning();
         }
     }
 }

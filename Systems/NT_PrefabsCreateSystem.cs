@@ -54,11 +54,12 @@ namespace NetworkTools.Systems {
         }
 
         /// <inheritdoc/>
-        protected override void OnUpdate() { }
+        protected override void OnUpdate() {
+        }
 
         /// <inheritdoc/>
-        protected override void OnGameLoadingComplete(Purpose  purpose,
-                                                      GameMode mode) {
+        protected override void OnGameLoadingComplete(Purpose purpose,
+            GameMode mode) {
             base.OnGameLoadingComplete(purpose, mode);
             m_Log.Debug($"OnGameLoadingComplete(purpose={purpose}, mode={mode})");
 
@@ -95,22 +96,23 @@ namespace NetworkTools.Systems {
                 prefabBaseDict[key] = prefabBase;
             }
 
-            CreateToolPrefab("Add Node", "add.svg", new NT_AddNode(), false);
-            CreateToolPrefab("Remove Node", "remove.svg", new NT_RemoveNode(), false);
-            CreateToolPrefab("Create Supernode", "super.svg", new NT_Select(), false);
-            CreateToolPrefab("Slope Tools", "slope.svg", new NT_Slope(), true);
-            CreateToolPrefab("Curve Tools", "curve.svg", new NT_Select(), false);
-            CreateToolPrefab("Connect", "connect.svg", new NT_Select(), false);
-            CreateToolPrefab("Adv. Parallel", "parallel.svg", new NT_Select(), false);
+            CreateToolPrefab("Add Node",         "add.svg",      "", new Components.NT_AddNode(), true);
+            CreateToolPrefab("Remove Node",      "remove.svg",   "", new Components.NT_RemoveNode(), true);
+            CreateToolPrefab("Create Supernode", "super.svg",    "", new Components.NT_Select(),     false);
+            CreateToolPrefab("Slope Tools",      "slope.svg",    "", new Components.NT_Slope(),      true);
+            CreateToolPrefab("Curve Tools",      "curve.svg",    "", new Components.NT_Select(),     false);
+            CreateToolPrefab("Connect",          "connect.svg",  "", new Components.NT_Select(),     false);
+            CreateToolPrefab("Adv. Parallel",    "parallel.svg", "", new Components.NT_Select(),     false);
 
             m_Log.Debug($"{logMethodPrefix} Completed.");
         }
 
-        private bool CreateToolPrefab<T>(string name, string icon, T component, bool active) where T : unmanaged, IComponentData {
+        private bool CreateToolPrefab<T>(string name, string icon, string description, T component, bool active)
+            where T : unmanaged, IComponentData {
             var toolPrefabBase = ScriptableObject.CreateInstance<NT_ToolPrefab>();
             toolPrefabBase.name        = name;
             toolPrefabBase.DisplayName = name;
-            toolPrefabBase.Description = "DESCRIPTION";
+            toolPrefabBase.Description = description;
             toolPrefabBase.Icon        = icon;
             toolPrefabBase.Active      = active;
             toolPrefabBase.Index       = m_InstalledTools++;

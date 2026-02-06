@@ -21,10 +21,10 @@ namespace NetworkTools.Systems {
 
     public partial class NT_SlopeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_Slope>(prefab)}");
+            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NetworkTools.Components.NT_Slope>(prefab)}");
             var validRequest =
                 prefab is NT_ToolPrefab &&
-                m_PrefabSystem.HasComponent<NT_Slope>(prefab);
+                m_PrefabSystem.HasComponent<NetworkTools.Components.NT_Slope>(prefab);
 
             if (!validRequest) return false;
 
@@ -90,32 +90,32 @@ namespace NetworkTools.Systems {
             m_DefinitionQuery = GetDefinitionQuery();
             m_NodesWithoutEligibleQuery = Unity.Entities.SystemAPI.QueryBuilder()
                                                .WithAll<Node>()
-                                               .WithNone<NT_Eligible>()
+                                               .WithNone<NetworkTools.Components.NT_Eligible>()
                                                .Build();
             m_NodesWithEligibleQuery = Unity.Entities.SystemAPI.QueryBuilder()
-                                            .WithAll<Node, NT_Eligible>()
+                                            .WithAll<Node, NetworkTools.Components.NT_Eligible>()
                                             .Build();
             m_NodesWithSelectedQuery = Unity.Entities.SystemAPI.QueryBuilder()
-                                            .WithAll<Node, NT_Selected>()
+                                            .WithAll<Node, NetworkTools.Components.NT_Selected>()
                                             .Build();
             m_NodesWithHighlightedQuery = Unity.Entities.SystemAPI.QueryBuilder()
                                                .WithAll<Node,
-                                                   NT_Highlighted>()
+                                                   NetworkTools.Components.NT_Highlighted>()
                                                .Build();
             m_NodesWithSelectedFirstQuery = Unity.Entities.SystemAPI.QueryBuilder()
                                                  .WithAll<Node,
-                                                     NT_SelectedFirst>()
+                                                     NetworkTools.Components.NT_SelectedFirst>()
                                                  .Build();
             m_NodesWithSelectedLastQuery = Unity.Entities.SystemAPI.QueryBuilder()
                                                 .WithAll<Node,
-                                                    NT_SelectedLast>()
+                                                    NetworkTools.Components.NT_SelectedLast>()
                                                 .Build();
             m_EdgesWithHighlightedQuery = Unity.Entities.SystemAPI.QueryBuilder()
                                                .WithAll<Edge,
-                                                   NT_Highlighted>()
+                                                   NetworkTools.Components.NT_Highlighted>()
                                                .Build();
             m_EdgesWithSelectedQuery = Unity.Entities.SystemAPI.QueryBuilder()
-                                            .WithAll<Edge, NT_Selected>()
+                                            .WithAll<Edge, NetworkTools.Components.NT_Selected>()
                                             .Build();
 
             base.OnCreate();
@@ -143,6 +143,8 @@ namespace NetworkTools.Systems {
 
             m_ApplyAction.shouldBeEnabled          = true;
             m_SecondaryApplyAction.shouldBeEnabled = true;
+
+            base.OnStartRunning();
         }
 
         protected override void OnStopRunning() {
@@ -154,21 +156,23 @@ namespace NetworkTools.Systems {
             m_Log.Debug("OnStopRunning: Cleaning up state components");
 
             // Batch remove all marker components using cached queries
-            EntityManager.RemoveComponent<NT_Selected>(m_NodesWithSelectedQuery);
-            EntityManager.RemoveComponent<NT_Selected>(m_EdgesWithSelectedQuery);
-            EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
-            EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
-            EntityManager.RemoveComponent<NT_Highlighted>(m_EdgesWithHighlightedQuery);
+            EntityManager.RemoveComponent<NetworkTools.Components.NT_Selected>(m_NodesWithSelectedQuery);
+            EntityManager.RemoveComponent<NetworkTools.Components.NT_Selected>(m_EdgesWithSelectedQuery);
+            EntityManager.RemoveComponent<NetworkTools.Components.NT_Eligible>(m_NodesWithEligibleQuery);
+            EntityManager.RemoveComponent<NetworkTools.Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
+            EntityManager.RemoveComponent<NetworkTools.Components.NT_Highlighted>(m_EdgesWithHighlightedQuery);
             EntityManager
-                .RemoveComponent<NT_SelectedFirst>(m_NodesWithSelectedFirstQuery);
+                .RemoveComponent<NetworkTools.Components.NT_SelectedFirst>(m_NodesWithSelectedFirstQuery);
             EntityManager
-                .RemoveComponent<NT_SelectedLast>(m_NodesWithSelectedLastQuery);
+                .RemoveComponent<NetworkTools.Components.NT_SelectedLast>(m_NodesWithSelectedLastQuery);
 
             // Clear internal state
             m_SelectedNodes.Clear();
             m_EligibleNodes.Clear();
             m_CurrentPathNodes.Clear();
             m_CurrentPathEdges.Clear();
+
+            base.OnStopRunning();
         }
     }
 }

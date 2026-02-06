@@ -31,10 +31,14 @@ namespace NetworkTools.Settings {
         public const  string SecondaryApplyActionStr = nameof(SecondaryApplyMimic);
         public const  string ToggleToolPanelStr      = nameof(ToggleToolPanel);
 
-        [SettingsUIMouseBinding(BindingMouse.Left, ApplyActionStr)]
+        [SettingsUIMouseBinding(ApplyActionStr)]
+        [SettingsUIBindingMimic(InputManager.kToolMap, "Apply")]
+        [SettingsUIHidden]
         public ProxyBinding ApplyMimic { get; set; }
 
-        [SettingsUIMouseBinding(BindingMouse.Right, SecondaryApplyActionStr)]
+        [SettingsUIMouseBinding(SecondaryApplyActionStr)]
+        [SettingsUIBindingMimic(InputManager.kToolMap, "Secondary Apply")]
+        [SettingsUIHidden]
         public ProxyBinding SecondaryApplyMimic { get; set; }
 
         [SettingsUIKeyboardBinding(BindingKeyboard.T, ToggleToolPanelStr, ctrl: true)]

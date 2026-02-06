@@ -20,7 +20,7 @@ namespace Game.Prefabs {
 
         public override void GetPrefabComponents(HashSet<ComponentType> components) {
             base.GetPrefabComponents(components);
-            components.Add(ComponentType.ReadWrite<NT_ToolData>());
+            components.Add(ComponentType.ReadWrite<NetworkTools.Components.NT_ToolData>());
         }
     }
 }

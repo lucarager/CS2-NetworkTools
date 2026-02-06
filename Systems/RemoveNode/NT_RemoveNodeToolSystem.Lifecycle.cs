@@ -19,8 +19,8 @@ namespace NetworkTools.Systems {
 
     public partial class NT_RemoveNodeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_RemoveNode>(prefab)}");
-            var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_RemoveNode>(prefab);
+            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NetworkTools.Components.NT_RemoveNode>(prefab)}");
+            var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NetworkTools.Components.NT_RemoveNode>(prefab);
 
             if (!validRequest) {
                 return false;
@@ -53,13 +53,13 @@ namespace NetworkTools.Systems {
             m_DefinitionQuery = GetDefinitionQuery();
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
                                                    .WithAll<Node>()
-                                                   .WithNone<NT_Eligible>()
+                                                   .WithNone<NetworkTools.Components.NT_Eligible>()
                                                    .Build();
             m_NodesWithEligibleQuery = SystemAPI.QueryBuilder()
-                                                .WithAll<Node, NT_Eligible>()
+                                                .WithAll<Node, NetworkTools.Components.NT_Eligible>()
                                                 .Build();
             m_NodesWithHighlightedQuery = SystemAPI.QueryBuilder()
-                                                   .WithAll<Node, NT_Highlighted>()
+                                                   .WithAll<Node, NetworkTools.Components.NT_Highlighted>()
                                                    .Build();
 
             base.OnCreate();
@@ -79,6 +79,8 @@ namespace NetworkTools.Systems {
             MarkEligibleNodes();
 
             m_ApplyAction.shouldBeEnabled = true;
+
+            base.OnStartRunning();
         }
 
         /// <summary>
@@ -88,7 +90,7 @@ namespace NetworkTools.Systems {
         private void MarkEligibleNodes() {
             var nodeQuery = SystemAPI.QueryBuilder()
                                      .WithAll<Node>()
-                                     .WithNone<NT_Eligible>()
+                                     .WithNone<NetworkTools.Components.NT_Eligible>()
                                      .Build();
 
             var nodeEntities = nodeQuery.ToEntityArray(Allocator.Temp);
@@ -102,7 +104,7 @@ namespace NetworkTools.Systems {
                 
                 // Only nodes with exactly 2 connected edges are eligible for removal
                 if (connectedEdges.Length == 2) {
-                    EntityManager.AddComponent<NT_Eligible>(nodeEntity);
+                    EntityManager.AddComponent<NetworkTools.Components.NT_Eligible>(nodeEntity);
                 }
             }
 
@@ -116,8 +118,10 @@ namespace NetworkTools.Systems {
             m_Log.Debug("OnStopRunning: Cleaning up state components");
 
             // Batch remove all marker components using cached queries
-            EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
-            EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
+            EntityManager.RemoveComponent<NetworkTools.Components.NT_Eligible>(m_NodesWithEligibleQuery);
+            EntityManager.RemoveComponent<NetworkTools.Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
+
+            base.OnStopRunning();
         }
     }
 }
