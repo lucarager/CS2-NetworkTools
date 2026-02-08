@@ -4,34 +4,63 @@
 // </copyright>
 
 namespace NetworkTools.Systems {
-    #region Using Statements
+#region Using Statements
 
-    using Colossal.Mathematics;
-    using Unity.Mathematics;
+using Colossal.Mathematics;
+using Unity.Entities;
+using Unity.Mathematics;
 
-    #endregion
+#endregion
+
+/// <summary>
+/// Determines how the slope transformation job outputs its results.
+/// </summary>
+public enum SlopeOutputMode : byte {
+    /// <summary>
+    /// Create CreationDefinition + NetCourse entities for preview.
+    /// </summary>
+    Preview,
 
     /// <summary>
-    /// Per-edge metadata for slope calculations.
-    /// Control point ratios are stored in PATH order (not bezier order).
+    /// Modify existing Curve components and handle intersection adjustments.
     /// </summary>
-    public struct EdgeSlopeData {
-        public float Length;
-        public float CtrlStartRatio;  // Path-ordered: ratio of control point closer to path-start
-        public float CtrlEndRatio;    // Path-ordered: ratio of control point closer to path-end
-        public bool  IsForward;       // True if edge direction matches path direction
-        public float OldHeight;       // Original height at path-end of this segment (for intersection updates)
-    }
+    Apply,
+}
 
-    /// <summary>
-    /// Pre-calculated heights for an edge's control points in path order.
-    /// </summary>
-    public struct EdgeHeights {
-        public float Start;      // Height at path-start of segment
-        public float CtrlStart;  // Height at control point closer to path-start
-        public float CtrlEnd;    // Height at control point closer to path-end
-        public float End;        // Height at path-end of segment
-    }
+/// <summary>
+/// Per-edge metadata for slope calculations.
+/// Control point ratios are stored in PATH order (not bezier order).
+/// </summary>
+public struct EdgeSlopeData {
+    public float Length;
+    public float CtrlStartRatio;  // Path-ordered: ratio of control point closer to path-start
+    public float CtrlEndRatio;    // Path-ordered: ratio of control point closer to path-end
+    public bool  IsForward;       // True if edge direction matches path direction
+    public float OldHeight;       // Original height at path-end of this segment (for intersection updates)
+}
+
+/// <summary>
+/// Pre-calculated heights for an edge's control points in path order.
+/// </summary>
+public struct EdgeHeights {
+    public float Start;      // Height at path-start of segment
+    public float CtrlStart;  // Height at control point closer to path-start
+    public float CtrlEnd;    // Height at control point closer to path-end
+    public float End;        // Height at path-end of segment
+}
+
+/// <summary>
+/// Computed slope data for a single edge, ready to be output.
+/// </summary>
+public struct ComputedEdgeSlope {
+    public int       PathIndex;
+    public Entity    EdgeEntity;
+    public Entity    StartNode;
+    public Entity    EndNode;
+    public Bezier4x3 AdjustedBezier;
+    public float     CumulativeDistance;
+    public EdgeSlopeData Metadata;
+}
 
     /// <summary>
     /// Burst-compatible utility struct for slope calculations.

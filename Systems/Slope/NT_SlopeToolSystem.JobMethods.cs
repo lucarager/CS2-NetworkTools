@@ -1,4 +1,4 @@
-﻿// <copyright file="NT_NodeSelectionToolSystem.cs" company="Luca Rager">
+﻿// <copyright file="NT_SlopeToolSystem.JobMethods.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -10,7 +10,6 @@ namespace NetworkTools.Systems {
     using Game.Net;
     using Game.Objects;
     using Game.Prefabs;
-    using Game.Simulation;
     using Game.Tools;
     using Unity.Entities;
     using Unity.Jobs;
@@ -18,10 +17,8 @@ namespace NetworkTools.Systems {
     #endregion
 
     public partial class NT_SlopeToolSystem {
-        private JobHandle UpdateDefinitions(JobHandle inputDeps) {
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
-
-            var createDefinitionJobHandle = new CreateDefinitionJob {
+        private JobHandle ScheduleSlopeTransformJob(JobHandle inputDeps, SlopeOutputMode outputMode) {
+            var jobHandle = new SlopeTransformJob {
                 SelectedNodes          = m_SelectedNodes,
                 CurrentPathEdges       = m_CurrentPathEdges,
                 CurrentPathNodes       = m_CurrentPathNodes,
@@ -30,31 +27,32 @@ namespace NetworkTools.Systems {
                 EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),
                 PrefabRefLookup        = SystemAPI.GetComponentLookup<PrefabRef>(true),
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
-                TerrainHeight          = m_TerrainSystem.GetHeightData(false),
+                ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
+                AggregatedLookup       = SystemAPI.GetComponentLookup<Aggregated>(true),
                 CurveConfig            = m_OperationState.Config,
+                OutputMode             = outputMode,
                 ECB                    = m_Barrier.CreateCommandBuffer(),
-                RenderBuffer           = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle)
-            }.Schedule(JobHandle.CombineDependencies(inputDeps,
-                renderBufferJobHandle));
-            m_TerrainSystem.AddCPUHeightReader(createDefinitionJobHandle);
-            m_Barrier.AddJobHandleForProducer(createDefinitionJobHandle);
-
-            return createDefinitionJobHandle;
+            }.Schedule(inputDeps);
+            m_Barrier.AddJobHandleForProducer(jobHandle);
+            return jobHandle;
         }
 
-        private JobHandle Update(JobHandle inputDeps, bool updateNeeded) {
-            var canReuse = !updateNeeded;
-
+        private JobHandle Update(JobHandle inputDeps) {
             // Check if we can reuse existing temp entities
             // This will be true if the selected nodes and operation config didn't change
-            //if (canReuse) {
-            //    applyMode = ApplyMode.None;
-            //    return inputDeps;
-            //}
+            if (!m_UpdateNeeded) {
+                applyMode = ApplyMode.None;
+                return inputDeps;
+            }
 
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
-            inputDeps = UpdateDefinitions(inputDeps);
+            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
+            inputDeps = ScheduleSlopeTransformJob(inputDeps, SlopeOutputMode.Preview);
+            
+            // Reset the flag after processing
+            m_UpdateNeeded = false;
+            
             return inputDeps;
         }
 
@@ -67,33 +65,11 @@ namespace NetworkTools.Systems {
         private JobHandle Apply(JobHandle inputDeps) {
             applyMode = ApplyMode.Clear;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
+            var jobHandle = ScheduleSlopeTransformJob(inputDeps, SlopeOutputMode.Apply);
 
-            ApplySlopeToSelectedEdges(m_OperationState.Config);
+            ResetToIdle();
 
-            // Clear state to completely blank
-            m_OperationState.Phase = OperationPhase.Idle;
-            // Batch remove all marker components using cached queries
-            // todo move this to a utility
-            EntityManager.RemoveComponent<Components.NT_Selected>(m_NodesWithSelectedQuery);
-            EntityManager.RemoveComponent<Components.NT_Selected>(m_EdgesWithSelectedQuery);
-            EntityManager.RemoveComponent<Components.NT_Eligible>(m_NodesWithEligibleQuery);
-            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
-            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_EdgesWithHighlightedQuery);
-            EntityManager
-                .RemoveComponent<Components.NT_SelectedFirst>(m_NodesWithSelectedFirstQuery);
-            EntityManager
-                .RemoveComponent<Components.NT_SelectedLast>(m_NodesWithSelectedLastQuery);
-
-            // Clear internal state
-            m_SelectedNodes.Clear();
-            m_EligibleNodes.Clear();
-            m_CurrentPathNodes.Clear();
-            m_CurrentPathEdges.Clear();
-
-            // Reset
-            StateTransitionNoNodes();
-
-            return inputDeps;
+            return jobHandle;
         }
     }
 }

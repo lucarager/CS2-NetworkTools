@@ -163,6 +163,13 @@ namespace NetworkTools.Systems {
         private OperationState m_OperationState;
 
         /// <summary>
+        /// Tracks whether an update/re-render is needed on the next frame.
+        /// This is set to true when something changes that requires regenerating preview entities.
+        /// Gets reset to false after being processed.
+        /// </summary>
+        private bool m_UpdateNeeded;
+
+        /// <summary>
         /// Selected Prefab, for this tool this is coming from the UI
         /// </summary>
         private PrefabBase m_Prefab;
@@ -228,6 +235,7 @@ namespace NetworkTools.Systems {
         /// </summary>
         public void SetTransformationConfig(SlopeCurveConfig config) {
             m_OperationState.Config = config;
+            m_UpdateNeeded          = true;
             m_Log.Debug($"Transformation config set: Template={config.Template}");
         }
 
@@ -252,11 +260,10 @@ namespace NetworkTools.Systems {
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
 
-            var updateNeeded = false;
-
             // Right click => Remove last point from stack
             if (m_SecondaryApplyAction.WasPressedThisFrame()) {
                 HandleRemoveNode();
+                m_UpdateNeeded = true;
                 return inputDeps;
             }
 
@@ -271,7 +278,7 @@ namespace NetworkTools.Systems {
                     HandlePathUpdate(controlPoint);
                     // Handle hovering if entity changed
                     HandleHover(controlPoint);
-                    updateNeeded = true;
+                    m_UpdateNeeded = true;
                 }
 
                 // Update Cache
@@ -281,7 +288,7 @@ namespace NetworkTools.Systems {
                 // Handle clicking
                 if (m_ApplyAction.WasPressedThisFrame()) {
                     HandleAddNode(controlPoint.m_OriginalEntity);
-                    updateNeeded = true;
+                    m_UpdateNeeded = true;
                 }
             } else {
                 // No entity under cursor
@@ -289,7 +296,7 @@ namespace NetworkTools.Systems {
             }
 
             // Handle temp entities
-            return HandleTempEntities(inputDeps, updateNeeded);
+            return HandleTempEntities(inputDeps);
         }
 
         /// <summary>
@@ -297,11 +304,11 @@ namespace NetworkTools.Systems {
         /// </summary>
         /// <param name="inputDeps"></param>
         /// <returns>inputDeps</returns>
-        private JobHandle HandleTempEntities(JobHandle inputDeps, bool updateNeeded) {
+        private JobHandle HandleTempEntities(JobHandle inputDeps) {
             return m_OperationState.Phase switch
             {
                 // Preview temp entities
-                OperationPhase.Ready => Update(inputDeps, updateNeeded),
+                OperationPhase.Ready => Update(inputDeps),
                 // Apply real entities
                 OperationPhase.Applying => Apply(inputDeps),
                 // Clear otherwise
@@ -597,215 +604,23 @@ namespace NetworkTools.Systems {
                                                RaycastFlags.Cargo   | RaycastFlags.Passenger;
         }
 
-        /// <summary>
-        /// Applies the slope transformation given by the config to the selected continuous road segment.
-        /// </summary>
-        /// <param name="curveConfig">The curve configuration to apply.</param>
-        public void ApplySlopeToSelectedEdges(SlopeCurveConfig curveConfig) {
-            if (m_SelectedNodes.Length < 2) {
-                m_Log.Debug("ApplySlopeToSelectedEdges: Not enough nodes selected.");
-                return;
-            }
+        public void ResetToIdle() {
+            // Clear state to completely blank
+            m_OperationState.Phase = OperationPhase.Idle;
 
-            var buffer = new EntityCommandBuffer(Allocator.Temp);
+            // Batch remove all marker components using cached queries
+            EntityManager.RemoveComponent<Components.NT_Selected>(m_NodesWithSelectedQuery);
+            EntityManager.RemoveComponent<Components.NT_Selected>(m_EdgesWithSelectedQuery);
+            EntityManager.RemoveComponent<Components.NT_Eligible>(m_NodesWithEligibleQuery);
+            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
+            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_EdgesWithHighlightedQuery);
+            EntityManager
+                .RemoveComponent<Components.NT_SelectedFirst>(m_NodesWithSelectedFirstQuery);
+            EntityManager
+                .RemoveComponent<Components.NT_SelectedLast>(m_NodesWithSelectedLastQuery);
 
-            var startHeight = EntityManager.GetComponentData<Node>(m_SelectedNodes[0]).m_Position.y;
-            var endHeight   = EntityManager.GetComponentData<Node>(m_SelectedNodes[^1]).m_Position.y;
-            var deltaHeight = endHeight - startHeight;
-
-            m_Log.Debug($"ApplySlopeToSelectedEdges: Using template {curveConfig.Template}");
-
-            // === Phase 1: Gather edge metadata and calculate total path length ===
-            var edgeCount  = m_CurrentPathEdges.Length;
-            var edgeData   = new NativeArray<EdgeSlopeData>(edgeCount, Allocator.Temp);
-            var totalLength = 0f;
-
-            for (var i = 0; i < edgeCount; i++) {
-                var edgeEntity = m_CurrentPathEdges[i];
-                var edge       = EntityManager.GetComponentData<Edge>(edgeEntity);
-                var data       = new EdgeSlopeData();
-
-                // Determine if edge direction matches path direction
-                var currentNode = m_CurrentPathNodes[i];
-                data.IsForward = edge.m_Start == currentNode;
-
-                if (EntityManager.TryGetComponent<Curve>(edgeEntity, out var curve)) {
-                    data.Length = curve.m_Length;
-
-                    // Calculate control point ratios using shared utility
-                    SlopeCalculator.CalculateControlPointRatios(
-                        curve.m_Bezier,
-                        data.Length,
-                        data.IsForward,
-                        out data.CtrlStartRatio,
-                        out data.CtrlEndRatio);
-                }
-
-                // Store old height at path-end node for intersection updates
-                var endNode = m_CurrentPathNodes[i + 1];
-                data.OldHeight = EntityManager.GetComponentData<Node>(endNode).m_Position.y;
-
-                edgeData[i] = data;
-                totalLength += data.Length;
-            }
-
-            if (totalLength <= 0f) {
-                m_Log.Debug("ApplySlopeToSelectedEdges: Total path length is zero.");
-                edgeData.Dispose();
-                buffer.Dispose();
-                return;
-            }
-
-            // === Phase 2: Calculate and apply heights to path edges ===
-            var cumulativeDistance = 0f;
-
-            for (var i = 0; i < edgeCount; i++) {
-                var edgeEntity = m_CurrentPathEdges[i];
-                var edge       = EntityManager.GetComponentData<Edge>(edgeEntity);
-                var data       = edgeData[i];
-
-                if (!EntityManager.TryGetComponent<Curve>(edgeEntity, out var curve)) {
-                    cumulativeDistance += data.Length;
-                    continue;
-                }
-
-                // Calculate heights using shared utility
-                var heights = SlopeCalculator.CalculateEdgeHeights(
-                    cumulativeDistance,
-                    data.Length,
-                    data.CtrlStartRatio,
-                    data.CtrlEndRatio,
-                    totalLength,
-                    startHeight,
-                    deltaHeight,
-                    curveConfig);
-
-                // Apply heights to bezier using shared utility
-                curve.m_Bezier = SlopeCalculator.ApplyHeightsToBezier(curve.m_Bezier, heights, data.IsForward);
-                buffer.SetComponent(edgeEntity, curve);
-
-                Node_SetUpdated(buffer, edge.m_Start);
-                Node_SetUpdated(buffer, edge.m_End);
-
-                cumulativeDistance += data.Length;
-            }
-
-            // === Phase 3: Update non-path edges at intersection nodes ===
-            var pathEdgeSet = new NativeHashSet<Entity>(edgeCount, Allocator.Temp);
-            foreach (var edge in m_CurrentPathEdges) {
-                pathEdgeSet.Add(edge);
-            }
-
-            // First node uses startHeight as both old and new
-            var firstNodeOldHeight = EntityManager.GetComponentData<Node>(m_CurrentPathNodes[0]).m_Position.y;
-            cumulativeDistance = 0f;
-
-            for (var i = 0; i < m_CurrentPathNodes.Length; i++) {
-                var nodeEntity = m_CurrentPathNodes[i];
-
-                if (!EntityManager.TryGetBuffer<ConnectedEdge>(nodeEntity, true, out var connectedEdges)) {
-                    continue;
-                }
-
-                // Only process intersection nodes (more than 2 connected edges)
-                if (connectedEdges.Length <= 2) {
-                    if (i < edgeCount) cumulativeDistance += edgeData[i].Length;
-                    continue;
-                }
-
-                // Calculate height delta for this node
-                float oldHeight, newHeight;
-                if (i == 0) {
-                    oldHeight = firstNodeOldHeight;
-                    newHeight = startHeight;
-                } else {
-                    oldHeight = edgeData[i - 1].OldHeight;
-                    newHeight = SlopeCalculator.CalculateHeight(cumulativeDistance, totalLength, startHeight, deltaHeight, curveConfig);
-                }
-
-                var heightDelta = newHeight - oldHeight;
-
-                if (math.abs(heightDelta) < 0.001f) {
-                    if (i < edgeCount) cumulativeDistance += edgeData[i].Length;
-                    continue;
-                }
-
-                // Adjust connected edges that are not part of the path
-                for (var j = 0; j < connectedEdges.Length; j++) {
-                    var connectedEdgeEntity = connectedEdges[j].m_Edge;
-
-                    if (pathEdgeSet.Contains(connectedEdgeEntity)) {
-                        continue;
-                    }
-
-                    if (!EntityManager.TryGetComponent<Edge>(connectedEdgeEntity, out var connectedEdge)) {
-                        continue;
-                    }
-
-                    if (!EntityManager.TryGetComponent<Curve>(connectedEdgeEntity, out var curve)) {
-                        continue;
-                    }
-
-                    var bezier = curve.m_Bezier;
-
-                    // Adjust endpoint and adjacent control point to preserve original slope
-                    if (connectedEdge.m_Start == nodeEntity) {
-                        bezier.a.y += heightDelta;
-                        bezier.b.y += heightDelta;
-                    } else if (connectedEdge.m_End == nodeEntity) {
-                        bezier.d.y += heightDelta;
-                        bezier.c.y += heightDelta;
-                    }
-
-                    curve.m_Bezier = bezier;
-                    buffer.SetComponent(connectedEdgeEntity, curve);
-
-                    TryAddUpdate(buffer, connectedEdgeEntity);
-                    TryAddUpdate(buffer, connectedEdge.m_Start);
-                    TryAddUpdate(buffer, connectedEdge.m_End);
-                }
-
-                if (i < edgeCount) cumulativeDistance += edgeData[i].Length;
-            }
-
-            buffer.Playback(EntityManager);
-            buffer.Dispose();
-            edgeData.Dispose();
-            pathEdgeSet.Dispose();
-        }
-
-        private void TryAddUpdate(in EntityCommandBuffer buffer, Entity e) {
-            buffer.AddComponent<Updated>(e);
-            buffer.AddComponent<BatchesUpdated>(e);
-        }
-
-        private void Node_SetUpdated(in EntityCommandBuffer buffer, Entity e) {
-            TryAddUpdate(buffer, e);
-
-            if (!EntityManager.TryGetBuffer<ConnectedEdge>(e, true, out var cBuffer)) {
-                return;
-            }
-
-            for (var i = 0; i < cBuffer.Length; i++) {
-                var seg  = cBuffer[i].m_Edge;
-                var edge = EntityManager.GetComponentData<Edge>(seg);
-                if (!e.Equals(edge.m_Start) && !e.Equals(edge.m_End)) {
-                    continue;
-                }
-
-                TryAddUpdate(buffer, seg);
-                if (!edge.m_Start.Equals(e)) {
-                    TryAddUpdate(buffer, edge.m_Start);
-                } else if (!edge.m_End.Equals(e)) {
-                    TryAddUpdate(buffer, edge.m_End);
-                }
-
-                if (!EntityManager.TryGetComponent<Aggregated>(seg, out var aggregated)) {
-                    continue;
-                }
-
-                TryAddUpdate(buffer, aggregated.m_Aggregate);
-            }
+            // Reset state
+            StateTransitionNoNodes();
         }
 
         /// <summary>
@@ -816,7 +631,9 @@ namespace NetworkTools.Systems {
             m_Log.Debug("StateTransitionNoNodes()");
 
             // Clear caches
-            m_CurrentPathNodes.Clear(); 
+            m_SelectedNodes.Clear();
+            m_EligibleNodes.Clear();
+            m_CurrentPathNodes.Clear();
             m_CurrentPathEdges.Clear();
 
             // Add NT_Eligible to ALL nodes 
