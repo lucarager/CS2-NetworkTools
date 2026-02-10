@@ -13,21 +13,6 @@ using Unity.Mathematics;
 #endregion
 
 /// <summary>
-/// Determines how the slope transformation job outputs its results.
-/// </summary>
-public enum SlopeOutputMode : byte {
-    /// <summary>
-    /// Create CreationDefinition + NetCourse entities for preview.
-    /// </summary>
-    Preview,
-
-    /// <summary>
-    /// Modify existing Curve components and handle intersection adjustments.
-    /// </summary>
-    Apply,
-}
-
-/// <summary>
 /// Per-edge metadata for slope calculations.
 /// Control point ratios are stored in PATH order (not bezier order).
 /// </summary>

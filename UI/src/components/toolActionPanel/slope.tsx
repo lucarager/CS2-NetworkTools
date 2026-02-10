@@ -1,15 +1,32 @@
 import React from "react";
 import styles from "./toolActionPanel.module.scss";
-import { GAME_BINDINGS, GAME_TRIGGERS, SlopeConfigData } from "gameBindings";
+import {
+    GAME_BINDINGS,
+    GAME_TRIGGERS,
+    SlopeConfigData,
+    ShapeConfigData,
+    SlopeTemplate,
+    ShapeTemplate,
+} from "gameBindings";
 import { useValue } from "cs2/api";
-import { Button } from "cs2/ui";
+import { Button, Tooltip } from "cs2/ui";
 import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
 
-const MODES = [
-    { label: "Linear", id: "linear", icon: "coui://nt/Presets/Slope/Linear.svg" },
-    { label: "Eased", id: "easeinout", icon: "coui://nt/Presets/Slope/Eased.svg" },
-    // { label: "Parabolic", id: "parabolic", icon: "coui://nt/Presets/Slope/Parabolic.svg" },
+// Shape modes (XZ plane transformations)
+const SHAPE_MODES: { label: string; id: ShapeTemplate; icon: string }[] = [
+    { label: "Preserve", id: "preserve", icon: "coui://nt/Modes/Shape/Preserve.svg" },
+    { label: "Straighten", id: "straighten", icon: "coui://nt/Modes/Shape/Straight.svg" },
+    { label: "Smooth", id: "smooth", icon: "coui://nt/Modes/Shape/Smooth.svg" },
+    // { label: "Equal Spacing", id: "equalspacing", icon: "coui://nt/Modes/Shape/EqualSpacing.svg" },
+];
+
+// Slope modes (Y axis transformations)
+const SLOPE_MODES: { label: string; id: SlopeTemplate; icon: string }[] = [
+    { label: "Preserve", id: "preserve", icon: "coui://nt/Modes/Slope/Preserve.svg" },
+    { label: "Linear", id: "linear", icon: "coui://nt/Modes/Slope/Linear.svg" },
+    { label: "Eased", id: "easeinout", icon: "coui://nt/Modes/Slope/Eased.svg" },
+    // { label: "Parabolic", id: "parabolic", icon: "coui://nt/Modes/Slope/Parabolic.svg" },
 ];
 
 interface SlopeProps {
@@ -19,14 +36,26 @@ interface SlopeProps {
 export const Slope: React.FC<SlopeProps> = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
     const slopeConfig = useValue(GAME_BINDINGS.SLOPE_CONFIG.binding);
+    const shapeConfig = useValue(GAME_BINDINGS.SHAPE_CONFIG.binding);
 
-    const handleParameterChange = (param: keyof SlopeConfigData, value: string | number) => {
+    const handleSlopeParameterChange = (param: keyof SlopeConfigData, value: string | number) => {
         const newConfig: SlopeConfigData = {
             ...slopeConfig,
             [param]: value,
         };
         GAME_BINDINGS.SLOPE_CONFIG.set(newConfig);
     };
+
+    const handleShapeParameterChange = (param: keyof ShapeConfigData, value: string | number) => {
+        const newConfig: ShapeConfigData = {
+            ...shapeConfig,
+            [param]: value,
+        };
+        GAME_BINDINGS.SHAPE_CONFIG.set(newConfig);
+    };
+
+    // Check if any transformation is configured
+    const hasTransform = shapeConfig.template !== "preserve" || slopeConfig.template !== "preserve";
 
     return (
         <>
@@ -54,101 +83,160 @@ export const Slope: React.FC<SlopeProps> = () => {
                     </div>
                 )}
             </div>
-            {/* Extra Controls */}
+
+            {/* Transform Controls - Show when 2+ nodes selected */}
             {selectedEntitiesBinding.length >= 2 && (
                 <>
+                    {/* Shape Controls (XZ) */}
                     <div className={styles.divider}></div>
                     <div className={styles.col}>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>Mode</span>
+                                <span className={styles.paramLabel}>Shape (XZ)</span>
                                 <div className={styles.buttonRow}>
-                                    {MODES.map((preset) => (
-                                        <Button
+                                    {SHAPE_MODES.map((preset) => (
+                                        <Tooltip
                                             key={preset.id}
-                                            variant="primary"
-                                            className={c(
-                                                styles.iconButton,
-                                                slopeConfig.template === preset.id
-                                                    ? styles.iconButton__active
-                                                    : null,
-                                            )}
-                                            tooltipLabel={preset.label}
-                                            onSelect={() =>
-                                                handleParameterChange("template", preset.id)
-                                            }>
-                                            <img src={preset.icon} className={styles.icon} />
-                                        </Button>
+                                            tooltip={preset.label}
+                                            delayTime={0}>
+                                            <Button
+                                                key={preset.id}
+                                                variant="primary"
+                                                className={c(
+                                                    styles.iconButton,
+                                                    shapeConfig.template === preset.id
+                                                        ? styles.iconButton__active
+                                                        : null,
+                                                )}
+                                                onSelect={() =>
+                                                    handleShapeParameterChange(
+                                                        "template",
+                                                        preset.id,
+                                                    )
+                                                }>
+                                                <img src={preset.icon} className={styles.icon} />
+                                            </Button>
+                                        </Tooltip>
                                     ))}
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    {slopeConfig.template && (
-                        <>
-                            {/* EaseInOut Parameters */}
-                            {slopeConfig.template === "easeinout" && (
-                                <>
-                                    <div className={styles.sliderField}>
-                                        <VC.FloatSliderField
-                                            value={slopeConfig.easeInLength}
-                                            label={"Start easing strength"}
-                                            min={0}
-                                            max={0.5}
-                                            fractionDigits={3}
-                                            onChange={(e: number) => {
-                                                handleParameterChange("easeInLength", e);
-                                            }}
-                                        />
-                                    </div>
-                                    <div className={styles.sliderField}>
-                                        <VC.FloatSliderField
-                                            value={slopeConfig.easeOutLength}
-                                            label={"End easing strength"}
-                                            min={0}
-                                            max={0.5}
-                                            fractionDigits={3}
-                                            onChange={(e: number) => {
-                                                handleParameterChange("easeOutLength", e);
-                                            }}
-                                        />
-                                    </div>
-                                </>
-                            )}
 
-                            {/* Parabolic Parameters */}
-                            {slopeConfig.template === "parabolic" && (
-                                <>
-                                    <div className={styles.controlRow}>
-                                        <VC.FloatSliderField
-                                            value={slopeConfig.archHeight}
-                                            label={"Arch Height"}
-                                            min={-1}
-                                            max={1}
-                                            fractionDigits={3}
-                                            onChange={(e: number) => {
-                                                handleParameterChange("archHeight", e);
-                                            }}
-                                        />
-                                    </div>
-                                    <div className={styles.controlRow}>
-                                        <VC.FloatSliderField
-                                            value={slopeConfig.archPosition}
-                                            label={"Arch Position"}
-                                            min={0.1}
-                                            max={0.9}
-                                            fractionDigits={3}
-                                            onChange={(e: number) => {
-                                                handleParameterChange("archPosition", e);
-                                            }}
-                                        />
-                                    </div>
-                                </>
-                            )}
-                        </>
-                    )}
+                        {/* Smooth Parameters */}
+                        {shapeConfig.template === "smooth" && (
+                            <div className={styles.sliderField}>
+                                <VC.FloatSliderField
+                                    value={shapeConfig.smoothingFactor}
+                                    label={"Smoothing Factor"}
+                                    min={0}
+                                    max={1}
+                                    fractionDigits={2}
+                                    onChange={(e: number) => {
+                                        handleShapeParameterChange("smoothingFactor", e);
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Slope Controls (Y) */}
+                    <div className={styles.divider}></div>
+                    <div className={styles.col}>
+                        <div className={styles.controlRow}>
+                            <div className={styles.controlRowInner}>
+                                <span className={styles.paramLabel}>Slope (Y)</span>
+                                <div className={styles.buttonRow}>
+                                    {SLOPE_MODES.map((preset) => (
+                                        <Tooltip
+                                            key={preset.id}
+                                            tooltip={preset.label}
+                                            delayTime={0}>
+                                            <Button
+                                                key={preset.id}
+                                                variant="primary"
+                                                className={c(
+                                                    styles.iconButton,
+                                                    slopeConfig.template === preset.id
+                                                        ? styles.iconButton__active
+                                                        : null,
+                                                )}
+                                                onSelect={() =>
+                                                    handleSlopeParameterChange(
+                                                        "template",
+                                                        preset.id,
+                                                    )
+                                                }>
+                                                <img src={preset.icon} className={styles.icon} />
+                                            </Button>
+                                        </Tooltip>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* EaseInOut Parameters */}
+                        {slopeConfig.template === "easeinout" && (
+                            <>
+                                <div className={styles.sliderField}>
+                                    <VC.FloatSliderField
+                                        value={slopeConfig.easeInLength}
+                                        label={"Start easing strength"}
+                                        min={0}
+                                        max={0.5}
+                                        fractionDigits={3}
+                                        onChange={(e: number) => {
+                                            handleSlopeParameterChange("easeInLength", e);
+                                        }}
+                                    />
+                                </div>
+                                <div className={styles.sliderField}>
+                                    <VC.FloatSliderField
+                                        value={slopeConfig.easeOutLength}
+                                        label={"End easing strength"}
+                                        min={0}
+                                        max={0.5}
+                                        fractionDigits={3}
+                                        onChange={(e: number) => {
+                                            handleSlopeParameterChange("easeOutLength", e);
+                                        }}
+                                    />
+                                </div>
+                            </>
+                        )}
+
+                        {/* Parabolic Parameters */}
+                        {slopeConfig.template === "parabolic" && (
+                            <>
+                                <div className={styles.controlRow}>
+                                    <VC.FloatSliderField
+                                        value={slopeConfig.archHeight}
+                                        label={"Arch Height"}
+                                        min={-1}
+                                        max={1}
+                                        fractionDigits={3}
+                                        onChange={(e: number) => {
+                                            handleSlopeParameterChange("archHeight", e);
+                                        }}
+                                    />
+                                </div>
+                                <div className={styles.controlRow}>
+                                    <VC.FloatSliderField
+                                        value={slopeConfig.archPosition}
+                                        label={"Arch Position"}
+                                        min={0.1}
+                                        max={0.9}
+                                        fractionDigits={3}
+                                        onChange={(e: number) => {
+                                            handleSlopeParameterChange("archPosition", e);
+                                        }}
+                                    />
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </>
             )}
+
             {/* Primary Controls */}
             <div className={styles.divider}></div>
             <div className={styles.row}>
@@ -160,9 +248,9 @@ export const Slope: React.FC<SlopeProps> = () => {
                         <Button
                             variant="primary"
                             className={styles.applyButton}
-                            disabled={selectedEntitiesBinding.length < 2 || !slopeConfig.template}
+                            disabled={selectedEntitiesBinding.length < 2 || !hasTransform}
                             onSelect={() => GAME_TRIGGERS.APPLY_SLOPE(slopeConfig.template)}>
-                            Apply Slope
+                            Apply Transform
                         </Button>
                     )}
                 </div>

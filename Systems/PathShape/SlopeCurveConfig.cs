@@ -11,19 +11,24 @@ namespace NetworkTools.Systems {
     /// </summary>
     public enum SlopeTemplate {
         /// <summary>
+        /// Keep existing Y positions (no-op).
+        /// </summary>
+        Preserve = 0,
+
+        /// <summary>
         /// Linear interpolation - constant slope throughout the path.
         /// </summary>
-        Linear = 0,
+        Linear = 1,
 
         /// <summary>
         /// Ease-in-out curve - smooth transitions at start and end with steeper middle section.
         /// </summary>
-        EaseInOut = 1,
+        EaseInOut = 2,
 
         /// <summary>
         /// Parabolic curve - creates an arch (hill) or dip (valley) along the path.
         /// </summary>
-        Parabolic = 2,
+        Parabolic = 3,
     }
 
     /// <summary>
@@ -63,10 +68,17 @@ namespace NetworkTools.Systems {
         public float ArchPosition;
 
         /// <summary>
+        /// Creates a preserve configuration (keeps existing Y positions).
+        /// </summary>
+        public static SlopeCurveConfig Preserve() => new SlopeCurveConfig {
+            Template = SlopeTemplate.Preserve,
+        };
+
+        /// <summary>
         /// Creates a linear slope configuration (default).
         /// </summary>
         public static SlopeCurveConfig Linear() => new SlopeCurveConfig {
-            Template = SlopeTemplate.Linear
+            Template = SlopeTemplate.Linear,
         };
 
         /// <summary>
@@ -98,24 +110,48 @@ namespace NetworkTools.Systems {
         /// <returns>Transformed value based on curve template</returns>
         public float ApplyCurve(float t) {
             return Template switch {
+                SlopeTemplate.Preserve => t,
                 SlopeTemplate.Linear => t,
                 SlopeTemplate.EaseInOut => ApplyEaseInOutCurve(t, EaseInLength, EaseOutLength),
                 SlopeTemplate.Parabolic => ApplyParabolicCurve(t, ArchHeight, ArchPosition),
-                _ => t
+                _ => t,
             };
         }
 
         /// <summary>
         /// Applies an ease-in-out curve with configurable transition zones.
+        /// Creates smooth transitions at start and end of the slope.
+        /// Uses a sine-based easing for smooth derivative matching.
         /// </summary>
         private static float ApplyEaseInOutCurve(float t, float easeInLength, float easeOutLength) {
+            // Handle edge cases
+            if (easeInLength < 0.001f && easeOutLength < 0.001f) {
+                return t; // Pure linear
+            }
+
+            // Clamp to valid range
+            t = math.clamp(t, 0f, 1f);
+
+            // Calculate the linear region boundaries
             float linearStart = easeInLength;
             float linearEnd = 1f - easeOutLength;
 
+            // Handle overlapping ease regions (sum > 1)
+            if (linearStart >= linearEnd) {
+                // Use sine easing for the entire curve (true S-curve)
+                // sin goes from 0 to 1 over [0, PI/2], with derivative 0 at ends when mirrored
+                float sineT = 0.5f * (1f - math.cos(t * math.PI));
+                return sineT;
+            }
+
             // Ease-In Region (0 to easeInLength)
-            if (t < linearStart && easeInLength > 0.001f) {
+            // Use sine ease-in: starts with derivative 0, ends matching linear slope
+            // sin(x * PI/2) for x in [0,1] gives 0 to 1 with derivative PI/2 at x=1
+            // We scale to match: output goes from 0 to easeInLength
+            if (t < linearStart) {
                 float localT = t / easeInLength;
-                float eased = localT * localT * localT; // Cubic ease-in for stronger effect
+                // Sine ease-in: derivative at end = 1 (matches linear)
+                float eased = 1f - math.cos(localT * math.PI * 0.5f);
                 return eased * easeInLength;
             }
 
@@ -125,13 +161,11 @@ namespace NetworkTools.Systems {
             }
 
             // Ease-Out Region (1-easeOutLength to 1)
-            if (easeOutLength > 0.001f) {
-                float localT = (t - linearEnd) / easeOutLength;
-                float eased = 1f - math.pow(1f - localT, 3f); // Cubic ease-out for stronger effect
-                return linearEnd + (eased * easeOutLength);
-            }
-
-            return t;
+            // Use sine ease-out: starts matching linear slope, ends with derivative 0
+            float outLocalT = (t - linearEnd) / easeOutLength;
+            // Sine ease-out: derivative at start = 1 (matches linear)
+            float outEased = math.sin(outLocalT * math.PI * 0.5f);
+            return linearEnd + outEased * easeOutLength;
         }
 
         /// <summary>

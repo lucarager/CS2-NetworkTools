@@ -17,8 +17,8 @@ namespace NetworkTools.Systems {
     #endregion
 
     public partial class NT_SlopeToolSystem {
-        private JobHandle ScheduleSlopeTransformJob(JobHandle inputDeps, SlopeOutputMode outputMode) {
-            var jobHandle = new SlopeTransformJob {
+        private JobHandle SchedulePathTransformJob(JobHandle inputDeps, TransformOutputMode outputMode) {
+            var jobHandle = new PathTransformJob {
                 SelectedNodes          = m_SelectedNodes,
                 CurrentPathEdges       = m_CurrentPathEdges,
                 CurrentPathNodes       = m_CurrentPathNodes,
@@ -29,7 +29,7 @@ namespace NetworkTools.Systems {
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
                 ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 AggregatedLookup       = SystemAPI.GetComponentLookup<Aggregated>(true),
-                CurveConfig            = m_OperationState.Config,
+                Config                 = m_OperationState.Config,
                 OutputMode             = outputMode,
                 ECB                    = m_Barrier.CreateCommandBuffer(),
             }.Schedule(inputDeps);
@@ -48,7 +48,7 @@ namespace NetworkTools.Systems {
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
-            inputDeps = ScheduleSlopeTransformJob(inputDeps, SlopeOutputMode.Preview);
+            inputDeps = SchedulePathTransformJob(inputDeps, TransformOutputMode.Preview);
             
             // Reset the flag after processing
             m_UpdateNeeded = false;
@@ -65,7 +65,7 @@ namespace NetworkTools.Systems {
         private JobHandle Apply(JobHandle inputDeps) {
             applyMode = ApplyMode.Clear;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
-            var jobHandle = ScheduleSlopeTransformJob(inputDeps, SlopeOutputMode.Apply);
+            var jobHandle = SchedulePathTransformJob(inputDeps, TransformOutputMode.Apply);
 
             ResetToIdle();
 

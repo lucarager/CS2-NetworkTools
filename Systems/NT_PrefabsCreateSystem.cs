@@ -96,11 +96,11 @@ namespace NetworkTools.Systems {
                 prefabBaseDict[key] = prefabBase;
             }
 
-            CreateToolPrefab("Add Node",         "add.svg",      "", new Components.NT_AddNode(), true);
+            CreateToolPrefab("Add Node",         "add.svg",      "", new Components.NT_AddNode(),    true);
             CreateToolPrefab("Remove Node",      "remove.svg",   "", new Components.NT_RemoveNode(), true);
             CreateToolPrefab("Create Supernode", "super.svg",    "", new Components.NT_Select(),     false);
-            CreateToolPrefab("Slope Tools",      "slope.svg",    "", new Components.NT_Slope(),      true);
-            CreateToolPrefab("Curve Tools",      "curve.svg",    "", new Components.NT_Select(),     false);
+            CreateToolPrefab("Path Shape Tools", "slope.svg",    "", new Components.NT_Slope(),      true);
+            //CreateToolPrefab("Curve Tools",      "curve.svg",    "", new Components.NT_Select(),     false);
             CreateToolPrefab("Connect",          "connect.svg",  "", new Components.NT_Select(),     false);
             CreateToolPrefab("Adv. Parallel",    "parallel.svg", "", new Components.NT_Select(),     false);
 

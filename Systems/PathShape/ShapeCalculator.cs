@@ -1,0 +1,465 @@
+// <copyright file="ShapeCalculator.cs" company="Luca Rager">
+// Copyright (c) Luca Rager. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// </copyright>
+
+namespace NetworkTools.Systems {
+    #region Using Statements
+
+    using Colossal.Mathematics;
+    using Unity.Entities;
+    using Unity.Mathematics;
+
+    #endregion
+
+    /// <summary>
+    /// Defines the type of shape curve to apply to road segments (XZ plane).
+    /// </summary>
+    public enum ShapeTemplate {
+        /// <summary>
+        /// Keep existing XZ positions (no-op).
+        /// </summary>
+        Preserve = 0,
+
+        /// <summary>
+        /// Align all nodes along a straight line between start/end.
+        /// </summary>
+        Straighten = 1,
+
+        /// <summary>
+        /// Fit nodes to a smooth bezier curve.
+        /// </summary>
+        Smooth = 2,
+
+        /// <summary>
+        /// Redistribute nodes evenly along the path.
+        /// </summary>
+        EqualSpacing = 3,
+    }
+
+    /// <summary>
+    /// Per-edge metadata for shape calculations.
+    /// Mirrors EdgeSlopeData but tracks XZ positions.
+    /// </summary>
+    public struct EdgeShapeData {
+        /// <summary>
+        /// Length of the edge.
+        /// </summary>
+        public float Length;
+
+        /// <summary>
+        /// Ratio of control point closer to path-start.
+        /// </summary>
+        public float CtrlStartRatio;
+
+        /// <summary>
+        /// Ratio of control point closer to path-end.
+        /// </summary>
+        public float CtrlEndRatio;
+
+        /// <summary>
+        /// True if edge direction matches path direction.
+        /// </summary>
+        public bool IsForward;
+
+        /// <summary>
+        /// Original XZ position at path-end (for intersection updates).
+        /// </summary>
+        public float2 OldPositionXZ;
+    }
+
+    /// <summary>
+    /// Pre-calculated XZ positions for an edge's control points in path order.
+    /// Mirrors EdgeHeights structure.
+    /// </summary>
+    public struct EdgePositions {
+        /// <summary>
+        /// XZ position at path-start of segment.
+        /// </summary>
+        public float2 Start;
+
+        /// <summary>
+        /// XZ position at control point closer to path-start.
+        /// </summary>
+        public float2 CtrlStart;
+
+        /// <summary>
+        /// XZ position at control point closer to path-end.
+        /// </summary>
+        public float2 CtrlEnd;
+
+        /// <summary>
+        /// XZ position at path-end of segment.
+        /// </summary>
+        public float2 End;
+    }
+
+    /// <summary>
+    /// Computed shape data for a single edge, ready to be output.
+    /// Mirrors ComputedEdgeSlope structure.
+    /// </summary>
+    public struct ComputedEdgeShape {
+        /// <summary>
+        /// Index in the path.
+        /// </summary>
+        public int PathIndex;
+
+        /// <summary>
+        /// The edge entity.
+        /// </summary>
+        public Entity EdgeEntity;
+
+        /// <summary>
+        /// The start node entity.
+        /// </summary>
+        public Entity StartNode;
+
+        /// <summary>
+        /// The end node entity.
+        /// </summary>
+        public Entity EndNode;
+
+        /// <summary>
+        /// The adjusted bezier curve.
+        /// </summary>
+        public Bezier4x3 AdjustedBezier;
+
+        /// <summary>
+        /// Cumulative distance along the path.
+        /// </summary>
+        public float CumulativeDistance;
+
+        /// <summary>
+        /// Edge shape metadata.
+        /// </summary>
+        public EdgeShapeData Metadata;
+    }
+
+    /// <summary>
+    /// Configuration for shape curve application.
+    /// </summary>
+    public struct ShapeCurveConfig {
+        /// <summary>
+        /// The template type to use for shape calculation.
+        /// </summary>
+        public ShapeTemplate Template;
+
+        /// <summary>
+        /// Smoothing factor (0-1), how much to smooth.
+        /// Used with Smooth template.
+        /// </summary>
+        public float SmoothingFactor;
+
+        /// <summary>
+        /// Creates a preserve configuration (keeps existing XZ positions).
+        /// </summary>
+        public static ShapeCurveConfig Preserve() => new ShapeCurveConfig {
+            Template = ShapeTemplate.Preserve,
+        };
+
+        /// <summary>
+        /// Creates a straighten configuration.
+        /// </summary>
+        public static ShapeCurveConfig Straighten() => new ShapeCurveConfig {
+            Template = ShapeTemplate.Straighten,
+        };
+
+        /// <summary>
+        /// Creates a smooth configuration with the specified smoothing factor.
+        /// </summary>
+        /// <param name="factor">Smoothing factor (0 to 1).</param>
+        public static ShapeCurveConfig Smooth(float factor = 0.5f) => new ShapeCurveConfig {
+            Template = ShapeTemplate.Smooth,
+            SmoothingFactor = math.clamp(factor, 0f, 1f),
+        };
+
+        /// <summary>
+        /// Creates an equal spacing configuration.
+        /// </summary>
+        public static ShapeCurveConfig EqualSpacing() => new ShapeCurveConfig {
+            Template = ShapeTemplate.EqualSpacing,
+        };
+    }
+
+    /// <summary>
+    /// Burst-compatible utility for shape (XZ) calculations.
+    /// Mirrors SlopeCalculator structure.
+    /// </summary>
+    public static class ShapeCalculator {
+        /// <summary>
+        /// Calculates XZ position at a given distance along a straight line.
+        /// </summary>
+        /// <param name="distance">Distance along the path.</param>
+        /// <param name="totalLength">Total length of the path.</param>
+        /// <param name="startXZ">XZ position at path start.</param>
+        /// <param name="endXZ">XZ position at path end.</param>
+        /// <returns>Calculated XZ position at the given distance.</returns>
+        public static float2 CalculatePositionLinear(
+            float  distance,
+            float  totalLength,
+            float2 startXZ,
+            float2 endXZ) {
+            var ratio = math.clamp(distance / totalLength, 0f, 1f);
+            return math.lerp(startXZ, endXZ, ratio);
+        }
+
+        /// <summary>
+        /// Calculates the control point ratios for a bezier curve in path order (XZ plane).
+        /// </summary>
+        /// <param name="bezier">The bezier curve.</param>
+        /// <param name="length">The length of the curve.</param>
+        /// <param name="isForward">True if edge direction matches path direction.</param>
+        /// <param name="ctrlStartRatio">Output: ratio of control point closer to path-start.</param>
+        /// <param name="ctrlEndRatio">Output: ratio of control point closer to path-end.</param>
+        public static void CalculateControlPointRatios(
+            in Bezier4x3 bezier,
+            float        length,
+            bool         isForward,
+            out float    ctrlStartRatio,
+            out float    ctrlEndRatio) {
+            // Calculate bezier control point ratios based on horizontal distance from 'a'
+            var horizontalA = new float2(bezier.a.x, bezier.a.z);
+            var horizontalB = new float2(bezier.b.x, bezier.b.z);
+            var horizontalC = new float2(bezier.c.x, bezier.c.z);
+
+            float bRatio, cRatio;
+            if (length > 0.01f) {
+                bRatio = math.clamp(math.distance(horizontalA, horizontalB) / length, 0f, 1f);
+                cRatio = math.clamp(math.distance(horizontalA, horizontalC) / length, 0f, 1f);
+            } else {
+                bRatio = 1f / 3f;
+                cRatio = 2f / 3f;
+            }
+
+            // Convert bezier ratios to path-ordered ratios
+            // Forward: B is closer to path-start, C is closer to path-end
+            // Reversed: C is closer to path-start, B is closer to path-end
+            if (isForward) {
+                ctrlStartRatio = bRatio;
+                ctrlEndRatio   = cRatio;
+            } else {
+                ctrlStartRatio = 1f - cRatio;
+                ctrlEndRatio   = 1f - bRatio;
+            }
+        }
+
+        /// <summary>
+        /// Calculates XZ positions for all four bezier control points (straighten mode).
+        /// </summary>
+        /// <param name="cumulativeDistance">Distance along path at the start of this edge.</param>
+        /// <param name="edgeLength">Length of this edge.</param>
+        /// <param name="ctrlStartRatio">Ratio of control point closer to path-start.</param>
+        /// <param name="ctrlEndRatio">Ratio of control point closer to path-end.</param>
+        /// <param name="totalLength">Total length of the entire path.</param>
+        /// <param name="pathStartXZ">XZ position at path start.</param>
+        /// <param name="pathEndXZ">XZ position at path end.</param>
+        /// <returns>XZ positions for all four control points in path order.</returns>
+        public static EdgePositions CalculateStraightenedPositions(
+            float  cumulativeDistance,
+            float  edgeLength,
+            float  ctrlStartRatio,
+            float  ctrlEndRatio,
+            float  totalLength,
+            float2 pathStartXZ,
+            float2 pathEndXZ) {
+            var distStart     = cumulativeDistance;
+            var distCtrlStart = cumulativeDistance + edgeLength * ctrlStartRatio;
+            var distCtrlEnd   = cumulativeDistance + edgeLength * ctrlEndRatio;
+            var distEnd       = cumulativeDistance + edgeLength;
+
+            return new EdgePositions {
+                Start     = CalculatePositionLinear(distStart, totalLength, pathStartXZ, pathEndXZ),
+                CtrlStart = CalculatePositionLinear(distCtrlStart, totalLength, pathStartXZ, pathEndXZ),
+                CtrlEnd   = CalculatePositionLinear(distCtrlEnd, totalLength, pathStartXZ, pathEndXZ),
+                End       = CalculatePositionLinear(distEnd, totalLength, pathStartXZ, pathEndXZ),
+            };
+        }
+
+        /// <summary>
+        /// Applies calculated XZ positions to a bezier curve, preserving Y values.
+        /// </summary>
+        /// <param name="bezier">The bezier curve to modify.</param>
+        /// <param name="positions">The calculated XZ positions in path order.</param>
+        /// <param name="isForward">True if edge direction matches path direction.</param>
+        /// <returns>The modified bezier curve.</returns>
+        public static Bezier4x3 ApplyPositionsToBezier(in Bezier4x3 bezier, in EdgePositions positions, bool isForward) {
+            var result = bezier;
+
+            if (isForward) {
+                result.a.x = positions.Start.x;     result.a.z = positions.Start.y;
+                result.b.x = positions.CtrlStart.x; result.b.z = positions.CtrlStart.y;
+                result.c.x = positions.CtrlEnd.x;   result.c.z = positions.CtrlEnd.y;
+                result.d.x = positions.End.x;       result.d.z = positions.End.y;
+            } else {
+                result.a.x = positions.End.x;       result.a.z = positions.End.y;
+                result.b.x = positions.CtrlEnd.x;   result.b.z = positions.CtrlEnd.y;
+                result.c.x = positions.CtrlStart.x; result.c.z = positions.CtrlStart.y;
+                result.d.x = positions.Start.x;     result.d.z = positions.Start.y;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Evaluates a cubic bezier curve at parameter t (0 to 1).
+        /// </summary>
+        /// <param name="p0">Start point.</param>
+        /// <param name="p1">First control point.</param>
+        /// <param name="p2">Second control point.</param>
+        /// <param name="p3">End point.</param>
+        /// <param name="t">Parameter (0 to 1).</param>
+        /// <returns>Position on the bezier curve at t.</returns>
+        public static float2 EvaluateBezier(float2 p0, float2 p1, float2 p2, float2 p3, float t) {
+            var oneMinusT = 1f - t;
+            var oneMinusT2 = oneMinusT * oneMinusT;
+            var oneMinusT3 = oneMinusT2 * oneMinusT;
+            var t2 = t * t;
+            var t3 = t2 * t;
+
+            return oneMinusT3 * p0 +
+                   3f * oneMinusT2 * t * p1 +
+                   3f * oneMinusT * t2 * p2 +
+                   t3 * p3;
+        }
+
+        /// <summary>
+        /// Evaluates the tangent (derivative) of a cubic bezier curve at parameter t.
+        /// </summary>
+        /// <param name="p0">Start point.</param>
+        /// <param name="p1">First control point.</param>
+        /// <param name="p2">Second control point.</param>
+        /// <param name="p3">End point.</param>
+        /// <param name="t">Parameter (0 to 1).</param>
+        /// <returns>Tangent vector at t.</returns>
+        public static float2 EvaluateBezierTangent(float2 p0, float2 p1, float2 p2, float2 p3, float t) {
+            var oneMinusT = 1f - t;
+            var oneMinusT2 = oneMinusT * oneMinusT;
+            var t2 = t * t;
+
+            return 3f * oneMinusT2 * (p1 - p0) +
+                   6f * oneMinusT * t * (p2 - p1) +
+                   3f * t2 * (p3 - p2);
+        }
+
+        /// <summary>
+        /// Calculates XZ positions for all four bezier control points (smooth mode).
+        /// Creates a master bezier from path start to end, then samples it for each edge.
+        /// </summary>
+        /// <param name="cumulativeDistance">Distance along path at the start of this edge.</param>
+        /// <param name="edgeLength">Length of this edge.</param>
+        /// <param name="ctrlStartRatio">Ratio of control point closer to path-start.</param>
+        /// <param name="ctrlEndRatio">Ratio of control point closer to path-end.</param>
+        /// <param name="totalLength">Total length of the entire path.</param>
+        /// <param name="pathStartXZ">XZ position at path start.</param>
+        /// <param name="pathEndXZ">XZ position at path end.</param>
+        /// <param name="masterCtrl1">First control point of master bezier.</param>
+        /// <param name="masterCtrl2">Second control point of master bezier.</param>
+        /// <param name="smoothingFactor">How much to smooth (0 = original, 1 = full smooth).</param>
+        /// <param name="originalBezier">Original bezier for blending.</param>
+        /// <param name="isForward">True if edge direction matches path direction.</param>
+        /// <returns>XZ positions for all four control points in path order.</returns>
+        public static EdgePositions CalculateSmoothedPositions(
+            float     cumulativeDistance,
+            float     edgeLength,
+            float     ctrlStartRatio,
+            float     ctrlEndRatio,
+            float     totalLength,
+            float2    pathStartXZ,
+            float2    pathEndXZ,
+            float2    masterCtrl1,
+            float2    masterCtrl2,
+            float     smoothingFactor,
+            in Bezier4x3 originalBezier,
+            bool      isForward) {
+            // Calculate t parameters for each point on this edge
+            var tStart     = math.clamp(cumulativeDistance / totalLength, 0f, 1f);
+            var tCtrlStart = math.clamp((cumulativeDistance + edgeLength * ctrlStartRatio) / totalLength, 0f, 1f);
+            var tCtrlEnd   = math.clamp((cumulativeDistance + edgeLength * ctrlEndRatio) / totalLength, 0f, 1f);
+            var tEnd       = math.clamp((cumulativeDistance + edgeLength) / totalLength, 0f, 1f);
+
+            // Sample positions on the master smooth bezier
+            var smoothStart     = EvaluateBezier(pathStartXZ, masterCtrl1, masterCtrl2, pathEndXZ, tStart);
+            var smoothCtrlStart = EvaluateBezier(pathStartXZ, masterCtrl1, masterCtrl2, pathEndXZ, tCtrlStart);
+            var smoothCtrlEnd   = EvaluateBezier(pathStartXZ, masterCtrl1, masterCtrl2, pathEndXZ, tCtrlEnd);
+            var smoothEnd       = EvaluateBezier(pathStartXZ, masterCtrl1, masterCtrl2, pathEndXZ, tEnd);
+
+            // Get original positions
+            float2 origStart, origCtrlStart, origCtrlEnd, origEnd;
+            if (isForward) {
+                origStart     = new float2(originalBezier.a.x, originalBezier.a.z);
+                origCtrlStart = new float2(originalBezier.b.x, originalBezier.b.z);
+                origCtrlEnd   = new float2(originalBezier.c.x, originalBezier.c.z);
+                origEnd       = new float2(originalBezier.d.x, originalBezier.d.z);
+            } else {
+                origStart     = new float2(originalBezier.d.x, originalBezier.d.z);
+                origCtrlStart = new float2(originalBezier.c.x, originalBezier.c.z);
+                origCtrlEnd   = new float2(originalBezier.b.x, originalBezier.b.z);
+                origEnd       = new float2(originalBezier.a.x, originalBezier.a.z);
+            }
+
+            // Blend between original and smooth positions based on smoothingFactor
+            return new EdgePositions {
+                Start     = math.lerp(origStart, smoothStart, smoothingFactor),
+                CtrlStart = math.lerp(origCtrlStart, smoothCtrlStart, smoothingFactor),
+                CtrlEnd   = math.lerp(origCtrlEnd, smoothCtrlEnd, smoothingFactor),
+                End       = math.lerp(origEnd, smoothEnd, smoothingFactor),
+            };
+        }
+
+        /// <summary>
+        /// Calculates the control points for a master bezier curve that smoothly connects
+        /// the path start to path end. Uses tangent information from edge endpoints.
+        /// </summary>
+        /// <param name="pathStartXZ">XZ position at path start.</param>
+        /// <param name="pathEndXZ">XZ position at path end.</param>
+        /// <param name="startTangentXZ">Tangent direction at path start (normalized).</param>
+        /// <param name="endTangentXZ">Tangent direction at path end (normalized, pointing into end).</param>
+        /// <param name="totalLength">Total length of the path.</param>
+        /// <param name="ctrl1">Output: First control point.</param>
+        /// <param name="ctrl2">Output: Second control point.</param>
+        public static void CalculateMasterBezierControls(
+            float2    pathStartXZ,
+            float2    pathEndXZ,
+            float2    startTangentXZ,
+            float2    endTangentXZ,
+            float     totalLength,
+            out float2 ctrl1,
+            out float2 ctrl2) {
+            // Use 1/3 of total length as control point distance for a smooth curve
+            var controlDistance = totalLength / 3f;
+
+            // First control point: offset from start in the direction of start tangent
+            ctrl1 = pathStartXZ + math.normalizesafe(startTangentXZ) * controlDistance;
+
+            // Second control point: offset from end in the opposite direction of end tangent
+            ctrl2 = pathEndXZ - math.normalizesafe(endTangentXZ) * controlDistance;
+        }
+
+        /// <summary>
+        /// Extracts the XZ tangent from a bezier curve at the start or end.
+        /// </summary>
+        /// <param name="bezier">The bezier curve.</param>
+        /// <param name="atStart">True to get start tangent, false for end tangent.</param>
+        /// <param name="isForward">True if edge direction matches path direction.</param>
+        /// <returns>The XZ tangent vector (not normalized).</returns>
+        public static float2 GetBezierTangentXZ(in Bezier4x3 bezier, bool atStart, bool isForward) {
+            float2 tangent;
+            if (atStart) {
+                // Tangent at start is direction from a to b
+                if (isForward) {
+                    tangent = new float2(bezier.b.x - bezier.a.x, bezier.b.z - bezier.a.z);
+                } else {
+                    tangent = new float2(bezier.c.x - bezier.d.x, bezier.c.z - bezier.d.z);
+                }
+            } else {
+                // Tangent at end is direction from c to d
+                if (isForward) {
+                    tangent = new float2(bezier.d.x - bezier.c.x, bezier.d.z - bezier.c.z);
+                } else {
+                    tangent = new float2(bezier.a.x - bezier.b.x, bezier.a.z - bezier.b.z);
+                }
+            }
+            return tangent;
+        }
+    }
+}

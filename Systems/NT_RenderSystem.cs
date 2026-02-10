@@ -14,6 +14,7 @@ namespace NetworkTools.Systems {
     using Game.Prefabs;
     using Game.Rendering;
     using Game.Tools;
+    using NetworkTools.Components;
     using Unity.Burst;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
@@ -129,11 +130,11 @@ namespace NetworkTools.Systems {
         [BurstCompile]
         protected struct DrawNodesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer          m_Buffer;
-            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_Highlighted> m_HighlightedComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_Selected>    m_SelectedComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_Eligible>    m_EligibleComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_SelectedFirst> m_SelectedFirstComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NetworkTools.Components.NT_SelectedLast>  m_SelectedLastComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_Selected>    m_SelectedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_Eligible>    m_EligibleComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_SelectedFirst> m_SelectedFirstComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_SelectedLast>  m_SelectedLastComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Node> m_NodeComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NodeGeometry> m_NodeGeometryComponentTypeHandle;
             [ReadOnly] public required EntityTypeHandle m_EntityTypeHandle;

@@ -7,7 +7,7 @@ import { Slope } from "./slope";
 
 // Registry of tool components mapped by tool ID
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
-    "Slope Tools": Slope,
+    "Path Shape Tools": Slope,
 };
 
 export const ToolActionPanel = () => {

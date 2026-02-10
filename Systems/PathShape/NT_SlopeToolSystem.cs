@@ -37,8 +37,8 @@ namespace NetworkTools.Systems {
     /// Tracks the state of the current transformation operation.
     /// </summary>
     public struct OperationState {
-        public  OperationPhase   Phase;
-        public  SlopeCurveConfig Config;
+        public  OperationPhase  Phase;
+        public  TransformConfig Config;
 
         /// <summary>
         /// Whether this operation can show a preview (has sufficient selection).
@@ -57,7 +57,7 @@ namespace NetworkTools.Systems {
             return new OperationState
             {
                 Phase  = OperationPhase.Idle,
-                Config = SlopeCurveConfig.Linear(),
+                Config = TransformConfig.Preserve(),
             };
         }
     }
@@ -231,12 +231,26 @@ namespace NetworkTools.Systems {
         public Entity[] GetSelectedNodes() { return m_SelectedNodes.ToArray(Allocator.Temp).ToArray(); }
 
         /// <summary>
-        /// Configures the transformation curve from the UI.
+        /// Configures the transformation from the UI.
         /// </summary>
-        public void SetTransformationConfig(SlopeCurveConfig config) {
+        public void SetTransformationConfig(TransformConfig config) {
             m_OperationState.Config = config;
             m_UpdateNeeded          = true;
-            m_Log.Debug($"Transformation config set: Template={config.Template}");
+            m_Log.Debug($"Transformation config set: ShapeTemplate={config.Shape.Template}, SlopeTemplate={config.Slope.Template}");
+        }
+
+        /// <summary>
+        /// Configures the slope transformation from the UI (backward-compatible).
+        /// </summary>
+        public void SetSlopeConfig(SlopeCurveConfig slopeConfig) {
+            SetTransformationConfig(TransformConfig.SlopeOnly(slopeConfig));
+        }
+
+        /// <summary>
+        /// Configures the shape transformation from the UI.
+        /// </summary>
+        public void SetShapeConfig(ShapeCurveConfig shapeConfig) {
+            SetTransformationConfig(TransformConfig.ShapeOnly(shapeConfig));
         }
 
         /// <summary>

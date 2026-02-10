@@ -43,6 +43,7 @@ namespace NetworkTools.Systems {
         private ValueBindingHelper<string>              m_SelectedPrefabBinding;
         private ValueBindingHelper<ToolUILookup[]>      m_ToolLookupBinding;
         private ValueBindingHelper<SlopeConfigData>     m_SlopeConfigBinding;
+        private ValueBindingHelper<ShapeConfigData>     m_ShapeConfigBinding;
         private ProxyAction                             m_ToggleToolPanelAction;
 
         /// <inheritdoc/>
@@ -61,6 +62,7 @@ namespace NetworkTools.Systems {
             m_SelectedPrefabBinding   = CreateBinding("SELECTED_PREFAB", "");
             m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES", new ToolSelectionData[] { });
             m_SlopeConfigBinding      = CreateBinding("SLOPE_CONFIG", SlopeConfigData.Default(), HandleUpdateSlopeConfig, new ValueWriter<SlopeConfigData>(), new ValueReader<SlopeConfigData>());
+            m_ShapeConfigBinding      = CreateBinding("SHAPE_CONFIG", ShapeConfigData.Default(), HandleUpdateShapeConfig, new ValueWriter<ShapeConfigData>(), new ValueReader<ShapeConfigData>());
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
             CreateTrigger<string>("APPLY_SLOPE", HandleApplySlope);
@@ -123,13 +125,57 @@ namespace NetworkTools.Systems {
         private void HandleUpdateSlopeConfig(SlopeConfigData configData) {
             m_Log.Debug($"HandleUpdateSlopeConfig(template: {configData.Template})");
             m_SlopeConfigBinding.Value = configData;
-            var config = configData.Template?.ToLowerInvariant() switch {
+            var slopeConfig = configData.Template?.ToLowerInvariant() switch {
+                "preserve" => SlopeCurveConfig.Preserve(),
                 "linear" => SlopeCurveConfig.Linear(),
                 "easeinout" => SlopeCurveConfig.EaseInOut(configData.EaseInLength, configData.EaseOutLength),
                 "parabolic" => SlopeCurveConfig.Parabolic(configData.ArchHeight, configData.ArchPosition),
-                _ => SlopeCurveConfig.Linear()
+                _ => SlopeCurveConfig.Linear(),
             };
-            m_NTSlopeToolSystem.SetTransformationConfig(config);
+
+            // Build transform config combining shape and slope
+            var shapeData = m_ShapeConfigBinding.Value;
+            var shapeConfig = shapeData.Template?.ToLowerInvariant() switch {
+                "preserve" => ShapeCurveConfig.Preserve(),
+                "straighten" => ShapeCurveConfig.Straighten(),
+                "smooth" => ShapeCurveConfig.Smooth(shapeData.SmoothingFactor),
+                _ => ShapeCurveConfig.Preserve(),
+            };
+
+            var transformConfig = new TransformConfig {
+                Shape = shapeConfig,
+                Slope = slopeConfig,
+                Flags = TransformFlags.None,
+            };
+            m_NTSlopeToolSystem.SetTransformationConfig(transformConfig);
+        }
+
+        private void HandleUpdateShapeConfig(ShapeConfigData configData) {
+            m_Log.Debug($"HandleUpdateShapeConfig(template: {configData.Template})");
+            m_ShapeConfigBinding.Value = configData;
+            var shapeConfig = configData.Template?.ToLowerInvariant() switch {
+                "preserve" => ShapeCurveConfig.Preserve(),
+                "straighten" => ShapeCurveConfig.Straighten(),
+                "smooth" => ShapeCurveConfig.Smooth(configData.SmoothingFactor),
+                _ => ShapeCurveConfig.Preserve(),
+            };
+
+            // Build transform config combining shape and slope
+            var slopeData = m_SlopeConfigBinding.Value;
+            var slopeConfig = slopeData.Template?.ToLowerInvariant() switch {
+                "preserve" => SlopeCurveConfig.Preserve(),
+                "linear" => SlopeCurveConfig.Linear(),
+                "easeinout" => SlopeCurveConfig.EaseInOut(slopeData.EaseInLength, slopeData.EaseOutLength),
+                "parabolic" => SlopeCurveConfig.Parabolic(slopeData.ArchHeight, slopeData.ArchPosition),
+                _ => SlopeCurveConfig.Linear(),
+            };
+
+            var transformConfig = new TransformConfig {
+                Shape = shapeConfig,
+                Slope = slopeConfig,
+                Flags = TransformFlags.None,
+            };
+            m_NTSlopeToolSystem.SetTransformationConfig(transformConfig);
         }
 
         private void HandleSelectTool(string id) {
@@ -233,7 +279,7 @@ namespace NetworkTools.Systems {
                 EaseInLength = 0.25f,
                 EaseOutLength = 0.25f,
                 ArchHeight = 0.5f,
-                ArchPosition = 0.5f
+                ArchPosition = 0.5f,
             };
 
             /// <inheritdoc/>
@@ -285,6 +331,52 @@ namespace NetworkTools.Systems {
                 if (reader.ReadProperty("archPosition")) {
                     reader.Read(out float archPosition);
                     ArchPosition = archPosition;
+                }
+
+                reader.ReadMapEnd();
+            }
+        }
+
+        /// <summary>
+        /// Struct to store and synchronize shape configuration parameters with the UI.
+        /// </summary>
+        public struct ShapeConfigData : IJsonWritable, IJsonReadable {
+            public string Template;
+            public float SmoothingFactor;
+
+            /// <summary>
+            /// Creates default configuration with Preserve template.
+            /// </summary>
+            public static ShapeConfigData Default() => new() {
+                Template = "preserve",
+                SmoothingFactor = 0.5f,
+            };
+
+            /// <inheritdoc/>
+            public void Write(IJsonWriter writer) {
+                writer.TypeBegin(GetType().FullName);
+
+                writer.PropertyName("template");
+                writer.Write(Template);
+
+                writer.PropertyName("smoothingFactor");
+                writer.Write(SmoothingFactor);
+
+                writer.TypeEnd();
+            }
+
+            /// <inheritdoc/>
+            public void Read(IJsonReader reader) {
+                reader.ReadMapBegin();
+
+                if (reader.ReadProperty("template")) {
+                    reader.Read(out string template);
+                    Template = template;
+                }
+
+                if (reader.ReadProperty("smoothingFactor")) {
+                    reader.Read(out float smoothingFactor);
+                    SmoothingFactor = smoothingFactor;
                 }
 
                 reader.ReadMapEnd();
