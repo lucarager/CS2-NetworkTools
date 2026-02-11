@@ -1,4 +1,4 @@
-﻿// <copyright file="NT_SlopeToolSystem.JobMethods.cs" company="Luca Rager">
+﻿// <copyright file="NT_PathTransformToolSystem.JobMethods.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -16,7 +16,7 @@ namespace NetworkTools.Systems {
 
     #endregion
 
-    public partial class NT_SlopeToolSystem {
+    public partial class NT_PathTransformToolSystem {
         private JobHandle SchedulePathTransformJob(JobHandle inputDeps, TransformOutputMode outputMode) {
             var jobHandle = new PathTransformJob {
                 SelectedNodes          = m_SelectedNodes,

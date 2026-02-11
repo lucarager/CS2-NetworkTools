@@ -1,4 +1,4 @@
-﻿// <copyright file="NT_SlopeToolSystem.Jobs.cs" company="Luca Rager">
+﻿// <copyright file="NT_PathTransformToolSystem.Jobs.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -19,7 +19,7 @@ using Unity.Mathematics;
 
 #endregion
 
-public partial class NT_SlopeToolSystem {
+public partial class NT_PathTransformToolSystem {
     /// <summary>
     /// Minimum height delta (in meters) to consider for intersection adjustments.
     /// </summary>

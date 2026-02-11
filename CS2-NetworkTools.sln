@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36603.0 d17.14
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11505.172 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTools.Mod", "NetworkTools.Mod/NetworkTools.Mod.csproj", "{C0F281F6-E277-478D-9C66-F1ADAE6877B7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTools", "NetworkTools.Mod\NetworkTools.csproj", "{C0F281F6-E277-478D-9C66-F1ADAE6877B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTools.Tests", "NetworkTools.Tests\NetworkTools.Tests.csproj", "{4774EF5C-F1D6-4213-BDFA-4B7C853B976F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{C0F281F6-E277-478D-9C66-F1ADAE6877B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0F281F6-E277-478D-9C66-F1ADAE6877B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0F281F6-E277-478D-9C66-F1ADAE6877B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4774EF5C-F1D6-4213-BDFA-4B7C853B976F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4774EF5C-F1D6-4213-BDFA-4B7C853B976F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4774EF5C-F1D6-4213-BDFA-4B7C853B976F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4774EF5C-F1D6-4213-BDFA-4B7C853B976F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

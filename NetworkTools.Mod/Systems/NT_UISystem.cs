@@ -35,7 +35,7 @@ namespace NetworkTools.Systems {
 
         private EntityQuery                             m_ToolPrefabQuery;
         private NameSystem                              m_NameSystem;
-        private NT_SlopeToolSystem                      m_NTSlopeToolSystem;
+        private NT_PathTransformToolSystem                      m_NtPathTransformToolSystem;
         private PrefabSystem                            m_PrefabSystem;
         private PrefixedLogger                          m_Log;
         private ToolSystem                              m_ToolSystem;
@@ -58,7 +58,7 @@ namespace NetworkTools.Systems {
 
             m_PrefabSystem      = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_ToolSystem        = World.GetOrCreateSystemManaged<ToolSystem>();
-            m_NTSlopeToolSystem = World.GetOrCreateSystemManaged<NT_SlopeToolSystem>();
+            m_NtPathTransformToolSystem = World.GetOrCreateSystemManaged<NT_PathTransformToolSystem>();
             m_NameSystem        = World.GetOrCreateSystemManaged<NameSystem>();
 
             m_ToolUIDataBinding       = CreateBinding("UI_DATA", new ToolUILookup[] { });
@@ -105,7 +105,7 @@ namespace NetworkTools.Systems {
             }
 
             // Update selected entities binding when selection changes
-            var selectedNodes    = m_NTSlopeToolSystem.GetSelectedNodes();
+            var selectedNodes    = m_NtPathTransformToolSystem.GetSelectedNodes();
             var currentNodesHash = ComputeSelectionHash(selectedNodes);
             if (currentNodesHash != m_LastSelectedNodesHash) {
                 m_LastSelectedNodesHash = currentNodesHash;
@@ -177,7 +177,7 @@ namespace NetworkTools.Systems {
                 Slope = slopeConfig,
                 Flags = TransformFlags.None,
             };
-            m_NTSlopeToolSystem.SetTransformationConfig(transformConfig);
+            m_NtPathTransformToolSystem.SetTransformationConfig(transformConfig);
         }
 
         private void HandleUpdateShapeConfig(ShapeConfigData configData) {
@@ -205,7 +205,7 @@ namespace NetworkTools.Systems {
                 Slope = slopeConfig,
                 Flags = TransformFlags.None,
             };
-            m_NTSlopeToolSystem.SetTransformationConfig(transformConfig);
+            m_NtPathTransformToolSystem.SetTransformationConfig(transformConfig);
         }
 
         private void HandleSelectTool(string id) {
@@ -223,7 +223,7 @@ namespace NetworkTools.Systems {
         private void HandleApplySlope(string templateName) { 
             m_Log.Debug($"HandleApplySlope(templateName: {templateName})");
             
-            m_NTSlopeToolSystem.RequestApply();
+            m_NtPathTransformToolSystem.RequestApply();
         }
 
         /// <summary>

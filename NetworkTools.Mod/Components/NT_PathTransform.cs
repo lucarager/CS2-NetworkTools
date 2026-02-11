@@ -10,5 +10,5 @@ namespace NetworkTools.Components {
 
     #endregion
 
-    public struct NT_Slope : IComponentData { }
+    public struct NT_PathTransform : IComponentData { }
 }

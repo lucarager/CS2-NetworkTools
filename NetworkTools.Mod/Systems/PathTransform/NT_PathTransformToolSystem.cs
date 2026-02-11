@@ -81,7 +81,7 @@ namespace NetworkTools.Systems {
     /// - The *SelectionState* handles user interactions for selecting nodes and edges.
     /// 
     /// </summary>
-    public partial class NT_SlopeToolSystem : NT_BaseToolSystem {
+    public partial class NT_PathTransformToolSystem : NT_BaseToolSystem {
         /// <summary>
         /// Maximum distance to select a node when selecting near an edge
         /// </summary>
