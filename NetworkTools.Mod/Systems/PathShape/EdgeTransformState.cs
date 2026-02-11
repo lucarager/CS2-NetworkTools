@@ -151,6 +151,13 @@ namespace NetworkTools.Systems {
         public float2 OriginalEndXZ;
 
         /// <summary>
+        /// Calculates the edge length from the current bezier geometry.
+        /// </summary>
+        public void CalculateLength() {
+            Length = MathUtils.Length(Bezier);
+        }
+
+        /// <summary>
         /// Recalculates the control point ratios based on the current bezier geometry.
         /// Call this after modifying the bezier's XZ positions.
         /// </summary>

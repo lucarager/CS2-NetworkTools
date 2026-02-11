@@ -4,22 +4,31 @@
 // </copyright>
 
 namespace NetworkTools.Systems {
-    #region Using Statements
+#region Using Statements
 
-    using Colossal.Mathematics;
-    using Game.Common;
-    using Game.Net;
-    using Game.Objects;
-    using Game.Prefabs;
-    using Game.Tools;
-    using Unity.Collections;
-    using Unity.Entities;
-    using Unity.Jobs;
-    using Unity.Mathematics;
+using Colossal.Mathematics;
+using Game.Common;
+using Game.Net;
+using Game.Objects;
+using Game.Prefabs;
+using Game.Tools;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using Unity.Mathematics;
 
-    #endregion
+#endregion
 
-    public partial class NT_SlopeToolSystem {
+public partial class NT_SlopeToolSystem {
+    /// <summary>
+    /// Minimum height delta (in meters) to consider for intersection adjustments.
+    /// </summary>
+    private const float HeightDeltaThreshold = 0.001f;
+
+    /// <summary>
+    /// Minimum XZ delta squared (in meters²) to consider for intersection adjustments.
+    /// </summary>
+    private const float XZDeltaSquaredThreshold = 0.000001f;
 #if BURST
         [BurstCompile]
 #endif
@@ -63,6 +72,11 @@ namespace NetworkTools.Systems {
 
                 // === 3. Apply shape transforms (XZ) ===
                 ApplyShapeTransforms(edges, in context);
+
+                // === 3b. Recalculate geometry after shape transforms ===
+                if (context.Config.HasShapeTransform) {
+                    RecalculateGeometry(edges, ref context);
+                }
 
                 // === 4. Apply slope transforms (Y) ===
                 ApplySlopeTransforms(edges, in context);
@@ -122,14 +136,8 @@ namespace NetworkTools.Systems {
                     // Get curve component for geometry
                     if (CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
                         state.Bezier = curve.m_Bezier;
-                        state.Length = curve.m_Length;
-
-                        SlopeCalculator.CalculateControlPointRatios(
-                            curve.m_Bezier,
-                            state.Length,
-                            state.IsForward,
-                            out state.CtrlStartRatio,
-                            out state.CtrlEndRatio);
+                        state.CalculateLength();
+                        state.RecalculateControlPointRatios();
                     }
 
                     // Store original values for intersection delta calculations
@@ -174,18 +182,11 @@ namespace NetworkTools.Systems {
             /// </summary>
             private void ApplyStraightenTransform(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
                 for (var i = 0; i < edges.Length; i++) {
-                    var state = edges[i];
-
-                    var positions = ShapeCalculator.CalculateStraightenedPositions(
-                        state.CumulativeDistance,
-                        state.Length,
-                        state.CtrlStartRatio,
-                        state.CtrlEndRatio,
-                        ctx.TotalLength,
-                        ctx.StartXZ,
-                        ctx.EndXZ);
+                    var state     = edges[i];
+                    var positions = ShapeCalculator.CalculateStraightenedPositions(in state, in ctx);
 
                     state.Bezier = ShapeCalculator.ApplyPositionsToBezier(state.Bezier, positions, state.IsForward);
+                    state.CalculateLength();
                     state.SetEvenControlPointRatios();
 
                     edges[i] = state;
@@ -213,27 +214,33 @@ namespace NetworkTools.Systems {
 
                 // Apply smooth transform to each edge
                 for (var i = 0; i < edges.Length; i++) {
-                    var state = edges[i];
-
-                    var positions = ShapeCalculator.CalculateSmoothedPositions(
-                        state.CumulativeDistance,
-                        state.Length,
-                        state.CtrlStartRatio,
-                        state.CtrlEndRatio,
-                        ctx.TotalLength,
-                        ctx.StartXZ,
-                        ctx.EndXZ,
-                        masterCtrl1,
-                        masterCtrl2,
-                        ctx.Config.Shape.SmoothingFactor,
-                        state.Bezier,
-                        state.IsForward);
+                    var state     = edges[i];
+                    var positions = ShapeCalculator.CalculateSmoothedPositions(in state, in ctx, masterCtrl1, masterCtrl2);
 
                     state.Bezier = ShapeCalculator.ApplyPositionsToBezier(state.Bezier, positions, state.IsForward);
+                    state.CalculateLength();
                     state.RecalculateControlPointRatios();
 
                     edges[i] = state;
                 }
+            }
+
+            /// <summary>
+            /// Recalculates cumulative distances and total path length
+            /// after shape transforms have modified the bezier curves.
+            /// Assumes each transform has already updated edge lengths.
+            /// </summary>
+            private void RecalculateGeometry(NativeArray<EdgeTransformState> edges, ref TransformContext context) {
+                var cumulativeDistance = 0f;
+
+                for (var i = 0; i < edges.Length; i++) {
+                    var state = edges[i];
+                    state.CumulativeDistance = cumulativeDistance;
+                    edges[i] = state;
+                    cumulativeDistance += state.Length;
+                }
+
+                context.TotalLength = cumulativeDistance;
             }
 
             // ========================================
@@ -246,21 +253,56 @@ namespace NetworkTools.Systems {
             private void ApplySlopeTransforms(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
                 if (!ctx.Config.HasSlopeTransform) return;
 
+                switch (ctx.Config.Slope.Template) {
+                    case SlopeTemplate.Linear:
+                        ApplyLinearSlopeTransform(edges, in ctx);
+                        break;
+                    case SlopeTemplate.EaseInOut:
+                        ApplyEaseInOutSlopeTransform(edges, in ctx);
+                        break;
+                    case SlopeTemplate.Parabolic:
+                        ApplyParabolicSlopeTransform(edges, in ctx);
+                        break;
+                }
+            }
+
+            /// <summary>
+            /// Applies a linear slope transform - constant slope throughout the path.
+            /// </summary>
+            private void ApplyLinearSlopeTransform(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
                 for (var i = 0; i < edges.Length; i++) {
-                    var state = edges[i];
+                    var state   = edges[i];
 
-                    var heights = SlopeCalculator.CalculateEdgeHeights(
-                        state.CumulativeDistance,
-                        state.Length,
-                        state.CtrlStartRatio,
-                        state.CtrlEndRatio,
-                        ctx.TotalLength,
-                        ctx.StartHeight,
-                        ctx.DeltaHeight,
-                        ctx.Config.Slope);
+                    // Use even ratios for linear slopes - this produces a constant gradient
+                    // regardless of control point XZ positions
+                    state.SetEvenControlPointRatios();
 
+                    var heights = SlopeCalculator.CalculateEdgeHeights(in state, in ctx);
                     state.Bezier = SlopeCalculator.ApplyHeightsToBezier(state.Bezier, heights, state.IsForward);
+                    edges[i] = state;
+                }
+            }
 
+            /// <summary>
+            /// Applies an ease-in-out slope transform - smooth transitions at start and end.
+            /// </summary>
+            private void ApplyEaseInOutSlopeTransform(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
+                for (var i = 0; i < edges.Length; i++) {
+                    var state   = edges[i];
+                    var heights = SlopeCalculator.CalculateEdgeHeights(in state, in ctx);
+                    state.Bezier = SlopeCalculator.ApplyHeightsToBezier(state.Bezier, heights, state.IsForward);
+                    edges[i] = state;
+                }
+            }
+
+            /// <summary>
+            /// Applies a parabolic slope transform - creates an arch (hill) or dip (valley).
+            /// </summary>
+            private void ApplyParabolicSlopeTransform(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
+                for (var i = 0; i < edges.Length; i++) {
+                    var state   = edges[i];
+                    var heights = SlopeCalculator.CalculateEdgeHeights(in state, in ctx);
+                    state.Bezier = SlopeCalculator.ApplyHeightsToBezier(state.Bezier, heights, state.IsForward);
                     edges[i] = state;
                 }
             }
@@ -412,8 +454,8 @@ namespace NetworkTools.Systems {
                         xzDelta = newXZ - oldXZ;
                     }
 
-                    var hasHeightDelta = math.abs(heightDelta) >= 0.001f;
-                    var hasXZDelta     = math.lengthsq(xzDelta) >= 0.000001f;
+                    var hasHeightDelta = math.abs(heightDelta) >= HeightDeltaThreshold;
+                    var hasXZDelta     = math.lengthsq(xzDelta) >= XZDeltaSquaredThreshold;
 
                     if (!hasHeightDelta && !hasXZDelta) {
                         continue;

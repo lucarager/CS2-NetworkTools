@@ -15,6 +15,7 @@ namespace NetworkTools.Systems {
     using Game.UI;
     using Game.UI.Tooltip;
     using Game.UI.Widgets;
+    using NetworkTools.Components;
     using NetworkTools.Utils;
     using Unity.Collections;
     using Unity.Entities;
@@ -51,12 +52,12 @@ namespace NetworkTools.Systems {
             // Queries
             m_SelectedEdgesQuery = SystemAPI.QueryBuilder()
                                             .WithAll<Edge>()
-                                            .WithAny<NetworkTools.Components.NT_Selected, Temp>()
+                                            .WithAny<NT_Selected, Temp>()
                                             .Build();
             m_SelectedNodesQuery = SystemAPI.QueryBuilder()
                                             .WithAll<Node>()
-                                            .WithAny<NetworkTools.Components.NT_Highlighted, NetworkTools.Components.NT_Eligible, NetworkTools.Components.NT_Selected,
-                                                NetworkTools.Components.NT_SelectedFirst, NetworkTools.Components.NT_SelectedLast>()
+                                            .WithAny<NT_Highlighted, NT_Eligible, NT_Selected,
+                                                NT_SelectedFirst, NT_SelectedLast>()
                                             .Build();
 
             // Data
@@ -108,12 +109,7 @@ namespace NetworkTools.Systems {
                 activeEdges.Add(edgeEntity);
 
                 var isTemp = EntityManager.HasComponent<Temp>(edgeEntity);
-                var (slopePercent, position) = CalculateEdgeSlopeData(edgeEntity, curve);
-
-                if (isTemp) {
-                    position.y += TempTooltipYOffset;
-                }
-
+                var (slopePercent, position) = CalculateEdgeSlopeData(edgeEntity, curve, isTemp);
                 var tooltipGroup = GetOrCreateEdgeTooltip(edgeEntity, slopePercent, position, isTemp);
 
                 if (tooltipGroup.children.Count > 0) {
@@ -124,7 +120,7 @@ namespace NetworkTools.Systems {
             edgeEntities.Dispose();
         }
 
-        private (float slopePercent, float2 position) CalculateEdgeSlopeData(Entity edgeEntity, Curve curve) {
+        private (float slopePercent, float2 position) CalculateEdgeSlopeData(Entity edgeEntity, Curve curve, bool isTemp) {
             var edge = EntityManager.GetComponentData<Edge>(edgeEntity);
             var (actualStart, actualEnd) = DetermineTraversalDirection(edge);
 
@@ -134,13 +130,15 @@ namespace NetworkTools.Systems {
             var slopePercent = deltaY / curve.m_Length * 100f;
 
             var position = WorldToTooltipPos(MathUtils.Position(curve.m_Bezier, 0.5f));
+            var offset = isTemp ? TempTooltipYOffset : -TempTooltipYOffset;
+            position.y += offset;
 
             return (slopePercent, position);
         }
 
         private (Entity start, Entity end) DetermineTraversalDirection(Edge edge) {
-            if (EntityManager.TryGetComponent<NetworkTools.Components.NT_Selected>(edge.m_Start, out var startSel) &&
-                EntityManager.TryGetComponent<NetworkTools.Components.NT_Selected>(edge.m_End, out var endSel)) {
+            if (EntityManager.TryGetComponent<NT_Selected>(edge.m_Start, out var startSel) &&
+                EntityManager.TryGetComponent<NT_Selected>(edge.m_End, out var endSel)) {
                 return startSel.PathIndex < endSel.PathIndex
                     ? (edge.m_Start, edge.m_End)
                     : (edge.m_End, edge.m_Start);
@@ -173,11 +171,11 @@ namespace NetworkTools.Systems {
             };
 
             var tooltipGroup = new TooltipGroup {
-                path = fullPath,
-                horizontalAlignment = TooltipGroup.Alignment.Center,
-                verticalAlignment = TooltipGroup.Alignment.Center,
-                category = TooltipGroup.Category.Network,
-                position = position,
+                path                = fullPath,
+                horizontalAlignment = isTemp ? TooltipGroup.Alignment.Start : TooltipGroup.Alignment.End,
+                verticalAlignment   = isTemp ? TooltipGroup.Alignment.Start : TooltipGroup.Alignment.End,
+                category            = TooltipGroup.Category.Network,
+                position            = position,
             };
             tooltipGroup.children.Add(slopeTooltip);
 
@@ -227,9 +225,9 @@ namespace NetworkTools.Systems {
                 }
 
                 // Update children based on current components
-                //var hasFirst = EntityManager.HasComponent<NetworkTools.Components.NT_SelectedFirst>(entity);
-                //var hasLast = EntityManager.HasComponent<NetworkTools.Components.NT_SelectedLast>(entity);
-                //var hasSelected = EntityManager.HasComponent<NetworkTools.Components.NT_Selected>(entity);
+                //var hasFirst = EntityManager.HasComponent<NT_SelectedFirst>(entity);
+                //var hasLast = EntityManager.HasComponent<NT_SelectedLast>(entity);
+                //var hasSelected = EntityManager.HasComponent<NT_Selected>(entity);
 
                 //var expectedChildren = (hasFirst ? 1 : 0) + (hasLast ? 1 : 0);
                 //if (group.children.Count != expectedChildren) {
@@ -238,23 +236,23 @@ namespace NetworkTools.Systems {
 
                 group.children.Clear();
 
-                if (EntityManager.HasComponent<NetworkTools.Components.NT_SelectedFirst>(entity)) {
+                if (EntityManager.HasComponent<NT_SelectedFirst>(entity)) {
                     group.children.Add(new StringTooltip { value = "Start" });
                 }
 
-                if (EntityManager.HasComponent<NetworkTools.Components.NT_SelectedLast>(entity)) {
+                if (EntityManager.HasComponent<NT_SelectedLast>(entity)) {
                     group.children.Add(new StringTooltip { value = "End" });
                 }
 
-                //if (EntityManager.HasComponent<NetworkTools.Components.NT_Highlighted>(entity)) {
+                //if (EntityManager.HasComponent<NT_Highlighted>(entity)) {
                 //    group.children.Add(new StringTooltip { value = "Highlighted" });
                 //}
 
-                //if (EntityManager.HasComponent<NetworkTools.Components.NT_Eligible>(entity)) {
+                //if (EntityManager.HasComponent<NT_Eligible>(entity)) {
                 //    group.children.Add(new StringTooltip { value = "Eligible" });
                 //}
 
-                //if (EntityManager.HasComponent<NetworkTools.Components.NT_Selected>(entity)) {
+                //if (EntityManager.HasComponent<NT_Selected>(entity)) {
                 //    group.children.Add(new StringTooltip { value = "Selected" });
                 //}
 

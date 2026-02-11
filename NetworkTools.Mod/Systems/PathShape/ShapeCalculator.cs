@@ -7,183 +7,13 @@ namespace NetworkTools.Systems {
     #region Using Statements
 
     using Colossal.Mathematics;
-    using Unity.Entities;
     using Unity.Mathematics;
 
     #endregion
 
     /// <summary>
-    /// Defines the type of shape curve to apply to road segments (XZ plane).
-    /// </summary>
-    public enum ShapeTemplate {
-        /// <summary>
-        /// Keep existing XZ positions (no-op).
-        /// </summary>
-        Preserve = 0,
-
-        /// <summary>
-        /// Align all nodes along a straight line between start/end.
-        /// </summary>
-        Straighten = 1,
-
-        /// <summary>
-        /// Fit nodes to a smooth bezier curve.
-        /// </summary>
-        Smooth = 2,
-
-        /// <summary>
-        /// Redistribute nodes evenly along the path.
-        /// </summary>
-        EqualSpacing = 3,
-    }
-
-    /// <summary>
-    /// Per-edge metadata for shape calculations.
-    /// Mirrors EdgeSlopeData but tracks XZ positions.
-    /// </summary>
-    public struct EdgeShapeData {
-        /// <summary>
-        /// Length of the edge.
-        /// </summary>
-        public float Length;
-
-        /// <summary>
-        /// Ratio of control point closer to path-start.
-        /// </summary>
-        public float CtrlStartRatio;
-
-        /// <summary>
-        /// Ratio of control point closer to path-end.
-        /// </summary>
-        public float CtrlEndRatio;
-
-        /// <summary>
-        /// True if edge direction matches path direction.
-        /// </summary>
-        public bool IsForward;
-
-        /// <summary>
-        /// Original XZ position at path-end (for intersection updates).
-        /// </summary>
-        public float2 OldPositionXZ;
-    }
-
-    /// <summary>
-    /// Pre-calculated XZ positions for an edge's control points in path order.
-    /// Mirrors EdgeHeights structure.
-    /// </summary>
-    public struct EdgePositions {
-        /// <summary>
-        /// XZ position at path-start of segment.
-        /// </summary>
-        public float2 Start;
-
-        /// <summary>
-        /// XZ position at control point closer to path-start.
-        /// </summary>
-        public float2 CtrlStart;
-
-        /// <summary>
-        /// XZ position at control point closer to path-end.
-        /// </summary>
-        public float2 CtrlEnd;
-
-        /// <summary>
-        /// XZ position at path-end of segment.
-        /// </summary>
-        public float2 End;
-    }
-
-    /// <summary>
-    /// Computed shape data for a single edge, ready to be output.
-    /// Mirrors ComputedEdgeSlope structure.
-    /// </summary>
-    public struct ComputedEdgeShape {
-        /// <summary>
-        /// Index in the path.
-        /// </summary>
-        public int PathIndex;
-
-        /// <summary>
-        /// The edge entity.
-        /// </summary>
-        public Entity EdgeEntity;
-
-        /// <summary>
-        /// The start node entity.
-        /// </summary>
-        public Entity StartNode;
-
-        /// <summary>
-        /// The end node entity.
-        /// </summary>
-        public Entity EndNode;
-
-        /// <summary>
-        /// The adjusted bezier curve.
-        /// </summary>
-        public Bezier4x3 AdjustedBezier;
-
-        /// <summary>
-        /// Cumulative distance along the path.
-        /// </summary>
-        public float CumulativeDistance;
-
-        /// <summary>
-        /// Edge shape metadata.
-        /// </summary>
-        public EdgeShapeData Metadata;
-    }
-
-    /// <summary>
-    /// Configuration for shape curve application.
-    /// </summary>
-    public struct ShapeCurveConfig {
-        /// <summary>
-        /// The template type to use for shape calculation.
-        /// </summary>
-        public ShapeTemplate Template;
-
-        /// <summary>
-        /// Smoothing factor (0-1), how much to smooth.
-        /// Used with Smooth template.
-        /// </summary>
-        public float SmoothingFactor;
-
-        /// <summary>
-        /// Creates a preserve configuration (keeps existing XZ positions).
-        /// </summary>
-        public static ShapeCurveConfig Preserve() => new ShapeCurveConfig {
-            Template = ShapeTemplate.Preserve,
-        };
-
-        /// <summary>
-        /// Creates a straighten configuration.
-        /// </summary>
-        public static ShapeCurveConfig Straighten() => new ShapeCurveConfig {
-            Template = ShapeTemplate.Straighten,
-        };
-
-        /// <summary>
-        /// Creates a smooth configuration with the specified smoothing factor.
-        /// </summary>
-        /// <param name="factor">Smoothing factor (0 to 1).</param>
-        public static ShapeCurveConfig Smooth(float factor = 0.5f) => new ShapeCurveConfig {
-            Template = ShapeTemplate.Smooth,
-            SmoothingFactor = math.clamp(factor, 0f, 1f),
-        };
-
-        /// <summary>
-        /// Creates an equal spacing configuration.
-        /// </summary>
-        public static ShapeCurveConfig EqualSpacing() => new ShapeCurveConfig {
-            Template = ShapeTemplate.EqualSpacing,
-        };
-    }
-
-    /// <summary>
     /// Burst-compatible utility for shape (XZ) calculations.
-    /// Mirrors SlopeCalculator structure.
+    /// Provides methods for calculating and applying XZ transformations to bezier curves.
     /// </summary>
     public static class ShapeCalculator {
         /// <summary>
@@ -273,6 +103,24 @@ namespace NetworkTools.Systems {
                 CtrlEnd   = CalculatePositionLinear(distCtrlEnd, totalLength, pathStartXZ, pathEndXZ),
                 End       = CalculatePositionLinear(distEnd, totalLength, pathStartXZ, pathEndXZ),
             };
+        }
+
+        /// <summary>
+        /// Calculates XZ positions for all four bezier control points (straighten mode).
+        /// Simplified overload that extracts parameters from state and context structs.
+        /// </summary>
+        /// <param name="state">The edge transform state containing edge-level data.</param>
+        /// <param name="ctx">The transform context containing path-level data.</param>
+        /// <returns>XZ positions for all four control points in path order.</returns>
+        public static EdgePositions CalculateStraightenedPositions(in EdgeTransformState state, in TransformContext ctx) {
+            return CalculateStraightenedPositions(
+                state.CumulativeDistance,
+                state.Length,
+                state.CtrlStartRatio,
+                state.CtrlEndRatio,
+                ctx.TotalLength,
+                ctx.StartXZ,
+                ctx.EndXZ);
         }
 
         /// <summary>
@@ -404,6 +252,35 @@ namespace NetworkTools.Systems {
                 CtrlEnd   = math.lerp(origCtrlEnd, smoothCtrlEnd, smoothingFactor),
                 End       = math.lerp(origEnd, smoothEnd, smoothingFactor),
             };
+        }
+
+        /// <summary>
+        /// Calculates XZ positions for all four bezier control points (smooth mode).
+        /// Simplified overload that extracts parameters from state and context structs.
+        /// </summary>
+        /// <param name="state">The edge transform state containing edge-level data.</param>
+        /// <param name="ctx">The transform context containing path-level data.</param>
+        /// <param name="masterCtrl1">First control point of master bezier.</param>
+        /// <param name="masterCtrl2">Second control point of master bezier.</param>
+        /// <returns>XZ positions for all four control points in path order.</returns>
+        public static EdgePositions CalculateSmoothedPositions(
+            in EdgeTransformState state,
+            in TransformContext   ctx,
+            float2                masterCtrl1,
+            float2                masterCtrl2) {
+            return CalculateSmoothedPositions(
+                state.CumulativeDistance,
+                state.Length,
+                state.CtrlStartRatio,
+                state.CtrlEndRatio,
+                ctx.TotalLength,
+                ctx.StartXZ,
+                ctx.EndXZ,
+                masterCtrl1,
+                masterCtrl2,
+                ctx.Config.Shape.SmoothingFactor,
+                state.Bezier,
+                state.IsForward);
         }
 
         /// <summary>

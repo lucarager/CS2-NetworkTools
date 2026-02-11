@@ -41,10 +41,13 @@ namespace NetworkTools.Systems {
         private ToolSystem                              m_ToolSystem;
         private ValueBindingHelper<ToolSelectionData[]> m_SelectedEntitiesBinding;
         private ValueBindingHelper<string>              m_SelectedPrefabBinding;
-        private ValueBindingHelper<ToolUILookup[]>      m_ToolLookupBinding;
+        private ValueBindingHelper<ToolUILookup[]>      m_ToolUIDataBinding;
         private ValueBindingHelper<SlopeConfigData>     m_SlopeConfigBinding;
         private ValueBindingHelper<ShapeConfigData>     m_ShapeConfigBinding;
         private ProxyAction                             m_ToggleToolPanelAction;
+        private string                                  m_LastSelectedPrefab;
+        private int                                     m_LastToolPrefabCount;
+        private int                                     m_LastSelectedNodesHash;
 
         /// <inheritdoc/>
         protected override void OnCreate() {
@@ -58,7 +61,7 @@ namespace NetworkTools.Systems {
             m_NTSlopeToolSystem = World.GetOrCreateSystemManaged<NT_SlopeToolSystem>();
             m_NameSystem        = World.GetOrCreateSystemManaged<NameSystem>();
 
-            m_ToolLookupBinding       = CreateBinding("UI_DATA", new ToolUILookup[] { });
+            m_ToolUIDataBinding       = CreateBinding("UI_DATA", new ToolUILookup[] { });
             m_SelectedPrefabBinding   = CreateBinding("SELECTED_PREFAB", "");
             m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES", new ToolSelectionData[] { });
             m_SlopeConfigBinding      = CreateBinding("SLOPE_CONFIG", SlopeConfigData.Default(), HandleUpdateSlopeConfig, new ValueWriter<SlopeConfigData>(), new ValueReader<SlopeConfigData>());
@@ -80,28 +83,43 @@ namespace NetworkTools.Systems {
 
         /// <inheritdoc/>
         protected override void OnUpdate() {
-            var entities        = m_ToolPrefabQuery.ToEntityArray(Allocator.Temp);
-            var toolLookupArray = new ToolUILookup[entities.Length];
-            for (var i = 0; i < entities.Length; i++) {
-                var prefab = m_PrefabSystem.GetPrefab<NT_ToolPrefab>(entities[i]);
-                toolLookupArray[i] = new ToolUILookup(prefab);
+            // Update tool UI data when the prefab count changes
+            var entityCount = m_ToolPrefabQuery.CalculateEntityCount();
+            if (entityCount != m_LastToolPrefabCount) {
+                m_LastToolPrefabCount = entityCount;
+                var entities        = m_ToolPrefabQuery.ToEntityArray(Allocator.Temp);
+                var toolLookupArray = new ToolUILookup[entities.Length];
+                for (var i = 0; i < entities.Length; i++) {
+                    var prefab = m_PrefabSystem.GetPrefab<NT_ToolPrefab>(entities[i]);
+                    toolLookupArray[i] = new ToolUILookup(prefab);
+                }
+
+                m_ToolUIDataBinding.Value = toolLookupArray;
             }
 
-            m_ToolLookupBinding.Value     = toolLookupArray;
-            m_SelectedPrefabBinding.Value = m_ToolSystem.activePrefab != null ? m_ToolSystem.activePrefab.GetPrefabID().GetName() : "";
-
-            // Update selected entities binding
-            var selectedNodes        = m_NTSlopeToolSystem.GetSelectedNodes();
-            var selectedEntitiesData = new ToolSelectionData[selectedNodes.Length];
-
-            for (var i = 0; i < selectedNodes.Length; i++) {
-                var entity     = selectedNodes[i];
-                var entityType = DetermineEntityType(entity);
-                var entityName = entityType == SelectedEntityType.Node ? $"Node {i + 1}" : m_NameSystem.GetRenderedLabelName(entity);
-                selectedEntitiesData[i] = new ToolSelectionData(entity, entityType, entityName);
+            // Update selected prefab binding when it changes
+            var currentPrefab = m_ToolSystem.activePrefab != null ? m_ToolSystem.activePrefab.GetPrefabID().GetName() : "";
+            if (currentPrefab != m_LastSelectedPrefab) {
+                m_LastSelectedPrefab          = currentPrefab;
+                m_SelectedPrefabBinding.Value = currentPrefab;
             }
 
-            m_SelectedEntitiesBinding.Value = selectedEntitiesData;
+            // Update selected entities binding when selection changes
+            var selectedNodes    = m_NTSlopeToolSystem.GetSelectedNodes();
+            var currentNodesHash = ComputeSelectionHash(selectedNodes);
+            if (currentNodesHash != m_LastSelectedNodesHash) {
+                m_LastSelectedNodesHash = currentNodesHash;
+                var selectedEntitiesData = new ToolSelectionData[selectedNodes.Length];
+
+                for (var i = 0; i < selectedNodes.Length; i++) {
+                    var entity     = selectedNodes[i];
+                    var entityType = DetermineEntityType(entity);
+                    var entityName = entityType == SelectedEntityType.Node ? $"Node {i + 1}" : m_NameSystem.GetRenderedLabelName(entity);
+                    selectedEntitiesData[i] = new ToolSelectionData(entity, entityType, entityName);
+                }
+
+                m_SelectedEntitiesBinding.Value = selectedEntitiesData;
+            }
 
             if (m_ToggleToolPanelAction.WasPerformedThisFrame()) {
                 // todo
@@ -120,6 +138,18 @@ namespace NetworkTools.Systems {
             }
 
             return SelectedEntityType.Unknown;
+        }
+
+        private int ComputeSelectionHash(Entity[] entities) {
+            unchecked {
+                var hash = 17;
+                for (var i = 0; i < entities.Length; i++) {
+                    hash = hash * 31 + entities[i].Index;
+                    hash = hash * 31 + entities[i].Version;
+                }
+
+                return hash;
+            }
         }
 
         private void HandleUpdateSlopeConfig(SlopeConfigData configData) {

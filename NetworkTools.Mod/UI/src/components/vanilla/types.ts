@@ -46,6 +46,12 @@ export type Tooltip = Widget & {
     },
 }
 
+export enum Alignment {
+    Start,
+    Center,
+    End,
+}
+
 export type TooltipGroup = Widget & {
     props: {
         disbled: boolean;
@@ -54,8 +60,8 @@ export type TooltipGroup = Widget & {
             x: number;
             y: number;
         },
-        horizontalAlignment: "left" | "center" | "right";
-        verticalAlignment: "top" | "center" | "bottom";
+        horizontalAlignment: Alignment;
+        verticalAlignment: Alignment;
         category: string;
     },
 };

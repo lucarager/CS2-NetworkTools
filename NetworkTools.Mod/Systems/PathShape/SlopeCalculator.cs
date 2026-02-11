@@ -4,52 +4,15 @@
 // </copyright>
 
 namespace NetworkTools.Systems {
-#region Using Statements
+    #region Using Statements
 
-using Colossal.Mathematics;
-using Unity.Entities;
-using Unity.Mathematics;
+    using Colossal.Mathematics;
 
-#endregion
-
-/// <summary>
-/// Per-edge metadata for slope calculations.
-/// Control point ratios are stored in PATH order (not bezier order).
-/// </summary>
-public struct EdgeSlopeData {
-    public float Length;
-    public float CtrlStartRatio;  // Path-ordered: ratio of control point closer to path-start
-    public float CtrlEndRatio;    // Path-ordered: ratio of control point closer to path-end
-    public bool  IsForward;       // True if edge direction matches path direction
-    public float OldHeight;       // Original height at path-end of this segment (for intersection updates)
-}
-
-/// <summary>
-/// Pre-calculated heights for an edge's control points in path order.
-/// </summary>
-public struct EdgeHeights {
-    public float Start;      // Height at path-start of segment
-    public float CtrlStart;  // Height at control point closer to path-start
-    public float CtrlEnd;    // Height at control point closer to path-end
-    public float End;        // Height at path-end of segment
-}
-
-/// <summary>
-/// Computed slope data for a single edge, ready to be output.
-/// </summary>
-public struct ComputedEdgeSlope {
-    public int       PathIndex;
-    public Entity    EdgeEntity;
-    public Entity    StartNode;
-    public Entity    EndNode;
-    public Bezier4x3 AdjustedBezier;
-    public float     CumulativeDistance;
-    public EdgeSlopeData Metadata;
-}
+    #endregion
 
     /// <summary>
-    /// Burst-compatible utility struct for slope calculations.
-    /// Contains static methods for calculating edge metadata and applying height transformations.
+    /// Burst-compatible utility class for slope (height/Y) calculations.
+    /// Contains static methods for calculating edge heights and applying height transformations.
     /// </summary>
     public static class SlopeCalculator {
         /// <summary>
@@ -65,46 +28,6 @@ public struct ComputedEdgeSlope {
             var ratio       = distance / totalLength;
             var curvedRatio = config.ApplyCurve(ratio);
             return startHeight + deltaHeight * curvedRatio;
-        }
-
-        /// <summary>
-        /// Calculates the control point ratios for a bezier curve in path order.
-        /// </summary>
-        /// <param name="bezier">The bezier curve</param>
-        /// <param name="length">The length of the curve</param>
-        /// <param name="isForward">True if edge direction matches path direction</param>
-        /// <param name="ctrlStartRatio">Output: ratio of control point closer to path-start</param>
-        /// <param name="ctrlEndRatio">Output: ratio of control point closer to path-end</param>
-        public static void CalculateControlPointRatios(
-            in Bezier4x3 bezier,
-            float        length,
-            bool         isForward,
-            out float    ctrlStartRatio,
-            out float    ctrlEndRatio) {
-            // Calculate bezier control point ratios based on horizontal distance from 'a'
-            var horizontalA = new float3(bezier.a.x, 0f, bezier.a.z);
-            var horizontalB = new float3(bezier.b.x, 0f, bezier.b.z);
-            var horizontalC = new float3(bezier.c.x, 0f, bezier.c.z);
-
-            float bRatio, cRatio;
-            if (length > 0.01f) {
-                bRatio = math.clamp(math.distance(horizontalA, horizontalB) / length, 0f, 1f);
-                cRatio = math.clamp(math.distance(horizontalA, horizontalC) / length, 0f, 1f);
-            } else {
-                bRatio = 1f / 3f;
-                cRatio = 2f / 3f;
-            }
-
-            // Convert bezier ratios to path-ordered ratios
-            // Forward: B is closer to path-start, C is closer to path-end
-            // Reversed: C is closer to path-start, B is closer to path-end
-            if (isForward) {
-                ctrlStartRatio = bRatio;
-                ctrlEndRatio   = cRatio;
-            } else {
-                ctrlStartRatio = 1f - cRatio;
-                ctrlEndRatio   = 1f - bRatio;
-            }
         }
 
         /// <summary>
@@ -165,6 +88,25 @@ public struct ComputedEdgeSlope {
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Calculates the heights for all four bezier control points using edge state and context.
+        /// Simplified overload that extracts parameters from the state and context structs.
+        /// </summary>
+        /// <param name="state">The edge transform state containing edge-level data.</param>
+        /// <param name="ctx">The transform context containing path-level data.</param>
+        /// <returns>Heights for all four control points in path order.</returns>
+        public static EdgeHeights CalculateEdgeHeights(in EdgeTransformState state, in TransformContext ctx) {
+            return CalculateEdgeHeights(
+                state.CumulativeDistance,
+                state.Length,
+                state.CtrlStartRatio,
+                state.CtrlEndRatio,
+                ctx.TotalLength,
+                ctx.StartHeight,
+                ctx.DeltaHeight,
+                ctx.Config.Slope);
         }
     }
 }
