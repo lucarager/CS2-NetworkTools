@@ -7,104 +7,112 @@ namespace NetworkTools.Systems {
     using Unity.Mathematics;
 
     /// <summary>
-    /// Defines the type of slope curve to apply to road segments.
+    ///     Defines the type of slope curve to apply to road segments.
     /// </summary>
     public enum SlopeTemplate {
         /// <summary>
-        /// Keep existing Y positions (no-op).
+        ///     Keep existing Y positions (no-op).
         /// </summary>
         Preserve = 0,
 
         /// <summary>
-        /// Linear interpolation - constant slope throughout the path.
+        ///     Linear interpolation - constant slope throughout the path.
         /// </summary>
         Linear = 1,
 
         /// <summary>
-        /// Ease-in-out curve - smooth transitions at start and end with steeper middle section.
+        ///     Ease-in-out curve - smooth transitions at start and end with steeper middle section.
         /// </summary>
         EaseInOut = 2,
 
         /// <summary>
-        /// Parabolic curve - creates an arch (hill) or dip (valley) along the path.
+        ///     Parabolic curve - creates an arch (hill) or dip (valley) along the path.
         /// </summary>
-        Parabolic = 3,
+        Parabolic = 3
     }
 
     /// <summary>
-    /// Configuration for slope curve application.
-    /// Contains parameters for different curve templates.
+    ///     Configuration for slope curve application.
+    ///     Contains parameters for different curve templates.
     /// </summary>
     public struct SlopeCurveConfig {
         /// <summary>
-        /// The template type to use for slope calculation.
+        ///     The template type to use for slope calculation.
         /// </summary>
         public SlopeTemplate Template;
 
         // EaseInOut parameters
         /// <summary>
-        /// Length of ease-in transition at start (0 to 0.5).
-        /// Defines how much of the path has gradual slope increase.
+        ///     Length of ease-in transition at start (0 to 0.5).
+        ///     Defines how much of the path has gradual slope increase.
         /// </summary>
         public float EaseInLength;
 
         /// <summary>
-        /// Length of ease-out transition at end (0 to 0.5).
-        /// Defines how much of the path has gradual slope decrease.
+        ///     Length of ease-out transition at end (0 to 0.5).
+        ///     Defines how much of the path has gradual slope decrease.
         /// </summary>
         public float EaseOutLength;
 
         // Parabolic parameters
         /// <summary>
-        /// Height of the parabolic arch (-1 to 1).
-        /// Positive creates a hill, negative creates a valley.
+        ///     Height of the parabolic arch (-1 to 1).
+        ///     Positive creates a hill, negative creates a valley.
         /// </summary>
         public float ArchHeight;
 
         /// <summary>
-        /// Position of the arch peak/valley along path (0 to 1).
-        /// 0.5 places it in the middle.
+        ///     Position of the arch peak/valley along path (0 to 1).
+        ///     0.5 places it in the middle.
         /// </summary>
         public float ArchPosition;
 
         /// <summary>
-        /// Creates a preserve configuration (keeps existing Y positions).
+        ///     Creates a preserve configuration (keeps existing Y positions).
         /// </summary>
-        public static SlopeCurveConfig Preserve() => new SlopeCurveConfig {
-            Template = SlopeTemplate.Preserve,
-        };
+        public static SlopeCurveConfig Preserve() {
+            return new SlopeCurveConfig {
+                Template = SlopeTemplate.Preserve
+            };
+        }
 
         /// <summary>
-        /// Creates a linear slope configuration (default).
+        ///     Creates a linear slope configuration (default).
         /// </summary>
-        public static SlopeCurveConfig Linear() => new SlopeCurveConfig {
-            Template = SlopeTemplate.Linear,
-        };
+        public static SlopeCurveConfig Linear() {
+            return new SlopeCurveConfig {
+                Template = SlopeTemplate.Linear
+            };
+        }
 
         /// <summary>
-        /// Creates an ease-in-out configuration with specified transition lengths.
+        ///     Creates an ease-in-out configuration with specified transition lengths.
         /// </summary>
         /// <param name="inLength">Ease-in length (0 to 0.5)</param>
         /// <param name="outLength">Ease-out length (0 to 0.5)</param>
-        public static SlopeCurveConfig EaseInOut(float inLength = 0.25f, float outLength = 0.25f) => new SlopeCurveConfig {
-            Template = SlopeTemplate.EaseInOut,
-            EaseInLength = math.clamp(inLength, 0f, 0.5f),
-            EaseOutLength = math.clamp(outLength, 0f, 0.5f)
-        };
+        public static SlopeCurveConfig EaseInOut(float inLength = 0.25f, float outLength = 0.25f) {
+            return new SlopeCurveConfig {
+                Template      = SlopeTemplate.EaseInOut,
+                EaseInLength  = math.clamp(inLength,  0f, 0.5f),
+                EaseOutLength = math.clamp(outLength, 0f, 0.5f)
+            };
+        }
 
         /// <summary>
-        /// Creates a parabolic configuration with specified arch properties.
+        ///     Creates a parabolic configuration with specified arch properties.
         /// </summary>
         /// <param name="height">Arch height (-1 to 1, negative = valley, positive = hill)</param>
         /// <param name="position">Arch position (0 to 1, 0.5 = middle)</param>
-        public static SlopeCurveConfig Parabolic(float height = 0.5f, float position = 0.5f) => new SlopeCurveConfig {
-            Template = SlopeTemplate.Parabolic,
-            ArchHeight = math.clamp(height, -1f, 1f),
-            ArchPosition = math.clamp(position, 0.1f, 0.9f)
-        };
+        public static SlopeCurveConfig Parabolic(float height = 0.5f, float position = 0.5f) {
+            return new SlopeCurveConfig {
+                Template     = SlopeTemplate.Parabolic,
+                ArchHeight   = math.clamp(height,   -1f,  1f),
+                ArchPosition = math.clamp(position, 0.1f, 0.9f)
+            };
+        }
 
         /// <summary>
-        /// Applies the configured curve to a normalized distance value (0 to 1).
+        ///     Applies the configured curve to a normalized distance value (0 to 1).
         /// </summary>
         /// <param name="t">Normalized distance along path (0 to 1)</param>
         /// <returns>Transformed value based on curve template</returns>
@@ -114,14 +122,14 @@ namespace NetworkTools.Systems {
                 SlopeTemplate.Linear => t,
                 SlopeTemplate.EaseInOut => ApplyEaseInOutCurve(t, EaseInLength, EaseOutLength),
                 SlopeTemplate.Parabolic => ApplyParabolicCurve(t, ArchHeight, ArchPosition),
-                _ => t,
+                _ => t
             };
         }
 
         /// <summary>
-        /// Applies an ease-in-out curve with configurable transition zones.
-        /// Creates smooth transitions at start and end of the slope.
-        /// Uses a sine-based easing for smooth derivative matching.
+        ///     Applies an ease-in-out curve with configurable transition zones.
+        ///     Creates smooth transitions at start and end of the slope.
+        ///     Uses a sine-based easing for smooth derivative matching.
         /// </summary>
         private static float ApplyEaseInOutCurve(float t, float easeInLength, float easeOutLength) {
             // Handle edge cases
@@ -133,14 +141,14 @@ namespace NetworkTools.Systems {
             t = math.clamp(t, 0f, 1f);
 
             // Calculate the linear region boundaries
-            float linearStart = easeInLength;
-            float linearEnd = 1f - easeOutLength;
+            var linearStart = easeInLength;
+            var linearEnd = 1f - easeOutLength;
 
             // Handle overlapping ease regions (sum > 1)
             if (linearStart >= linearEnd) {
                 // Use sine easing for the entire curve (true S-curve)
                 // sin goes from 0 to 1 over [0, PI/2], with derivative 0 at ends when mirrored
-                float sineT = 0.5f * (1f - math.cos(t * math.PI));
+                var sineT = 0.5f * (1f - math.cos(t * math.PI));
                 return sineT;
             }
 
@@ -149,9 +157,9 @@ namespace NetworkTools.Systems {
             // sin(x * PI/2) for x in [0,1] gives 0 to 1 with derivative PI/2 at x=1
             // We scale to match: output goes from 0 to easeInLength
             if (t < linearStart) {
-                float localT = t / easeInLength;
+                var localT = t / easeInLength;
                 // Sine ease-in: derivative at end = 1 (matches linear)
-                float eased = 1f - math.cos(localT * math.PI * 0.5f);
+                var eased = 1f - math.cos(localT * math.PI * 0.5f);
                 return eased * easeInLength;
             }
 
@@ -162,42 +170,49 @@ namespace NetworkTools.Systems {
 
             // Ease-Out Region (1-easeOutLength to 1)
             // Use sine ease-out: starts matching linear slope, ends with derivative 0
-            float outLocalT = (t - linearEnd) / easeOutLength;
+            var outLocalT = (t - linearEnd) / easeOutLength;
             // Sine ease-out: derivative at start = 1 (matches linear)
-            float outEased = math.sin(outLocalT * math.PI * 0.5f);
+            var outEased = math.sin(outLocalT * math.PI * 0.5f);
             return linearEnd + outEased * easeOutLength;
         }
 
         /// <summary>
-        /// Applies a parabolic curve with configurable arch height and position.
+        ///     Applies a parabolic curve with configurable arch height and position.
+        ///     Endpoints (0 and 1) are preserved; the arch creates a deviation from linear in between.
         /// </summary>
         private static float ApplyParabolicCurve(float t, float archHeight, float archPosition) {
-            // Calculate parabola with peak/valley at archPosition
-            float parabola;
+            // Calculate a bump function that is 0 at endpoints and 1 at archPosition
+            float bump;
 
             if (t < archPosition) {
-                // Left side of arch: rises from low point to peak
-                float localT = t / archPosition;
-                parabola = localT * localT;
-            } else {
-                // Right side of arch: falls from peak to low point
-                float localT = (1f - t) / (1f - archPosition);
-                parabola = localT * localT;
+                // Left side of arch: rises from 0 to 1 at archPosition
+                var localT = t / archPosition;
+                bump = localT * localT;
+            }
+            else {
+                // Right side of arch: falls from 1 at archPosition to 0 at t=1
+                var localT = (1f - t) / (1f - archPosition);
+                bump = localT * localT;
             }
 
-            // parabola is now 0 at endpoints, 1 at archPosition (bridge shape)
+            // bump is now 0 at endpoints (t=0, t=1), 1 at archPosition
 
-            // Mix linear with parabolic based on archHeight
-            // archHeight = 0: purely linear
-            // archHeight = 1: maximum arch effect (bridge)
-            // archHeight = -1: maximum inverted arch effect (valley)
-            if (archHeight >= 0f) {
-                // Bridge: blend towards parabola (endpoints low, middle high)
-                return math.lerp(t, parabola, archHeight);
-            } else {
-                // Valley: invert parabola (endpoints high, middle low)
-                return math.lerp(t, 1f - parabola, -archHeight);
-            }
+            // Calculate the maximum deviation possible at this t while preserving endpoints
+            // At any point t, we can deviate at most min(t, 1-t) to stay in [0, 1]
+            // But for arch effect, we want to add to linear based on archHeight
+
+            // archHeight = 0: purely linear (no deviation)
+            // archHeight = 1: maximum arch effect (adds bump scaled to reach 1 at peak)
+            // archHeight = -1: maximum inverted arch effect (subtracts bump scaled to reach 0 at peak)
+
+            // The deviation at each point: bump * archHeight * scale
+            // At archPosition with archHeight=1: we want result=1, so deviation = 1 - archPosition
+            // At archPosition with archHeight=-1: we want result=0, so deviation = -archPosition
+            var linearValue = t;
+            var maxDeviationAtPeak = archHeight >= 0f ? 1f - archPosition : archPosition;
+            var deviation = bump * archHeight * maxDeviationAtPeak;
+
+            return linearValue + deviation;
         }
     }
 }

@@ -105,5 +105,16 @@ namespace NetworkTools.Systems {
             Slope = SlopeCurveConfig.Preserve(),
             Flags = TransformFlags.None,
         };
+
+        /// <summary>
+        /// Creates a combined config with both shape and slope transforms.
+        /// </summary>
+        /// <param name="shape">The shape curve configuration.</param>
+        /// <param name="slope">The slope curve configuration.</param>
+        public static TransformConfig Combined(ShapeCurveConfig shape, SlopeCurveConfig slope) => new TransformConfig {
+            Shape = shape,
+            Slope = slope,
+            Flags = TransformFlags.None,
+        };
     }
 }

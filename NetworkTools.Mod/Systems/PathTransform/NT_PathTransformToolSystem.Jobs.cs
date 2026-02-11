@@ -44,7 +44,7 @@ public partial class NT_PathTransformToolSystem {
         /// 4. Apply slope transforms (Y modifications)
         /// 5. Output results (preview or apply)
         /// </summary>
-        private struct PathTransformJob : IJob {
+        internal struct PathTransformJob : IJob {
             [ReadOnly] public required NativeList<Entity>                SelectedNodes;
             [ReadOnly] public required NativeList<Entity>                CurrentPathEdges;
             [ReadOnly] public required NativeList<Entity>                CurrentPathNodes;
@@ -71,15 +71,15 @@ public partial class NT_PathTransformToolSystem {
                 }
 
                 // === 3. Apply shape transforms (XZ) ===
-                ApplyShapeTransforms(edges, in context);
+                PathTransformUtility.ApplyShapeTransforms(edges, in context);
 
                 // === 3b. Recalculate geometry after shape transforms ===
                 if (context.Config.HasShapeTransform) {
-                    RecalculateGeometry(edges, ref context);
+                    PathTransformUtility.RecalculateGeometry(edges, ref context);
                 }
 
                 // === 4. Apply slope transforms (Y) ===
-                ApplySlopeTransforms(edges, in context);
+                PathTransformUtility.ApplySlopeTransforms(edges, in context);
 
                 // === 5. Output results ===
                 Output(edges, in context);
@@ -161,151 +161,9 @@ public partial class NT_PathTransformToolSystem {
             // Pipeline Stage 3: Shape Transforms (XZ)
             // ========================================
 
-            /// <summary>
-            /// Applies shape transformations to all edges based on the configured template.
-            /// </summary>
-            private void ApplyShapeTransforms(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
-                if (!ctx.Config.HasShapeTransform) return;
-
-                switch (ctx.Config.Shape.Template) {
-                    case ShapeTemplate.Straighten:
-                        ApplyStraightenTransform(edges, in ctx);
-                        break;
-                    case ShapeTemplate.Smooth:
-                        ApplySmoothTransform(edges, in ctx);
-                        break;
-                }
-            }
-
-            /// <summary>
-            /// Straightens all edges to lie on a direct line from path start to path end.
-            /// </summary>
-            private void ApplyStraightenTransform(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
-                for (var i = 0; i < edges.Length; i++) {
-                    var state     = edges[i];
-                    var positions = ShapeCalculator.CalculateStraightenedPositions(in state, in ctx);
-
-                    state.Bezier = ShapeCalculator.ApplyPositionsToBezier(state.Bezier, positions, state.IsForward);
-                    state.CalculateLength();
-                    state.SetEvenControlPointRatios();
-
-                    edges[i] = state;
-                }
-            }
-
-            /// <summary>
-            /// Smooths all edges to follow a master bezier curve from path start to path end.
-            /// </summary>
-            private void ApplySmoothTransform(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
-                if (edges.Length == 0) return;
-
-                // Calculate master bezier controls from first/last edge tangents
-                var firstEdge = edges[0];
-                var lastEdge  = edges[^1];
-
-                var startTangent = ShapeCalculator.GetBezierTangentXZ(firstEdge.Bezier, true, firstEdge.IsForward);
-                var endTangent   = ShapeCalculator.GetBezierTangentXZ(lastEdge.Bezier, false, lastEdge.IsForward);
-
-                ShapeCalculator.CalculateMasterBezierControls(
-                    ctx.StartXZ, ctx.EndXZ,
-                    startTangent, endTangent,
-                    ctx.TotalLength,
-                    out var masterCtrl1, out var masterCtrl2);
-
-                // Apply smooth transform to each edge
-                for (var i = 0; i < edges.Length; i++) {
-                    var state     = edges[i];
-                    var positions = ShapeCalculator.CalculateSmoothedPositions(in state, in ctx, masterCtrl1, masterCtrl2);
-
-                    state.Bezier = ShapeCalculator.ApplyPositionsToBezier(state.Bezier, positions, state.IsForward);
-                    state.CalculateLength();
-                    state.RecalculateControlPointRatios();
-
-                    edges[i] = state;
-                }
-            }
-
-            /// <summary>
-            /// Recalculates cumulative distances and total path length
-            /// after shape transforms have modified the bezier curves.
-            /// Assumes each transform has already updated edge lengths.
-            /// </summary>
-            private void RecalculateGeometry(NativeArray<EdgeTransformState> edges, ref TransformContext context) {
-                var cumulativeDistance = 0f;
-
-                for (var i = 0; i < edges.Length; i++) {
-                    var state = edges[i];
-                    state.CumulativeDistance = cumulativeDistance;
-                    edges[i] = state;
-                    cumulativeDistance += state.Length;
-                }
-
-                context.TotalLength = cumulativeDistance;
-            }
-
             // ========================================
             // Pipeline Stage 4: Slope Transforms (Y)
             // ========================================
-
-            /// <summary>
-            /// Applies slope transformations to all edges based on the configured template.
-            /// </summary>
-            private void ApplySlopeTransforms(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
-                if (!ctx.Config.HasSlopeTransform) return;
-
-                switch (ctx.Config.Slope.Template) {
-                    case SlopeTemplate.Linear:
-                        ApplyLinearSlopeTransform(edges, in ctx);
-                        break;
-                    case SlopeTemplate.EaseInOut:
-                        ApplyEaseInOutSlopeTransform(edges, in ctx);
-                        break;
-                    case SlopeTemplate.Parabolic:
-                        ApplyParabolicSlopeTransform(edges, in ctx);
-                        break;
-                }
-            }
-
-            /// <summary>
-            /// Applies a linear slope transform - constant slope throughout the path.
-            /// </summary>
-            private void ApplyLinearSlopeTransform(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
-                for (var i = 0; i < edges.Length; i++) {
-                    var state   = edges[i];
-
-                    // Use even ratios for linear slopes - this produces a constant gradient
-                    // regardless of control point XZ positions
-                    state.SetEvenControlPointRatios();
-
-                    var heights = SlopeCalculator.CalculateEdgeHeights(in state, in ctx);
-                    state.Bezier = SlopeCalculator.ApplyHeightsToBezier(state.Bezier, heights, state.IsForward);
-                    edges[i] = state;
-                }
-            }
-
-            /// <summary>
-            /// Applies an ease-in-out slope transform - smooth transitions at start and end.
-            /// </summary>
-            private void ApplyEaseInOutSlopeTransform(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
-                for (var i = 0; i < edges.Length; i++) {
-                    var state   = edges[i];
-                    var heights = SlopeCalculator.CalculateEdgeHeights(in state, in ctx);
-                    state.Bezier = SlopeCalculator.ApplyHeightsToBezier(state.Bezier, heights, state.IsForward);
-                    edges[i] = state;
-                }
-            }
-
-            /// <summary>
-            /// Applies a parabolic slope transform - creates an arch (hill) or dip (valley).
-            /// </summary>
-            private void ApplyParabolicSlopeTransform(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
-                for (var i = 0; i < edges.Length; i++) {
-                    var state   = edges[i];
-                    var heights = SlopeCalculator.CalculateEdgeHeights(in state, in ctx);
-                    state.Bezier = SlopeCalculator.ApplyHeightsToBezier(state.Bezier, heights, state.IsForward);
-                    edges[i] = state;
-                }
-            }
 
             // ========================================
             // Pipeline Stage 5: Output
@@ -341,7 +199,7 @@ public partial class NT_PathTransformToolSystem {
 
                     if (PseudoRandomSeedLookup.TryGetComponent(state.EdgeEntity, out var seed)) {
                         creationDefinition.m_RandomSeed = seed.m_Seed;
-                    }
+            }
 
                     ECB.AddComponent(definitionEntity, creationDefinition);
                     ECB.AddComponent<Updated>(definitionEntity);
@@ -434,7 +292,7 @@ public partial class NT_PathTransformToolSystem {
                     }
 
                     // Get cumulative distance at this node
-                    var cumulativeDistance = (i == 0) ? 0f : GetCumulativeDistanceAtNode(edges, i);
+                    var cumulativeDistance = (i == 0) ? 0f : PathTransformUtility.GetCumulativeDistanceAtNode(edges, i);
 
                     // Calculate height delta for this node
                     float heightDelta = 0f;
@@ -464,16 +322,6 @@ public partial class NT_PathTransformToolSystem {
                     // Adjust connected edges that are not part of the path
                     AdjustConnectedEdges(nodeEntity, connectedEdges, pathEdgeSet, heightDelta, xzDelta, hasHeightDelta, hasXZDelta);
                 }
-            }
-
-            /// <summary>
-            /// Gets the cumulative distance at a node index (sum of all edge lengths before this node).
-            /// </summary>
-            private float GetCumulativeDistanceAtNode(NativeArray<EdgeTransformState> edges, int nodeIndex) {
-                if (nodeIndex <= 0) return 0f;
-                // The cumulative distance at node i is the cumulative distance of edge i-1 plus its length
-                var prevEdge = edges[nodeIndex - 1];
-                return prevEdge.CumulativeDistance + prevEdge.Length;
             }
 
             /// <summary>

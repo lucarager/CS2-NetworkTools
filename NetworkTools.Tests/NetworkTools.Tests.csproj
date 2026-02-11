@@ -1,0 +1,103 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>11.0</LangVersion>
+    <IsPackable>false</IsPackable>
+    <Configurations>Debug;Release;Test</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="NUnit" Version="3.14.0" />
+	<PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+	<PackageReference Include="NUnit.Engine" Version="3.16.3" />
+	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NetworkTools.Mod\NetworkTools.csproj" />
+  </ItemGroup>
+
+	<!--Imports must be after PropertyGroup block-->
+	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
+	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
+
+	<PropertyGroup>
+		<LangVersion>11.0</LangVersion>
+		<ImplicitUsings>disable</ImplicitUsings>
+	</PropertyGroup>
+
+	<!-- References needed at test runtime - copied to output -->
+	<ItemGroup>
+		<Reference Include="Unity.Mathematics">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Colossal.Mathematics">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Unity.Collections">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Unity.Burst">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Unity.Entities">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="UnityEngine.CoreModule">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Colossal.TestFramework">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="cohtml.Net.dll">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Game">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Colossal.AssetPipeline">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Colossal.Collections">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Colossal.Core">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Colossal.IO.AssetDatabase">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Colossal.Localization">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Colossal.Logging">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Colossal.UI">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Colossal.UI.Binding">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Unity.InputSystem">
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="Newtonsoft.Json">
+			<Private>true</Private>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Update="System">
+			<Private>false</Private>
+		</Reference>
+		<Reference Update="System.Core">
+			<Private>false</Private>
+		</Reference>
+		<Reference Update="System.Data">
+			<Private>false</Private>
+		</Reference>
+	</ItemGroup>
+
+</Project>
