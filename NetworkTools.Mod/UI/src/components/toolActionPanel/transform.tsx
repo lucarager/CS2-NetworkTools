@@ -24,16 +24,16 @@ const SHAPE_MODES: { label: string; id: ShapeTemplate; icon: string }[] = [
 // Slope modes (Y axis transformations)
 const SLOPE_MODES: { label: string; id: SlopeTemplate; icon: string }[] = [
     { label: "Preserve", id: "preserve", icon: "coui://nt/Modes/Slope/Preserve.svg" },
-    { label: "Linear", id: "linear", icon: "coui://nt/Modes/Slope/Linear.svg" },
-    { label: "Eased", id: "easeinout", icon: "coui://nt/Modes/Slope/Eased.svg" },
+    { label: "Constant Slope", id: "linear", icon: "coui://nt/Modes/Slope/Linear.svg" },
+    { label: "EaseInOut Slope", id: "easeinout", icon: "coui://nt/Modes/Slope/Eased.svg" },
     // { label: "Parabolic", id: "parabolic", icon: "coui://nt/Modes/Slope/Parabolic.svg" },
 ];
 
-interface SlopeProps {
+interface TransformControlProps {
     toolId?: string;
 }
 
-export const Slope: React.FC<SlopeProps> = () => {
+export const TransformControls: React.FC<TransformControlProps> = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
     const slopeConfig = useValue(GAME_BINDINGS.SLOPE_CONFIG.binding);
     const shapeConfig = useValue(GAME_BINDINGS.SHAPE_CONFIG.binding);

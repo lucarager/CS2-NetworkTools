@@ -15,12 +15,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NetworkTools.Mod\NetworkTools.csproj" />
+	<ProjectReference Include="..\NetworkTools.Mod\NetworkTools.csproj" />
   </ItemGroup>
 
-	<!--Imports must be after PropertyGroup block-->
+	<!--Import only Mod.props for reference paths, NOT Mod.targets (which deploys to mods folder)-->
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
-	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
 
 	<PropertyGroup>
 		<LangVersion>11.0</LangVersion>

@@ -3,11 +3,11 @@ import styles from "./toolActionPanel.module.scss";
 import panels from "../shared/panels.module.scss";
 import { GAME_BINDINGS } from "gameBindings";
 import { useValue } from "cs2/api";
-import { Slope } from "./slope";
+import { TransformControls } from "./transform";
 
 // Registry of tool components mapped by tool ID
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
-    "Path Shape Tools": Slope,
+    "Path Shape Tools": TransformControls,
 };
 
 export const ToolActionPanel = () => {

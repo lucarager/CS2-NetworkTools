@@ -124,9 +124,12 @@ namespace NetworkTools.Systems {
             var edge = EntityManager.GetComponentData<Edge>(edgeEntity);
             var (actualStart, actualEnd) = DetermineTraversalDirection(edge);
 
-            var startNode = EntityManager.GetComponentData<Node>(actualStart);
-            var endNode = EntityManager.GetComponentData<Node>(actualEnd);
-            var deltaY = endNode.m_Position.y - startNode.m_Position.y;
+            // Calculate deltaY from the bezier curve itself, not from node positions
+            // This ensures we get the correct slope for transformed temp edges
+            bool isForward = (actualStart == edge.m_Start);
+            float startY = isForward ? curve.m_Bezier.a.y : curve.m_Bezier.d.y;
+            float endY = isForward ? curve.m_Bezier.d.y : curve.m_Bezier.a.y;
+            var deltaY = endY - startY;
             var slopePercent = deltaY / curve.m_Length * 100f;
 
             var position = WorldToTooltipPos(MathUtils.Position(curve.m_Bezier, 0.5f));

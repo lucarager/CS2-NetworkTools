@@ -305,7 +305,7 @@ namespace NetworkTools.Systems {
             /// Creates default configuration with Linear template.
             /// </summary>
             public static SlopeConfigData Default() => new() {
-                Template = "linear",
+                Template = "preserve",
                 EaseInLength = 0.25f,
                 EaseOutLength = 0.25f,
                 ArchHeight = 0.5f,
