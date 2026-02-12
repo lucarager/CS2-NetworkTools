@@ -12,12 +12,10 @@ namespace NetworkTools.Tests.PathTransform {
     public class TransformContextTests {
         private const float Tolerance = 0.0001f;
 
-        #region Create Factory
-
         [Test]
         public void Create_SetsStartPositionCorrectly() {
-            var startPos = new float3(10f, 20f, 30f);
-            var endPos = new float3(100f, 200f, 300f);
+            var startPos = new float3(10f, 20f,  30f);
+            var endPos = new float3(100f,  200f, 300f);
             var config = TransformConfig.Preserve();
 
             var ctx = TransformContext.Create(startPos, endPos, config);
@@ -29,8 +27,8 @@ namespace NetworkTools.Tests.PathTransform {
 
         [Test]
         public void Create_SetsEndPositionCorrectly() {
-            var startPos = new float3(10f, 20f, 30f);
-            var endPos = new float3(100f, 200f, 300f);
+            var startPos = new float3(10f, 20f,  30f);
+            var endPos = new float3(100f,  200f, 300f);
             var config = TransformConfig.Preserve();
 
             var ctx = TransformContext.Create(startPos, endPos, config);
@@ -56,15 +54,10 @@ namespace NetworkTools.Tests.PathTransform {
             Assert.AreEqual(SlopeTemplate.Linear, ctx.Config.Slope.Template);
         }
 
-        #endregion
-
-        #region Computed Properties
-
         [Test]
         public void StartHeight_ReturnsYComponent() {
-            var ctx = TransformContext.Create(
-                new float3(0f, 42f, 0f),
-                new float3(0f, 0f, 0f),
+            var ctx = TransformContext.Create(new float3(0f, 42f, 0f),
+                new float3(0f,                               0f,  0f),
                 TransformConfig.Preserve());
 
             Assert.AreEqual(42f, ctx.StartHeight, Tolerance);
@@ -72,9 +65,8 @@ namespace NetworkTools.Tests.PathTransform {
 
         [Test]
         public void DeltaHeight_ReturnsCorrectDifference() {
-            var ctx = TransformContext.Create(
-                new float3(0f, 10f, 0f),
-                new float3(0f, 50f, 0f),
+            var ctx = TransformContext.Create(new float3(0f, 10f, 0f),
+                new float3(0f,                               50f, 0f),
                 TransformConfig.Preserve());
 
             Assert.AreEqual(40f, ctx.DeltaHeight, Tolerance);
@@ -82,9 +74,8 @@ namespace NetworkTools.Tests.PathTransform {
 
         [Test]
         public void DeltaHeight_NegativeSlope_ReturnsNegative() {
-            var ctx = TransformContext.Create(
-                new float3(0f, 100f, 0f),
-                new float3(0f, 20f, 0f),
+            var ctx = TransformContext.Create(new float3(0f, 100f, 0f),
+                new float3(0f,                               20f,  0f),
                 TransformConfig.Preserve());
 
             Assert.AreEqual(-80f, ctx.DeltaHeight, Tolerance);
@@ -92,8 +83,7 @@ namespace NetworkTools.Tests.PathTransform {
 
         [Test]
         public void StartXZ_ReturnsXZComponents() {
-            var ctx = TransformContext.Create(
-                new float3(10f, 999f, 30f),
+            var ctx = TransformContext.Create(new float3(10f, 999f, 30f),
                 float3.zero,
                 TransformConfig.Preserve());
 
@@ -103,18 +93,13 @@ namespace NetworkTools.Tests.PathTransform {
 
         [Test]
         public void EndXZ_ReturnsXZComponents() {
-            var ctx = TransformContext.Create(
-                float3.zero,
+            var ctx = TransformContext.Create(float3.zero,
                 new float3(100f, 999f, 300f),
                 TransformConfig.Preserve());
 
             Assert.AreEqual(100f, ctx.EndXZ.x, Tolerance);
             Assert.AreEqual(300f, ctx.EndXZ.y, Tolerance);
         }
-
-        #endregion
-
-        #region IsValid
 
         [Test]
         public void IsValid_ZeroLength_ReturnsFalse() {
@@ -139,7 +124,5 @@ namespace NetworkTools.Tests.PathTransform {
 
             Assert.IsFalse(ctx.IsValid);
         }
-
-        #endregion
     }
 }

@@ -9,15 +9,13 @@ namespace NetworkTools.Tests.PathTransform {
 
     [TestFixture]
     public class TransformConfigTests {
-        #region Factory Methods
-
         [Test]
         public void Preserve_BothTemplatesArePreserve() {
             var config = TransformConfig.Preserve();
 
             Assert.AreEqual(ShapeTemplate.Preserve, config.Shape.Template);
             Assert.AreEqual(SlopeTemplate.Preserve, config.Slope.Template);
-            Assert.AreEqual(TransformFlags.None, config.Flags);
+            Assert.AreEqual(TransformFlags.None,    config.Flags);
         }
 
         [Test]
@@ -25,7 +23,7 @@ namespace NetworkTools.Tests.PathTransform {
             var config = TransformConfig.SlopeOnly(SlopeCurveConfig.Linear());
 
             Assert.AreEqual(ShapeTemplate.Preserve, config.Shape.Template);
-            Assert.AreEqual(SlopeTemplate.Linear, config.Slope.Template);
+            Assert.AreEqual(SlopeTemplate.Linear,   config.Slope.Template);
         }
 
         [Test]
@@ -33,22 +31,17 @@ namespace NetworkTools.Tests.PathTransform {
             var config = TransformConfig.ShapeOnly(ShapeCurveConfig.Straighten());
 
             Assert.AreEqual(ShapeTemplate.Straighten, config.Shape.Template);
-            Assert.AreEqual(SlopeTemplate.Preserve, config.Slope.Template);
+            Assert.AreEqual(SlopeTemplate.Preserve,   config.Slope.Template);
         }
 
         [Test]
         public void Combined_BothTemplatesSet() {
-            var config = TransformConfig.Combined(
-                ShapeCurveConfig.Smooth(0.5f),
+            var config = TransformConfig.Combined(ShapeCurveConfig.Smooth(),
                 SlopeCurveConfig.EaseInOut(0.2f, 0.3f));
 
-            Assert.AreEqual(ShapeTemplate.Smooth, config.Shape.Template);
+            Assert.AreEqual(ShapeTemplate.Smooth,    config.Shape.Template);
             Assert.AreEqual(SlopeTemplate.EaseInOut, config.Slope.Template);
         }
-
-        #endregion
-
-        #region HasTransform
 
         [Test]
         public void HasTransform_BothPreserve_ReturnsFalse() {
@@ -73,16 +66,11 @@ namespace NetworkTools.Tests.PathTransform {
 
         [Test]
         public void HasTransform_BothActive_ReturnsTrue() {
-            var config = TransformConfig.Combined(
-                ShapeCurveConfig.Straighten(),
+            var config = TransformConfig.Combined(ShapeCurveConfig.Straighten(),
                 SlopeCurveConfig.Linear());
 
             Assert.IsTrue(config.HasTransform);
         }
-
-        #endregion
-
-        #region HasShapeTransform
 
         [Test]
         public void HasShapeTransform_Preserve_ReturnsFalse() {
@@ -104,10 +92,6 @@ namespace NetworkTools.Tests.PathTransform {
 
             Assert.IsTrue(config.HasShapeTransform);
         }
-
-        #endregion
-
-        #region HasSlopeTransform
 
         [Test]
         public void HasSlopeTransform_Preserve_ReturnsFalse() {
@@ -136,7 +120,5 @@ namespace NetworkTools.Tests.PathTransform {
 
             Assert.IsTrue(config.HasSlopeTransform);
         }
-
-        #endregion
     }
 }
