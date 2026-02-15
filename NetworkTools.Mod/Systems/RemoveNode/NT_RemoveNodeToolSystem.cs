@@ -32,6 +32,7 @@ namespace NetworkTools.Systems {
 
         private TerrainSystem m_TerrainSystem;
         private OverlayRenderSystem m_OverlayRenderSystem;
+        public override string toolID => "RemoveNode Tool";
 
         private EntityQuery m_DefinitionQuery;
         private EntityQuery m_NodesWithEligibleQuery;
@@ -201,7 +202,7 @@ namespace NetworkTools.Systems {
         }
 
         private void AddHighlight(Entity entity) {
-            EntityManager.AddComponent<Components.NT_Highlighted>(entity);
+            EntityManager.AddComponentData(entity, Components.NT_Highlighted.DefaultNode);
         }
 
         private void RemoveHighlight(Entity entity) {

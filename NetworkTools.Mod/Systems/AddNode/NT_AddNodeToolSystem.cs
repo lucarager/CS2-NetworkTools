@@ -33,6 +33,7 @@ namespace NetworkTools.Systems {
 
         private TerrainSystem       m_TerrainSystem;
         private OverlayRenderSystem m_OverlayRenderSystem;
+        public override string toolID => "AddNode Tool";
 
         private EntityQuery m_DefinitionQuery;
         private EntityQuery m_NodesWithEligibleQuery;
@@ -221,7 +222,7 @@ namespace NetworkTools.Systems {
             AddHighlight(newEntity);
         }
 
-        private void AddHighlight(Entity entity) { EntityManager.AddComponent<NetworkTools.Components.NT_Highlighted>(entity); }
+        private void AddHighlight(Entity entity) { EntityManager.AddComponentData(entity, NetworkTools.Components.NT_Highlighted.DefaultNode); }
 
         private void RemoveHighlight(Entity entity) { EntityManager.RemoveComponent<NetworkTools.Components.NT_Highlighted>(entity); }
 

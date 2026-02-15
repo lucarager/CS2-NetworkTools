@@ -36,8 +36,12 @@ namespace NetworkTools.Systems {
         public override PrefabBase GetPrefab() { return m_Prefab; }
 
         protected override void OnCreate() {
+            base.OnCreate();
+
+            m_Log.Prefix = nameof(NT_AddNodeToolSystem);
+
             // Systems & Tools
-            m_Barrier       = World.GetOrCreateSystemManaged<ToolOutputBarrier>();
+            m_Barrier = World.GetOrCreateSystemManaged<ToolOutputBarrier>();
             m_TerrainSystem = World.GetOrCreateSystemManaged<TerrainSystem>();
             m_OverlayRenderSystem =
                 World.GetOrCreateSystemManaged<OverlayRenderSystem>();
@@ -69,8 +73,6 @@ namespace NetworkTools.Systems {
                                                .WithAll<Node,
                                                    NetworkTools.Components.NT_Highlighted>()
                                                .Build();
-
-            base.OnCreate();
         }
 
         protected override void OnDestroy() {

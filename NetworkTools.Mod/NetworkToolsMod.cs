@@ -135,6 +135,7 @@ namespace NetworkTools {
             // Tools
             updateSystem.UpdateAt<NT_PathTransformToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
+            updateSystem.UpdateAt<NT_NodeControlToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_RemoveNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             // UI
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);

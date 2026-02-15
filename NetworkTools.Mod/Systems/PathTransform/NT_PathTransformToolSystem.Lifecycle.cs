@@ -36,6 +36,10 @@ namespace NetworkTools.Systems {
         public override PrefabBase GetPrefab() { return m_Prefab; }
 
         protected override void OnCreate() {
+            base.OnCreate();
+
+            m_Log.Prefix = nameof(NT_PathTransformToolSystem);
+
             // Systems & Tools
             m_Barrier       = World.GetOrCreateSystemManaged<ToolOutputBarrier>();
             m_TerrainSystem = World.GetOrCreateSystemManaged<TerrainSystem>();
@@ -118,8 +122,6 @@ namespace NetworkTools.Systems {
             m_EdgesWithSelectedQuery = Unity.Entities.SystemAPI.QueryBuilder()
                                             .WithAll<Edge, NT_Selected>()
                                             .Build();
-
-            base.OnCreate();
         }
 
         protected override void OnDestroy() {

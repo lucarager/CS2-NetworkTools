@@ -4,58 +4,90 @@
 // </copyright>
 
 namespace NetworkTools.Systems {
-#region Using Statements
+    #region Using Statements
 
-using Colossal.Mathematics;
-using Game.Common;
-using Game.Net;
-using Game.Objects;
-using Game.Prefabs;
-using Game.Tools;
-using Unity.Collections;
-using Unity.Entities;
-using Unity.Jobs;
-using Unity.Mathematics;
+    using Colossal.Mathematics;
+    using Game.Common;
+    using Game.Net;
+    using Game.Prefabs;
+    using Game.Tools;
+    using Unity.Collections;
+    using Unity.Entities;
+    using Unity.Jobs;
+    using Unity.Mathematics;
 
-#endregion
+    #endregion
 
-public partial class NT_PathTransformToolSystem {
-    /// <summary>
-    /// Minimum height delta (in meters) to consider for intersection adjustments.
-    /// </summary>
-    private const float HeightDeltaThreshold = 0.001f;
+    public partial class NT_PathTransformToolSystem {
+        /// <summary>
+        ///     Minimum height delta (in meters) to consider for intersection adjustments.
+        /// </summary>
+        private const float HeightDeltaThreshold = 0.001f;
 
-    /// <summary>
-    /// Minimum XZ delta squared (in meters²) to consider for intersection adjustments.
-    /// </summary>
-    private const float XZDeltaSquaredThreshold = 0.000001f;
+        /// <summary>
+        ///     Minimum XZ delta squared (in meters²) to consider for intersection adjustments.
+        /// </summary>
+        private const float XZDeltaSquaredThreshold = 0.000001f;
+
+
 #if BURST
         [BurstCompile]
 #endif
         /// <summary>
-        /// Unified job for path transformations. Computes adjusted beziers and outputs
-        /// either preview definitions or applies changes to existing entities.
-        /// Supports both shape (XZ) and slope (Y) transformations.
-        /// 
-        /// Pipeline:
-        /// 1. Initialize context (path-level data)
-        /// 2. Gather edge states (per-edge data, single loop)
-        /// 3. Apply shape transforms (XZ modifications)
-        /// 4. Apply slope transforms (Y modifications)
-        /// 5. Output results (preview or apply)
+        ///     Creates temp marker objects at specific positions.
         /// </summary>
-        internal struct PathTransformJob : IJob {
-            [ReadOnly] public required NativeList<Entity>                SelectedNodes;
-            [ReadOnly] public required NativeList<Entity>                CurrentPathEdges;
-            [ReadOnly] public required NativeList<Entity>                CurrentPathNodes;
-            [ReadOnly] public required ComponentLookup<Node>             NodeLookup;
-            [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
-            [ReadOnly] public required ComponentLookup<Edge>             EdgeLookup;
-            [ReadOnly] public required TransformConfig                   Config;
-            [ReadOnly] public required ComponentLookup<PrefabRef>        PrefabRefLookup;
+        internal struct CreateMarkersJob : IJob {
+            [ReadOnly] public NativeArray<float3> Positions;
+            [ReadOnly] public Entity MarkerPrefab;
+            public EntityCommandBuffer ECB;
+
+            public void Execute() {
+                for (var i = 0; i < Positions.Length; i++) {
+                    var position = Positions[i];
+                    var entity = ECB.CreateEntity();
+
+                    var creationDefinition = new CreationDefinition {
+                        m_Prefab = MarkerPrefab,
+                    };
+
+                    ECB.AddComponent(entity, creationDefinition);
+                    ECB.AddComponent<Updated>(entity);
+
+                    var objectDefinition = new ObjectDefinition {
+                        m_Position = position,
+                    };
+
+                    ECB.AddComponent(entity, objectDefinition);
+                }
+            }
+        }
+
+#if BURST
+        [BurstCompile]
+#endif
+            /// <summary>
+            ///     Unified job for path transformations. Computes adjusted beziers and outputs
+            ///     either preview definitions or applies changes to existing entities.
+            ///     Supports both shape (XZ) and slope (Y) transformations.
+            ///     Pipeline:
+            ///     1. Initialize context (path-level data)
+            ///     2. Gather edge states (per-edge data, single loop)
+            ///     3. Apply shape transforms (XZ modifications)
+            ///     4. Apply slope transforms (Y modifications)
+            ///     5. Output results (preview or apply)
+            /// </summary>
+            internal struct PathTransformJob : IJob {
+            [ReadOnly] public required NativeList<Entity> SelectedNodes;
+            [ReadOnly] public required NativeList<Entity> CurrentPathEdges;
+            [ReadOnly] public required NativeList<Entity> CurrentPathNodes;
+            [ReadOnly] public required ComponentLookup<Node> NodeLookup;
+            [ReadOnly] public required ComponentLookup<Curve> CurveLookup;
+            [ReadOnly] public required ComponentLookup<Edge> EdgeLookup;
+            [ReadOnly] public required TransformConfig Config;
+            [ReadOnly] public required ComponentLookup<PrefabRef> PrefabRefLookup;
             [ReadOnly] public required ComponentLookup<PseudoRandomSeed> PseudoRandomSeedLookup;
-            [ReadOnly] public required BufferLookup<ConnectedEdge>       ConnectedEdgeLookup;
-            [ReadOnly] public required ComponentLookup<Aggregated>       AggregatedLookup;
+            [ReadOnly] public required BufferLookup<ConnectedEdge> ConnectedEdgeLookup;
+            [ReadOnly] public required ComponentLookup<Aggregated> AggregatedLookup;
             public required TransformOutputMode OutputMode;
             public required EntityCommandBuffer ECB;
 
@@ -87,29 +119,22 @@ public partial class NT_PathTransformToolSystem {
                 edges.Dispose();
             }
 
-            // ========================================
-            // Pipeline Stage 1: Initialize Context
-            // ========================================
 
             /// <summary>
-            /// Creates the path-level context from endpoint node positions.
+            ///     Creates the path-level context from endpoint node positions.
             /// </summary>
             private TransformContext InitializeContext() {
                 var startNode = SelectedNodes[0];
-                var endNode   = SelectedNodes[^1];
-                var startPos  = NodeLookup[startNode].m_Position;
-                var endPos    = NodeLookup[endNode].m_Position;
+                var endNode = SelectedNodes[^1];
+                var startPos = NodeLookup[startNode].m_Position;
+                var endPos = NodeLookup[endNode].m_Position;
 
                 return TransformContext.Create(startPos, endPos, Config);
             }
 
-            // ========================================
-            // Pipeline Stage 2: Gather Edge States
-            // ========================================
-
             /// <summary>
-            /// Gathers all edge data in a single loop, calculating cumulative distances
-            /// and total path length. Updates context.TotalLength.
+            ///     Gathers all edge data in a single loop, calculating cumulative distances
+            ///     and total path length. Updates context.TotalLength.
             /// </summary>
             private NativeArray<EdgeTransformState> GatherEdgeStates(ref TransformContext context) {
                 var edgeCount = CurrentPathEdges.Length;
@@ -121,7 +146,7 @@ public partial class NT_PathTransformToolSystem {
                     var state = new EdgeTransformState {
                         EdgeEntity         = edgeEntity,
                         PathIndex          = i,
-                        CumulativeDistance = cumulativeDistance,
+                        CumulativeDistance = cumulativeDistance
                     };
 
                     // Get edge component for direction and node references
@@ -147,7 +172,7 @@ public partial class NT_PathTransformToolSystem {
                         state.OriginalEndXZ = new float2(pathEndNodeInfo.m_Position.x, pathEndNodeInfo.m_Position.z);
                     }
 
-                    edges[i] = state;
+                    edges[i]           =  state;
                     cumulativeDistance += state.Length;
                 }
 
@@ -157,31 +182,20 @@ public partial class NT_PathTransformToolSystem {
                 return edges;
             }
 
-            // ========================================
-            // Pipeline Stage 3: Shape Transforms (XZ)
-            // ========================================
-
-            // ========================================
-            // Pipeline Stage 4: Slope Transforms (Y)
-            // ========================================
-
-            // ========================================
-            // Pipeline Stage 5: Output
-            // ========================================
-
             /// <summary>
-            /// Outputs the transformed edges as either preview entities or applied changes.
+            ///     Outputs the transformed edges as either preview entities or applied changes.
             /// </summary>
             private void Output(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
                 if (OutputMode == TransformOutputMode.Preview) {
                     OutputPreview(edges);
-                } else {
+                }
+                else {
                     OutputApply(edges, ctx);
                 }
             }
 
             /// <summary>
-            /// Creates CreationDefinition + NetCourse entities for preview.
+            ///     Creates CreationDefinition + NetCourse entities for preview.
             /// </summary>
             private void OutputPreview(NativeArray<EdgeTransformState> edges) {
                 for (var i = 0; i < edges.Length; i++) {
@@ -190,7 +204,7 @@ public partial class NT_PathTransformToolSystem {
 
                     var creationDefinition = new CreationDefinition {
                         m_Original = state.EdgeEntity,
-                        m_Flags    = CreationFlags.Recreate | CreationFlags.Parent,
+                        m_Flags    = CreationFlags.Recreate | CreationFlags.Parent
                     };
 
                     if (PrefabRefLookup.TryGetComponent(state.EdgeEntity, out var prefabRef)) {
@@ -199,7 +213,7 @@ public partial class NT_PathTransformToolSystem {
 
                     if (PseudoRandomSeedLookup.TryGetComponent(state.EdgeEntity, out var seed)) {
                         creationDefinition.m_RandomSeed = seed.m_Seed;
-            }
+                    }
 
                     ECB.AddComponent(definitionEntity, creationDefinition);
                     ECB.AddComponent<Updated>(definitionEntity);
@@ -217,7 +231,7 @@ public partial class NT_PathTransformToolSystem {
                             m_Elevation     = default,
                             m_Flags         = 0,
                             m_ParentMesh    = -1,
-                            m_SplitPosition = 0,
+                            m_SplitPosition = 0
                         },
                         m_EndPosition = new CoursePos {
                             m_Entity        = Entity.Null,
@@ -227,8 +241,8 @@ public partial class NT_PathTransformToolSystem {
                             m_Elevation     = default,
                             m_Flags         = 0,
                             m_ParentMesh    = -1,
-                            m_SplitPosition = 0,
-                        },
+                            m_SplitPosition = 0
+                        }
                     };
 
                     ECB.AddComponent(definitionEntity, netCourse);
@@ -236,7 +250,7 @@ public partial class NT_PathTransformToolSystem {
             }
 
             /// <summary>
-            /// Applies transformation changes to existing Curve components and handles intersection adjustments.
+            ///     Applies transformation changes to existing Curve components and handles intersection adjustments.
             /// </summary>
             private void OutputApply(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
                 // Build path edge set for intersection filtering
@@ -249,7 +263,7 @@ public partial class NT_PathTransformToolSystem {
 
                     var curve = new Curve {
                         m_Bezier = state.Bezier,
-                        m_Length = MathUtils.Length(state.Bezier),
+                        m_Length = MathUtils.Length(state.Bezier)
                     };
                     ECB.SetComponent(state.EdgeEntity, curve);
 
@@ -263,21 +277,16 @@ public partial class NT_PathTransformToolSystem {
                 pathEdgeSet.Dispose();
             }
 
-            // ========================================
-            // Intersection Handling
-            // ========================================
-
             /// <summary>
-            /// Adjusts non-path edges connected to intersection nodes to preserve their original slopes and positions.
+            ///     Adjusts non-path edges connected to intersection nodes to preserve their original slopes and positions.
             /// </summary>
             private void HandleIntersections(
                 NativeArray<EdgeTransformState> edges,
                 NativeHashSet<Entity> pathEdgeSet,
                 in TransformContext ctx) {
-
-                var firstNodePos       = NodeLookup[CurrentPathNodes[0]].m_Position;
+                var firstNodePos = NodeLookup[CurrentPathNodes[0]].m_Position;
                 var firstNodeOldHeight = firstNodePos.y;
-                var firstNodeOldXZ     = new float2(firstNodePos.x, firstNodePos.z);
+                var firstNodeOldXZ = new float2(firstNodePos.x, firstNodePos.z);
 
                 for (var i = 0; i < CurrentPathNodes.Length; i++) {
                     var nodeEntity = CurrentPathNodes[i];
@@ -292,40 +301,51 @@ public partial class NT_PathTransformToolSystem {
                     }
 
                     // Get cumulative distance at this node
-                    var cumulativeDistance = (i == 0) ? 0f : PathTransformUtility.GetCumulativeDistanceAtNode(edges, i);
+                    var cumulativeDistance = i == 0 ? 0f : PathTransformUtility.GetCumulativeDistanceAtNode(edges, i);
 
                     // Calculate height delta for this node
-                    float heightDelta = 0f;
+                    var heightDelta = 0f;
                     if (ctx.Config.HasSlopeTransform) {
-                        float oldHeight = (i == 0) ? firstNodeOldHeight : edges[i - 1].OriginalEndHeight;
-                        float newHeight = SlopeCalculator.CalculateHeight(
-                            cumulativeDistance, ctx.TotalLength, ctx.StartHeight, ctx.DeltaHeight, ctx.Config.Slope);
+                        var oldHeight = i == 0 ? firstNodeOldHeight : edges[i - 1].OriginalEndHeight;
+                        var newHeight = SlopeCalculator.CalculateHeight(cumulativeDistance,
+                            ctx.TotalLength,
+                            ctx.StartHeight,
+                            ctx.DeltaHeight,
+                            ctx.Config.Slope);
                         heightDelta = newHeight - oldHeight;
                     }
 
                     // Calculate XZ delta for this node
-                    float2 xzDelta = float2.zero;
+                    var xzDelta = float2.zero;
                     if (ctx.Config.HasShapeTransform && ctx.Config.Shape.Template == ShapeTemplate.Straighten) {
-                        float2 oldXZ = (i == 0) ? firstNodeOldXZ : edges[i - 1].OriginalEndXZ;
-                        float2 newXZ = ShapeCalculator.CalculatePositionLinear(
-                            cumulativeDistance, ctx.TotalLength, ctx.StartXZ, ctx.EndXZ);
+                        var oldXZ = i == 0 ? firstNodeOldXZ : edges[i - 1].OriginalEndXZ;
+                        var newXZ = ShapeCalculator.CalculatePositionLinear(cumulativeDistance,
+                            ctx.TotalLength,
+                            ctx.StartXZ,
+                            ctx.EndXZ);
                         xzDelta = newXZ - oldXZ;
                     }
 
                     var hasHeightDelta = math.abs(heightDelta) >= HeightDeltaThreshold;
-                    var hasXZDelta     = math.lengthsq(xzDelta) >= XZDeltaSquaredThreshold;
+                    var hasXZDelta = math.lengthsq(xzDelta) >= XZDeltaSquaredThreshold;
 
                     if (!hasHeightDelta && !hasXZDelta) {
                         continue;
                     }
 
                     // Adjust connected edges that are not part of the path
-                    AdjustConnectedEdges(nodeEntity, connectedEdges, pathEdgeSet, heightDelta, xzDelta, hasHeightDelta, hasXZDelta);
+                    AdjustConnectedEdges(nodeEntity,
+                        connectedEdges,
+                        pathEdgeSet,
+                        heightDelta,
+                        xzDelta,
+                        hasHeightDelta,
+                        hasXZDelta);
                 }
             }
 
             /// <summary>
-            /// Adjusts edges connected to an intersection node that are not part of the path.
+            ///     Adjusts edges connected to an intersection node that are not part of the path.
             /// </summary>
             private void AdjustConnectedEdges(
                 Entity nodeEntity,
@@ -335,7 +355,6 @@ public partial class NT_PathTransformToolSystem {
                 float2 xzDelta,
                 bool hasHeightDelta,
                 bool hasXZDelta) {
-
                 for (var j = 0; j < connectedEdges.Length; j++) {
                     var connectedEdgeEntity = connectedEdges[j].m_Edge;
 
@@ -359,17 +378,20 @@ public partial class NT_PathTransformToolSystem {
                             bezier.a.y += heightDelta;
                             bezier.b.y += heightDelta;
                         }
+
                         if (hasXZDelta) {
                             bezier.a.x += xzDelta.x;
                             bezier.a.z += xzDelta.y;
                             bezier.b.x += xzDelta.x;
                             bezier.b.z += xzDelta.y;
                         }
-                    } else if (connectedEdge.m_End == nodeEntity) {
+                    }
+                    else if (connectedEdge.m_End == nodeEntity) {
                         if (hasHeightDelta) {
                             bezier.d.y += heightDelta;
                             bezier.c.y += heightDelta;
                         }
+
                         if (hasXZDelta) {
                             bezier.d.x += xzDelta.x;
                             bezier.d.z += xzDelta.y;
@@ -387,12 +409,8 @@ public partial class NT_PathTransformToolSystem {
                 }
             }
 
-            // ========================================
-            // Utility Methods
-            // ========================================
-
             /// <summary>
-            /// Marks an entity as updated with Updated and BatchesUpdated components.
+            ///     Marks an entity as updated with Updated and BatchesUpdated components.
             /// </summary>
             private void MarkUpdated(Entity entity) {
                 ECB.AddComponent<Updated>(entity);
@@ -400,7 +418,7 @@ public partial class NT_PathTransformToolSystem {
             }
 
             /// <summary>
-            /// Marks a node and all its connected edges as updated.
+            ///     Marks a node and all its connected edges as updated.
             /// </summary>
             private void MarkNodeUpdated(Entity nodeEntity) {
                 MarkUpdated(nodeEntity);
@@ -424,7 +442,8 @@ public partial class NT_PathTransformToolSystem {
 
                     if (edge.m_Start != nodeEntity) {
                         MarkUpdated(edge.m_Start);
-                    } else if (edge.m_End != nodeEntity) {
+                    }
+                    else if (edge.m_End != nodeEntity) {
                         MarkUpdated(edge.m_End);
                     }
 

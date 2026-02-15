@@ -102,6 +102,8 @@ namespace NetworkTools.Systems {
         private EntityQuery m_NodesWithSelectedQuery;
         private bool        m_RegisteredWithAnarchy;
 
+        public override string toolID => "PathTransform Tool";
+
         /// <summary>
         /// Caches the last hit position
         /// </summary>
@@ -404,7 +406,7 @@ namespace NetworkTools.Systems {
                     m_SelectedNodes.Add(entity);
 
                     // Add markers to first node
-                    EntityManager.AddComponent<NetworkTools.Components.NT_Selected>(entity);
+                    EntityManager.AddComponentData(entity, NetworkTools.Components.NT_Selected.DefaultNode);
                     EntityManager.AddComponent<NetworkTools.Components.NT_SelectedFirst>(entity);
                     break;
                 case SelectionState.StartNodeSelected:
@@ -412,7 +414,7 @@ namespace NetworkTools.Systems {
                     m_SelectedNodes.Add(entity);
 
                     // Add markers to end node
-                    EntityManager.AddComponent<NetworkTools.Components.NT_Selected>(entity);
+                    EntityManager.AddComponentData(entity, NetworkTools.Components.NT_Selected.DefaultNode);
                     EntityManager.AddComponent<NetworkTools.Components.NT_SelectedLast>(entity);
 
                     break;
@@ -426,7 +428,7 @@ namespace NetworkTools.Systems {
                     m_SelectedNodes.Add(entity);
 
                     // Add markers to new end node
-                    EntityManager.AddComponent<NetworkTools.Components.NT_Selected>(entity);
+                    EntityManager.AddComponentData(entity, NetworkTools.Components.NT_Selected.DefaultNode);
                     EntityManager.AddComponent<NetworkTools.Components.NT_SelectedLast>(entity);
 
                     break;
@@ -436,7 +438,7 @@ namespace NetworkTools.Systems {
             foreach (var node in m_NextPathNodes) {
                 if (!m_CurrentPathNodes.Contains(node)) {
                     m_CurrentPathNodes.Add(node);
-                    EntityManager.AddComponent<NetworkTools.Components.NT_Selected>(node);
+                    EntityManager.AddComponentData(node, NetworkTools.Components.NT_Selected.DefaultNode);
                 }
             }
 
@@ -444,7 +446,7 @@ namespace NetworkTools.Systems {
             foreach (var edge in m_NextPathEdges) {
                 if (!m_CurrentPathEdges.Contains(edge)) {
                     m_CurrentPathEdges.Add(edge);
-                    EntityManager.AddComponent<NetworkTools.Components.NT_Selected>(edge);
+                    EntityManager.AddComponentData(edge, NetworkTools.Components.NT_Selected.DefaultEdge);
                 }
             }
 
@@ -589,7 +591,7 @@ namespace NetworkTools.Systems {
             AddHighlight(newEntity);
         }
 
-        private void AddHighlight(Entity entity) { EntityManager.AddComponent<NetworkTools.Components.NT_Highlighted>(entity); }
+        private void AddHighlight(Entity entity) { EntityManager.AddComponentData(entity, NetworkTools.Components.NT_Highlighted.DefaultNode); }
 
         private void RemoveHighlight(Entity entity) { EntityManager.RemoveComponent<NetworkTools.Components.NT_Highlighted>(entity); }
 
@@ -601,7 +603,8 @@ namespace NetworkTools.Systems {
             for (var i = 0; i < m_CurrentPathNodes.Length; i++) {
                 var node = m_CurrentPathNodes[i];
                 if (EntityManager.HasComponent<NetworkTools.Components.NT_Selected>(node)) {
-                    EntityManager.SetComponentData(node, new NetworkTools.Components.NT_Selected { PathIndex = i });
+                    EntityManager.SetComponentData(node, NetworkTools.Components.NT_Selected.ForNode(
+                        NetworkTools.Components.NodeRenderMode.RenderAsCircle, i));
                 }
             }
         }
@@ -829,14 +832,14 @@ namespace NetworkTools.Systems {
             ClearAllHighlights();
 
             // Add highlights to nodes
-            var nodesArray = new NativeArray<Entity>(m_NextPathNodes.AsArray(), Allocator.Temp);
-            EntityManager.AddComponent<NetworkTools.Components.NT_Highlighted>(nodesArray);
-            nodesArray.Dispose();
+            foreach (var node in m_NextPathNodes) {
+                EntityManager.AddComponentData(node, NetworkTools.Components.NT_Highlighted.DefaultNode);
+            }
 
             // Add highlights to edges
-            var edgesArray = new NativeArray<Entity>(m_NextPathEdges.AsArray(), Allocator.Temp);
-            EntityManager.AddComponent<NetworkTools.Components.NT_Highlighted>(edgesArray);
-            edgesArray.Dispose();
+            foreach (var edge in m_NextPathEdges) {
+                EntityManager.AddComponentData(edge, NetworkTools.Components.NT_Highlighted.DefaultEdge);
+            }
         }
 
         /// <summary>

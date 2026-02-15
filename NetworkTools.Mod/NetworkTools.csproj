@@ -108,6 +108,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Systems\Tools\" />
 	  <Folder Include="UI\src\mods\" />
 	</ItemGroup>
 

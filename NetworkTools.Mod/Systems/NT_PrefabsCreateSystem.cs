@@ -31,6 +31,7 @@ namespace NetworkTools.Systems {
         /// Configuration for vanilla prefabas to load for further processing.
         /// </summary>
         private readonly Dictionary<string, PrefabID> m_SourcePrefabsDict = new() {
+            { "marker", new PrefabID("MarkerObjectPrefab", "Pedestrian Access Location") },
         };
 
         private Dictionary<PrefabBase, Entity> m_PrefabEntities;
@@ -39,6 +40,8 @@ namespace NetworkTools.Systems {
         /// Cache for prefabs.
         /// </summary>
         private List<PrefabBase> m_PrefabBases;
+
+        internal Entity m_MarkerPrefabEntity;
 
         // Logger
         private PrefixedLogger m_Log;
@@ -96,15 +99,35 @@ namespace NetworkTools.Systems {
                 prefabBaseDict[key] = prefabBase;
             }
 
-            CreateToolPrefab("Add Node",         "add.svg",    "", new Components.NT_AddNode(),       false);
-            CreateToolPrefab("Remove Node",      "remove.svg", "", new Components.NT_RemoveNode(),    false);
-            CreateToolPrefab("Create Supernode", "super.svg",  "", new Components.NT_Select(),        false);
-            CreateToolPrefab("Path Shape Tools", "slope.svg",  "", new Components.NT_PathTransform(), true);
-            //CreateToolPrefab("Curve Tools",      "curve.svg",    "", new Components.NT_Select(),     false);
-            CreateToolPrefab("Connect",          "connect.svg",  "", new Components.NT_Select(),     false);
-            CreateToolPrefab("Adv. Parallel",    "parallel.svg", "", new Components.NT_Select(),     false);
+            CreateToolPrefab("Add Node",         "add.svg",      "", new Components.NT_AddNode(),       false);
+            CreateToolPrefab("Remove Node",      "remove.svg",   "", new Components.NT_RemoveNode(),    false);
+            CreateToolPrefab("Create Supernode", "super.svg",    "", new Components.NT_Select(),        false);
+            CreateToolPrefab("Path Shape Tools", "slope.svg",    "", new Components.NT_PathTransform(), true);
+            CreateToolPrefab("Secret Tools",     "curve.svg",    "", new Components.NT_NodeControl(),   true);
+            CreateToolPrefab("Connect",          "connect.svg",  "", new Components.NT_Select(),        false);
+            CreateToolPrefab("Adv. Parallel",    "parallel.svg", "", new Components.NT_Select(),        false);
+
+            CreateMarkerPrefab((MarkerObjectPrefab)prefabBaseDict["marker"]);
 
             m_Log.Debug($"{logMethodPrefix} Completed.");
+        }
+
+        private bool CreateMarkerPrefab(MarkerObjectPrefab pedestrianPrefab) {
+            var prefabBase = ScriptableObject.CreateInstance<MarkerObjectPrefab>();
+            prefabBase.name       = "NT_MarkerObjectPrefab";
+            prefabBase.m_Circular = true;
+            prefabBase.m_Mesh = pedestrianPrefab.m_Mesh;
+
+            var success = m_PrefabSystem.AddPrefab(prefabBase);
+
+            if (success) {
+                var prefabEntity = m_PrefabSystem.GetEntity(prefabBase);
+                m_PrefabBases.Add(prefabBase);
+                m_PrefabEntities.Add(prefabBase, prefabEntity);
+                m_MarkerPrefabEntity = prefabEntity;
+            }
+
+            return success;
         }
 
         private bool CreateToolPrefab<T>(string name, string icon, string description, T component, bool active)

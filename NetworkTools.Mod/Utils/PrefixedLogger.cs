@@ -12,14 +12,14 @@ namespace NetworkTools.Utils {
 
     internal class PrefixedLogger {
         private readonly ILog   m_Log;
-        private readonly string m_Prefix;
+        public string Prefix { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PrefixedLogger"/> class.
         /// </summary>
         /// <param name="prefix"></param>
         public PrefixedLogger(string prefix) {
-            m_Prefix = prefix;
+            Prefix = prefix;
             m_Log    = NetworkToolsMod.Instance.Log;
         }
 
@@ -32,7 +32,7 @@ namespace NetworkTools.Utils {
         public void Debug(string message) { Log("DEBUG", message); }
 
         private void Log(string level, string message) {
-            var formattedMessage = $"[{m_Prefix}] {message}";
+            var formattedMessage = $"[{Prefix}] {message}";
 
             switch (level) {
                 case "ERROR":
