@@ -35,9 +35,9 @@ namespace NetworkTools.Settings {
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.SecondaryApplyActionStr), "SecondaryApplyActionStr Options Label" },
                 { m_Setting.GetBindingKeyLocaleID(NT_Settings.SecondaryApplyActionStr), "SecondaryApplyActionStr Binding Key" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.SecondaryApplyActionStr), "SecondaryApplyActionStr Description" },
-                { m_Setting.GetOptionLabelLocaleID(NT_Settings.ToggleToolPanelStr), "ToggleToolPanelStr Options Label" },
-                { m_Setting.GetBindingKeyLocaleID(NT_Settings.ToggleToolPanelStr), "ToggleToolPanelStr Binding Key" },
-                { m_Setting.GetOptionDescLocaleID(NT_Settings.ToggleToolPanelStr), "ToggleToolPanelStr Description" },
+                //{ m_Setting.GetOptionLabelLocaleID(NT_Settings.ToggleToolPanelStr), "ToggleToolPanelStr Options Label" },
+                //{ m_Setting.GetBindingKeyLocaleID(NT_Settings.ToggleToolPanelStr), "ToggleToolPanelStr Binding Key" },
+                //{ m_Setting.GetOptionDescLocaleID(NT_Settings.ToggleToolPanelStr), "ToggleToolPanelStr Description" },
 
                 // Sections
 

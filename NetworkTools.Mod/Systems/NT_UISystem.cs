@@ -14,6 +14,8 @@ namespace NetworkTools.Systems {
     using Game.Tools;
     using Game.UI;
     using NetworkTools.Settings;
+    using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.PathTransform;
     using Unity.Collections;
     using Unity.Entities;
     using Utils;
@@ -35,7 +37,7 @@ namespace NetworkTools.Systems {
 
         private EntityQuery                             m_ToolPrefabQuery;
         private NameSystem                              m_NameSystem;
-        private NT_PathTransformToolSystem                      m_NtPathTransformToolSystem;
+        private NT_PathTransformToolSystem              m_NtPathTransformToolSystem;
         private PrefabSystem                            m_PrefabSystem;
         private PrefixedLogger                          m_Log;
         private ToolSystem                              m_ToolSystem;
@@ -71,14 +73,14 @@ namespace NetworkTools.Systems {
             CreateTrigger<string>("APPLY_SLOPE", HandleApplySlope);
 
             // Actions
-            m_ToggleToolPanelAction = NetworkToolsMod.Instance.Settings.GetAction(NT_Settings.ToggleToolPanelStr);
+            //m_ToggleToolPanelAction = NetworkToolsMod.Instance.Settings.GetAction(NT_Settings.ToggleToolPanelStr);
 
             m_ToolPrefabQuery = SystemAPI.QueryBuilder()
-                                         .WithAll<NetworkTools.Components.NT_ToolData>()
+                                         .WithAll<Components.NT_ToolData>()
                                          .Build();
 
             // Always enable
-            m_ToggleToolPanelAction.shouldBeEnabled = true;
+            //m_ToggleToolPanelAction.shouldBeEnabled = true;
         }
 
         /// <inheritdoc/>
@@ -121,9 +123,9 @@ namespace NetworkTools.Systems {
                 m_SelectedEntitiesBinding.Value = selectedEntitiesData;
             }
 
-            if (m_ToggleToolPanelAction.WasPerformedThisFrame()) {
-                // todo
-            }
+            //if (m_ToggleToolPanelAction.WasPerformedThisFrame()) {
+            //    // todo
+            //}
 
             base.OnUpdate();
         }

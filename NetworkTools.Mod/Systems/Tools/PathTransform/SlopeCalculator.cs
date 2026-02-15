@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems {
+namespace NetworkTools.Systems.Tools.PathTransform {
     #region Using Statements
 
     using Colossal.Mathematics;

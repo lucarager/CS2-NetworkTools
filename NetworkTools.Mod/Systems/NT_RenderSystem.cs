@@ -15,6 +15,7 @@ namespace NetworkTools.Systems {
     using Game.Rendering;
     using Game.Tools;
     using NetworkTools.Components;
+    using NetworkTools.Systems.Tools;
     using NetworkTools.Utils;
     using Unity.Burst;
     using Unity.Burst.Intrinsics;
@@ -126,13 +127,15 @@ namespace NetworkTools.Systems {
             if (tool.ShowEdges) {
                 // Draw edges
                 var drawEdgesJob = new DrawEdgesJob {
-                    m_Buffer                         = m_OverlayRenderSystem.GetBuffer(out edgeBufferJobHandle),
-                    m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
-                    m_SelectedComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
-                    m_EdgeComponentTypeHandle        = SystemAPI.GetComponentTypeHandle<Edge>(),
-                    m_CurveComponentTypeHandle       = SystemAPI.GetComponentTypeHandle<Curve>(),
-                    m_EdgeGeometryComponentTypeHandle = SystemAPI.GetComponentTypeHandle<EdgeGeometry>(),
-                    m_NodeLookup                     = SystemAPI.GetComponentLookup<Node>(true)
+                    m_Buffer                               = m_OverlayRenderSystem.GetBuffer(out edgeBufferJobHandle),
+                    m_HighlightedComponentTypeHandle       = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
+                    m_SelectedComponentTypeHandle          = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
+                    m_EdgeComponentTypeHandle              = SystemAPI.GetComponentTypeHandle<Edge>(),
+                    m_CurveComponentTypeHandle             = SystemAPI.GetComponentTypeHandle<Curve>(),
+                    m_EdgeGeometryComponentTypeHandle      = SystemAPI.GetComponentTypeHandle<EdgeGeometry>(),
+                    m_StartNodeGeometryComponentTypeHandle = SystemAPI.GetComponentTypeHandle<StartNodeGeometry>(),
+                    m_EndNodeGeometryComponentTypeHandle   = SystemAPI.GetComponentTypeHandle<EndNodeGeometry>(),
+                    m_NodeLookup                           = SystemAPI.GetComponentLookup<Node>(true)
                 };
 
                 var drawEdgesJobHandle = drawEdgesJob.ScheduleByRef(m_EdgeQuery,
@@ -330,6 +333,8 @@ namespace NetworkTools.Systems {
             [ReadOnly] public required ComponentTypeHandle<Edge> m_EdgeComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Curve> m_CurveComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<EdgeGeometry> m_EdgeGeometryComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<StartNodeGeometry> m_StartNodeGeometryComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<EndNodeGeometry> m_EndNodeGeometryComponentTypeHandle;
             [ReadOnly] public required ComponentLookup<Node> m_NodeLookup;
 
             /// <inheritdoc />
@@ -340,11 +345,15 @@ namespace NetworkTools.Systems {
                 var edgesArray = chunk.GetNativeArray(ref m_EdgeComponentTypeHandle);
                 var curvesArray = chunk.GetNativeArray(ref m_CurveComponentTypeHandle);
                 var edgeGeometriesArray = chunk.GetNativeArray(ref m_EdgeGeometryComponentTypeHandle);
+                var startNodeGeometriesArray = chunk.GetNativeArray(ref m_StartNodeGeometryComponentTypeHandle);
+                var endNodeGeometriesArray = chunk.GetNativeArray(ref m_EndNodeGeometryComponentTypeHandle);
 
                 for (var i = 0; i < edgesArray.Length; i++) {
                     var edge = edgesArray[i];
                     var curve = curvesArray[i];
                     var edgeGeometry = edgeGeometriesArray[i];
+                    var startNodeGeometry = startNodeGeometriesArray[i];
+                    var endNodeGeometry = endNodeGeometriesArray[i];
 
                     // Check component flags
                     var isHighlighted = chunk.Has(ref m_HighlightedComponentTypeHandle);
@@ -356,13 +365,13 @@ namespace NetworkTools.Systems {
 
                     if (isSelected) {
                         // Selected edge - primary purple/bright
-                        color = new Color(0.58f, 0.27f, 1f, 1f);
-                        width = 4f;
+                        color = new Color(1f, 1f, 1f, 1f);
+                        width = 2f;
                     }
                     else if (isHighlighted) {
                         // Hovered/highlighted edge - primary purple/subtle
-                        color = new Color(0.58f, 0.27f, 1f, 0.3f);
-                        width = 4f;
+                        color = new Color(1f, 1f, 1f, 0.3f);
+                        width = 2f;
                     }
                     else {
                         // Not highlighted or selected - don't render
@@ -374,6 +383,11 @@ namespace NetworkTools.Systems {
                     m_Buffer.DrawCurve(color, edgeGeometry.m_Start.m_Right, width);
                     m_Buffer.DrawCurve(color, edgeGeometry.m_End.m_Left,    width);
                     m_Buffer.DrawCurve(color, edgeGeometry.m_End.m_Right, width);
+
+                    m_Buffer.DrawCurve(Color.red, startNodeGeometry.m_Geometry.m_Left.m_Left,  width);
+                    m_Buffer.DrawCurve(Color.green, startNodeGeometry.m_Geometry.m_Left.m_Right, width);
+                    m_Buffer.DrawCurve(Color.blue, endNodeGeometry.m_Geometry.m_Right.m_Left,    width);
+                    m_Buffer.DrawCurve(Color.yellow, endNodeGeometry.m_Geometry.m_Right.m_Right,   width);
                 }
             }
         }

@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems {
+namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Game.Common;
@@ -14,6 +14,7 @@ namespace NetworkTools.Systems {
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+    using NetworkTools.Systems.Tools;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -25,54 +26,7 @@ namespace NetworkTools.Systems {
     /// # Remove Node System
     /// </summary>
     public partial class NT_RemoveNodeToolSystem : NT_BaseToolSystem {
-        /// <summary>
-        /// Maximum distance to select a node when selecting near an edge
-        /// </summary>
-        private const float MaxDistanceToSelect = 16f;
-
-        private TerrainSystem m_TerrainSystem;
-        private OverlayRenderSystem m_OverlayRenderSystem;
         public override string toolID => "RemoveNode Tool";
-
-        private EntityQuery m_DefinitionQuery;
-        private EntityQuery m_NodesWithEligibleQuery;
-        private EntityQuery m_NodesWithHighlightedQuery;
-        private EntityQuery m_NodesWithoutEligibleQuery;
-
-        /// <summary>
-        /// Apply action (usually left click)
-        /// </summary>
-        private IProxyAction m_ApplyAction;
-
-        /// <summary>
-        /// Secondary apply action (usually right click)
-        /// </summary>
-        private IProxyAction m_SecondaryApplyAction;
-
-        /// <summary>
-        /// Caches the last hovered entity to detect changes
-        /// </summary>
-        private NativeReference<Entity> m_LastHoveredEntity;
-
-        /// <summary>
-        /// Caches the last raycast entity to detect changes
-        /// </summary>
-        private NativeReference<Entity> m_LastRaycastEntity;
-
-        /// <summary>
-        /// Current operation state tracking configuration and phase.
-        /// </summary>
-        private OperationState m_OperationState;
-
-        /// <summary>
-        /// Selected Prefab, for this tool this is coming from the UI
-        /// </summary>
-        private PrefabBase m_Prefab;
-
-        /// <summary>
-        /// Tool barrier for command buffers
-        /// </summary>
-        private ToolOutputBarrier m_Barrier;
 
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
@@ -107,7 +61,7 @@ namespace NetworkTools.Systems {
         }
 
         private void HandleApply() {
-            m_OperationState.Phase = OperationPhase.Applying;
+            Phase = OperationPhase.Applying;
         }
 
         /// <summary>
@@ -118,7 +72,7 @@ namespace NetworkTools.Systems {
         /// <param name="updateNeeded"></param>
         /// <returns>inputDeps</returns>
         private JobHandle HandleTempEntities(JobHandle inputDeps, bool updateNeeded) {
-            return m_OperationState.Phase switch {
+            return Phase switch {
                 OperationPhase.Ready =>
                     // Show preview when hovering over a valid (eligible) node
                     Update(inputDeps, updateNeeded),
@@ -134,16 +88,12 @@ namespace NetworkTools.Systems {
 
         private void HandleNoHover() {
             m_LastHoveredEntity.Value = Entity.Null;
-            m_OperationState.Phase    = OperationPhase.Idle;
+            Phase    = OperationPhase.Idle;
             ClearAllHighlights();
         }
 
-        private void UpdateActions() {
-            m_ApplyAction.shouldBeEnabled = true;
-        }
-
         private void HandleHover(ControlPoint controlPoint) {
-            m_OperationState.Phase = OperationPhase.Ready;
+            Phase = OperationPhase.Ready;
             SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity);
         }
 
@@ -190,25 +140,6 @@ namespace NetworkTools.Systems {
             return controlPoint;
         }
 
-        /// <summary>
-        /// Swaps highlighting between two entities (removes from old, adds to new).
-        /// Simple single-node highlighting utility.
-        /// </summary>
-        /// <param name="oldEntity">Entity to remove highlighting from</param>
-        /// <param name="newEntity">Entity to add highlighting to</param>
-        private void SwapHighlightedEntities(Entity oldEntity, Entity newEntity) {
-            RemoveHighlight(oldEntity);
-            AddHighlight(newEntity);
-        }
-
-        private void AddHighlight(Entity entity) {
-            EntityManager.AddComponentData(entity, Components.NT_Highlighted.DefaultNode);
-        }
-
-        private void RemoveHighlight(Entity entity) {
-            EntityManager.RemoveComponent<Components.NT_Highlighted>(entity);
-        }
-
         public override void InitializeRaycast() {
             base.InitializeRaycast();
 
@@ -221,13 +152,6 @@ namespace NetworkTools.Systems {
             m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset |
                                                RaycastFlags.SubElements |
                                                RaycastFlags.Cargo | RaycastFlags.Passenger;
-        }
-
-        /// <summary>
-        /// Clears all NT_Highlighted components from nodes and edges (batch operation).
-        /// </summary>
-        private void ClearAllHighlights() {
-            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
         }
     }
 }

@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems {
+namespace NetworkTools.Systems.Tools.PathTransform {
     /// <summary>
     /// Pre-calculated heights for an edge's control points in path order.
     /// </summary>

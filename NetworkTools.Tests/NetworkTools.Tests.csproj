@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
-    <LangVersion>11.0</LangVersion>
     <IsPackable>false</IsPackable>
     <Configurations>Debug;Release;Test</Configurations>
   </PropertyGroup>
@@ -22,7 +21,6 @@
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
 
 	<PropertyGroup>
-		<LangVersion>11.0</LangVersion>
 		<ImplicitUsings>disable</ImplicitUsings>
 	</PropertyGroup>
 

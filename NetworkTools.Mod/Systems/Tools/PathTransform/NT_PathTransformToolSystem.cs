@@ -3,10 +3,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems {
+namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
-    using System.Linq;
     using Colossal.Entities;
     using Game.Common;
     using Game.Input;
@@ -16,6 +15,8 @@ namespace NetworkTools.Systems {
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+    using NetworkTools.Components;
+    using NetworkTools.Systems.Tools.PathTransform;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -24,252 +25,168 @@ namespace NetworkTools.Systems {
     #endregion
 
     /// <summary>
-    /// Represents the phase of the current transformation operation.
+    ///     Represents the currentEntity selection state of the tool.
     /// </summary>
-    public enum OperationPhase {
-        Idle        = 0, // No operation configured
-        Configuring = 1, // Operation configured but insufficient selection (< 2 nodes)
-        Ready       = 2, // Operation configured with valid selection (>= 2 nodes), can show preview
-        Applying    = 3, // Operation is being applied to real entities
-    }
-
-    /// <summary>
-    /// Tracks the state of the current transformation operation.
-    /// </summary>
-    public struct OperationState {
-        public  OperationPhase  Phase;
-        public  TransformConfig Config;
-
-        /// <summary>
-        /// Whether this operation can show a preview (has sufficient selection).
-        /// </summary>
-        public bool CanPreview => Phase == OperationPhase.Ready;
-
-        /// <summary>
-        /// Whether this operation is active and configured.
-        /// </summary>
-        public bool IsActive => Phase != OperationPhase.Idle;
-
-        /// <summary>
-        /// Creates an idle state with no operation.
-        /// </summary>
-        public static OperationState Idle() {
-            return new OperationState
-            {
-                Phase  = OperationPhase.Idle,
-                Config = TransformConfig.Preserve(),
-            };
-        }
-    }
-
-    /// <summary>
-    /// Represents the currentEntity selection state of the tool.
-    /// </summary>
-    public enum SelectionState {
-        NoSelection       = 0,
+    public enum PathTransformSelectionState {
+        NoSelection = 0,
         StartNodeSelected = 1,
-        EndNodeSelected   = 2,
+        EndNodeSelected = 2
     }
 
     /// <summary>
-    /// # Continuous Edge (CE) Tool System
-    /// 
-    /// Selection System that allows selecting a contiguous edge and performing operations on it.
-    /// It selects all edge segments between a start and end node.
-    /// 
-    /// - The *OperationState* tracks the current transformation operation (slope/curve) and its phase.
-    /// - The *SelectionState* handles user interactions for selecting nodes and edges.
-    /// 
+    ///     # Continuous Edge (CE) Tool System
+    ///     Selection System that allows selecting a contiguous edge and performing operations on it.
+    ///     It selects all edge segments between a start and end node.
+    ///     - The *OperationState* tracks the current transformation operation (slope/curve) and its phase.
+    ///     - The *PathTransformSelectionState* handles user interactions for selecting nodes and edges.
     /// </summary>
     public partial class NT_PathTransformToolSystem : NT_BaseToolSystem {
         /// <summary>
-        /// Maximum distance to select a node when selecting near an edge
-        /// </summary>
-        private const float MaxDistanceToSelect = 16f;
-
-        private TerrainSystem       m_TerrainSystem;
-        private OverlayRenderSystem m_OverlayRenderSystem;
-        private ValidationSystem    m_ValidationSystem;
-
-        private EntityQuery m_DefinitionQuery;
-        private EntityQuery m_EdgesWithHighlightedQuery;
-        private EntityQuery m_EdgesWithSelectedQuery;
-        private EntityQuery m_NodesWithEligibleQuery;
-        private EntityQuery m_NodesWithHighlightedQuery;
-        private EntityQuery m_NodesWithoutEligibleQuery;
-        private EntityQuery m_NodesWithSelectedFirstQuery;
-        private EntityQuery m_NodesWithSelectedLastQuery;
-        private EntityQuery m_NodesWithSelectedQuery;
-        private bool        m_RegisteredWithAnarchy;
-
-        public override string toolID => "PathTransform Tool";
-
-        /// <summary>
-        /// Caches the last hit position
-        /// </summary>
-        private float3 m_LastHitPosition;
-
-        /// <summary>
-        /// Apply action (usually left click)
-        /// </summary>
-        private IProxyAction m_ApplyAction;
-
-        /// <summary>
-        /// Secondary apply action (usually right click)
-        /// </summary>
-        private IProxyAction m_SecondaryApplyAction;
-
-        /// <summary>
-        /// Currently selected path of edges
+        ///     Currently selected path of edges
         /// </summary>
         private NativeList<Entity> m_CurrentPathEdges;
 
         /// <summary>
-        /// Currently selected path of nodes
+        ///     Currently selected path of nodes
         /// </summary>
         private NativeList<Entity> m_CurrentPathNodes;
 
+        private EntityQuery m_EdgesWithHighlightedQuery;
+        private EntityQuery m_EdgesWithSelectedQuery;
+
         /// <summary>
-        /// List of currently eligible node entities for selection
+        ///     List of currently eligible node entities for selection
         /// </summary>
         private NativeList<Entity> m_EligibleNodes;
 
         /// <summary>
-        /// Next path of edges (updated on hover)
+        ///     Caches the last hit position
+        /// </summary>
+        private float3 m_LastHitPosition;
+
+        /// <summary>
+        ///     Next path of edges (updated on hover)
         /// </summary>
         private NativeList<Entity> m_NextPathEdges;
 
         /// <summary>
-        /// Next path of nodes (updated on hover)
+        ///     Next path of nodes (updated on hover)
         /// </summary>
         private NativeList<Entity> m_NextPathNodes;
 
+        private EntityQuery m_NodesWithSelectedFirstQuery;
+        private EntityQuery m_NodesWithSelectedLastQuery;
+        private EntityQuery m_NodesWithSelectedQuery;
+
         /// <summary>
-        /// List of currently selected node entities, creating a contiguous path
+        ///     List of currently selected node entities, creating a contiguous path
         /// </summary>
         private NativeList<Entity> m_SelectedNodes;
 
         /// <summary>
-        /// Caches the last hovered entity to detect changes
-        /// </summary>
-        private NativeReference<Entity> m_LastHoveredEntity;
-
-        /// <summary>
-        /// Caches the last raycast entity to detect changes
-        /// </summary>
-        private NativeReference<Entity> m_LastRaycastEntity;
-
-        /// <summary>
-        /// Current operation state tracking configuration and phase.
-        /// </summary>
-        private OperationState m_OperationState;
-
-        /// <summary>
-        /// Tracks whether an update/re-render is needed on the next frame.
-        /// This is set to true when something changes that requires regenerating preview entities.
-        /// Gets reset to false after being processed.
+        ///     Tracks whether an update/re-render is needed on the next frame.
+        ///     This is set to true when something changes that requires regenerating preview entities.
+        ///     Gets reset to false after being processed.
         /// </summary>
         private bool m_UpdateNeeded;
 
         /// <summary>
-        /// Selected Prefab, for this tool this is coming from the UI
+        ///     Current config
         /// </summary>
-        private PrefabBase m_Prefab;
+        public TransformConfig TransformConfig;
+
+        public override string toolID => "PathTransform Tool";
 
         /// <summary>
-        /// Tool barrier for command buffers
-        /// </summary>
-        private ToolOutputBarrier m_Barrier;
-
-        /// <summary>
-        /// Current selection state (Happens during Configuring phase of OperationState)
-        /// 
-        /// ## m_OperationState machine:
-        /// 
-        /// ### NoSelection
-        /// - All network nodes in the game have NT_Eligible component
-        /// - Actions:
+        ///     Current selection state (Happens during Configuring phase of OperationState)
+        ///     ## m_OperationState machine:
+        ///     ### NoSelection
+        ///     - All network nodes in the game have NT_Eligible component
+        ///     - Actions:
         ///     - [Hover] over NT_Eligible Node: Clear NT_Highlighted. Adds NT_Highlighted to node.
         ///     - [Hover] over nothing: Removes all NT_Highlighted.
         ///     - [Apply]: Transition to `StartNodeSelected` with node.
         ///     - [Cancel]: Exit Tool
-        /// 
-        /// ### StartNodeSelected
-        /// - When entering state with node, adds this node to the start of the "Nodes" list. This node is now the start node
-        /// - First node has: NT_Selected, NT_SelectedFirst
-        /// - Eligible nodes are nodes reachable via an uninterrupted edge (no intersections) from the start node.
-        /// - Any eligible nodes have: NT_Eligible
-        /// - Actions:
-        ///     - [Hover] over NT_Eligible Node: Clear NT_Highlighted. Adds NT_Highlighted to node. Add NT_Highlighted to Edges and Nodes between start and hovered node.
+        ///     ### StartNodeSelected
+        ///     - When entering state with node, adds this node to the start of the "Nodes" list. This node is now the start node
+        ///     - First node has: NT_Selected, NT_SelectedFirst
+        ///     - Eligible nodes are nodes reachable via an uninterrupted edge (no intersections) from the start node.
+        ///     - Any eligible nodes have: NT_Eligible
+        ///     - Actions:
+        ///     - [Hover] over NT_Eligible Node: Clear NT_Highlighted. Adds NT_Highlighted to node. Add NT_Highlighted to Edges and
+        ///     Nodes between start and hovered node.
         ///     - [Hover] over nothing: Removes all NT_Highlighted.
         ///     - [Apply]: Transition to `EndNodeSelected` with node.
         ///     - [Cancel]: Transition back to `NoSelection`
-        /// 
-        /// ### EndNodeSelected
-        /// - When entering state with node, adds this node to the "Nodes" list. The new node is now the end node.
-        /// - First node has: NT_Selected, NT_SelectedFirst
-        /// - Last node has: NT_Selected, NT_SelectedLast
-        /// - Edges and Nodes in path between the two have: NT_Selected
-        /// - Eligible nodes are nodes reachable via an uninterrupted edge (no intersections) from the end node. This allows "extending" the selected edge beyond intersections.
-        /// - Any eligible nodes have: NT_Eligible
-        /// - Actions:
-        ///     - [Hover] over NT_Eligible Node: Clear NT_Highlighted. Adds NT_Highlighted to node. Add NT_Highlighted to Edges and Nodes between currentEntity end node and hovered node.
+        ///     ### EndNodeSelected
+        ///     - When entering state with node, adds this node to the "Nodes" list. The new node is now the end node.
+        ///     - First node has: NT_Selected, NT_SelectedFirst
+        ///     - Last node has: NT_Selected, NT_SelectedLast
+        ///     - Edges and Nodes in path between the two have: NT_Selected
+        ///     - Eligible nodes are nodes reachable via an uninterrupted edge (no intersections) from the end node. This allows
+        ///     "extending" the selected edge beyond intersections.
+        ///     - Any eligible nodes have: NT_Eligible
+        ///     - Actions:
+        ///     - [Hover] over NT_Eligible Node: Clear NT_Highlighted. Adds NT_Highlighted to node. Add NT_Highlighted to Edges and
+        ///     Nodes between currentEntity end node and hovered node.
         ///     - [Hover] over nothing: Removes all NT_Highlighted.
         ///     - [Apply]: Transition to `EndNodeSelected` with new end node.
         ///     - [Cancel]: Pop last node from cache. If it's the last "end node", transition back to `StartNodeSelected`
         /// </summary>
-        public SelectionState CurrentNodeState =>
-            m_SelectedNodes.Length switch
-            {
-                0 => SelectionState.NoSelection,
-                1 => SelectionState.StartNodeSelected,
-                _ => SelectionState.EndNodeSelected,
+        public PathTransformSelectionState CurrentSelectionState =>
+            m_SelectedNodes.Length switch {
+                0 => PathTransformSelectionState.NoSelection,
+                1 => PathTransformSelectionState.StartNodeSelected,
+                _ => PathTransformSelectionState.EndNodeSelected
             };
 
         /// <summary>
-        /// Gets the array of currently selected node entities.
+        ///     Gets the array of currently selected node entities.
         /// </summary>
         /// <returns>Array of selected Entity objects.</returns>
-        public Entity[] GetSelectedNodes() { return m_SelectedNodes.ToArray(Allocator.Temp).ToArray(); }
-
-        /// <summary>
-        /// Configures the transformation from the UI.
-        /// </summary>
-        public void SetTransformationConfig(TransformConfig config) {
-            m_OperationState.Config = config;
-            m_UpdateNeeded          = true;
-            m_Log.Debug($"Transformation config set: ShapeTemplate={config.Shape.Template}, SlopeTemplate={config.Slope.Template}");
+        public Entity[] GetSelectedNodes() {
+            return m_SelectedNodes.ToArray(Allocator.Temp).ToArray();
         }
 
         /// <summary>
-        /// Configures the slope transformation from the UI (backward-compatible).
+        ///     Configures the transformation from the UI.
+        /// </summary>
+        public void SetTransformationConfig(TransformConfig config) {
+            TransformConfig = config;
+            m_UpdateNeeded  = true;
+            m_Log.Debug(
+                $"Transformation config set: ShapeTemplate={config.Shape.Template}, SlopeTemplate={config.Slope.Template}");
+        }
+
+        /// <summary>
+        ///     Configures the slope transformation from the UI (backward-compatible).
         /// </summary>
         public void SetSlopeConfig(SlopeCurveConfig slopeConfig) {
             SetTransformationConfig(TransformConfig.SlopeOnly(slopeConfig));
         }
 
         /// <summary>
-        /// Configures the shape transformation from the UI.
+        ///     Configures the shape transformation from the UI.
         /// </summary>
         public void SetShapeConfig(ShapeCurveConfig shapeConfig) {
             SetTransformationConfig(TransformConfig.ShapeOnly(shapeConfig));
         }
 
         /// <summary>
-        /// Updates the operation phase based on the current selection state.
-        /// Should be called after any operation that changes the selected node count.
+        ///     Updates the operation phase based on the current selection state.
+        ///     Should be called after any operation that changes the selected node count.
         /// </summary>
         private void UpdateOperationPhase() {
             // Don't interrupt an active apply operation
-            if (m_OperationState.Phase == OperationPhase.Applying) {
+            if (Phase == OperationPhase.Applying) {
                 return;
             }
 
             // Derive phase from node count
-            m_OperationState.Phase = m_SelectedNodes.Length switch {
-                0   => OperationPhase.Idle,
-                1   => OperationPhase.Configuring,
-                _   => OperationPhase.Ready,
+            Phase = m_SelectedNodes.Length switch {
+                0 => OperationPhase.Idle,
+                1 => OperationPhase.Configuring,
+                _ => OperationPhase.Ready
             };
         }
 
@@ -286,7 +203,7 @@ namespace NetworkTools.Systems {
             // Get raycast result
             if (GetRaycastResult(out var controlPoint)) {
                 // We hit something
-                var hitPos          = controlPoint.m_HitPosition;
+                var hitPos = controlPoint.m_HitPosition;
                 var newEntityWasHit = m_LastHoveredEntity.Value != controlPoint.m_OriginalEntity;
 
                 if (newEntityWasHit) {
@@ -306,7 +223,8 @@ namespace NetworkTools.Systems {
                     HandleAddNode(controlPoint.m_OriginalEntity);
                     m_UpdateNeeded = true;
                 }
-            } else {
+            }
+            else {
                 // No entity under cursor
                 HandleNoHover();
             }
@@ -316,20 +234,19 @@ namespace NetworkTools.Systems {
         }
 
         /// <summary>
-        /// Runs various jobs depending on whether we need to Update, Apply, or Cancel temp entities
+        ///     Runs various jobs depending on whether we need to Update, Apply, or Cancel temp entities
         /// </summary>
         /// <param name="inputDeps"></param>
         /// <returns>inputDeps</returns>
         private JobHandle HandleTempEntities(JobHandle inputDeps) {
-            return m_OperationState.Phase switch
-            {
+            return Phase switch {
                 // Preview temp entities
                 OperationPhase.Ready => Update(inputDeps),
                 // Apply real entities
                 OperationPhase.Applying => Apply(inputDeps),
                 // Clear otherwise
                 OperationPhase.Idle or OperationPhase.Configuring => Clear(inputDeps),
-                _ => Clear(inputDeps),
+                _ => Clear(inputDeps)
             };
         }
 
@@ -347,12 +264,12 @@ namespace NetworkTools.Systems {
         }
 
         private void HandlePathUpdate(ControlPoint controlPoint) {
-            if (CurrentNodeState == SelectionState.NoSelection) {
+            if (CurrentSelectionState == PathTransformSelectionState.NoSelection) {
                 return;
             }
 
             var startNode = m_SelectedNodes[^1];
-            var endNode   = controlPoint.m_OriginalEntity;
+            var endNode = controlPoint.m_OriginalEntity;
 
             // Find path from first node to hovered node
             var newPathNodes = new NativeList<Entity>(16, Allocator.Temp);
@@ -371,16 +288,16 @@ namespace NetworkTools.Systems {
         }
 
         private void HandleHover(ControlPoint controlPoint) {
-            switch (CurrentNodeState) {
-                case SelectionState.NoSelection:
+            switch (CurrentSelectionState) {
+                case PathTransformSelectionState.NoSelection:
                     m_Log.Debug("[NoSelection] Hovering over potential start point.");
                     SwapHighlitedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity);
                     return;
-                case SelectionState.StartNodeSelected:
+                case PathTransformSelectionState.StartNodeSelected:
                     PreviewPath();
                     m_Log.Debug("[StartNodeSelected] Hovering over potential end point.");
                     return;
-                case SelectionState.EndNodeSelected:
+                case PathTransformSelectionState.EndNodeSelected:
                     PreviewPath();
                     m_Log.Debug("[EndNodeSelected] Hovering over another potential end point.");
                     return;
@@ -388,10 +305,11 @@ namespace NetworkTools.Systems {
         }
 
         public void RequestApply() {
-            if (m_OperationState.Phase != OperationPhase.Ready) {
+            if (Phase != OperationPhase.Ready) {
                 return;
             }
-            m_OperationState.Phase = OperationPhase.Applying;
+
+            Phase = OperationPhase.Applying;
         }
 
         private void HandleAddNode(Entity entity) {
@@ -400,68 +318,66 @@ namespace NetworkTools.Systems {
             }
 
             // Add Node
-            switch (CurrentNodeState) {
-                case SelectionState.NoSelection:
+            switch (CurrentSelectionState) {
+                case PathTransformSelectionState.NoSelection:
                     m_Log.Debug("[NoSelection -> StartNodeSelected] Adding start point.");
                     m_SelectedNodes.Add(entity);
 
                     // Add markers to first node
-                    EntityManager.AddComponentData(entity, NetworkTools.Components.NT_Selected.DefaultNode);
-                    EntityManager.AddComponent<NetworkTools.Components.NT_SelectedFirst>(entity);
+                    EntityManager.AddComponentData(entity, NT_Selected.DefaultNode);
+                    EntityManager.AddComponent<NT_SelectedFirst>(entity);
                     break;
-                case SelectionState.StartNodeSelected:
+                case PathTransformSelectionState.StartNodeSelected:
                     m_Log.Debug("[StartNodeSelected -> EndNodeSelected] Adding end point.");
                     m_SelectedNodes.Add(entity);
 
                     // Add markers to end node
-                    EntityManager.AddComponentData(entity, NetworkTools.Components.NT_Selected.DefaultNode);
-                    EntityManager.AddComponent<NetworkTools.Components.NT_SelectedLast>(entity);
+                    EntityManager.AddComponentData(entity, NT_Selected.DefaultNode);
+                    EntityManager.AddComponent<NT_SelectedLast>(entity);
 
                     break;
-                case SelectionState.EndNodeSelected:
+                case PathTransformSelectionState.EndNodeSelected:
                     m_Log.Debug("[EndNodeSelected] Adding another end point.");
 
                     // Remove marker from previous end node
                     var lastNode = m_SelectedNodes[^1];
-                    EntityManager.RemoveComponent<NetworkTools.Components.NT_SelectedLast>(lastNode);
+                    EntityManager.RemoveComponent<NT_SelectedLast>(lastNode);
 
                     m_SelectedNodes.Add(entity);
 
                     // Add markers to new end node
-                    EntityManager.AddComponentData(entity, NetworkTools.Components.NT_Selected.DefaultNode);
-                    EntityManager.AddComponent<NetworkTools.Components.NT_SelectedLast>(entity);
+                    EntityManager.AddComponentData(entity, NT_Selected.DefaultNode);
+                    EntityManager.AddComponent<NT_SelectedLast>(entity);
 
                     break;
             }
 
             // Add the nodes to our cache and mark as selected
-            foreach (var node in m_NextPathNodes) {
+            foreach (var node in m_NextPathNodes)
                 if (!m_CurrentPathNodes.Contains(node)) {
                     m_CurrentPathNodes.Add(node);
-                    EntityManager.AddComponentData(node, NetworkTools.Components.NT_Selected.DefaultNode);
+                    EntityManager.AddComponentData(node, NT_Selected.DefaultNode);
                 }
-            }
 
             // Add the edges to our cache and mark as selected
-            foreach (var edge in m_NextPathEdges) {
+            foreach (var edge in m_NextPathEdges)
                 if (!m_CurrentPathEdges.Contains(edge)) {
                     m_CurrentPathEdges.Add(edge);
-                    EntityManager.AddComponentData(edge, NetworkTools.Components.NT_Selected.DefaultEdge);
+                    EntityManager.AddComponentData(edge, NT_Selected.DefaultEdge);
                 }
-            }
 
             // Update all path indices to ensure they're consecutive and correct
             UpdatePathIndices();
 
             // Remove NT_Eligible from ALL nodes (we will recalculate based on state)
-            EntityManager.RemoveComponent<NetworkTools.Components.NT_Eligible>(m_NodesWithEligibleQuery);
+            EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
 
             // Find all eligible nodes from new head of path
             FindEligibleNodes(entity, m_EligibleNodes);
 
             // Add NT_Eligible to eligible nodes
             var eligibleArray = new NativeArray<Entity>(m_EligibleNodes.AsArray(), Allocator.Temp);
-            EntityManager.AddComponent<NetworkTools.Components.NT_Eligible>(eligibleArray);
+            EntityManager.AddComponent<NT_Eligible>(eligibleArray);
             eligibleArray.Dispose();
 
             // Update phase based on new node count
@@ -470,30 +386,32 @@ namespace NetworkTools.Systems {
 
         private void HandleRemoveNode() {
             var lastNode = m_SelectedNodes[^1];
-            switch (CurrentNodeState) {
-                case SelectionState.NoSelection:
+            switch (CurrentSelectionState) {
+                case PathTransformSelectionState.NoSelection:
                     break;
-                case SelectionState.StartNodeSelected:
+                case PathTransformSelectionState.StartNodeSelected:
                     m_Log.Debug("[StartNodeSelected -> NoSelection] Removing start point.");
-                    EntityManager.RemoveComponent<NetworkTools.Components.NT_Selected>(lastNode);
-                    EntityManager.RemoveComponent<NetworkTools.Components.NT_SelectedFirst>(lastNode);
+                    EntityManager.RemoveComponent<NT_Selected>(lastNode);
+                    EntityManager.RemoveComponent<NT_SelectedFirst>(lastNode);
                     m_SelectedNodes.RemoveAt(m_SelectedNodes.Length - 1);
                     StateTransitionNoNodes();
                     break;
-                case SelectionState.EndNodeSelected:
+                case PathTransformSelectionState.EndNodeSelected:
                     if (m_SelectedNodes.Length > 2) {
-                        m_Log.Debug($"[EndNodeSelected] Removing an end point. {m_SelectedNodes.Length - 1} end points remaining");
-                    } else {
+                        m_Log.Debug(
+                            $"[EndNodeSelected] Removing an end point. {m_SelectedNodes.Length - 1} end points remaining");
+                    }
+                    else {
                         m_Log.Debug("[EndNodeSelected -> StartNodeSelected] Removing last end point.");
                     }
 
-                    EntityManager.RemoveComponent<NetworkTools.Components.NT_Selected>(lastNode);
-                    EntityManager.RemoveComponent<NetworkTools.Components.NT_SelectedLast>(lastNode);
+                    EntityManager.RemoveComponent<NT_Selected>(lastNode);
+                    EntityManager.RemoveComponent<NT_SelectedLast>(lastNode);
                     m_SelectedNodes.RemoveAt(m_SelectedNodes.Length - 1);
 
                     // Reduce our path - remove nodes and edges until we reach the new last node
                     var newLastNode = m_SelectedNodes[^1];
-                    var done        = false;
+                    var done = false;
                     while (!done) {
                         var curNode = m_CurrentPathNodes[^1];
                         if (curNode == newLastNode || m_CurrentPathNodes.Length == 1) {
@@ -501,13 +419,13 @@ namespace NetworkTools.Systems {
                             break;
                         }
 
-                        EntityManager.RemoveComponent<NetworkTools.Components.NT_Selected>(curNode);
+                        EntityManager.RemoveComponent<NT_Selected>(curNode);
                         m_CurrentPathNodes.RemoveAt(m_CurrentPathNodes.Length - 1);
 
                         // Remove corresponding edge
                         if (m_CurrentPathEdges.Length > 0) {
                             var curEdge = m_CurrentPathEdges[^1];
-                            EntityManager.RemoveComponent<NetworkTools.Components.NT_Selected>(curEdge);
+                            EntityManager.RemoveComponent<NT_Selected>(curEdge);
                             m_CurrentPathEdges.RemoveAt(m_CurrentPathEdges.Length - 1);
                         }
                     }
@@ -516,19 +434,19 @@ namespace NetworkTools.Systems {
                     UpdatePathIndices();
 
                     // Remove NT_Eligible from ALL nodes (we will recalculate based on state)
-                    EntityManager.RemoveComponent<NetworkTools.Components.NT_Eligible>(m_NodesWithEligibleQuery);
+                    EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
 
                     // Find all eligible nodes from new head of path
                     FindEligibleNodes(newLastNode, m_EligibleNodes);
 
                     // Add NT_Eligible to eligible nodes
                     var eligibleArray = new NativeArray<Entity>(m_EligibleNodes.AsArray(), Allocator.Temp);
-                    EntityManager.AddComponent<NetworkTools.Components.NT_Eligible>(eligibleArray);
+                    EntityManager.AddComponent<NT_Eligible>(eligibleArray);
                     eligibleArray.Dispose();
 
                     if (m_SelectedNodes.Length >= 2) {
                         // Mark the new last node if we still have at least 2
-                        EntityManager.AddComponent<NetworkTools.Components.NT_SelectedLast>(newLastNode);
+                        EntityManager.AddComponent<NT_SelectedLast>(newLastNode);
                     }
 
                     // Update phase based on new node count
@@ -550,30 +468,32 @@ namespace NetworkTools.Systems {
         }
 
         private ControlPoint FilterRaycastResult(Entity entity, RaycastHit hit) {
-            var controlPoint    = default(ControlPoint);
+            var controlPoint = default(ControlPoint);
             var candidateEntity = Entity.Null;
 
             // If we hit an edge, find the closest node instead
             if (EntityManager.HasComponent<Edge>(entity)) {
                 // todo make job
                 // Find the closest node to the hit position
-                var edge            = EntityManager.GetComponentData<Edge>(entity);
-                var startNode       = EntityManager.GetComponentData<Node>(edge.m_Start);
+                var edge = EntityManager.GetComponentData<Edge>(entity);
+                var startNode = EntityManager.GetComponentData<Node>(edge.m_Start);
                 var distanceToStart = math.distance(hit.m_Position, startNode.m_Position);
-                var endNode         = EntityManager.GetComponentData<Node>(edge.m_End);
-                var distanceToEnd   = math.distance(hit.m_Position, endNode.m_Position);
+                var endNode = EntityManager.GetComponentData<Node>(edge.m_End);
+                var distanceToEnd = math.distance(hit.m_Position, endNode.m_Position);
 
                 if (distanceToStart < MaxDistanceToSelect && distanceToStart < distanceToEnd) {
                     candidateEntity = edge.m_Start;
-                } else if (distanceToEnd < MaxDistanceToSelect && distanceToEnd < distanceToStart) {
+                }
+                else if (distanceToEnd < MaxDistanceToSelect && distanceToEnd < distanceToStart) {
                     candidateEntity = edge.m_End;
                 }
-            } else {
+            }
+            else {
                 candidateEntity = entity;
             }
 
             // Check that the entity we're hitting is eligible
-            if (EntityManager.HasComponent<NetworkTools.Components.NT_Eligible>(candidateEntity)) {
+            if (EntityManager.HasComponent<NT_Eligible>(candidateEntity)) {
                 controlPoint = new ControlPoint(candidateEntity, hit);
             }
 
@@ -581,8 +501,8 @@ namespace NetworkTools.Systems {
         }
 
         /// <summary>
-        /// Swaps highlighting between two entities (removes from old, adds to new).
-        /// Simple single-node highlighting utility.
+        ///     Swaps highlighting between two entities (removes from old, adds to new).
+        ///     Simple single-node highlighting utility.
         /// </summary>
         /// <param name="oldEntity">Entity to remove highlighting from</param>
         /// <param name="newEntity">Entity to add highlighting to</param>
@@ -591,20 +511,23 @@ namespace NetworkTools.Systems {
             AddHighlight(newEntity);
         }
 
-        private void AddHighlight(Entity entity) { EntityManager.AddComponentData(entity, NetworkTools.Components.NT_Highlighted.DefaultNode); }
+        private void AddHighlight(Entity entity) {
+            EntityManager.AddComponentData(entity, NT_Highlighted.DefaultNode);
+        }
 
-        private void RemoveHighlight(Entity entity) { EntityManager.RemoveComponent<NetworkTools.Components.NT_Highlighted>(entity); }
+        private void RemoveHighlight(Entity entity) {
+            EntityManager.RemoveComponent<NT_Highlighted>(entity);
+        }
 
         /// <summary>
-        /// Updates the PathIndex for all nodes in m_CurrentPathNodes to reflect their position in the path.
-        /// This should be called after any add/remove operation to keep indices synchronized.
+        ///     Updates the PathIndex for all nodes in m_CurrentPathNodes to reflect their position in the path.
+        ///     This should be called after any add/remove operation to keep indices synchronized.
         /// </summary>
         private void UpdatePathIndices() {
             for (var i = 0; i < m_CurrentPathNodes.Length; i++) {
                 var node = m_CurrentPathNodes[i];
-                if (EntityManager.HasComponent<NetworkTools.Components.NT_Selected>(node)) {
-                    EntityManager.SetComponentData(node, NetworkTools.Components.NT_Selected.ForNode(
-                        NetworkTools.Components.NodeRenderMode.RenderAsCircle, i));
+                if (EntityManager.HasComponent<NT_Selected>(node)) {
+                    EntityManager.SetComponentData(node, NT_Selected.ForNode(NodeRenderMode.RenderAsCircle, i));
                 }
             }
         }
@@ -612,37 +535,39 @@ namespace NetworkTools.Systems {
         public override void InitializeRaycast() {
             base.InitializeRaycast();
 
-            m_ToolRaycastSystem.collisionMask   = CollisionMask.OnGround | CollisionMask.Overground | CollisionMask.Underground;
+            m_ToolRaycastSystem.collisionMask =
+                CollisionMask.OnGround | CollisionMask.Overground | CollisionMask.Underground;
             m_ToolRaycastSystem.typeMask        = TypeMask.Net;
             m_ToolRaycastSystem.netLayerMask    = Layer.All;
             m_ToolRaycastSystem.iconLayerMask   = IconLayerMask.None;
             m_ToolRaycastSystem.utilityTypeMask = UtilityTypes.None;
-            m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset | RaycastFlags.SubElements |
-                                               RaycastFlags.Cargo   | RaycastFlags.Passenger;
+            m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset |
+                                               RaycastFlags.SubElements |
+                                               RaycastFlags.Cargo | RaycastFlags.Passenger;
         }
 
         public void ResetToIdle() {
             // Clear state to completely blank
-            m_OperationState.Phase = OperationPhase.Idle;
+            Phase = OperationPhase.Idle;
 
             // Batch remove all marker components using cached queries
-            EntityManager.RemoveComponent<Components.NT_Selected>(m_NodesWithSelectedQuery);
-            EntityManager.RemoveComponent<Components.NT_Selected>(m_EdgesWithSelectedQuery);
-            EntityManager.RemoveComponent<Components.NT_Eligible>(m_NodesWithEligibleQuery);
-            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
-            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_EdgesWithHighlightedQuery);
+            EntityManager.RemoveComponent<NT_Selected>(m_NodesWithSelectedQuery);
+            EntityManager.RemoveComponent<NT_Selected>(m_EdgesWithSelectedQuery);
+            EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
+            EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
+            EntityManager.RemoveComponent<NT_Highlighted>(m_EdgesWithHighlightedQuery);
             EntityManager
-                .RemoveComponent<Components.NT_SelectedFirst>(m_NodesWithSelectedFirstQuery);
+                .RemoveComponent<NT_SelectedFirst>(m_NodesWithSelectedFirstQuery);
             EntityManager
-                .RemoveComponent<Components.NT_SelectedLast>(m_NodesWithSelectedLastQuery);
+                .RemoveComponent<NT_SelectedLast>(m_NodesWithSelectedLastQuery);
 
             // Reset state
             StateTransitionNoNodes();
         }
 
         /// <summary>
-        /// Transitions to STATE 0: No nodes selected.
-        /// Sets all nodes in the game as eligible for selection.
+        ///     Transitions to STATE 0: No nodes selected.
+        ///     Sets all nodes in the game as eligible for selection.
         /// </summary>
         private void StateTransitionNoNodes() {
             m_Log.Debug("StateTransitionNoNodes()");
@@ -654,14 +579,14 @@ namespace NetworkTools.Systems {
             m_CurrentPathEdges.Clear();
 
             // Add NT_Eligible to ALL nodes 
-            EntityManager.AddComponent<NetworkTools.Components.NT_Eligible>(m_NodesWithoutEligibleQuery);
+            EntityManager.AddComponent<NT_Eligible>(m_NodesWithoutEligibleQuery);
         }
 
         /// <summary>
-        /// Finds all nodes eligible for selection from a starting node.
-        /// Traverses in all directions until hitting intersections (>2 edges) or road ends.
-        /// The start node itself is always included, even if it's an intersection.
-        /// Skips nodes that are already in the current path to avoid backing up.
+        ///     Finds all nodes eligible for selection from a starting node.
+        ///     Traverses in all directions until hitting intersections (>2 edges) or road ends.
+        ///     The start node itself is always included, even if it's an intersection.
+        ///     Skips nodes that are already in the current path to avoid backing up.
         /// </summary>
         /// <param name="startNode">The node to start traversal from</param>
         /// <param name="outEligibleNodes">Output list of eligible nodes</param>
@@ -697,7 +622,7 @@ namespace NetworkTools.Systems {
                         continue;
                     }
 
-                    var edge     = EntityManager.GetComponentData<Edge>(edgeEntity);
+                    var edge = EntityManager.GetComponentData<Edge>(edgeEntity);
                     var neighbor = edge.m_Start == current ? edge.m_End : edge.m_Start;
 
                     // Skip nodes already in current path (except start node)
@@ -720,18 +645,18 @@ namespace NetworkTools.Systems {
         }
 
         /// <summary>
-        /// Finds the shortest path between two nodes using BFS.
-        /// Returns the path including start and end nodes, and the edges connecting them.
+        ///     Finds the shortest path between two nodes using BFS.
+        ///     Returns the path including start and end nodes, and the edges connecting them.
         /// </summary>
         /// <param name="startNode">Starting node</param>
         /// <param name="endNode">Ending node</param>
         /// <param name="nodesPath">Output list containing the path from start to end</param>
         /// <param name="edgePath">Output list containing the edges in the path</param>
         /// <returns>True if a path was found, false otherwise</returns>
-        private bool FindPathBetween(Entity                 startNode,
-                                     Entity                 endNode,
-                                     ref NativeList<Entity> nodesPath,
-                                     ref NativeList<Entity> edgePath) {
+        private bool FindPathBetween(Entity startNode,
+            Entity endNode,
+            ref NativeList<Entity> nodesPath,
+            ref NativeList<Entity> edgePath) {
             nodesPath.Clear();
             edgePath.Clear();
 
@@ -739,10 +664,10 @@ namespace NetworkTools.Systems {
                 return true;
             }
 
-            var queue     = new NativeQueue<Entity>(Allocator.Temp);
-            var visited   = new NativeHashSet<Entity>(64, Allocator.Temp);
+            var queue = new NativeQueue<Entity>(Allocator.Temp);
+            var visited = new NativeHashSet<Entity>(64, Allocator.Temp);
             var parentMap = new NativeHashMap<Entity, Entity>(64, Allocator.Temp);
-            var edgeMap   = new NativeHashMap<Entity, Entity>(64, Allocator.Temp);
+            var edgeMap = new NativeHashMap<Entity, Entity>(64,   Allocator.Temp);
 
             queue.Enqueue(startNode);
             visited.Add(startNode);
@@ -781,7 +706,7 @@ namespace NetworkTools.Systems {
             if (foundPath) {
                 var pathNodes = new NativeList<Entity>(16, Allocator.Temp);
                 var pathEdges = new NativeList<Entity>(16, Allocator.Temp);
-                var current   = endNode;
+                var current = endNode;
 
                 while (current != startNode) {
                     pathNodes.Add(current);
@@ -800,14 +725,10 @@ namespace NetworkTools.Systems {
                     pathNodes.Add(startNode);
 
                     // Reverse path to go from start to end
-                    for (var i = pathNodes.Length - 1; i >= 0; i--) {
-                        nodesPath.Add(pathNodes[i]);
-                    }
+                    for (var i = pathNodes.Length - 1; i >= 0; i--) nodesPath.Add(pathNodes[i]);
 
                     // Reverse edges to go from start to end
-                    for (var i = pathEdges.Length - 1; i >= 0; i--) {
-                        edgePath.Add(pathEdges[i]);
-                    }
+                    for (var i = pathEdges.Length - 1; i >= 0; i--) edgePath.Add(pathEdges[i]);
                 }
 
                 pathNodes.Dispose();
@@ -819,35 +740,32 @@ namespace NetworkTools.Systems {
             parentMap.Dispose();
             edgeMap.Dispose();
 
-            m_Log.Debug($"FindPathBetween: Found path with {nodesPath.Length} nodes and {edgePath.Length} edges: {foundPath}");
+            m_Log.Debug(
+                $"FindPathBetween: Found path with {nodesPath.Length} nodes and {edgePath.Length} edges: {foundPath}");
             return foundPath;
         }
 
         /// <summary>
-        /// Updates highlighting for hovered path.
-        /// Highlights both nodes and edges in the path from the last selected node to the hovered node.
+        ///     Updates highlighting for hovered path.
+        ///     Highlights both nodes and edges in the path from the last selected node to the hovered node.
         /// </summary>
         private void PreviewPath() {
             // Clear any existing highlights
             ClearAllHighlights();
 
             // Add highlights to nodes
-            foreach (var node in m_NextPathNodes) {
-                EntityManager.AddComponentData(node, NetworkTools.Components.NT_Highlighted.DefaultNode);
-            }
+            foreach (var node in m_NextPathNodes) EntityManager.AddComponentData(node, NT_Highlighted.DefaultNode);
 
             // Add highlights to edges
-            foreach (var edge in m_NextPathEdges) {
-                EntityManager.AddComponentData(edge, NetworkTools.Components.NT_Highlighted.DefaultEdge);
-            }
+            foreach (var edge in m_NextPathEdges) EntityManager.AddComponentData(edge, NT_Highlighted.DefaultEdge);
         }
 
         /// <summary>
-        /// Clears all NT_Highlighted components from nodes and edges (batch operation).
+        ///     Clears all NT_Highlighted components from nodes and edges (batch operation).
         /// </summary>
         private void ClearAllHighlights() {
-            EntityManager.RemoveComponent<NetworkTools.Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
-            EntityManager.RemoveComponent<NetworkTools.Components.NT_Highlighted>(m_EdgesWithHighlightedQuery);
+            EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
+            EntityManager.RemoveComponent<NT_Highlighted>(m_EdgesWithHighlightedQuery);
         }
     }
 }

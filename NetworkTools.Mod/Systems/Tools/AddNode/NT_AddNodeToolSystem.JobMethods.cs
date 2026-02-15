@@ -4,7 +4,7 @@
 // information.
 // </copyright>
 
-namespace NetworkTools.Systems {
+namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Game.Common;
@@ -79,7 +79,7 @@ namespace NetworkTools.Systems {
             inputDeps = UpdateDefinitions(inputDeps);
 
             // Clear state to completely blank
-            m_OperationState = OperationState.Idle();
+            Phase = OperationPhase.Idle;
 
             return inputDeps;
         }

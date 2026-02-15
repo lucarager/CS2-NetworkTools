@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems {
+namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Game.Common;
@@ -13,6 +13,7 @@ namespace NetworkTools.Systems {
     using Game.Objects;
     using Game.Prefabs;
     using Game.Tools;
+    using NetworkTools.Systems.Tools;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -53,25 +54,11 @@ namespace NetworkTools.Systems {
     ///     - [Cancel]: Deselect node and return to NoSelection state
     /// </summary>
     public partial class NT_NodeControlToolSystem : NT_BaseToolSystem {
-        /// <summary>
-        /// Maximum distance to select a node when selecting near an edge
-        /// </summary>
-        private const float MaxDistanceToSelect = 16f;
-
         public override string toolID => "NodeControl Tool";
 
-        private EntityQuery m_NodesWithEligibleQuery;
-        private EntityQuery m_NodesWithHighlightedQuery;
-        private EntityQuery m_NodesWithoutEligibleQuery;
         private EntityQuery m_NodesWithSelectedQuery;
-        private EntityQuery m_DefinitionQuery;
 
         private NT_PrefabsCreateSystem m_NTPrefabsCreateSystem;
-
-        /// <summary>
-        /// Tool barrier for command buffers
-        /// </summary>
-        private ToolOutputBarrier m_Barrier;
 
         /// <summary>
         /// Tracks whether an update/re-render is needed on the next frame.
@@ -81,29 +68,9 @@ namespace NetworkTools.Systems {
         private bool m_UpdateNeeded;
 
         /// <summary>
-        /// Apply action (usually left click)
-        /// </summary>
-        private IProxyAction m_ApplyAction;
-
-        /// <summary>
-        /// Secondary apply action (usually right click)
-        /// </summary>
-        private IProxyAction m_SecondaryApplyAction;
-
-        /// <summary>
         /// Currently selected node entity
         /// </summary>
         private NativeReference<Entity> m_SelectedNode;
-
-        /// <summary>
-        /// Caches the last hovered entity to detect changes
-        /// </summary>
-        private NativeReference<Entity> m_LastHoveredEntity;
-
-        /// <summary>
-        /// Selected Prefab, for this tool this is coming from the UI
-        /// </summary>
-        private PrefabBase m_Prefab;
 
         /// <summary>
         /// Current selection state
@@ -214,11 +181,6 @@ namespace NetworkTools.Systems {
         private void HandleNoHover() {
             m_LastHoveredEntity.Value = Entity.Null;
             ClearAllHighlights();
-        }
-
-        private void UpdateActions() {
-            m_ApplyAction.shouldBeEnabled          = true;
-            m_SecondaryApplyAction.shouldBeEnabled = true;
         }
 
         private void SelectNode(Entity entity) {
@@ -382,22 +344,6 @@ namespace NetworkTools.Systems {
             return controlPoint;
         }
 
-        /// <summary>
-        /// Swaps highlighting between two entities (removes from old, adds to new).
-        /// </summary>
-        private void SwapHighlightedEntities(Entity oldEntity, Entity newEntity) {
-            RemoveHighlight(oldEntity);
-            AddHighlight(newEntity);
-        }
-
-        private void AddHighlight(Entity entity) {
-            EntityManager.AddComponentData(entity, Components.NT_Highlighted.DefaultNode);
-        }
-
-        private void RemoveHighlight(Entity entity) {
-            EntityManager.RemoveComponent<Components.NT_Highlighted>(entity);
-        }
-
         public override void InitializeRaycast() {
             base.InitializeRaycast();
 
@@ -407,13 +353,6 @@ namespace NetworkTools.Systems {
             m_ToolRaycastSystem.iconLayerMask   = IconLayerMask.None;
             m_ToolRaycastSystem.utilityTypeMask = UtilityTypes.None;
             m_ToolRaycastSystem.raycastFlags    = RaycastFlags.BuildingLots;
-        }
-
-        /// <summary>
-        /// Clears all NT_Highlighted components from nodes (batch operation).
-        /// </summary>
-        private void ClearAllHighlights() {
-            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
         }
 
         /// <summary>

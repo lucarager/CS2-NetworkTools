@@ -13,7 +13,6 @@
 
 	<PropertyGroup>
 		<LangVersion>11.0</LangVersion>
-		<ImplicitUsings>disable</ImplicitUsings>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -93,8 +92,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="$(ModPropsFile)" Link="Properties\Mod.props" />
-		<None Include="$(ModTargetsFile)" Link="Properties\Mod.targets" />
 		<None Include=".github\copilot-instructions.md" />
 	</ItemGroup>
 
@@ -108,7 +105,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Systems\Tools\" />
 	  <Folder Include="UI\src\mods\" />
 	</ItemGroup>
 

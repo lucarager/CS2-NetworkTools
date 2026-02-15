@@ -4,7 +4,7 @@
 // information.
 // </copyright>
 
-namespace NetworkTools.Systems {
+namespace NetworkTools.Systems.Tools {
     using Game.Net;
     using Game.Common;
     using Game.Prefabs;
@@ -230,37 +230,37 @@ namespace NetworkTools.Systems {
         [BurstCompile]
 #endif
         private struct SnapJob : IJob {
-            [ReadOnly] public required NativeList<Game.Tools.ControlPoint> m_ControlPoints;
+            [ReadOnly] public required NativeList<ControlPoint> m_ControlPoints;
             [ReadOnly] public required SnapMode                            m_SnapMode;
 
             [ReadOnly]
-            public required Colossal.Collections.NativeQuadTree<Entity, Game.Common.QuadTreeBoundsXZ>
+            public required Colossal.Collections.NativeQuadTree<Entity, QuadTreeBoundsXZ>
                 m_NetTree;
 
-            [ReadOnly] public required Game.Simulation.TerrainHeightData m_TerrainHeightData;
+            [ReadOnly] public required TerrainHeightData m_TerrainHeightData;
 
             [ReadOnly]
-            public required Game.Simulation.WaterSurfaceData<Game.Simulation.SurfaceWater>
+            public required WaterSurfaceData<SurfaceWater>
                 m_WaterSurfaceData;
 
             [ReadOnly] public required EntityTypeHandle                        m_EntityTypeHandle;
-            [ReadOnly] public required ComponentLookup<Game.Net.Node>          m_NodeLookup;
-            [ReadOnly] public required ComponentLookup<Game.Net.Edge>          m_EdgeLookup;
-            [ReadOnly] public required ComponentLookup<Game.Net.Curve>         m_CurveLookup;
-            [ReadOnly] public required ComponentLookup<Game.Net.Composition>   m_CompositionLookup;
-            [ReadOnly] public required ComponentLookup<Game.Prefabs.PrefabRef> m_PrefabRefLookup;
-            [ReadOnly] public required ComponentLookup<Game.Prefabs.NetData>   m_NetDataLookup;
+            [ReadOnly] public required ComponentLookup<Node>          m_NodeLookup;
+            [ReadOnly] public required ComponentLookup<Edge>          m_EdgeLookup;
+            [ReadOnly] public required ComponentLookup<Curve>         m_CurveLookup;
+            [ReadOnly] public required ComponentLookup<Composition>   m_CompositionLookup;
+            [ReadOnly] public required ComponentLookup<PrefabRef> m_PrefabRefLookup;
+            [ReadOnly] public required ComponentLookup<NetData>   m_NetDataLookup;
 
             [ReadOnly]
-            public required ComponentLookup<Game.Prefabs.NetGeometryData> m_NetGeometryDataLookup;
+            public required ComponentLookup<NetGeometryData> m_NetGeometryDataLookup;
 
             [ReadOnly]
-            public required ComponentLookup<Game.Prefabs.NetCompositionData> m_NetCompositionDataLookup;
+            public required ComponentLookup<NetCompositionData> m_NetCompositionDataLookup;
 
-            [ReadOnly] public required ComponentLookup<Game.Net.EdgeGeometry> m_EdgeGeoLookup;
-            [ReadOnly] public required ComponentLookup<Game.Net.StartNodeGeometry> m_StartNodeGeoLookup;
-            [ReadOnly] public required ComponentLookup<Game.Net.EndNodeGeometry> m_EndNodeGeoLookup;
-            [ReadOnly] public required BufferLookup<Game.Net.ConnectedEdge> m_ConnectedEdgeLookup;
+            [ReadOnly] public required ComponentLookup<EdgeGeometry> m_EdgeGeoLookup;
+            [ReadOnly] public required ComponentLookup<StartNodeGeometry> m_StartNodeGeoLookup;
+            [ReadOnly] public required ComponentLookup<EndNodeGeometry> m_EndNodeGeoLookup;
+            [ReadOnly] public required BufferLookup<ConnectedEdge> m_ConnectedEdgeLookup;
             [ReadOnly] public required BufferLookup<Game.Zones.SubBlock> m_SubBlockLookup;
             public required            NativeReference<bool> m_IsSnapped;
 
@@ -270,7 +270,7 @@ namespace NetworkTools.Systems {
 
                 // Search radius around current point
                 var searchRadius = 20f;
-                var bounds = new Colossal.Mathematics.Bounds3(
+                var bounds = new Bounds3(
                                                               controlPoint.m_Position - searchRadius,
                                                               controlPoint.m_Position + searchRadius
                                                              );
@@ -306,9 +306,9 @@ namespace NetworkTools.Systems {
                 m_ControlPoints[^1] = bestSnapPosition;
             }
 
-            public void HandleRoadSideSnap(ref Game.Tools.ControlPoint  bestSnapPosition,
-                                           Game.Tools.ControlPoint      controlPoint,
-                                           Colossal.Mathematics.Bounds3 bounds,
+            public void HandleRoadSideSnap(ref ControlPoint  bestSnapPosition,
+                                           ControlPoint      controlPoint,
+                                           Bounds3 bounds,
                                            float                        minDistance) {
                 //var iterator = new EdgeSnapIterator {
                 //    m_TotalBounds              = bounds,
@@ -343,8 +343,8 @@ namespace NetworkTools.Systems {
                 //AddSnapPosition(ref bestSnapPosition, iterator.BestSnapPosition);
             }
 
-            private static void AddSnapPosition(ref Game.Tools.ControlPoint bestSnapPosition,
-                                                Game.Tools.ControlPoint     candidate) {
+            private static void AddSnapPosition(ref ControlPoint bestSnapPosition,
+                                                ControlPoint     candidate) {
                 if (CompareSnapPriority(candidate.m_SnapPriority, bestSnapPosition.m_SnapPriority))
                     bestSnapPosition = candidate;
             }
@@ -355,50 +355,50 @@ namespace NetworkTools.Systems {
             }
 
             public struct EdgeSnapIterator : Colossal.Collections.INativeQuadTreeIterator<Entity,
-                Game.Common.QuadTreeBoundsXZ> {
-                public          Game.Tools.ControlPoint BestSnapPosition => m_BestSnapPosition;
-                public required Colossal.Mathematics.Bounds3 m_TotalBounds;
-                public required Colossal.Mathematics.Bounds3 m_Bounds;
+                QuadTreeBoundsXZ> {
+                public          ControlPoint BestSnapPosition => m_BestSnapPosition;
+                public required Bounds3 m_TotalBounds;
+                public required Bounds3 m_Bounds;
                 public required float m_SnapOffset;
                 public required float m_Elevation;
-                public required Colossal.Mathematics.Bounds1 m_HeightRange;
-                public required Game.Prefabs.NetData m_NetData;
-                public required Game.Tools.ControlPoint m_ControlPoint;
-                public required Game.Tools.ControlPoint m_BestSnapPosition;
+                public required Bounds1 m_HeightRange;
+                public required NetData m_NetData;
+                public required ControlPoint m_ControlPoint;
+                public required ControlPoint m_BestSnapPosition;
                 public required int2 m_LotSize;
-                public required Game.Simulation.TerrainHeightData m_TerrainHeightData;
+                public required TerrainHeightData m_TerrainHeightData;
 
-                public required Game.Simulation.WaterSurfaceData<Game.Simulation.SurfaceWater>
+                public required WaterSurfaceData<SurfaceWater>
                     m_WaterSurfaceData;
 
-                public required ComponentLookup<Game.Net.Node>                m_NodeLookup;
-                public required ComponentLookup<Game.Net.Edge>                m_EdgeLookup;
-                public required ComponentLookup<Game.Net.Curve>               m_CurveLookup;
+                public required ComponentLookup<Node>                m_NodeLookup;
+                public required ComponentLookup<Edge>                m_EdgeLookup;
+                public required ComponentLookup<Curve>               m_CurveLookup;
                 public required BufferLookup<Game.Zones.SubBlock>             m_SubBlockLookup;
-                public required ComponentLookup<Game.Net.Composition>         m_CompositionLookup;
-                public required ComponentLookup<Game.Prefabs.PrefabRef>       m_PrefabRefLookup;
-                public required ComponentLookup<Game.Prefabs.NetData>         m_NetDataLookup;
-                public required ComponentLookup<Game.Prefabs.NetGeometryData> m_NetGeometryDataLookup;
+                public required ComponentLookup<Composition>         m_CompositionLookup;
+                public required ComponentLookup<PrefabRef>       m_PrefabRefLookup;
+                public required ComponentLookup<NetData>         m_NetDataLookup;
+                public required ComponentLookup<NetGeometryData> m_NetGeometryDataLookup;
 
-                public required ComponentLookup<Game.Prefabs.NetCompositionData>
+                public required ComponentLookup<NetCompositionData>
                     m_NetCompositionDataLookup;
 
-                public required ComponentLookup<Game.Net.EdgeGeometry>      m_EdgeGeoLookup;
-                public required ComponentLookup<Game.Net.StartNodeGeometry> m_StartNodeGeoLookup;
-                public required ComponentLookup<Game.Net.EndNodeGeometry>   m_EndNodeGeoLookup;
-                public required BufferLookup<Game.Net.ConnectedEdge>        m_ConnectedEdgeLookup;
+                public required ComponentLookup<EdgeGeometry>      m_EdgeGeoLookup;
+                public required ComponentLookup<StartNodeGeometry> m_StartNodeGeoLookup;
+                public required ComponentLookup<EndNodeGeometry>   m_EndNodeGeoLookup;
+                public required BufferLookup<ConnectedEdge>        m_ConnectedEdgeLookup;
                 public required float                                       m_BestDistance;
                 public required float                                       m_SnapLevel;
 
-                public bool Intersect(Game.Common.QuadTreeBoundsXZ bounds) {
-                    return Colossal.Mathematics.MathUtils.Intersect(bounds.m_Bounds, m_TotalBounds);
+                public bool Intersect(QuadTreeBoundsXZ bounds) {
+                    return MathUtils.Intersect(bounds.m_Bounds, m_TotalBounds);
                 }
 
-                public void Iterate(Game.Common.QuadTreeBoundsXZ bounds, Entity entity) {
-                    if (!Colossal.Mathematics.MathUtils.Intersect(bounds.m_Bounds, m_TotalBounds))
+                public void Iterate(QuadTreeBoundsXZ bounds, Entity entity) {
+                    if (!MathUtils.Intersect(bounds.m_Bounds, m_TotalBounds))
                         return;
 
-                    if (Colossal.Mathematics.MathUtils.Intersect(bounds.m_Bounds, m_Bounds) &&
+                    if (MathUtils.Intersect(bounds.m_Bounds, m_Bounds) &&
                         HandleGeometry(entity)) { }
                 }
 
@@ -445,22 +445,22 @@ namespace NetworkTools.Systems {
                         distance += netCompositionData.m_Width * 0.5f;
                     }
 
-                    if (Colossal.Mathematics.MathUtils.Distance(
+                    if (MathUtils.Distance(
                                                                 curve.m_Bezier.xz,
                                                                 m_ControlPoint.m_HitPosition.xz,
                                                                 out controlPoint.m_CurvePosition) >=
                         distance)
                         return false;
 
-                    var snapHeight = Colossal.Mathematics.MathUtils
+                    var snapHeight = MathUtils
                                              .Position(curve.m_Bezier, controlPoint.m_CurvePosition).y;
 
                     return HandleGeometry(controlPoint, snapHeight, prefabRef, false);
                 }
 
-                public bool HandleGeometry(Game.Tools.ControlPoint controlPoint,
+                public bool HandleGeometry(ControlPoint controlPoint,
                                            float                   snapHeight,
-                                           Game.Prefabs.PrefabRef  prefabRef,
+                                           PrefabRef  prefabRef,
                                            bool                    ignoreHeightDistance) {
                     if (!m_NetDataLookup.HasComponent(prefabRef.m_Prefab)) return false;
 
@@ -472,37 +472,37 @@ namespace NetworkTools.Systems {
                     float height;
 
                     if (m_Elevation < 0f)
-                        height = Game.Simulation.TerrainUtils.SampleHeight(ref m_TerrainHeightData,
+                        height = TerrainUtils.SampleHeight(ref m_TerrainHeightData,
                                                                            controlPoint.m_HitPosition) +
                                  m_Elevation;
                     else
                         height =
-                            Game.Simulation.WaterUtils.SampleHeight(ref m_WaterSurfaceData,
+                            WaterUtils.SampleHeight(ref m_WaterSurfaceData,
                                                                     ref m_TerrainHeightData,
                                                                     controlPoint.m_HitPosition) +
                             m_Elevation;
 
                     if (m_NetGeometryDataLookup.HasComponent(prefabRef.m_Prefab)) {
                         var netGeometryData = m_NetGeometryDataLookup[prefabRef.m_Prefab];
-                        var bounds          = new Colossal.Mathematics.Bounds1(height);
+                        var bounds          = new Bounds1(height);
                         var bounds2         = netGeometryData.m_DefaultHeightRange + snapHeight;
-                        if (!Colossal.Mathematics.MathUtils.Intersect(bounds, bounds2)) {
+                        if (!MathUtils.Intersect(bounds, bounds2)) {
                             flag2 = false;
                             allowEdgeSnap = (netGeometryData.m_Flags &
-                                             Game.Net.GeometryFlags.NoEdgeConnection) == 0;
+                                             GeometryFlags.NoEdgeConnection) == 0;
                         }
                     }
 
-                    if (flag2 && !Game.Net.NetUtils.CanConnect(netData, m_NetData)) return snapAdded;
+                    if (flag2 && !NetUtils.CanConnect(netData, m_NetData)) return snapAdded;
 
                     if ((m_NetData.m_ConnectLayers & ~netData.m_RequiredLayers &
-                         Game.Net.Layer.LaneEditor) != Game.Net.Layer.None)
+                         Layer.LaneEditor) != Layer.None)
                         return snapAdded;
 
                     var num2 = snapHeight - height;
 
                     if (!ignoreHeightDistance &&
-                        !Colossal.Mathematics.MathUtils.Intersect(m_HeightRange, num2))
+                        !MathUtils.Intersect(m_HeightRange, num2))
                         return snapAdded;
 
                     if (m_NodeLookup.HasComponent(controlPoint.m_OriginalEntity)) {
@@ -525,7 +525,7 @@ namespace NetworkTools.Systems {
                         var node      = m_NodeLookup[controlPoint.m_OriginalEntity];
                         candidate.m_Position  = node.m_Position;
                         candidate.m_Direction = math.mul(node.m_Rotation, new float3(0f, 0f, 1f)).xz;
-                        Colossal.Mathematics.MathUtils.TryNormalize(ref candidate.m_Direction);
+                        MathUtils.TryNormalize(ref candidate.m_Direction);
 
                         candidate.m_SnapPriority = CalculateSnapPriority(
                                                                          m_SnapLevel,
@@ -536,7 +536,7 @@ namespace NetworkTools.Systems {
                                                                          controlPoint.m_Direction
                                                                         );
 
-                        Game.Tools.ToolUtils.AddSnapPosition(ref m_BestSnapPosition, candidate);
+                        ToolUtils.AddSnapPosition(ref m_BestSnapPosition, candidate);
 
                         snapAdded = true;
                     } else if (m_CurveLookup.HasComponent(controlPoint.m_OriginalEntity)) {
@@ -549,7 +549,7 @@ namespace NetworkTools.Systems {
                     return snapAdded;
                 }
 
-                private void HandleCurve(Game.Tools.ControlPoint controlPoint,
+                private void HandleCurve(ControlPoint controlPoint,
                                          Entity                  curveEntity,
                                          bool                    allowEdgeSnap,
                                          ref bool                snapAdded) {
@@ -562,7 +562,7 @@ namespace NetworkTools.Systems {
                     var startIsConnected = m_ConnectedEdgeLookup[edge.m_Start].Length > 1;
                     var endIsConnected   = m_ConnectedEdgeLookup[edge.m_End].Length   > 1;
 
-                    var curvesList   = new NativeList<Colossal.Mathematics.Bezier4x3>(Allocator.Temp);
+                    var curvesList   = new NativeList<Bezier4x3>(Allocator.Temp);
                     var curvesFilter = new NativeList<bool>(Allocator.Temp);
 
                     curvesList.Add(edgeGeo.m_Start.m_Left);
@@ -593,7 +593,7 @@ namespace NetworkTools.Systems {
                     curvesFilter.Add(endNodeGeo.m_Geometry.m_Right.m_Length.y > 1);
 
                     // Find curve closes to our control point.
-                    var closestCurve = default(Colossal.Mathematics.Bezier4x3);
+                    var closestCurve = default(Bezier4x3);
                     var closestPoint = default(float);
 
                     for (var i = 0; i < curvesList.Length; i++) {
@@ -604,7 +604,7 @@ namespace NetworkTools.Systems {
 
                         // Calculate the distance from the control point to the curve
                         var distance =
-                            Colossal.Mathematics.MathUtils.Distance(curve.xz,
+                            MathUtils.Distance(curve.xz,
                                                                     controlPoint.m_HitPosition.xz,
                                                                     out var t);
 
@@ -630,17 +630,17 @@ namespace NetworkTools.Systems {
                                    closestCurve.Equals(endNodeGeo.m_Geometry.m_Left.m_Left)    ||
                                    closestCurve.Equals(endNodeGeo.m_Geometry.m_Right.m_Left);
 
-                    var tangent = Colossal.Mathematics.MathUtils.Tangent(closestCurve, closestPoint);
+                    var tangent = MathUtils.Tangent(closestCurve, closestPoint);
 
                     m_BestSnapPosition.m_Direction = useRight ?
-                        Colossal.Mathematics.MathUtils.Right(tangent.xz) :
-                        Colossal.Mathematics.MathUtils.Left(tangent.xz);
+                        MathUtils.Right(tangent.xz) :
+                        MathUtils.Left(tangent.xz);
 
-                    Colossal.Mathematics.MathUtils.TryNormalize(ref m_BestSnapPosition.m_Direction);
+                    MathUtils.TryNormalize(ref m_BestSnapPosition.m_Direction);
                     m_BestSnapPosition.m_Rotation =
-                        Game.Tools.ToolUtils.CalculateRotation(m_BestSnapPosition.m_Direction);
+                        ToolUtils.CalculateRotation(m_BestSnapPosition.m_Direction);
                     m_BestSnapPosition.m_Position =
-                        Colossal.Mathematics.MathUtils.Position(closestCurve, closestPoint);
+                        MathUtils.Position(closestCurve, closestPoint);
 
                     // Shift back to center on the curve
                     m_BestSnapPosition.m_Position.xz -=

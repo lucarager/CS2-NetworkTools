@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems {
+namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Colossal.Mathematics;
@@ -11,6 +11,7 @@ namespace NetworkTools.Systems {
     using Game.Net;
     using Game.Prefabs;
     using Game.Tools;
+    using NetworkTools.Systems.Tools.PathTransform;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -29,54 +30,21 @@ namespace NetworkTools.Systems {
         /// </summary>
         private const float XZDeltaSquaredThreshold = 0.000001f;
 
-
 #if BURST
         [BurstCompile]
 #endif
         /// <summary>
-        ///     Creates temp marker objects at specific positions.
+        ///     Unified job for path transformations. Computes adjusted beziers and outputs
+        ///     either preview definitions or applies changes to existing entities.
+        ///     Supports both shape (XZ) and slope (Y) transformations.
+        ///     Pipeline:
+        ///     1. Initialize context (path-level data)
+        ///     2. Gather edge states (per-edge data, single loop)
+        ///     3. Apply shape transforms (XZ modifications)
+        ///     4. Apply slope transforms (Y modifications)
+        ///     5. Output results (preview or apply)
         /// </summary>
-        internal struct CreateMarkersJob : IJob {
-            [ReadOnly] public NativeArray<float3> Positions;
-            [ReadOnly] public Entity MarkerPrefab;
-            public EntityCommandBuffer ECB;
-
-            public void Execute() {
-                for (var i = 0; i < Positions.Length; i++) {
-                    var position = Positions[i];
-                    var entity = ECB.CreateEntity();
-
-                    var creationDefinition = new CreationDefinition {
-                        m_Prefab = MarkerPrefab,
-                    };
-
-                    ECB.AddComponent(entity, creationDefinition);
-                    ECB.AddComponent<Updated>(entity);
-
-                    var objectDefinition = new ObjectDefinition {
-                        m_Position = position,
-                    };
-
-                    ECB.AddComponent(entity, objectDefinition);
-                }
-            }
-        }
-
-#if BURST
-        [BurstCompile]
-#endif
-            /// <summary>
-            ///     Unified job for path transformations. Computes adjusted beziers and outputs
-            ///     either preview definitions or applies changes to existing entities.
-            ///     Supports both shape (XZ) and slope (Y) transformations.
-            ///     Pipeline:
-            ///     1. Initialize context (path-level data)
-            ///     2. Gather edge states (per-edge data, single loop)
-            ///     3. Apply shape transforms (XZ modifications)
-            ///     4. Apply slope transforms (Y modifications)
-            ///     5. Output results (preview or apply)
-            /// </summary>
-            internal struct PathTransformJob : IJob {
+        internal struct PathTransformJob : IJob {
             [ReadOnly] public required NativeList<Entity> SelectedNodes;
             [ReadOnly] public required NativeList<Entity> CurrentPathEdges;
             [ReadOnly] public required NativeList<Entity> CurrentPathNodes;

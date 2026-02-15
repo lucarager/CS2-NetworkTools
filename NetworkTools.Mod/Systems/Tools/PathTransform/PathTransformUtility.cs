@@ -3,12 +3,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems {
-#region Using Statements
+namespace NetworkTools.Systems.Tools.PathTransform {
+    #region Using Statements
 
-using Unity.Collections;
+    using Unity.Collections;
 
-#endregion
+    #endregion
 
     /// <summary>
     /// Pure utility class for path transformation pipeline operations.

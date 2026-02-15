@@ -3,14 +3,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems {
+namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Game.Common;
     using Game.Net;
-    using Game.Objects;
     using Game.Prefabs;
     using Game.Tools;
+    using NetworkTools.Systems.Tools.PathTransform;
     using Unity.Entities;
     using Unity.Jobs;
 
@@ -29,9 +29,9 @@ namespace NetworkTools.Systems {
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
                 ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 AggregatedLookup       = SystemAPI.GetComponentLookup<Aggregated>(true),
-                Config                 = m_OperationState.Config,
+                Config                 = TransformConfig,
                 OutputMode             = outputMode,
-                ECB                    = m_Barrier.CreateCommandBuffer(),
+                ECB                    = m_Barrier.CreateCommandBuffer()
             }.Schedule(inputDeps);
             m_Barrier.AddJobHandleForProducer(jobHandle);
             return jobHandle;
@@ -49,10 +49,10 @@ namespace NetworkTools.Systems {
             applyMode = ApplyMode.Clear;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             inputDeps = SchedulePathTransformJob(inputDeps, TransformOutputMode.Preview);
-            
+
             // Reset the flag after processing
             m_UpdateNeeded = false;
-            
+
             return inputDeps;
         }
 

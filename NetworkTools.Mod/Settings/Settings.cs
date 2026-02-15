@@ -29,7 +29,7 @@ namespace NetworkTools.Settings {
         public const  string AboutGroupStr           = "AboutGroupStr";
         public const  string ApplyActionStr          = nameof(ApplyMimic);
         public const  string SecondaryApplyActionStr = nameof(SecondaryApplyMimic);
-        public const  string ToggleToolPanelStr      = nameof(ToggleToolPanel);
+        //public const  string ToggleToolPanelStr      = nameof(ToggleToolPanel);
 
         [SettingsUIMouseBinding(ApplyActionStr)]
         [SettingsUIBindingMimic(InputManager.kToolMap, "Apply")]
@@ -41,8 +41,8 @@ namespace NetworkTools.Settings {
         [SettingsUIHidden]
         public ProxyBinding SecondaryApplyMimic { get; set; }
 
-        [SettingsUIKeyboardBinding(BindingKeyboard.T, ToggleToolPanelStr, ctrl: true)]
-        public ProxyBinding ToggleToolPanel { get; set; }
+        //[SettingsUIKeyboardBinding(BindingKeyboard.T, ToggleToolPanelStr, ctrl: true)]
+        //public ProxyBinding ToggleToolPanel { get; set; }
 
         [SettingsUISection(AboutGroupStr)]
         public bool Discord {
@@ -66,9 +66,6 @@ namespace NetworkTools.Settings {
             }
         }
 
-        [SettingsUIHidden]
-        public bool ModalFirstLaunch { get; set; }
-        
         [SettingsUISection(AboutGroupStr)]
         public string Credits => CreditStr;
 
@@ -89,13 +86,6 @@ namespace NetworkTools.Settings {
         /// Restores mod settings to default.
         /// </summary>
         public override void SetDefaults() {
-            ModalFirstLaunch = false;
         }
-
-        /// <summary>
-        /// Determines whether we're currently in-game (in a city) or not.
-        /// </summary>
-        /// <returns><c>false</c> if we're currently in-game, <c>true</c> otherwise (such as in the main menu or editor).</returns>
-        public bool IsNotInGame() { return GameManager.instance.gameMode != GameMode.Game; }
     }
 }

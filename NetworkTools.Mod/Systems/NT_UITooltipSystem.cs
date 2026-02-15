@@ -16,6 +16,7 @@ namespace NetworkTools.Systems {
     using Game.UI.Tooltip;
     using Game.UI.Widgets;
     using NetworkTools.Components;
+    using NetworkTools.Systems.Tools;
     using NetworkTools.Utils;
     using Unity.Collections;
     using Unity.Entities;

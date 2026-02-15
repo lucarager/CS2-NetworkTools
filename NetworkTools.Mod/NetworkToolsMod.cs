@@ -25,6 +25,7 @@ namespace NetworkTools {
     using Game.SceneFlow;
     using HarmonyLib;
     using NetworkTools.Systems;
+    using NetworkTools.Systems.Tools;
     using NetworkTools.Utils;
     using Newtonsoft.Json;
     using Settings;
@@ -37,7 +38,7 @@ namespace NetworkTools {
     /// Mod entry point.
     /// </summary>
     public class NetworkToolsMod : IMod {
-        private const string HarmonyPatchId = $"{nameof(NetworkTools)}.{nameof(NetworkToolsMod)}";
+        private static readonly string HarmonyPatchId = $"{nameof(NetworkTools)}.{nameof(NetworkToolsMod)}";
 
         /// <summary>
         /// The mod's default actionName.
