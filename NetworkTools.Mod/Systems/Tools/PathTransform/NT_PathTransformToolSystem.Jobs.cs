@@ -30,6 +30,12 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         private const float XZDeltaSquaredThreshold = 0.000001f;
 
+        public const float QuayThreshold = 4f;
+        public const float RetainingWallThreshold = -4f;
+        public const float TunnelThreshold = -12f;
+        public const float ElevatedThreshold = 8f;
+        public const float ForceGroundElevation = 0f;
+
 #if BURST
         [BurstCompile]
 #endif
@@ -51,6 +57,7 @@ namespace NetworkTools.Systems.Tools {
             [ReadOnly] public required ComponentLookup<Node> NodeLookup;
             [ReadOnly] public required ComponentLookup<Curve> CurveLookup;
             [ReadOnly] public required ComponentLookup<Edge> EdgeLookup;
+            [ReadOnly] public required ComponentLookup<Upgraded> UpgradedLookup;
             [ReadOnly] public required TransformConfig Config;
             [ReadOnly] public required ComponentLookup<PrefabRef> PrefabRefLookup;
             [ReadOnly] public required ComponentLookup<PseudoRandomSeed> PseudoRandomSeedLookup;
@@ -126,6 +133,18 @@ namespace NetworkTools.Systems.Tools {
                         state.IsForward = edge.m_Start == currentNode;
                     }
 
+                    if (UpgradedLookup.TryGetComponent(edgeEntity, out var upgraded)) {
+                        if ((upgraded.m_Flags.m_General & CompositionFlags.General.Elevated) != 0) {
+                            state.NetworkComposition = NetworkComposition.Elevated;
+                        }
+                        else if ((upgraded.m_Flags.m_General & CompositionFlags.General.Tunnel) != 0) {
+                            state.NetworkComposition = NetworkComposition.Tunnel;
+                        }
+                        else {
+                            state.NetworkComposition = NetworkComposition.Ground;
+                        }
+                    }
+
                     // Get curve component for geometry
                     if (CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
                         state.Bezier = curve.m_Bezier;
@@ -186,17 +205,26 @@ namespace NetworkTools.Systems.Tools {
                     ECB.AddComponent(definitionEntity, creationDefinition);
                     ECB.AddComponent<Updated>(definitionEntity);
 
+                    var elevation = float2.zero;
+
+                    elevation = state.NetworkComposition switch {
+                        NetworkComposition.Elevated => ElevatedThreshold,
+                        NetworkComposition.Tunnel => TunnelThreshold,
+                        NetworkComposition.Ground => ForceGroundElevation,
+                        _ => elevation
+                    };
+
                     var netCourse = new NetCourse {
                         m_Curve      = state.Bezier,
                         m_Length     = MathUtils.Length(state.Bezier),
                         m_FixedIndex = -1,
-                        m_Elevation  = default,
+                        m_Elevation  = elevation,
                         m_StartPosition = new CoursePos {
                             m_Entity        = Entity.Null,
                             m_Position      = state.Bezier.a,
                             m_Rotation      = NetUtils.GetNodeRotation(MathUtils.StartTangent(state.Bezier)),
                             m_CourseDelta   = 0,
-                            m_Elevation     = default,
+                            m_Elevation     = elevation,
                             m_Flags         = 0,
                             m_ParentMesh    = -1,
                             m_SplitPosition = 0
@@ -206,7 +234,7 @@ namespace NetworkTools.Systems.Tools {
                             m_Position      = state.Bezier.d,
                             m_Rotation      = NetUtils.GetNodeRotation(MathUtils.EndTangent(state.Bezier)),
                             m_CourseDelta   = 1,
-                            m_Elevation     = default,
+                            m_Elevation     = elevation,
                             m_Flags         = 0,
                             m_ParentMesh    = -1,
                             m_SplitPosition = 0

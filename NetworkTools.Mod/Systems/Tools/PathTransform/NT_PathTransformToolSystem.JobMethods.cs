@@ -25,6 +25,7 @@ namespace NetworkTools.Systems.Tools {
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
                 EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),
+                UpgradedLookup         = SystemAPI.GetComponentLookup<Upgraded>(true),
                 PrefabRefLookup        = SystemAPI.GetComponentLookup<PrefabRef>(true),
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
                 ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),

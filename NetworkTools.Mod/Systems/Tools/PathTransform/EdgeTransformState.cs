@@ -13,6 +13,16 @@ namespace NetworkTools.Systems.Tools.PathTransform {
     #endregion
 
     /// <summary>
+    /// An enum for network composition.
+    /// </summary>
+    public enum NetworkComposition {
+        None,
+        Ground = 1,
+        Elevated = 2,
+        Tunnel = 4,
+    }
+
+    /// <summary>
     /// Path-level context data for the transformation pipeline.
     /// Immutable after initialization - contains input configuration and derived values.
     /// </summary>
@@ -106,6 +116,11 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         /// True if the edge direction matches the path direction.
         /// </summary>
         public bool IsForward;
+
+        /// <summary>
+        /// Network composition of the edge.
+        /// </summary>
+        public NetworkComposition NetworkComposition;
 
         // === Geometry (mutable - updated by transforms) ===
 

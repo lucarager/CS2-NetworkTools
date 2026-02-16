@@ -70,6 +70,12 @@ namespace NetworkTools.Systems.Tools {
             m_EdgesWithSelectedQuery = SystemAPI.QueryBuilder()
                 .WithAll<Edge, NT_Selected>()
                 .Build();
+
+            // Override default query to exclude some networks
+            m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
+                .WithAll<Node, ConnectedEdge>()
+                .WithNone<NT_Eligible>()
+                .Build();
         }
 
         protected override void OnDestroy() {
