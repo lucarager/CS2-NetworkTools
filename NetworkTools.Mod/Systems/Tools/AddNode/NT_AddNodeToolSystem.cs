@@ -68,7 +68,10 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private void HandleApply(Entity controlPointEntity) {
-            Phase = OperationPhase.Ready;
+            if (controlPointEntity == Entity.Null) {
+                return;
+            }
+            Phase = OperationPhase.Applying;
         }
 
         /// <summary>
@@ -98,7 +101,7 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private void HandleHover(ControlPoint controlPoint) {
-            AddHighlight(controlPoint.m_OriginalEntity);
+            AddHighlight(controlPoint.m_OriginalEntity, Components.NT_Highlighted.DefaultNode);
             // Update Cache
             m_LastHoveredEntity.Value = controlPoint.m_OriginalEntity;
             m_LastControlPoint        = controlPoint;

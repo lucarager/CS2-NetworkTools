@@ -94,7 +94,7 @@ namespace NetworkTools.Systems.Tools {
 
         private void HandleHover(ControlPoint controlPoint) {
             Phase = OperationPhase.Ready;
-            SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity);
+            SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity, Components.NT_Highlighted.DefaultNode);
         }
 
         protected override bool GetRaycastResult(out ControlPoint controlPoint) {

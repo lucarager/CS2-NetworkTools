@@ -217,9 +217,9 @@ namespace NetworkTools.Systems.Tools {
         /// <summary>
         ///     Adds NT_Highlighted component to an entity.
         /// </summary>
-        protected virtual void AddHighlight(Entity entity) {
+        protected virtual void AddHighlight(Entity entity, Components.NT_Highlighted highlightData) {
             if (entity == Entity.Null) return;
-            EntityManager.AddComponentData(entity, Components.NT_Highlighted.DefaultNode);
+            EntityManager.AddComponentData(entity, highlightData);
         }
 
         /// <summary>
@@ -233,9 +233,9 @@ namespace NetworkTools.Systems.Tools {
         /// <summary>
         ///     Swaps highlighting between two entities (removes from old, adds to new).
         /// </summary>
-        protected virtual void SwapHighlightedEntities(Entity oldEntity, Entity newEntity) {
+        protected virtual void SwapHighlightedEntities(Entity oldEntity, Entity newEntity, Components.NT_Highlighted highlightData) {
             RemoveHighlight(oldEntity);
-            AddHighlight(newEntity);
+            AddHighlight(newEntity, highlightData);
         }
 
         /// <summary>

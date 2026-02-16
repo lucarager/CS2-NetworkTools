@@ -169,11 +169,11 @@ namespace NetworkTools.Systems.Tools {
             switch (CurrentSelectionState) {
                 case NodeControlSelectionState.NoSelection:
                     m_Log.Debug("[NoSelection] Hovering over potential node.");
-                    SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity);
+                    SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity, Components.NT_Highlighted.DefaultNode);
                     break;
                 case NodeControlSelectionState.NodeSelected:
                     m_Log.Debug("[NodeSelected] Hovering over potential marker.");
-                    SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity);
+                    SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity, Components.NT_Highlighted.DefaultNode);
                     break;
             }
         }
