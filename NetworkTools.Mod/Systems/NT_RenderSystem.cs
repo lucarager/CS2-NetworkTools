@@ -154,7 +154,9 @@ namespace NetworkTools.Systems {
         ///     Job to draw node overlays.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
+#if BURST
         [BurstCompile]
+#endif
         protected struct DrawNodesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
             [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
@@ -170,8 +172,11 @@ namespace NetworkTools.Systems {
             [ReadOnly] public required ComponentLookup<Curve> m_CurveLookup;
             [ReadOnly] public required EntityTypeHandle m_EntityTypeHandle;
 
-            public static float GetEdgeWidth(EdgeGeometry geometry) {
-                return math.distance(geometry.m_Start.m_Left.a, geometry.m_Start.m_Right.a);
+            public static float GetEdgeWidth(Entity nodeEntity, Edge edge, EdgeGeometry geometry) {
+                if (edge.m_Start == nodeEntity) {
+                    return math.distance(geometry.m_Start.m_Left.a, geometry.m_Start.m_Right.a);
+                }
+                return math.distance(geometry.m_End.m_Left.a, geometry.m_End.m_Right.a);
             }
 
             public static float3 GetConnectedEdgeNodePos(Entity node, Edge edge, Curve curve) {
@@ -206,8 +211,8 @@ namespace NetworkTools.Systems {
                     float borderWidth;
 
                     var connectedEdges = connectedEdgesArray[i];
-                    var maxEdgeDiameter = 0f;
                     var edgeNodePositions = float3.zero;
+                    var diameterSum = 0f;
                     var edgeNodesCount = 0;
 
                     for (var j = 0; j < connectedEdges.Length; j++) {
@@ -217,8 +222,12 @@ namespace NetworkTools.Systems {
                         var curve = m_CurveLookup[edgeEntity.m_Edge];
 
                         // Update max edge diameter
-                        var edgeDiameter = GetEdgeWidth(edgeGeometry);
-                        maxEdgeDiameter = math.max(maxEdgeDiameter, edgeDiameter);
+                        diameterSum += GetEdgeWidth(entity, edge, edgeGeometry);
+
+                        //m_Buffer.DrawCircle(Color.red, edgeGeometry.m_Start.m_Left.a,  2f);
+                        //m_Buffer.DrawCircle(Color.blue, edgeGeometry.m_Start.m_Right.a, 2f);
+                        //m_Buffer.DrawCircle(Color.yellow, edgeGeometry.m_End.m_Left.a,  2f);
+                        //m_Buffer.DrawCircle(Color.green, edgeGeometry.m_End.m_Right.a, 2f);
 
                         // Store connected edge node position 
                         edgeNodePositions += GetConnectedEdgeNodePos(entity, edge, curve);
@@ -228,37 +237,36 @@ namespace NetworkTools.Systems {
                     // Average the positions of connected edge nodes to get the position for the node overlay,
                     // so that it is centered in the middle of connected edges
                     var averagedPosition = edgeNodePositions / edgeNodesCount;
+                    var averagedSize = diameterSum / edgeNodesCount;
 
                     // Select
                     var position = averagedPosition;
-                    var nodeDiameter = maxEdgeDiameter;
-                    var nodeBorderWidth = math.min(1f, nodeDiameter);
+                    var nodeDiameter = averagedSize;
+                    var nodeBorderWidth = math.min(1f, averagedSize);
 
                     // Lift node up slightly so it shows over other elements
-                    position.y += 0.5f;
+                    position.y += 1f;
 
                     if (isSelectedFirst || isSelectedLast) {
-                        // First or last path node - white/bright
+                        // First or last path node
                         fillColor = new Color(0.58f, 0.27f, 1f, 1f);
                         borderColor = new Color(0.58f, 0.27f, 1f, 1f);
                         diameter = nodeDiameter;
                         borderWidth = nodeBorderWidth;
                     } else if (isSelected) {
-                        // Intermediate path nodes - small white/bright
-                        //fillColor   = new Color(1f,    1f,    1f, 1f);
-                        //borderColor = new Color(1f,    1f,    1f, 1f);
-                        fillColor = new Color(0.58f, 0.27f, 1f, 1f);
-                        borderColor = new Color(0.58f, 0.27f, 1f, 1f);
+                        //Intermediate path nodes
+                        fillColor   = new Color(1f,    1f,    1f, 1f);
+                        borderColor = new Color(1f,    1f,    1f, 1f);
                         diameter = 2f;
                         borderWidth = 0.1f;
                     } else if (isHighlighted) {
-                        // Hovered eligible node or path nodes - primary purple/subtle
+                        // Hovered eligible node or path nodes
                         fillColor = new Color(1f, 1f, 1f, 1f);
                         borderColor = new Color(1f, 1f, 1f, 1f);
                         diameter = nodeDiameter;
                         borderWidth = nodeBorderWidth;
                     } else if (isEligible) {
-                        // Eligible but not hovered - white/subtle
+                        // Eligible but not hovered
                         fillColor = new Color(1f, 1f, 1f, 0.2f);
                         borderColor = new Color(1f, 1f, 1f, 0.6f);
                         diameter = nodeDiameter;
@@ -283,7 +291,9 @@ namespace NetworkTools.Systems {
         ///     Job to draw node overlays.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
+#if BURST
         [BurstCompile]
+#endif
         protected struct DrawMarkersJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
             [ReadOnly] public required ComponentTypeHandle<NT_MarkerPosition> m_NTMarkerPositionComponentTypeHandle;
@@ -325,7 +335,9 @@ namespace NetworkTools.Systems {
         ///     Job to draw edge overlays.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
+#if BURST
         [BurstCompile]
+#endif
         protected struct DrawEdgesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
             [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
@@ -365,12 +377,12 @@ namespace NetworkTools.Systems {
 
                     if (isSelected) {
                         // Selected edge - primary purple/bright
-                        color = new Color(1f, 1f, 1f, 1f);
+                        color = new Color(0.58f, 0.27f, 1f, 1f);
                         width = 2f;
                     }
                     else if (isHighlighted) {
                         // Hovered/highlighted edge - primary purple/subtle
-                        color = new Color(1f, 1f, 1f, 0.3f);
+                        color = new Color(0.58f, 0.27f, 1f, 1f);
                         width = 2f;
                     }
                     else {
@@ -378,16 +390,26 @@ namespace NetworkTools.Systems {
                         continue;
                     }
 
-                    // Draw all curves in the EdgeGeometry
-                    m_Buffer.DrawCurve(color, edgeGeometry.m_Start.m_Left,  width);
-                    m_Buffer.DrawCurve(color, edgeGeometry.m_Start.m_Right, width);
-                    m_Buffer.DrawCurve(color, edgeGeometry.m_End.m_Left,    width);
-                    m_Buffer.DrawCurve(color, edgeGeometry.m_End.m_Right, width);
+                    // Draw the curve bezier
+                    m_Buffer.DrawCurve(color, curve.m_Bezier, width);
 
-                    m_Buffer.DrawCurve(Color.red, startNodeGeometry.m_Geometry.m_Left.m_Left,  width);
-                    m_Buffer.DrawCurve(Color.green, startNodeGeometry.m_Geometry.m_Left.m_Right, width);
-                    m_Buffer.DrawCurve(Color.blue, endNodeGeometry.m_Geometry.m_Right.m_Left,    width);
-                    m_Buffer.DrawCurve(Color.yellow, endNodeGeometry.m_Geometry.m_Right.m_Right,   width);
+                    // Draw all curves in the EdgeGeometry
+                    //m_Buffer.DrawCurve(color, edgeGeometry.m_Start.m_Left, width);
+                    //m_Buffer.DrawCurve(color, edgeGeometry.m_Start.m_Right, width);
+                    //m_Buffer.DrawCurve(color, edgeGeometry.m_End.m_Left, width);
+                    //m_Buffer.DrawCurve(color, edgeGeometry.m_End.m_Right, width);
+
+                    //m_Buffer.DrawCurve(Color.cyan, startNodeGeometry.m_Geometry.m_Middle, width);
+                    //m_Buffer.DrawCurve(Color.red, startNodeGeometry.m_Geometry.m_Left.m_Left, width);
+                    //m_Buffer.DrawCurve(Color.green, startNodeGeometry.m_Geometry.m_Left.m_Right, width);
+                    //m_Buffer.DrawCurve(Color.white, startNodeGeometry.m_Geometry.m_Right.m_Left, width);
+                    //m_Buffer.DrawCurve(Color.black, startNodeGeometry.m_Geometry.m_Right.m_Right, width);
+
+                    //m_Buffer.DrawCurve(Color.gray, endNodeGeometry.m_Geometry.m_Middle, width);
+                    //m_Buffer.DrawCurve(Color.blue, endNodeGeometry.m_Geometry.m_Left.m_Left, width);
+                    //m_Buffer.DrawCurve(Color.yellow, endNodeGeometry.m_Geometry.m_Left.m_Right, width);
+                    //m_Buffer.DrawCurve(Color.magenta, endNodeGeometry.m_Geometry.m_Right.m_Left, width);
+                    //m_Buffer.DrawCurve(Color.gray, endNodeGeometry.m_Geometry.m_Right.m_Right, width);
                 }
             }
         }
