@@ -37,7 +37,7 @@ namespace NetworkTools.Systems.Tools {
             m_NTPrefabsCreateSystem = World.GetOrCreateSystemManaged<NT_PrefabsCreateSystem>();
 
             // Configuration
-            ShowNodes = true;
+            RenderEligibleNodes = true;
 
             // Data Structures
             m_SelectedNode = new NativeReference<Entity>(Allocator.Persistent);
@@ -63,6 +63,8 @@ namespace NetworkTools.Systems.Tools {
 
             // Reset internal state
             m_SelectedNode.Value = Entity.Null;
+            m_InputState = InputInteractionState.Idle;
+            m_MouseDownEntity = Entity.Null;
 
             // Transition to NoSelection state - all nodes become eligible
             StateTransitionNoSelection();
@@ -76,6 +78,8 @@ namespace NetworkTools.Systems.Tools {
 
             // Clear internal state
             m_SelectedNode.Value = Entity.Null;
+            m_InputState = InputInteractionState.Idle;
+            m_MouseDownEntity = Entity.Null;
         }
     }
 }

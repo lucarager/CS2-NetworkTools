@@ -18,6 +18,8 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
+    using UnityEngine;
+    using UnityEngine.InputSystem;
 
     #endregion
 
@@ -27,6 +29,18 @@ namespace NetworkTools.Systems.Tools {
     public enum NodeControlSelectionState {
         NoSelection  = 0,
         NodeSelected = 1,
+    }
+
+    /// <summary>
+    /// Tracks the current input interaction state (separate from selection state).
+    /// </summary>
+    public enum InputInteractionState {
+        /// <summary>Not pressing anything.</summary>
+        Idle = 0,
+        /// <summary>Mouse down, but haven't moved enough to determine drag vs click.</summary>
+        PendingAction = 1,
+        /// <summary>Confirmed drag in progress.</summary>
+        Dragging = 2,
     }
 
     /// <summary>
@@ -73,6 +87,26 @@ namespace NetworkTools.Systems.Tools {
         private NativeReference<Entity> m_SelectedNode;
 
         /// <summary>
+        /// Current input interaction state.
+        /// </summary>
+        private InputInteractionState m_InputState;
+
+        /// <summary>
+        /// World position when mouse was pressed (for drag threshold detection).
+        /// </summary>
+        private float3 m_MouseDownPosition;
+
+        /// <summary>
+        /// Entity under cursor when mouse was pressed.
+        /// </summary>
+        private Entity m_MouseDownEntity;
+
+        /// <summary>
+        /// World units the mouse must move before being considered a drag.
+        /// </summary>
+        private const float DragThreshold = 0.5f;
+
+        /// <summary>
         /// Current selection state
         /// </summary>
         public NodeControlSelectionState CurrentSelectionState =>
@@ -91,36 +125,122 @@ namespace NetworkTools.Systems.Tools {
 
             // Right click => Cancel / Deselect
             if (m_SecondaryApplyAction.WasPressedThisFrame()) {
+                CancelCurrentInteraction();
                 HandleCancel();
                 return inputDeps;
             }
 
             // Get raycast result
-            if (GetRaycastResult(out var controlPoint)) {
-                // We hit something
-                var newEntityWasHit = m_LastHoveredEntity.Value != controlPoint.m_OriginalEntity;
+            var hasHit      = GetRaycastResult(out var controlPoint);
+            var hitPosition = hasHit ? controlPoint.m_HitPosition : float3.zero;
+            var hitEntity   = hasHit ? controlPoint.m_OriginalEntity : Entity.Null;
 
-                if (newEntityWasHit) {
-                    HandleHover(controlPoint);
-                }
+            switch (m_InputState) {
+                case InputInteractionState.Idle:
+                    HandleIdleState(hasHit, hitEntity, controlPoint);
+                    break;
 
-                // Update Cache
-                m_LastHoveredEntity.Value = controlPoint.m_OriginalEntity;
+                case InputInteractionState.PendingAction:
+                    HandlePendingState(hasHit, hitPosition);
+                    break;
 
-                // Handle dragging (holding apply)
-                if (m_ApplyAction.IsPressed()) {
-                    HandleDrag(controlPoint);
-                }
-                // Handle clicking
-                else if (m_ApplyAction.WasReleasedThisFrame()) {
-                    HandleApply(controlPoint.m_OriginalEntity);
-                }
-            } else {
-                // No entity under cursor
-                HandleNoHover();
+                case InputInteractionState.Dragging:
+                    HandleDraggingState();
+                    break;
             }
 
             return inputDeps;
+        }
+
+        private void HandleIdleState(bool hasHit, Entity hitEntity, ControlPoint controlPoint) {
+            if (hasHit) {
+                // Update hover highlight
+                if (m_LastHoveredEntity.Value != hitEntity) {
+                    HandleHover(controlPoint);
+                    m_LastHoveredEntity.Value = hitEntity;
+                }
+
+                // Mouse down - start potential interaction
+                if (m_ApplyAction.WasPressedThisFrame()) {
+                    m_InputState = InputInteractionState.PendingAction;
+                    m_MouseDownPosition = controlPoint.m_HitPosition;
+                    m_MouseDownEntity = hitEntity;
+                    m_Log.Debug($"[Idle -> PendingAction] Mouse down on {hitEntity}");
+                }
+            } else {
+                HandleNoHover();
+            }
+        }
+
+        private void HandlePendingState(bool hasHit, float3 hitPosition) {
+            if (m_ApplyAction.WasReleasedThisFrame()) {
+                // Released before dragging threshold - this is a CLICK
+                m_Log.Debug("[PendingAction -> Idle] Click detected");
+                HandleClick(m_MouseDownEntity);
+                m_InputState = InputInteractionState.Idle;
+                return;
+            }
+
+            if (!m_ApplyAction.IsPressed()) {
+                // Button no longer pressed (edge case)
+                m_InputState = InputInteractionState.Idle;
+                return;
+            }
+
+            // Check if we've moved enough to be considered a drag
+            if (hasHit) {
+                var distance = math.distance(hitPosition.xz, m_MouseDownPosition.xz);
+                if (distance > DragThreshold) {
+                    // Only allow dragging markers in NodeSelected state
+                    if (CurrentSelectionState == NodeControlSelectionState.NodeSelected &&
+                        EntityManager.HasComponent<Components.NT_Marker>(m_MouseDownEntity)) {
+                        m_InputState = InputInteractionState.Dragging;
+                        m_Log.Debug("[PendingAction -> Dragging] Drag started");
+
+                        // Clear hover highlight and mark marker as selected
+                        ClearAllHighlights();
+                        EntityManager.AddComponentData(m_MouseDownEntity, Components.NT_Selected.DefaultNode);
+                    } else {
+                        // Can't drag this entity, cancel the interaction
+                        m_InputState = InputInteractionState.Idle;
+                    }
+                }
+            }
+        }
+
+        private void HandleDraggingState() {
+            if (m_ApplyAction.WasReleasedThisFrame()) {
+                // Drag ended - remove selected state from marker
+                m_Log.Debug("[Dragging -> Idle] Drag ended");
+                if (EntityManager.HasComponent<Components.NT_Selected>(m_MouseDownEntity)) {
+                    EntityManager.RemoveComponent<Components.NT_Selected>(m_MouseDownEntity);
+                }
+                m_InputState = InputInteractionState.Idle;
+                return;
+            }
+
+            // Continue dragging - project mouse onto XZ plane at marker's Y
+            UpdateMarkerDragPosition(m_MouseDownEntity);
+        }
+
+        private void HandleClick(Entity entity) {
+            switch (CurrentSelectionState) {
+                case NodeControlSelectionState.NoSelection:
+                    if (entity != Entity.Null && EntityManager.HasComponent<Components.NT_Eligible>(entity)) {
+                        m_Log.Debug("[NoSelection -> NodeSelected] Selecting node.");
+                        SelectNode(entity);
+                    }
+                    break;
+                case NodeControlSelectionState.NodeSelected:
+                    // Click on marker or elsewhere - could add behavior here
+                    m_Log.Debug("[NodeSelected] Click registered.");
+                    break;
+            }
+        }
+
+        private void CancelCurrentInteraction() {
+            m_InputState = InputInteractionState.Idle;
+            m_MouseDownEntity = Entity.Null;
         }
 
         private void HandleCancel() {
@@ -139,32 +259,6 @@ namespace NetworkTools.Systems.Tools {
             }
         }
 
-        private void HandleDrag(ControlPoint controlPoint) {
-            switch (CurrentSelectionState) {
-                case NodeControlSelectionState.NoSelection:
-                    break;
-                case NodeControlSelectionState.NodeSelected:
-                    MoveMarker(controlPoint.m_OriginalEntity, controlPoint.m_HitPosition);
-                    m_Log.Debug("[NodeSelected] Dragging.");
-                    break;
-            }
-        }
-
-        private void HandleApply(Entity entity) {
-            switch (CurrentSelectionState) {
-                case NodeControlSelectionState.NoSelection:
-                    if (entity != Entity.Null) {
-                        m_Log.Debug("[NoSelection -> NodeSelected] Selecting node.");
-                        SelectNode(entity);
-                    }
-                    break;
-                case NodeControlSelectionState.NodeSelected:
-                    // Do nothing when already selected
-                    m_Log.Debug("[NodeSelected] Apply pressed, but node already selected.");
-                    break;
-            }
-        }
-
         private void HandleHover(ControlPoint controlPoint) {
             switch (CurrentSelectionState) {
                 case NodeControlSelectionState.NoSelection:
@@ -179,6 +273,11 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private void HandleNoHover() {
+            // Remove highlight from the last hovered entity directly (handles markers which aren't in m_NodesWithHighlightedQuery)
+            if (m_LastHoveredEntity.Value != Entity.Null &&
+                EntityManager.HasComponent<Components.NT_Highlighted>(m_LastHoveredEntity.Value)) {
+                EntityManager.RemoveComponent<Components.NT_Highlighted>(m_LastHoveredEntity.Value);
+            }
             m_LastHoveredEntity.Value = Entity.Null;
             ClearAllHighlights();
         }
@@ -243,12 +342,63 @@ namespace NetworkTools.Systems.Tools {
             m_Markers.Clear();
         }
 
-        private void MoveMarker(Entity markerEntity, float3 position) {
-            if (EntityManager.Exists(markerEntity)) {
+        /// <summary>
+        /// Updates the marker position by projecting mouse onto a horizontal plane at the marker's Y.
+        /// </summary>
+        private void UpdateMarkerDragPosition(Entity markerEntity) {
+            if (!EntityManager.Exists(markerEntity)) return;
+            if (!EntityManager.HasComponent<Components.NT_MarkerPosition>(markerEntity)) return;
+
+            var currentPos = EntityManager.GetComponentData<Components.NT_MarkerPosition>(markerEntity).Position;
+            var fixedY = currentPos.y;
+
+            if (TryGetXZPlaneIntersection(fixedY, out var intersection)) {
                 EntityManager.SetComponentData(markerEntity, new Components.NT_MarkerPosition {
-                    Position = position
+                    Position = intersection
                 });
             }
+        }
+
+        /// <summary>
+        /// Gets the intersection point of the camera ray (through mouse position) with a horizontal plane.
+        /// </summary>
+        /// <param name="planeY">The Y height of the horizontal plane.</param>
+        /// <param name="intersection">The resulting intersection point.</param>
+        /// <returns>True if intersection found, false otherwise.</returns>
+        private bool TryGetXZPlaneIntersection(float planeY, out float3 intersection) {
+            intersection = float3.zero;
+
+            var camera = Camera.main;
+            if (camera == null) {
+                m_Log.Warn("Camera.main is null");
+                return false;
+            }
+
+            // Create ray from camera through mouse position
+            var mousePos = Mouse.current.position.ReadValue();
+            var ray = camera.ScreenPointToRay(mousePos);
+
+            var rayOrigin = (float3)ray.origin;
+            var rayDirection = math.normalize((float3)ray.direction);
+
+            // Plane equation: y = planeY (normal is (0, 1, 0))
+            // Ray: P = origin + t * direction
+            // Solve for t: origin.y + t * direction.y = planeY
+
+            // Avoid division by zero (ray parallel to plane)
+            if (math.abs(rayDirection.y) < 0.0001f) {
+                return false;
+            }
+
+            var t = (planeY - rayOrigin.y) / rayDirection.y;
+
+            // Only consider intersections in front of the camera
+            if (t < 0) {
+                return false;
+            }
+
+            intersection = rayOrigin + t * rayDirection;
+            return true;
         }
 
         private void DeselectCurrentNode() {

@@ -154,6 +154,10 @@ namespace NetworkTools.Systems.Tools {
         public void SetTransformationConfig(TransformConfig config) {
             TransformConfig = config;
             m_UpdateNeeded  = true;
+
+            // Enable/Disable rendering based on config
+            RenderSlopeTooltips = config.HasSlopeTransform;
+
             m_Log.Debug(
                 $"Transformation config set: ShapeTemplate={config.Shape.Template}, SlopeTemplate={config.Slope.Template}");
         }

@@ -32,6 +32,7 @@ namespace NetworkTools.Systems {
     /// </summary>
     public partial class NT_RenderSystem : GameSystemBase {
         private EntityQuery m_EdgeQuery;
+        private EntityQuery m_TempEdgeQuery;
         private PrefixedLogger m_Log;
         private EntityQuery m_NodeQuery;
         private EntityQuery m_MarkerQuery;
@@ -59,6 +60,12 @@ namespace NetworkTools.Systems {
                 .WithNone<Deleted, Hidden>()
                 .Build();
 
+
+            m_TempEdgeQuery = SystemAPI.QueryBuilder()
+                .WithAll<Edge, Temp>()
+                .WithNone<Deleted, Hidden>()
+                .Build();
+
             m_MarkerQuery = SystemAPI.QueryBuilder()
                 .WithAll<NT_Marker>()
                 .WithNone<Deleted>()
@@ -79,9 +86,10 @@ namespace NetworkTools.Systems {
             var nodeBufferJobHandle = default(JobHandle);
             var markersBufferJobHandle = default(JobHandle);
             var edgeBufferJobHandle = default(JobHandle);
+            var tempEdgeBufferJobHandle = default(JobHandle);
             var lastJobHandle = Dependency;
 
-            if (tool.ShowNodes) {
+            if (tool.RenderEligibleNodes) {
                 // Draw nodes
                 var drawNodesJob = new DrawNodesJob {
                     m_Buffer                           = m_OverlayRenderSystem.GetBuffer(out nodeBufferJobHandle),
@@ -107,13 +115,14 @@ namespace NetworkTools.Systems {
                 lastJobHandle = drawNodesJobHandle;
             }
 
-            if (tool.ShowNodes) {
+            if (tool.RenderEligibleNodes) {
                 // Draw markers
                 var drawMarkersJob = new DrawMarkersJob {
                     m_Buffer                              = m_OverlayRenderSystem.GetBuffer(out markersBufferJobHandle),
                     m_EntityTypeHandle                    = SystemAPI.GetEntityTypeHandle(),
                     m_NTMarkerPositionComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_MarkerPosition>(),
                     m_HighlightedComponentTypeHandle      = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
+                    m_SelectedComponentTypeHandle         = SystemAPI.GetComponentTypeHandle<NT_Selected>()
                 };
 
                 var drawMarkersJobHandle = drawMarkersJob.ScheduleByRef(m_MarkerQuery,
@@ -124,7 +133,7 @@ namespace NetworkTools.Systems {
                 lastJobHandle = drawMarkersJobHandle;
             }
 
-            if (tool.ShowEdges) {
+            if (tool.RenderEligibleEdges) {
                 // Draw edges
                 var drawEdgesJob = new DrawEdgesJob {
                     m_Buffer                               = m_OverlayRenderSystem.GetBuffer(out edgeBufferJobHandle),
@@ -144,6 +153,28 @@ namespace NetworkTools.Systems {
 
                 m_OverlayRenderSystem.AddBufferWriter(drawEdgesJobHandle);
                 lastJobHandle = drawEdgesJobHandle;
+            }
+
+            if (tool.RenderTempEdges) {
+                // Draw edges
+                var drawTempEdgesJob = new DrawTempEdgesJob {
+                    m_Buffer                               = m_OverlayRenderSystem.GetBuffer(out tempEdgeBufferJobHandle),
+                    m_HighlightedComponentTypeHandle       = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
+                    m_SelectedComponentTypeHandle          = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
+                    m_EdgeComponentTypeHandle              = SystemAPI.GetComponentTypeHandle<Edge>(),
+                    m_CurveComponentTypeHandle             = SystemAPI.GetComponentTypeHandle<Curve>(),
+                    m_EdgeGeometryComponentTypeHandle      = SystemAPI.GetComponentTypeHandle<EdgeGeometry>(),
+                    m_StartNodeGeometryComponentTypeHandle = SystemAPI.GetComponentTypeHandle<StartNodeGeometry>(),
+                    m_EndNodeGeometryComponentTypeHandle   = SystemAPI.GetComponentTypeHandle<EndNodeGeometry>(),
+                    m_NodeLookup                           = SystemAPI.GetComponentLookup<Node>(true)
+                };
+
+                var drawTempEdgesJobHandle = drawTempEdgesJob.ScheduleByRef(m_TempEdgeQuery,
+                    JobHandle.CombineDependencies(lastJobHandle,
+                        tempEdgeBufferJobHandle));
+
+                m_OverlayRenderSystem.AddBufferWriter(drawTempEdgesJobHandle);
+                lastJobHandle = drawTempEdgesJobHandle;
             }
 
             Dependency = lastJobHandle;
@@ -298,6 +329,7 @@ namespace NetworkTools.Systems {
             [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
             [ReadOnly] public required ComponentTypeHandle<NT_MarkerPosition> m_NTMarkerPositionComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_Selected> m_SelectedComponentTypeHandle;
             [ReadOnly] public required EntityTypeHandle m_EntityTypeHandle;
 
             /// <inheritdoc />
@@ -313,9 +345,23 @@ namespace NetworkTools.Systems {
                     var position = positionsArray[i];
 
                     var isHighlighted = chunk.Has(ref m_HighlightedComponentTypeHandle);
+                    var isSelected = chunk.Has(ref m_SelectedComponentTypeHandle);
 
-                    var fillColor = isHighlighted ? Color.red : Color.green; // new Color(0.58f, 0.27f, 1f, 1f);
-                    var borderColor = isHighlighted ? Color.red : Color.green; // new Color(0.58f, 0.27f, 1f, 1f);
+                    Color color;
+
+                    if (isSelected) {
+                        // Selected edge - primary purple/bright
+                        color = Color.red;
+                    } else if (isHighlighted) {
+                        // Hovered/highlighted edge - primary purple/subtle
+                        color = Color.green;
+                    } else {
+                        // Not highlighted or selected - don't render
+                        color = Color.blue;
+                    }
+
+                    var fillColor = color;
+                    var borderColor = color;
                     var diameter = 3f;
                     var borderWidth = 1f;
 
@@ -410,6 +456,68 @@ namespace NetworkTools.Systems {
                     //m_Buffer.DrawCurve(Color.yellow, endNodeGeometry.m_Geometry.m_Left.m_Right, width);
                     //m_Buffer.DrawCurve(Color.magenta, endNodeGeometry.m_Geometry.m_Right.m_Left, width);
                     //m_Buffer.DrawCurve(Color.gray, endNodeGeometry.m_Geometry.m_Right.m_Right, width);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Job to draw edge overlays.
+        /// </summary>
+        [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
+#if BURST
+        [BurstCompile]
+#endif
+        protected struct DrawTempEdgesJob : IJobChunk {
+            [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
+            [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_Selected> m_SelectedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<Edge> m_EdgeComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<Curve> m_CurveComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<EdgeGeometry> m_EdgeGeometryComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<StartNodeGeometry> m_StartNodeGeometryComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<EndNodeGeometry> m_EndNodeGeometryComponentTypeHandle;
+            [ReadOnly] public required ComponentLookup<Node> m_NodeLookup;
+
+            /// <inheritdoc />
+            public void Execute(in ArchetypeChunk chunk,
+                int unfilteredChunkIndex,
+                bool useEnabledMask,
+                in v128 chunkEnabledMask) {
+                var edgesArray = chunk.GetNativeArray(ref m_EdgeComponentTypeHandle);
+                var curvesArray = chunk.GetNativeArray(ref m_CurveComponentTypeHandle);
+                var edgeGeometriesArray = chunk.GetNativeArray(ref m_EdgeGeometryComponentTypeHandle);
+                var startNodeGeometriesArray = chunk.GetNativeArray(ref m_StartNodeGeometryComponentTypeHandle);
+                var endNodeGeometriesArray = chunk.GetNativeArray(ref m_EndNodeGeometryComponentTypeHandle);
+
+                for (var i = 0; i < edgesArray.Length; i++) {
+                    var curve = curvesArray[i];
+
+                    // Determine visual style
+                    var color = new Color(1f, 1f, 1f, 1f);
+                    var width = 1f;
+                    var perpLineHalfLength = 2f;
+
+                    // Trim the bezier by a fixed absolute distance at each end
+                    var absoluteTrimAmount = 4f;
+                    var relativeTrim = math.clamp(absoluteTrimAmount / curve.m_Length, 0f, 0.49f);
+                    var trimmedBezier = MathUtils.Cut(curve.m_Bezier, new Bounds1(relativeTrim, 1f - relativeTrim));
+
+                    // Draw the shortened curve bezier
+                    m_Buffer.DrawCurve(color, trimmedBezier, width);
+
+                    // Calculate perpendicular lines at start
+                    var startPoint = trimmedBezier.a;
+                    var startTangent = math.normalize(MathUtils.Tangent(trimmedBezier, 0f));
+                    var startPerp = new float3(-startTangent.z, 0f, startTangent.x);
+                    var startLine = new Line3.Segment(startPoint - startPerp * perpLineHalfLength, startPoint + startPerp * perpLineHalfLength);
+                    m_Buffer.DrawLine(color, startLine, width);
+
+                    // Calculate perpendicular lines at end
+                    var endPoint = trimmedBezier.d;
+                    var endTangent = math.normalize(MathUtils.Tangent(trimmedBezier, 1f));
+                    var endPerp = new float3(-endTangent.z, 0f, endTangent.x);
+                    var endLine = new Line3.Segment(endPoint - endPerp * perpLineHalfLength, endPoint + endPerp * perpLineHalfLength);
+                    m_Buffer.DrawLine(color, endLine, width);
                 }
             }
         }

@@ -89,7 +89,7 @@ namespace NetworkTools.Systems {
         private void UpdateEdgeTooltips(NT_BaseToolSystem tool) {
             var activeEdges = new NativeHashSet<Entity>(32, Allocator.Temp);
 
-            if (tool.ShowTooltipsSlopes) {
+            if (tool.RenderSlopeTooltips) {
                 ProcessEdgeTooltips(activeEdges);
             }
 

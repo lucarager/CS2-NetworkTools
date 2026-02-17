@@ -41,9 +41,8 @@ namespace NetworkTools.Systems.Tools {
             m_Log.Prefix = nameof(NT_PathTransformToolSystem);
 
             // Configuration
-            ShowNodes                = true;
-            ShowEdges                = true;
-            ShowTooltipsSlopes       = true;
+            RenderEligibleNodes      = true;
+            RenderEligibleEdges      = true;
             DisableVanillaValidation = true;
 
             // Data Structures
@@ -73,7 +72,7 @@ namespace NetworkTools.Systems.Tools {
 
             // Override default query to exclude some networks
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, ConnectedEdge>()
+                .WithAll<Node, Road>()
                 .WithNone<NT_Eligible>()
                 .Build();
         }

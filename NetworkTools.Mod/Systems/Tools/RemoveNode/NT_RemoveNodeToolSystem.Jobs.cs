@@ -21,25 +21,104 @@ namespace NetworkTools.Systems.Tools {
     #endregion
 
     public partial class NT_RemoveNodeToolSystem {
+
+#if BURST
+        [BurstCompile]
+#endif
+        private struct MinimalNodeRemovalJob : IJob {
+            [ReadOnly] public required Entity m_NodeToRemove;
+            [ReadOnly] public required ComponentLookup<Node> m_NodeData;
+            [ReadOnly] public required ComponentLookup<Edge> m_EdgeData;
+            [ReadOnly] public required ComponentLookup<Curve> m_CurveData;
+            [ReadOnly] public required ComponentLookup<Temp> m_TempData;
+            [ReadOnly] public required BufferLookup<ConnectedEdge> m_ConnectedEdges;
+
+            public void Execute() {
+                // 1. Get the two connected edges
+                var connectedEdges = m_ConnectedEdges[m_NodeToRemove];
+                var edge1 = connectedEdges[0].m_Edge;
+                var edge2 = connectedEdges[1].m_Edge;
+
+                // 2. Determine edge orientation relative to node
+                var edgeData1 = m_EdgeData[edge1];
+                var edgeData2 = m_EdgeData[edge2];
+                var edge1StartsAtNode = edgeData1.m_Start == m_NodeToRemove;
+                var edge2EndsAtNode = edgeData2.m_End == m_NodeToRemove;
+
+                // 3. Get curves and orient them: edge1 → node → edge2
+                var curve1 = m_CurveData[edge1];
+                var curve2 = m_CurveData[edge2];
+                if (edge1StartsAtNode) {
+                    curve1.m_Bezier = MathUtils.Invert(curve1.m_Bezier);
+                }
+
+                if (edge2EndsAtNode) {
+                    curve2.m_Bezier = MathUtils.Invert(curve2.m_Bezier);
+                }
+
+                // 4. Join curves into one
+                var joinedCurve = MathUtils.Join(curve1.m_Bezier, curve2.m_Bezier);
+
+                // 5. Mark node for deletion
+                var nodeTemp = m_TempData[m_NodeToRemove];
+                nodeTemp.m_Flags           = TempFlags.Delete | TempFlags.Hidden;
+                m_TempData[m_NodeToRemove] = nodeTemp;
+
+                // 6. Update surviving edge (edge2) with joined curve
+                curve2.m_Bezier = joinedCurve;
+                if (edge2EndsAtNode) {
+                    curve2.m_Bezier = MathUtils.Invert(curve2.m_Bezier);
+                }
+
+                curve2.m_Length    = MathUtils.Length(curve2.m_Bezier);
+                m_CurveData[edge2] = curve2;
+
+                // 7. Update surviving edge's connection to far node of deleted edge
+                var farNode = edge1StartsAtNode ? edgeData1.m_End : edgeData1.m_Start;
+                if (edge2EndsAtNode) {
+                    edgeData2.m_End = farNode;
+                }
+                else {
+                    edgeData2.m_Start = farNode;
+                }
+
+                m_EdgeData[edge2] = edgeData2;
+
+                // 8. Update far node's ConnectedEdge buffer (switch edge1 → edge2)
+                var farNodeEdges = m_ConnectedEdges[farNode];
+                for (var i = 0; i < farNodeEdges.Length; i++)
+                    if (farNodeEdges[i].m_Edge == edge1) {
+                        farNodeEdges[i] = new ConnectedEdge(edge2);
+                        break;
+                    }
+
+                // 9. Mark deleted edge
+                var edge1Temp = m_TempData[edge1];
+                edge1Temp.m_Flags = TempFlags.Delete | TempFlags.Hidden;
+                m_TempData[edge1] = edge1Temp;
+            }
+        }
+
+
 #if BURST
         [BurstCompile]
 #endif
         /// <summary>
-        /// Creates definitions for the merged edge when removing a node.
-        /// Given a node with exactly 2 connected edges, creates a NetCourse that
-        /// connects the two neighbor nodes, effectively previewing the removal.
+        ///     Creates definitions for the merged edge when removing a node.
+        ///     Given a node with exactly 2 connected edges, creates a NetCourse that
+        ///     connects the two neighbor nodes, effectively previewing the removal.
         /// </summary>
         private struct CreateDefinitionJob : IJob {
-            [ReadOnly] public required NativeReference<Entity>           HoveredNode;
-            [ReadOnly] public required ComponentLookup<Node>             NodeLookup;
-            [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
-            [ReadOnly] public required ComponentLookup<Edge>             EdgeLookup;
-            [ReadOnly] public required ComponentLookup<PrefabRef>        PrefabRefLookup;
+            [ReadOnly] public required NativeReference<Entity> HoveredNode;
+            [ReadOnly] public required ComponentLookup<Node> NodeLookup;
+            [ReadOnly] public required ComponentLookup<Curve> CurveLookup;
+            [ReadOnly] public required ComponentLookup<Edge> EdgeLookup;
+            [ReadOnly] public required ComponentLookup<PrefabRef> PrefabRefLookup;
             [ReadOnly] public required ComponentLookup<PseudoRandomSeed> PseudoRandomSeedLookup;
-            [ReadOnly] public required BufferLookup<ConnectedEdge>       ConnectedEdgeLookup;
-            [ReadOnly] public required TerrainHeightData                 TerrainHeight;
-            [ReadOnly] public required OverlayRenderSystem.Buffer        RenderBuffer;
-            public required            EntityCommandBuffer               ECB;
+            [ReadOnly] public required BufferLookup<ConnectedEdge> ConnectedEdgeLookup;
+            [ReadOnly] public required TerrainHeightData TerrainHeight;
+            [ReadOnly] public required OverlayRenderSystem.Buffer RenderBuffer;
+            public required EntityCommandBuffer ECB;
 
             public void Execute() {
                 var nodeToRemove = HoveredNode.Value;
@@ -77,17 +156,13 @@ namespace NetworkTools.Systems.Tools {
 
                 // Create the new merged curve (as a new edge)
                 ProcessNewCurveDef(edge1, nodeToRemove, edge2, curve1, curve2, edge1Entity);
-
-                // Delete both edges (both must be deleted for the node to be removed)
                 //ProcessEdgeDeletionDef(edge1Entity, edge1);
                 ProcessEdgeDeletionDef(edge2Entity, edge2);
-
-                // Delete the node being removed
                 //ProcessNodeDeletionDef(nodeToRemove);
             }
 
             /// <summary>
-            /// Processes the edge definition for deletion.
+            ///     Processes the edge definition for deletion.
             /// </summary>
             private void ProcessEdgeDeletionDef(Entity edgeEntity, Edge edge) {
                 var definitionEntity = ECB.CreateEntity();
@@ -122,7 +197,7 @@ namespace NetworkTools.Systems.Tools {
             }
 
             /// <summary>
-            /// Processes the node definition for removal.
+            ///     Processes the node definition for removal.
             /// </summary>
             /// <param name="nodeToRemove"></param>
             private void ProcessNodeDeletionDef(Entity nodeToRemove) {
@@ -141,13 +216,17 @@ namespace NetworkTools.Systems.Tools {
                         m_Entity      = nodeToRemove,
                         m_Position    = node.m_Position,
                         m_Rotation    = node.m_Rotation,
-                        m_CourseDelta = 0f
+                        m_CourseDelta = 0f,
+                        m_Flags = CoursePosFlags.IsLeft |
+                                  CoursePosFlags.IsRight
                     },
                     m_EndPosition = new CoursePos {
                         m_Entity      = nodeToRemove,
                         m_Position    = node.m_Position,
                         m_Rotation    = node.m_Rotation,
-                        m_CourseDelta = 1f
+                        m_CourseDelta = 1f,
+                        m_Flags = CoursePosFlags.IsLeft |
+                                  CoursePosFlags.IsRight
                     }
                 };
                 ECB.AddComponent(definitionEntity, creationDefinition);
@@ -156,7 +235,7 @@ namespace NetworkTools.Systems.Tools {
             }
 
             /// <summary>
-            /// Processes the curve definition for the merged edge.
+            ///     Processes the curve definition for the merged edge.
             /// </summary>
             /// <param name="edge1"></param>
             /// <param name="nodeToRemove"></param>
@@ -164,25 +243,23 @@ namespace NetworkTools.Systems.Tools {
             /// <param name="curve1"></param>
             /// <param name="curve2"></param>
             /// <param name="edge1Entity"></param>
-            private void ProcessNewCurveDef(Edge   edge1,
-                                         Entity nodeToRemove,
-                                         Edge   edge2,
-                                         Curve  curve1,
-                                         Curve  curve2,
-                                         Entity edge1Entity) {
+            private void ProcessNewCurveDef(Edge edge1,
+                Entity nodeToRemove,
+                Edge edge2,
+                Curve curve1,
+                Curve curve2,
+                Entity edge1Entity) {
                 // Determine the neighbor nodes (the nodes that are NOT the one being removed)
                 var neighbor1 = edge1.m_Start == nodeToRemove ? edge1.m_End : edge1.m_Start;
                 var neighbor2 = edge2.m_Start == nodeToRemove ? edge2.m_End : edge2.m_Start;
 
                 // Compute the new bezier curve that connects neighbor1 to neighbor2
                 // by retaining the original control points from each edge
-                var newBezier = ComputeMergedBezier(
-                                                    nodeToRemove,
-                                                    edge1,
-                                                    curve1,
-                                                    edge2,
-                                                    curve2
-                                                   );
+                var newBezier = ComputeMergedBezier(nodeToRemove,
+                    edge1,
+                    curve1,
+                    edge2,
+                    curve2);
 
                 // Create the definition entity
                 var definitionEntity = ECB.CreateEntity();
@@ -236,15 +313,15 @@ namespace NetworkTools.Systems.Tools {
             }
 
             /// <summary>
-            /// Computes a merged bezier curve connecting two neighbor nodes,
-            /// by retaining the original control points from each edge.
-            /// This preserves the exact original curve shape at each end.
+            ///     Computes a merged bezier curve connecting two neighbor nodes,
+            ///     by retaining the original control points from each edge.
+            ///     This preserves the exact original curve shape at each end.
             /// </summary>
             private Bezier4x3 ComputeMergedBezier(Entity nodeToRemove,
-                                                  Edge   edge1,
-                                                  Curve  curve1,
-                                                  Edge   edge2,
-                                                  Curve  curve2) {
+                Edge edge1,
+                Curve curve1,
+                Edge edge2,
+                Curve curve2) {
                 // New bezier goes: neighbor1 -> neighbor2
                 // We take a, b from edge1 (neighbor1 side) and c, d from edge2 (neighbor2 side)
 
@@ -256,7 +333,8 @@ namespace NetworkTools.Systems.Tools {
                     // neighbor1 is at the start (a side)
                     a = curve1.m_Bezier.a;
                     b = curve1.m_Bezier.b;
-                } else {
+                }
+                else {
                     // edge1: nodeToRemove -> neighbor1
                     // neighbor1 is at the end (d side)
                     a = curve1.m_Bezier.d;
@@ -269,7 +347,8 @@ namespace NetworkTools.Systems.Tools {
                     // neighbor2 is at the end (d side)
                     c = curve2.m_Bezier.c;
                     d = curve2.m_Bezier.d;
-                } else {
+                }
+                else {
                     // edge2: neighbor2 -> nodeToRemove
                     // neighbor2 is at the start (a side)
                     c = curve2.m_Bezier.b;

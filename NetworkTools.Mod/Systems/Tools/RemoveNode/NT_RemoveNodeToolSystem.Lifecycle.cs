@@ -36,7 +36,7 @@ namespace NetworkTools.Systems.Tools {
             m_Log.Prefix = nameof(NT_RemoveNodeToolSystem);
 
             // Configuration
-            ShowNodes                = true;
+            RenderEligibleNodes                = true;
             DisableVanillaValidation = true;
         }
 

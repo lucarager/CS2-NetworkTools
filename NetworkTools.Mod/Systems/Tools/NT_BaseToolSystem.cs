@@ -65,6 +65,7 @@ namespace NetworkTools.Systems.Tools {
         protected EntityQuery m_DefinitionQuery;
         protected EntityQuery m_NodesWithEligibleQuery;
         protected EntityQuery m_NodesWithHighlightedQuery;
+        protected EntityQuery m_EntitiesWithHighlightedQuery;
         protected EntityQuery m_NodesWithoutEligibleQuery;
 
         /// <summary>
@@ -81,19 +82,24 @@ namespace NetworkTools.Systems.Tools {
         protected NativeReference<Entity> m_LastRaycastEntity;
 
         /// <summary>
+        ///     Tool requests rendering temp edges
+        /// </summary>
+        public bool RenderTempEdges = false;
+
+        /// <summary>
         ///     Tool requests rendering edges
         /// </summary>
-        public bool ShowEdges = false;
+        public bool RenderEligibleEdges = false;
 
         /// <summary>
         ///     Tool requests rendering nodes
         /// </summary>
-        public bool ShowNodes = false;
+        public bool RenderEligibleNodes = false;
 
         /// <summary>
         ///     Tool requests rendering tooltips of slopes for selected edges
         /// </summary>
-        public bool ShowTooltipsSlopes = false;
+        public bool RenderSlopeTooltips = false;
 
         /// <summary>
         /// Apply action (usually left click)
@@ -141,6 +147,9 @@ namespace NetworkTools.Systems.Tools {
                 .Build();
             m_NodesWithHighlightedQuery = SystemAPI.QueryBuilder()
                 .WithAll<Node, Components.NT_Highlighted>()
+                .Build();
+            m_EntitiesWithHighlightedQuery = SystemAPI.QueryBuilder()
+                .WithAll<Components.NT_Highlighted>()
                 .Build();
         }
 
@@ -242,8 +251,8 @@ namespace NetworkTools.Systems.Tools {
         ///     Clears all NT_Highlighted components from nodes (batch operation).
         /// </summary>
         protected virtual void ClearAllHighlights() {
-            if (m_NodesWithHighlightedQuery.IsEmptyIgnoreFilter) return;
-            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_NodesWithHighlightedQuery);
+            if (m_EntitiesWithHighlightedQuery.IsEmptyIgnoreFilter) return;
+            EntityManager.RemoveComponent<Components.NT_Highlighted>(m_EntitiesWithHighlightedQuery);
         }
     }
 }
