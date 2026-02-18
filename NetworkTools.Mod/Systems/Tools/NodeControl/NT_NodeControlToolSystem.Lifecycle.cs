@@ -38,12 +38,12 @@ namespace NetworkTools.Systems.Tools {
 
             // Configuration
             RenderEligibleNodes      = true;
-            RenderMarkers            = true;
+            RenderHandles            = true;
             DisableVanillaValidation = true;
 
             // Data Structures
             m_SelectedNode = new NativeReference<Entity>(Allocator.Persistent);
-            m_Markers      = new NativeList<Entity>(16, Allocator.Persistent);
+            m_Handles      = new NativeList<Entity>(16, Allocator.Persistent);
 
             // Queries
             m_NodesWithSelectedQuery = SystemAPI.QueryBuilder()
@@ -52,10 +52,10 @@ namespace NetworkTools.Systems.Tools {
         }
 
         protected override void OnDestroy() {
-            DestroyMarkers();
+            DestroyHandles();
 
             m_SelectedNode.Dispose();
-            m_Markers.Dispose();
+            m_Handles.Dispose();
 
             base.OnDestroy();
         }
@@ -76,7 +76,7 @@ namespace NetworkTools.Systems.Tools {
 
             // Tool-specific cleanup
             EntityManager.RemoveComponent<NT_Selected>(m_NodesWithSelectedQuery);
-            DestroyMarkers();
+            DestroyHandles();
 
             // Clear internal state
             m_SelectedNode.Value = Entity.Null;

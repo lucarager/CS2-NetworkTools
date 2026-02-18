@@ -41,7 +41,7 @@ namespace NetworkTools.Systems {
         /// </summary>
         private List<PrefabBase> m_PrefabBases;
 
-        internal Entity m_MarkerPrefabEntity;
+        internal Entity m_HandlePrefabEntity;
 
         // Logger
         private PrefixedLogger m_Log;
@@ -107,14 +107,14 @@ namespace NetworkTools.Systems {
             CreateToolPrefab("Connect",          "connect.svg",  "", new Components.NT_Select(),        false);
             CreateToolPrefab("Adv. Parallel",    "parallel.svg", "", new Components.NT_Select(),        false);
 
-            CreateMarkerPrefab((MarkerObjectPrefab)prefabBaseDict["marker"]);
+            CreateHandlePrefab((MarkerObjectPrefab)prefabBaseDict["marker"]);
 
             m_Log.Debug($"{logMethodPrefix} Completed.");
         }
 
-        private bool CreateMarkerPrefab(MarkerObjectPrefab pedestrianPrefab) {
+        private bool CreateHandlePrefab(MarkerObjectPrefab pedestrianPrefab) {
             var prefabBase = ScriptableObject.CreateInstance<MarkerObjectPrefab>();
-            prefabBase.name       = "NT_MarkerObjectPrefab";
+            prefabBase.name       = "NT_HandleObjectPrefab";
             prefabBase.m_Circular = true;
             prefabBase.m_Mesh = pedestrianPrefab.m_Mesh;
 
@@ -124,7 +124,7 @@ namespace NetworkTools.Systems {
                 var prefabEntity = m_PrefabSystem.GetEntity(prefabBase);
                 m_PrefabBases.Add(prefabBase);
                 m_PrefabEntities.Add(prefabBase, prefabEntity);
-                m_MarkerPrefabEntity = prefabEntity;
+                m_HandlePrefabEntity = prefabEntity;
             }
 
             return success;

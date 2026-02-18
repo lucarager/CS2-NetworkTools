@@ -99,7 +99,7 @@ namespace NetworkTools.Systems.Tools {
         /// <summary>
         ///     Tool requests rendering markers
         /// </summary>
-        public bool RenderMarkers = false;
+        public bool RenderHandles = false;
 
         /// <summary>
         ///     Tool requests rendering tooltips of slopes for selected edges

@@ -1,4 +1,4 @@
-﻿// <copyright file="NT_MarkerPosition.cs" company="Luca Rager">
+﻿// <copyright file="NT_HandlePosition.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -13,13 +13,13 @@ namespace NetworkTools.Components {
 
     #endregion
 
-    public struct NT_MarkerPosition : IComponentData,
-        IEquatable<NT_MarkerPosition>,
+    public struct NT_HandlePosition : IComponentData,
+        IEquatable<NT_HandlePosition>,
         ISerializable {
         public float3 Position;
         public quaternion Rotation;
 
-        public bool Equals(NT_MarkerPosition other) {
+        public bool Equals(NT_HandlePosition other) {
             return Position.Equals(other.Position) && Rotation.Equals(other.Rotation);
         }
 

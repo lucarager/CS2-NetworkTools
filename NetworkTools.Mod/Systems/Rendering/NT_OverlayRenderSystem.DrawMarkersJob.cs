@@ -19,11 +19,11 @@
 #if BURST
         [BurstCompile]
 #endif
-        protected struct DrawMarkersJob : IJobChunk {
+        protected struct DrawHandlesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
-            [ReadOnly] public required ComponentTypeHandle<NT_MarkerPosition> m_NTMarkerPositionComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NT_MarkerLink> m_NTMarkerLinkComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NT_Marker> m_NTMarkerComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_HandlePosition> m_NTHandlePositionComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_HandleLink> m_NTHandleLinkComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_Handle> m_NTHandleComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Selected> m_SelectedComponentTypeHandle;
             [ReadOnly] public required ComponentLookup<Node> m_NodeLookup;
@@ -36,9 +36,9 @@
                 bool useEnabledMask,
                 in v128 chunkEnabledMask) {
                 var entitiesArray = chunk.GetNativeArray(m_EntityTypeHandle);
-                var positionsArray = chunk.GetNativeArray(ref m_NTMarkerPositionComponentTypeHandle);
-                var markerLinkArray = chunk.GetNativeArray(ref m_NTMarkerLinkComponentTypeHandle);
-                var markerArray = chunk.GetNativeArray(ref m_NTMarkerComponentTypeHandle);
+                var positionsArray = chunk.GetNativeArray(ref m_NTHandlePositionComponentTypeHandle);
+                var markerLinkArray = chunk.GetNativeArray(ref m_NTHandleLinkComponentTypeHandle);
+                var markerArray = chunk.GetNativeArray(ref m_NTHandleComponentTypeHandle);
 
                 for (var i = 0; i < entitiesArray.Length; i++) {
                     var entity = entitiesArray[i];
@@ -49,17 +49,17 @@
                     var isHighlighted = chunk.Has(ref m_HighlightedComponentTypeHandle);
                     var isSelected = chunk.Has(ref m_SelectedComponentTypeHandle);
 
-                    if ((marker.TypeFlags & MarkerTypeFlags.BezierPoint) != MarkerTypeFlags.None) {
+                    if ((marker.TypeFlags & HandleTypeFlags.BezierPoint) != HandleTypeFlags.None) {
                         var node = m_NodeLookup[link.LinkedEntity];
                         var curve = m_CurveLookup[link.LinkedEdge];
-                        var isControlPoint = (marker.TypeFlags & MarkerTypeFlags.BezierControlPoint) != MarkerTypeFlags.None;
+                        var isControlPoint = (marker.TypeFlags & HandleTypeFlags.BezierControlPoint) != HandleTypeFlags.None;
 
                         RenderBezierPoint(entity, curve, node, position, marker, link, isControlPoint, isHighlighted, isSelected, m_Buffer);
                     }
                 }
             }
 
-            public static void RenderBezierPoint(Entity entity, Curve curve, Node node, NT_MarkerPosition position, NT_Marker marker, NT_MarkerLink link, bool isControlPoint,
+            public static void RenderBezierPoint(Entity entity, Curve curve, Node node, NT_HandlePosition position, NT_Handle handle, NT_HandleLink link, bool isControlPoint,
                 bool isHighlighted, bool isSelected, OverlayRenderSystem.Buffer buffer) {
 
                 Color color;

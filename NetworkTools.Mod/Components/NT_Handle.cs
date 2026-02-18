@@ -1,4 +1,4 @@
-﻿// <copyright file="NT_MarkerLink.cs" company="Luca Rager">
+﻿// <copyright file="NT_HandleLink.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -13,7 +13,7 @@ namespace NetworkTools.Components {
 
 
     [Flags]
-    public enum MarkerTypeFlags : uint {
+    public enum HandleTypeFlags : uint {
         None = 0,
         BezierPoint = 1 << 0,    
         BezierStartPoint = 1 << 1,   
@@ -22,7 +22,8 @@ namespace NetworkTools.Components {
         Curve = 1 << 4,
     }
 
-    public struct NT_Marker : IComponentData {
-        public MarkerTypeFlags TypeFlags;
+    public struct NT_Handle
+        : IComponentData {
+        public HandleTypeFlags TypeFlags;
     }
 }

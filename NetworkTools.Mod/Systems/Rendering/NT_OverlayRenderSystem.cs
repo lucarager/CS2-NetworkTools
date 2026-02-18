@@ -35,7 +35,7 @@ namespace NetworkTools.Systems {
         private EntityQuery m_TempEdgeQuery;
         private PrefixedLogger m_Log;
         private EntityQuery m_NodeQuery;
-        private EntityQuery m_MarkerQuery;
+        private EntityQuery m_HandleQuery;
         private OverlayRenderSystem m_OverlayRenderSystem;
         private PreCullingSystem m_PreCullingSystem;
         private ToolSystem m_ToolSystem;
@@ -66,8 +66,8 @@ namespace NetworkTools.Systems {
                 .WithNone<Deleted, Hidden>()
                 .Build();
 
-            m_MarkerQuery = SystemAPI.QueryBuilder()
-                .WithAll<NT_Marker>()
+            m_HandleQuery = SystemAPI.QueryBuilder()
+                .WithAll<NT_Handle>()
                 .WithNone<Deleted>()
                 .Build();
 
@@ -115,26 +115,26 @@ namespace NetworkTools.Systems {
                 lastJobHandle = drawNodesJobHandle;
             }
 
-            if (tool.RenderMarkers) {
+            if (tool.RenderHandles) {
                 // Draw markers
-                var drawMarkersJob = new DrawMarkersJob {
+                var drawHandlesJob = new DrawHandlesJob {
                     m_Buffer                              = m_OverlayRenderSystem.GetBuffer(out markersBufferJobHandle),
                     m_EntityTypeHandle                    = SystemAPI.GetEntityTypeHandle(),
-                    m_NTMarkerPositionComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_MarkerPosition>(),
+                    m_NTHandlePositionComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandlePosition>(),
                     m_HighlightedComponentTypeHandle      = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
                     m_SelectedComponentTypeHandle         = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
-                    m_NTMarkerComponentTypeHandle         = SystemAPI.GetComponentTypeHandle<NT_Marker>(),
-                    m_NTMarkerLinkComponentTypeHandle     = SystemAPI.GetComponentTypeHandle<NT_MarkerLink>(),
+                    m_NTHandleComponentTypeHandle         = SystemAPI.GetComponentTypeHandle<NT_Handle>(),
+                    m_NTHandleLinkComponentTypeHandle     = SystemAPI.GetComponentTypeHandle<NT_HandleLink>(),
                     m_NodeLookup                          = SystemAPI.GetComponentLookup<Node>(true),
                     m_CurveLookup                         = SystemAPI.GetComponentLookup<Curve>(true),
                 };
 
-                var drawMarkersJobHandle = drawMarkersJob.ScheduleByRef(m_MarkerQuery,
+                var drawHandlesJobHandle = drawHandlesJob.ScheduleByRef(m_HandleQuery,
                     JobHandle.CombineDependencies(Dependency,
                         markersBufferJobHandle));
 
-                m_OverlayRenderSystem.AddBufferWriter(drawMarkersJobHandle);
-                lastJobHandle = drawMarkersJobHandle;
+                m_OverlayRenderSystem.AddBufferWriter(drawHandlesJobHandle);
+                lastJobHandle = drawHandlesJobHandle;
             }
 
             if (tool.RenderEligibleEdges) {

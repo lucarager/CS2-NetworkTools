@@ -19,36 +19,6 @@ namespace NetworkTools.Systems.Tools {
     #endregion
 
     public partial class NT_NodeControlToolSystem {
-#if BURST
-        [BurstCompile]
-#endif
-        /// <summary>
-        ///     Creates temp marker objects at specific positions.
-        /// </summary>
-        internal struct CreateMarkersJob : IJob {
-            [ReadOnly] public required NativeArray<float3> Positions;
-            [ReadOnly] public required Entity MarkerPrefab;
-            public required EntityCommandBuffer ECB;
 
-            public void Execute() {
-                for (var i = 0; i < Positions.Length; i++) {
-                    var position = Positions[i];
-                    var entity = ECB.CreateEntity();
-
-                    var creationDefinition = new CreationDefinition {
-                        m_Prefab = MarkerPrefab,
-                    };
-
-                    ECB.AddComponent(entity, creationDefinition);
-                    ECB.AddComponent<Updated>(entity);
-
-                    var objectDefinition = new ObjectDefinition {
-                        m_Position = position,
-                    };
-
-                    ECB.AddComponent(entity, objectDefinition);
-                }
-            }
-        }
     }
 }

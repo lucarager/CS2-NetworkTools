@@ -1,4 +1,4 @@
-﻿// <copyright file="NT_MarkerLink.cs" company="Luca Rager">
+﻿// <copyright file="NT_HandleLink.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -10,7 +10,7 @@ namespace NetworkTools.Components {
 
     #endregion
 
-    public struct NT_MarkerLink : IComponentData {
+    public struct NT_HandleLink : IComponentData {
         /// <summary>
         /// The primary entity this marker is associated with (e.g., a node).
         /// </summary>

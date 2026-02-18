@@ -107,9 +107,9 @@ namespace NetworkTools.Systems.Tools {
         private const float DragThreshold = 0.5f;
 
         /// <summary>
-        /// Radius of the invisible sphere around each marker for ray intersection hit detection.
+        /// Radius of the invisible sphere around each handle for ray intersection hit detection.
         /// </summary>
-        private const float MarkerHitRadius = 2f;
+        private const float HandleHitRadius = 2f;
 
         /// <summary>
         /// Current selection state
@@ -196,13 +196,13 @@ namespace NetworkTools.Systems.Tools {
             if (hasHit) {
                 var distance = math.distance(hitPosition.xz, m_MouseDownPosition.xz);
                 if (distance > DragThreshold) {
-                    // Only allow dragging markers in NodeSelected state
+                    // Only allow dragging handles in NodeSelected state
                     if (CurrentSelectionState == NodeControlSelectionState.NodeSelected &&
-                        EntityManager.HasComponent<Components.NT_Marker>(m_MouseDownEntity)) {
+                        EntityManager.HasComponent<Components.NT_Handle>(m_MouseDownEntity)) {
                         m_InputState = InputInteractionState.Dragging;
                         m_Log.Debug("[PendingAction -> Dragging] Drag started");
 
-                        // Clear hover highlight and mark marker as selected
+                        // Clear hover highlight and mark handle as selected
                         ClearAllHighlights();
                         EntityManager.AddComponentData(m_MouseDownEntity, Components.NT_Selected.DefaultNode);
                     } else {
@@ -215,7 +215,7 @@ namespace NetworkTools.Systems.Tools {
 
         private void HandleDraggingState() {
             if (m_ApplyAction.WasReleasedThisFrame()) {
-                // Drag ended - remove selected state from marker
+                // Drag ended - remove selected state from handle
                 m_Log.Debug("[Dragging -> Idle] Drag ended");
                 if (EntityManager.HasComponent<Components.NT_Selected>(m_MouseDownEntity)) {
                     EntityManager.RemoveComponent<Components.NT_Selected>(m_MouseDownEntity);
@@ -224,11 +224,11 @@ namespace NetworkTools.Systems.Tools {
                 return;
             }
 
-            // Continue dragging - project mouse onto XZ plane at marker's Y
-            UpdateMarkerDragPosition(m_MouseDownEntity);
+            // Continue dragging - project mouse onto XZ plane at handle's Y
+            UpdateHandleDragPosition(m_MouseDownEntity);
 
-            // Live preview - apply marker position to curve
-            ApplyMarkerPositionToCurve(m_MouseDownEntity);
+            // Live preview - apply handle position to curve
+            ApplyHandlePositionToCurve(m_MouseDownEntity);
         }
 
         private void HandleClick(Entity entity) {
@@ -240,7 +240,7 @@ namespace NetworkTools.Systems.Tools {
                     }
                     break;
                 case NodeControlSelectionState.NodeSelected:
-                    // Click on marker or elsewhere - could add behavior here
+                    // Click on handle or elsewhere - could add behavior here
                     m_Log.Debug("[NodeSelected] Click registered.");
                     break;
             }
@@ -274,14 +274,14 @@ namespace NetworkTools.Systems.Tools {
                     SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity, Components.NT_Highlighted.DefaultNode);
                     break;
                 case NodeControlSelectionState.NodeSelected:
-                    m_Log.Debug("[NodeSelected] Hovering over potential marker.");
+                    m_Log.Debug("[NodeSelected] Hovering over potential handle.");
                     SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity, Components.NT_Highlighted.DefaultNode);
                     break;
             }
         }
 
         private void HandleNoHover() {
-            // Remove highlight from the last hovered entity directly (handles markers which aren't in m_NodesWithHighlightedQuery)
+            // Remove highlight from the last hovered entity directly (handles handles which aren't in m_NodesWithHighlightedQuery)
             if (m_LastHoveredEntity.Value != Entity.Null &&
                 EntityManager.HasComponent<Components.NT_Highlighted>(m_LastHoveredEntity.Value)) {
                 EntityManager.RemoveComponent<Components.NT_Highlighted>(m_LastHoveredEntity.Value);
@@ -294,7 +294,7 @@ namespace NetworkTools.Systems.Tools {
             // Store the selected node
             m_SelectedNode.Value = entity;
 
-            // Add marker component
+            // Add handle component
             EntityManager.AddComponentData(entity, Components.NT_Selected.DefaultNode);
 
             // Clear highlights
@@ -303,13 +303,13 @@ namespace NetworkTools.Systems.Tools {
             // Remove NT_Eligible from ALL nodes
             EntityManager.RemoveComponent<Components.NT_Eligible>(m_NodesWithEligibleQuery);
 
-            // Generate marker entities
-            CreateMarkers(entity);
+            // Generate handle entities
+            CreateHandles(entity);
         }
 
-        private NativeList<Entity> m_Markers;
+        private NativeList<Entity> m_Handles;
 
-        private void CreateMarkers(Entity node) {
+        private void CreateHandles(Entity node) {
             var connectedEdges = EntityManager.GetBuffer<ConnectedEdge>(node);
 
             for (var i = 0; i < connectedEdges.Length; i++) {
@@ -318,80 +318,80 @@ namespace NetworkTools.Systems.Tools {
                 var curve = EntityManager.GetComponentData<Curve>(edgeEntity);
                 var isForward = edge.m_Start == node;
 
-                // Endpoint marker (a or d)
-                var endpointFlags = Components.MarkerTypeFlags.BezierPoint |
-                                    (isForward ? Components.MarkerTypeFlags.BezierStartPoint : Components.MarkerTypeFlags.BezierEndPoint);
-                m_Markers.Add(CreateMarker(node, edgeEntity, isForward ? 0 : 3, isForward ? curve.m_Bezier.a : curve.m_Bezier.d, endpointFlags));
+                // Endpoint handle (a or d)
+                var endpointFlags = Components.HandleTypeFlags.BezierPoint |
+                                    (isForward ? Components.HandleTypeFlags.BezierStartPoint : Components.HandleTypeFlags.BezierEndPoint);
+                m_Handles.Add(CreateHandle(node, edgeEntity, isForward ? 0 : 3, isForward ? curve.m_Bezier.a : curve.m_Bezier.d, endpointFlags));
 
-                // Control point marker (b or c)
-                var controlFlags = Components.MarkerTypeFlags.BezierPoint | Components.MarkerTypeFlags.BezierControlPoint;
-                m_Markers.Add(CreateMarker(node, edgeEntity, isForward ? 1 : 2, isForward ? curve.m_Bezier.b : curve.m_Bezier.c, controlFlags));
+                // Control point handle (b or c)
+                var controlFlags = Components.HandleTypeFlags.BezierPoint | Components.HandleTypeFlags.BezierControlPoint;
+                m_Handles.Add(CreateHandle(node, edgeEntity, isForward ? 1 : 2, isForward ? curve.m_Bezier.b : curve.m_Bezier.c, controlFlags));
             }
         }
 
         /// <summary>
-        /// Creates a marker entity with the specified link data, position, and type flags.
+        /// Creates a handle entity with the specified link data, position, and type flags.
         /// </summary>
-        private Entity CreateMarker(Entity linkedEntity, Entity linkedEdge, int key, float3 position, Components.MarkerTypeFlags typeFlags) {
-            var marker = EntityManager.CreateEntity();
-            EntityManager.AddComponentData(marker, new Components.NT_Marker {
+        private Entity CreateHandle(Entity linkedEntity, Entity linkedEdge, int key, float3 position, Components.HandleTypeFlags typeFlags) {
+            var handle = EntityManager.CreateEntity();
+            EntityManager.AddComponentData(handle, new Components.NT_Handle {
                 TypeFlags = typeFlags,
             });
-            EntityManager.AddComponentData(marker, new Components.NT_MarkerLink {
+            EntityManager.AddComponentData(handle, new Components.NT_HandleLink {
                 LinkedEntity = linkedEntity,
                 LinkedEdge = linkedEdge,
                 Key = key,
             });
-            EntityManager.AddComponentData(marker, new Components.NT_MarkerPosition {
+            EntityManager.AddComponentData(handle, new Components.NT_HandlePosition {
                 Position = position,
             });
-            return marker;
+            return handle;
         }
 
 
-        private void DestroyMarkers() {
-            for (var i = 0; i < m_Markers.Length; i++) {
-                var marker = m_Markers[i];
-                if (EntityManager.Exists(marker)) {
-                    EntityManager.DestroyEntity(marker);
+        private void DestroyHandles() {
+            for (var i = 0; i < m_Handles.Length; i++) {
+                var handle = m_Handles[i];
+                if (EntityManager.Exists(handle)) {
+                    EntityManager.DestroyEntity(handle);
                 }
             }
-            m_Markers.Clear();
+            m_Handles.Clear();
         }
 
         /// <summary>
-        /// Updates the marker position by projecting mouse onto a horizontal plane at the marker's Y.
+        /// Updates the handle position by projecting mouse onto a horizontal plane at the handle's Y.
         /// </summary>
-        private void UpdateMarkerDragPosition(Entity markerEntity) {
-            if (!EntityManager.Exists(markerEntity)) return;
-            if (!EntityManager.HasComponent<Components.NT_MarkerPosition>(markerEntity)) return;
+        private void UpdateHandleDragPosition(Entity handleEntity) {
+            if (!EntityManager.Exists(handleEntity)) return;
+            if (!EntityManager.HasComponent<Components.NT_HandlePosition>(handleEntity)) return;
 
-            var currentPos = EntityManager.GetComponentData<Components.NT_MarkerPosition>(markerEntity).Position;
+            var currentPos = EntityManager.GetComponentData<Components.NT_HandlePosition>(handleEntity).Position;
             var fixedY = currentPos.y;
 
             if (TryGetXZPlaneIntersection(fixedY, out var intersection)) {
-                EntityManager.SetComponentData(markerEntity, new Components.NT_MarkerPosition {
+                EntityManager.SetComponentData(handleEntity, new Components.NT_HandlePosition {
                     Position = intersection
                 });
             }
         }
 
         /// <summary>
-        /// Applies the marker's current position to the bezier curve it controls.
-        /// Updates the corresponding control point (a, b, c, or d) based on the marker's key.
+        /// Applies the handle's current position to the bezier curve it controls.
+        /// Updates the corresponding control point (a, b, c, or d) based on the handle's key.
         /// </summary>
-        private void ApplyMarkerPositionToCurve(Entity markerEntity) {
-            if (!EntityManager.Exists(markerEntity)) return;
-            if (!EntityManager.HasComponent<Components.NT_MarkerLink>(markerEntity)) return;
-            if (!EntityManager.HasComponent<Components.NT_MarkerPosition>(markerEntity)) return;
+        private void ApplyHandlePositionToCurve(Entity handleEntity) {
+            if (!EntityManager.Exists(handleEntity)) return;
+            if (!EntityManager.HasComponent<Components.NT_HandleLink>(handleEntity)) return;
+            if (!EntityManager.HasComponent<Components.NT_HandlePosition>(handleEntity)) return;
 
-            var markerLink = EntityManager.GetComponentData<Components.NT_MarkerLink>(markerEntity);
-            var markerPos = EntityManager.GetComponentData<Components.NT_MarkerPosition>(markerEntity).Position;
-            var edgeEntity = markerLink.LinkedEdge;
-            var key = markerLink.Key;
+            var handleLink = EntityManager.GetComponentData<Components.NT_HandleLink>(handleEntity);
+            var handlePos = EntityManager.GetComponentData<Components.NT_HandlePosition>(handleEntity).Position;
+            var edgeEntity = handleLink.LinkedEdge;
+            var key = handleLink.Key;
 
             if (!EntityManager.Exists(edgeEntity)) {
-                m_Log.Warn($"[ApplyMarkerPositionToCurve] Edge entity {edgeEntity} does not exist");
+                m_Log.Warn($"[ApplyHandlePositionToCurve] Edge entity {edgeEntity} does not exist");
                 return;
             }
 
@@ -402,19 +402,19 @@ namespace NetworkTools.Systems.Tools {
             // Update the appropriate control point based on key
             switch (key) {
                 case 0:
-                    bezier.a = markerPos;
+                    bezier.a = handlePos;
                     break;
                 case 1:
-                    bezier.b = markerPos;
+                    bezier.b = handlePos;
                     break;
                 case 2:
-                    bezier.c = markerPos;
+                    bezier.c = handlePos;
                     break;
                 case 3:
-                    bezier.d = markerPos;
+                    bezier.d = handlePos;
                     break;
                 default:
-                    m_Log.Warn($"[ApplyMarkerPositionToCurve] Invalid key {key}");
+                    m_Log.Warn($"[ApplyHandlePositionToCurve] Invalid key {key}");
                     return;
             }
 
@@ -427,7 +427,7 @@ namespace NetworkTools.Systems.Tools {
                 EntityManager.AddComponent<Updated>(edgeEntity);
             }
 
-            m_Log.Debug($"[ApplyMarkerPositionToCurve] Updated bezier point {key} to {markerPos}");
+            m_Log.Debug($"[ApplyHandlePositionToCurve] Updated bezier point {key} to {handlePos}");
         }
 
         /// <summary>
@@ -473,11 +473,11 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        /// Gets the closest marker entity that the camera ray intersects, treating markers as spheres.
+        /// Gets the closest handle entity that the camera ray intersects, treating handles as spheres.
         /// </summary>
-        /// <param name="markerRadius">The radius of the invisible sphere around each marker.</param>
-        /// <returns>The closest marker entity hit, or Entity.Null if none.</returns>
-        private Entity GetClosestMarkerFromRay(float markerRadius) {
+        /// <param name="handleRadius">The radius of the invisible sphere around each handle.</param>
+        /// <returns>The closest handle entity hit, or Entity.Null if none.</returns>
+        private Entity GetClosestHandleFromRay(float handleRadius) {
             var camera = Camera.main;
             if (camera == null) return Entity.Null;
 
@@ -486,22 +486,22 @@ namespace NetworkTools.Systems.Tools {
             var rayOrigin = (float3)ray.origin;
             var rayDir = math.normalize((float3)ray.direction);
 
-            var closestMarker = Entity.Null;
+            var closestHandle = Entity.Null;
             var closestT = float.MaxValue;
 
-            for (var i = 0; i < m_Markers.Length; i++) {
-                var markerEntity = m_Markers[i];
-                var markerPos = EntityManager.GetComponentData<Components.NT_MarkerPosition>(markerEntity).Position;
+            for (var i = 0; i < m_Handles.Length; i++) {
+                var handleEntity = m_Handles[i];
+                var handlePos = EntityManager.GetComponentData<Components.NT_HandlePosition>(handleEntity).Position;
 
-                if (TryRaySphereIntersection(rayOrigin, rayDir, markerPos, markerRadius, out var t)) {
+                if (TryRaySphereIntersection(rayOrigin, rayDir, handlePos, handleRadius, out var t)) {
                     if (t < closestT) {
                         closestT = t;
-                        closestMarker = markerEntity;
+                        closestHandle = handleEntity;
                     }
                 }
             }
 
-            return closestMarker;
+            return closestHandle;
         }
 
         /// <summary>
@@ -557,8 +557,8 @@ namespace NetworkTools.Systems.Tools {
             // Add NT_Eligible to ALL nodes
             EntityManager.AddComponent<Components.NT_Eligible>(m_NodesWithoutEligibleQuery);
 
-            // Remove markers
-            DestroyMarkers();
+            // Remove handles
+            DestroyHandles();
         }
 
         protected override bool GetRaycastResult(out ControlPoint controlPoint) {
@@ -575,11 +575,11 @@ namespace NetworkTools.Systems.Tools {
             var controlPoint    = default(ControlPoint);
             var candidateEntity = Entity.Null;
 
-            // If we're in the NodeSelected state, check for marker hits using ray-sphere intersection
+            // If we're in the NodeSelected state, check for handle hits using ray-sphere intersection
             if (CurrentSelectionState == NodeControlSelectionState.NodeSelected) {
-                candidateEntity = GetClosestMarkerFromRay(MarkerHitRadius);
+                candidateEntity = GetClosestHandleFromRay(HandleHitRadius);
 
-                m_Log.Debug("[FilterRaycastResult] Marker check: " + (candidateEntity != Entity.Null ? "Hit" : "Miss"));
+                m_Log.Debug("[FilterRaycastResult] Handle check: " + (candidateEntity != Entity.Null ? "Hit" : "Miss"));
 
                 return candidateEntity != Entity.Null
                     ? new ControlPoint(candidateEntity, hit)
@@ -634,7 +634,7 @@ namespace NetworkTools.Systems.Tools {
         /// Resets the tool to idle state, clearing all selections.
         /// </summary>
         public void ResetToIdle() {
-            // Remove selected marker
+            // Remove selected handle
             EntityManager.RemoveComponent<Components.NT_Selected>(m_NodesWithSelectedQuery);
 
             // Clear highlights
