@@ -4,7 +4,7 @@
 // </copyright>
 
 namespace NetworkTools.Tests.PathTransform {
-    using NetworkTools.Systems.Tools.PathTransform;
+    using NetworkTools.Systems.Tools;
     using NUnit.Framework;
     using Unity.Mathematics;
 

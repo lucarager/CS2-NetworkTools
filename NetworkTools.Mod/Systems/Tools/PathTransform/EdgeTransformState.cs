@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems.Tools.PathTransform {
+namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Colossal.Mathematics;
@@ -138,13 +138,13 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         /// Ratio (0-1) of the control point closer to path-start.
         /// Updated after shape transforms to reflect new positions.
         /// </summary>
-        public float CtrlStartRatio;
+        public float ControlPointStartRatio;
 
         /// <summary>
         /// Ratio (0-1) of the control point closer to path-end.
         /// Updated after shape transforms to reflect new positions.
         /// </summary>
-        public float CtrlEndRatio;
+        public float ControlPointEndRatio;
 
         /// <summary>
         /// Cumulative distance along the path at the start of this edge.
@@ -181,8 +181,8 @@ namespace NetworkTools.Systems.Tools.PathTransform {
                 Bezier,
                 Length,
                 IsForward,
-                out CtrlStartRatio,
-                out CtrlEndRatio);
+                out ControlPointStartRatio,
+                out ControlPointEndRatio);
         }
 
         /// <summary>
@@ -190,8 +190,8 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         /// Useful for straightened edges where control points are linear.
         /// </summary>
         public void SetEvenControlPointRatios() {
-            CtrlStartRatio = 1f / 3f;
-            CtrlEndRatio   = 2f / 3f;
+            ControlPointStartRatio = 1f / 3f;
+            ControlPointEndRatio   = 2f / 3f;
         }
     }
 }

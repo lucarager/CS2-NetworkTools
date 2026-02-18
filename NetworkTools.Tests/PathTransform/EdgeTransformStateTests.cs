@@ -5,7 +5,7 @@
 
 namespace NetworkTools.Tests.PathTransform {
     using Colossal.Mathematics;
-    using NetworkTools.Systems.Tools.PathTransform;
+    using NetworkTools.Systems.Tools;
     using NUnit.Framework;
     using Unity.Mathematics;
 
@@ -16,38 +16,38 @@ namespace NetworkTools.Tests.PathTransform {
         [Test]
         public void SetEvenControlPointRatios_SetsOneThird() {
             var state = new EdgeTransformState {
-                CtrlStartRatio = 0f,
-                CtrlEndRatio   = 0f
+                ControlPointStartRatio = 0f,
+                ControlPointEndRatio   = 0f
             };
 
             state.SetEvenControlPointRatios();
 
-            Assert.AreEqual(1f / 3f, state.CtrlStartRatio, Tolerance);
+            Assert.AreEqual(1f / 3f, state.ControlPointStartRatio, Tolerance);
         }
 
         [Test]
         public void SetEvenControlPointRatios_SetsTwoThirds() {
             var state = new EdgeTransformState {
-                CtrlStartRatio = 0f,
-                CtrlEndRatio   = 0f
+                ControlPointStartRatio = 0f,
+                ControlPointEndRatio   = 0f
             };
 
             state.SetEvenControlPointRatios();
 
-            Assert.AreEqual(2f / 3f, state.CtrlEndRatio, Tolerance);
+            Assert.AreEqual(2f / 3f, state.ControlPointEndRatio, Tolerance);
         }
 
         [Test]
         public void SetEvenControlPointRatios_OverwritesExistingValues() {
             var state = new EdgeTransformState {
-                CtrlStartRatio = 0.1f,
-                CtrlEndRatio   = 0.9f
+                ControlPointStartRatio = 0.1f,
+                ControlPointEndRatio   = 0.9f
             };
 
             state.SetEvenControlPointRatios();
 
-            Assert.AreEqual(1f / 3f, state.CtrlStartRatio, Tolerance);
-            Assert.AreEqual(2f / 3f, state.CtrlEndRatio,   Tolerance);
+            Assert.AreEqual(1f / 3f, state.ControlPointStartRatio, Tolerance);
+            Assert.AreEqual(2f / 3f, state.ControlPointEndRatio,   Tolerance);
         }
 
         [Test]
@@ -125,8 +125,8 @@ namespace NetworkTools.Tests.PathTransform {
 
             state.RecalculateControlPointRatios();
 
-            Assert.AreEqual(0.25f, state.CtrlStartRatio, 0.01f);
-            Assert.AreEqual(0.75f, state.CtrlEndRatio,   0.01f);
+            Assert.AreEqual(0.25f, state.ControlPointStartRatio, 0.01f);
+            Assert.AreEqual(0.75f, state.ControlPointEndRatio,   0.01f);
         }
 
         [Test]
@@ -147,8 +147,8 @@ namespace NetworkTools.Tests.PathTransform {
             // Reversed: C is at 0.75 from start, B is at 0.25
             // ctrlStartRatio = 1 - 0.75 = 0.25
             // ctrlEndRatio = 1 - 0.25 = 0.75
-            Assert.AreEqual(0.25f, state.CtrlStartRatio, 0.01f);
-            Assert.AreEqual(0.75f, state.CtrlEndRatio,   0.01f);
+            Assert.AreEqual(0.25f, state.ControlPointStartRatio, 0.01f);
+            Assert.AreEqual(0.75f, state.ControlPointEndRatio,   0.01f);
         }
 
         [Test]

@@ -6,51 +6,61 @@
 namespace NetworkTools.Systems {
     #region Using Statements
 
-    using System.Collections.Generic;
-    using Game.Common;
+    using System;
     using Game.Input;
     using Game.Prefabs;
     using Game.Tools;
-    using Game.UI.Localization;
     using Game.UI.Tooltip;
     using NetworkTools.Components;
-    using Settings;
-    using Unity.Collections;
+    using NetworkTools.Settings;
+    using NetworkTools.Systems.Tools;
     using Unity.Entities;
-    using static Colossal.AssetPipeline.Diagnostic.Report;
 
     #endregion
 
-    enum NT_ToolType {
+    internal enum NT_ToolType {
         None = 0,
         AddNode,
         RemoveNode,
         PathTransform,
-        NodeControl,
+        NodeControl
     }
 
     /// <summary>
-    /// Tooltip System.
+    ///     Tooltip System.
     /// </summary>
     public partial class NT_ToolTooltipSystem : TooltipSystemBase {
-        private InputHintTooltip m_Tooltip_Apply;
-        private InputHintTooltip m_Tooltip_SecondaryApply;
-        private ToolSystem m_ToolSystem;
+        private NT_AddNodeToolSystem m_NtAddNodeToolSystem;
+        private NT_NodeControlToolSystem m_NtNodeControlToolSystem;
+        private NT_PathTransformToolSystem m_NtPathTransformToolSystem;
+        private NT_RemoveNodeToolSystem m_NtRemoveNodeToolSystem;
         private EntityQuery m_ParcelQuery;
         protected PrefabSystem m_PrefabSystem;
+        private ToolSystem m_ToolSystem;
+        private InputHintTooltip m_Tooltip_Apply;
+        private InputHintTooltip m_Tooltip_SecondaryApply;
 
-        /// <inheritdoc/>
+
+        /// <inheritdoc />
         protected override void OnCreate() {
             base.OnCreate();
 
-            m_ToolSystem = World.GetOrCreateSystemManaged<ToolSystem>();
-            m_PrefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
+            m_ToolSystem                = World.GetOrCreateSystemManaged<ToolSystem>();
+            m_PrefabSystem              = World.GetOrCreateSystemManaged<PrefabSystem>();
+            m_NtAddNodeToolSystem       = World.GetOrCreateSystemManaged<NT_AddNodeToolSystem>();
+            m_NtRemoveNodeToolSystem    = World.GetOrCreateSystemManaged<NT_RemoveNodeToolSystem>();
+            m_NtPathTransformToolSystem = World.GetOrCreateSystemManaged<NT_PathTransformToolSystem>();
+            m_NtNodeControlToolSystem   = World.GetOrCreateSystemManaged<NT_NodeControlToolSystem>();
 
-            m_Tooltip_Apply = new InputHintTooltip(InputManager.instance.FindAction("NetworkTools.NetworkTools.NetworkToolsMod", NT_Settings.ApplyActionStr));
-            m_Tooltip_SecondaryApply = new InputHintTooltip(InputManager.instance.FindAction("NetworkTools.NetworkTools.NetworkToolsMod", NT_Settings.SecondaryApplyActionStr));
+            m_Tooltip_Apply =
+                new InputHintTooltip(InputManager.instance.FindAction("NetworkTools.NetworkTools.NetworkToolsMod",
+                    NT_Settings.ApplyActionStr));
+            m_Tooltip_SecondaryApply =
+                new InputHintTooltip(InputManager.instance.FindAction("NetworkTools.NetworkTools.NetworkToolsMod",
+                    NT_Settings.SecondaryApplyActionStr));
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void OnUpdate() {
             if (m_ToolSystem.activePrefab is not NT_ToolPrefab) {
                 return;
@@ -61,34 +71,105 @@ namespace NetworkTools.Systems {
             if (controlScheme is not InputManager.ControlScheme.KeyboardAndMouse) {
                 return;
             }
-            
+
             var activeToolType = NT_ToolType.None;
+            var activeTool = default(NT_BaseToolSystem);
 
             // Check which tool is active
             if (m_ToolSystem.activePrefab is NT_ToolPrefab activePrefab) {
                 if (m_PrefabSystem.HasComponent<NT_AddNode>(activePrefab)) {
                     activeToolType = NT_ToolType.AddNode;
+                    activeTool     = m_NtAddNodeToolSystem;
                 }
                 else if (m_PrefabSystem.HasComponent<NT_RemoveNode>(activePrefab)) {
                     activeToolType = NT_ToolType.RemoveNode;
+                    activeTool     = m_NtRemoveNodeToolSystem;
                 }
                 else if (m_PrefabSystem.HasComponent<NT_PathTransform>(activePrefab)) {
                     activeToolType = NT_ToolType.PathTransform;
+                    activeTool     = m_NtPathTransformToolSystem;
                 }
                 else if (m_PrefabSystem.HasComponent<NT_NodeControl>(activePrefab)) {
                     activeToolType = NT_ToolType.NodeControl;
+                    activeTool     = m_NtNodeControlToolSystem;
                 }
             }
 
             switch (activeToolType) {
                 case NT_ToolType.AddNode:
-                    // Process state
-                    // Add tooltips
-                    //var mouseTooltip = new StringTooltip() {
-                    //    value = "Add Helper",
-                    //};
-                    //AddMouseTooltip(mouseTooltip);
+                    switch (activeTool.Phase) {
+                        case OperationPhase.Idle:
+                            // Add tooltips
+                            var idleTooltip = new StringTooltip {
+                                value = "Add Node: Idle"
+                            };
+                            AddMouseTooltip(idleTooltip);
+                            break;
+                        case OperationPhase.Configuring:
+                            break;
+                        case OperationPhase.Ready:
+                            break;
+                        case OperationPhase.Applying:
+                            break;
+                    }
+
                     break;
+                case NT_ToolType.RemoveNode:
+                    switch (activeTool.Phase) {
+                        case OperationPhase.Idle:
+                            // Add tooltips
+                            var idleTooltip = new StringTooltip {
+                                value = "Remove Node: Idle"
+                            };
+                            AddMouseTooltip(idleTooltip);
+                            break;
+                        case OperationPhase.Configuring:
+                            break;
+                        case OperationPhase.Ready:
+                            break;
+                        case OperationPhase.Applying:
+                            break;
+                    }
+
+                    break;
+                case NT_ToolType.PathTransform:
+                    switch (activeTool.Phase) {
+                        case OperationPhase.Idle:
+                            // Add tooltips
+                            var idleTooltip = new StringTooltip {
+                                value = "PathTransform: Idle"
+                            };
+                            AddMouseTooltip(idleTooltip);
+                            break;
+                        case OperationPhase.Configuring:
+                            break;
+                        case OperationPhase.Ready:
+                            break;
+                        case OperationPhase.Applying:
+                            break;
+                    }
+
+                    break;
+                case NT_ToolType.NodeControl:
+                    switch (activeTool.Phase) {
+                        case OperationPhase.Idle:
+                            // Add tooltips
+                            var idleTooltip = new StringTooltip {
+                                value = "Node Control: Idle"
+                            };
+                            AddMouseTooltip(idleTooltip);
+                            break;
+                        case OperationPhase.Configuring:
+                            break;
+                        case OperationPhase.Ready:
+                            break;
+                        case OperationPhase.Applying:
+                            break;
+                    }
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
     }

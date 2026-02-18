@@ -1,4 +1,4 @@
-﻿// <copyright file="NT_CEToolSystem.cs" company="Luca Rager">
+﻿// <copyright file="NT_PathTransformToolSystem.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -16,7 +16,6 @@ namespace NetworkTools.Systems.Tools {
     using Game.Simulation;
     using Game.Tools;
     using NetworkTools.Components;
-    using NetworkTools.Systems.Tools.PathTransform;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;

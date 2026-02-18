@@ -15,7 +15,6 @@ namespace NetworkTools.Systems {
     using Game.UI;
     using NetworkTools.Settings;
     using NetworkTools.Systems.Tools;
-    using NetworkTools.Systems.Tools.PathTransform;
     using Unity.Collections;
     using Unity.Entities;
     using Utils;
@@ -177,7 +176,6 @@ namespace NetworkTools.Systems {
             var transformConfig = new TransformConfig {
                 Shape = shapeConfig,
                 Slope = slopeConfig,
-                Flags = TransformFlags.None,
             };
             m_NtPathTransformToolSystem.SetTransformationConfig(transformConfig);
         }
@@ -205,7 +203,6 @@ namespace NetworkTools.Systems {
             var transformConfig = new TransformConfig {
                 Shape = shapeConfig,
                 Slope = slopeConfig,
-                Flags = TransformFlags.None,
             };
             m_NtPathTransformToolSystem.SetTransformationConfig(transformConfig);
         }

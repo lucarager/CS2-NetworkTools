@@ -5,7 +5,7 @@
 
 namespace NetworkTools.Tests.PathTransform {
     using Colossal.Mathematics;
-    using NetworkTools.Systems.Tools.PathTransform;
+    using NetworkTools.Systems.Tools;
     using NUnit.Framework;
     using Unity.Mathematics;
 

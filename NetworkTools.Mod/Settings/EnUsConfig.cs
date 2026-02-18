@@ -46,15 +46,15 @@ namespace NetworkTools.Settings {
                 { m_Setting.GetOptionGroupLocaleID(NT_Settings.AboutGroupStr), "About" },
 
                 // About
-                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Version)), "Version" },
-                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.InformationalVersion)), "Informational Version" },
-                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Credits)), string.Empty },
-                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Github)), "GitHub" }, {
-                    m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Github)),
-                    "Opens a browser window to https://github.com/lucarager/CS2-NetworkTools"
-                },
-                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Discord)), "Discord" },
-                { m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Discord)), "Opens link to join the CS:2 Modding Discord" },
+                //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Version)), "Version" },
+                //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.InformationalVersion)), "Informational Version" },
+                //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Credits)), string.Empty },
+                //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Github)), "GitHub" }, {
+                //    m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Github)),
+                //    "Opens a browser window to https://github.com/lucarager/CS2-NetworkTools"
+                //},
+                //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Discord)), "Discord" },
+                //{ m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Discord)), "Opens link to join the CS:2 Modding Discord" },
             };
         }
 

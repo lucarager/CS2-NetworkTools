@@ -5,7 +5,7 @@
 
 namespace NetworkTools.Tests.PathTransform {
     using Colossal.Mathematics;
-    using NetworkTools.Systems.Tools.PathTransform;
+    using NetworkTools.Systems.Tools;
     using NUnit.Framework;
     using Unity.Mathematics;
 
@@ -152,9 +152,9 @@ namespace NetworkTools.Tests.PathTransform {
                 config);
 
             Assert.AreEqual(50f, heights.Start, Tolerance);
-            // CtrlStart at 50 + 50*(1/3) = 66.67
+            // ControlPointStart at 50 + 50*(1/3) = 66.67
             Assert.AreEqual(50f + 50f / 3f, heights.CtrlStart, Tolerance);
-            // CtrlEnd at 50 + 50*(2/3) = 83.33
+            // ControlPointEnd at 50 + 50*(2/3) = 83.33
             Assert.AreEqual(50f + 100f / 3f, heights.CtrlEnd, Tolerance);
             Assert.AreEqual(100f,            heights.End,     Tolerance);
         }
@@ -162,7 +162,7 @@ namespace NetworkTools.Tests.PathTransform {
         [Test]
         public void ApplyHeightsToBezier_Forward_CorrectAssignment() {
             var bezier = CreateTestBezier();
-            var heights = new EdgeHeights {
+            var heights = new EdgeControlPointHeights {
                 Start     = 10f,
                 CtrlStart = 20f,
                 CtrlEnd   = 30f,
@@ -180,7 +180,7 @@ namespace NetworkTools.Tests.PathTransform {
         [Test]
         public void ApplyHeightsToBezier_Reversed_SwapsAssignment() {
             var bezier = CreateTestBezier();
-            var heights = new EdgeHeights {
+            var heights = new EdgeControlPointHeights {
                 Start     = 10f,
                 CtrlStart = 20f,
                 CtrlEnd   = 30f,
@@ -189,7 +189,7 @@ namespace NetworkTools.Tests.PathTransform {
 
             var result = SlopeCalculator.ApplyHeightsToBezier(bezier, heights, false);
 
-            // Reversed: a=End, b=CtrlEnd, c=CtrlStart, d=Start
+            // Reversed: a=End, b=ControlPointEnd, c=ControlPointStart, d=Start
             Assert.AreEqual(40f, result.a.y, Tolerance);
             Assert.AreEqual(30f, result.b.y, Tolerance);
             Assert.AreEqual(20f, result.c.y, Tolerance);
@@ -199,7 +199,7 @@ namespace NetworkTools.Tests.PathTransform {
         [Test]
         public void ApplyHeightsToBezier_PreservesXZ() {
             var bezier = CreateTestBezier();
-            var heights = new EdgeHeights {
+            var heights = new EdgeControlPointHeights {
                 Start     = 100f,
                 CtrlStart = 100f,
                 CtrlEnd   = 100f,

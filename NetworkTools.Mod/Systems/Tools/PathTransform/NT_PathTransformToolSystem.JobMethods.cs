@@ -10,7 +10,6 @@ namespace NetworkTools.Systems.Tools {
     using Game.Net;
     using Game.Prefabs;
     using Game.Tools;
-    using NetworkTools.Systems.Tools.PathTransform;
     using Unity.Entities;
     using Unity.Jobs;
 

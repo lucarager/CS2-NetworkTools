@@ -37,7 +37,9 @@ namespace NetworkTools.Systems.Tools {
             m_NTPrefabsCreateSystem = World.GetOrCreateSystemManaged<NT_PrefabsCreateSystem>();
 
             // Configuration
-            RenderEligibleNodes = true;
+            RenderEligibleNodes      = true;
+            RenderMarkers            = true;
+            DisableVanillaValidation = true;
 
             // Data Structures
             m_SelectedNode = new NativeReference<Entity>(Allocator.Persistent);

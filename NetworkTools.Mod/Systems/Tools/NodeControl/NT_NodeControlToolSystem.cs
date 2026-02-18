@@ -107,6 +107,11 @@ namespace NetworkTools.Systems.Tools {
         private const float DragThreshold = 0.5f;
 
         /// <summary>
+        /// Radius of the invisible sphere around each marker for ray intersection hit detection.
+        /// </summary>
+        private const float MarkerHitRadius = 2f;
+
+        /// <summary>
         /// Current selection state
         /// </summary>
         public NodeControlSelectionState CurrentSelectionState =>
@@ -221,6 +226,9 @@ namespace NetworkTools.Systems.Tools {
 
             // Continue dragging - project mouse onto XZ plane at marker's Y
             UpdateMarkerDragPosition(m_MouseDownEntity);
+
+            // Live preview - apply marker position to curve
+            ApplyMarkerPositionToCurve(m_MouseDownEntity);
         }
 
         private void HandleClick(Entity entity) {
@@ -310,19 +318,28 @@ namespace NetworkTools.Systems.Tools {
                 var curve = EntityManager.GetComponentData<Curve>(edgeEntity);
                 var isForward = edge.m_Start == node;
 
-                m_Markers.Add(CreateMarker(node, isForward ? 0 : 3, isForward ? curve.m_Bezier.a : curve.m_Bezier.d));
-                m_Markers.Add(CreateMarker(node, isForward ? 1 : 2, isForward ? curve.m_Bezier.b : curve.m_Bezier.c));
+                // Endpoint marker (a or d)
+                var endpointFlags = Components.MarkerTypeFlags.BezierPoint |
+                                    (isForward ? Components.MarkerTypeFlags.BezierStartPoint : Components.MarkerTypeFlags.BezierEndPoint);
+                m_Markers.Add(CreateMarker(node, edgeEntity, isForward ? 0 : 3, isForward ? curve.m_Bezier.a : curve.m_Bezier.d, endpointFlags));
+
+                // Control point marker (b or c)
+                var controlFlags = Components.MarkerTypeFlags.BezierPoint | Components.MarkerTypeFlags.BezierControlPoint;
+                m_Markers.Add(CreateMarker(node, edgeEntity, isForward ? 1 : 2, isForward ? curve.m_Bezier.b : curve.m_Bezier.c, controlFlags));
             }
         }
 
         /// <summary>
-        /// Method that creates Unity ECS entities 
+        /// Creates a marker entity with the specified link data, position, and type flags.
         /// </summary>
-        private Entity CreateMarker(Entity linkedEntity, int key, float3 position) {
+        private Entity CreateMarker(Entity linkedEntity, Entity linkedEdge, int key, float3 position, Components.MarkerTypeFlags typeFlags) {
             var marker = EntityManager.CreateEntity();
-            EntityManager.AddComponentData(marker, new Components.NT_Marker());
+            EntityManager.AddComponentData(marker, new Components.NT_Marker {
+                TypeFlags = typeFlags,
+            });
             EntityManager.AddComponentData(marker, new Components.NT_MarkerLink {
                 LinkedEntity = linkedEntity,
+                LinkedEdge = linkedEdge,
                 Key = key,
             });
             EntityManager.AddComponentData(marker, new Components.NT_MarkerPosition {
@@ -357,6 +374,60 @@ namespace NetworkTools.Systems.Tools {
                     Position = intersection
                 });
             }
+        }
+
+        /// <summary>
+        /// Applies the marker's current position to the bezier curve it controls.
+        /// Updates the corresponding control point (a, b, c, or d) based on the marker's key.
+        /// </summary>
+        private void ApplyMarkerPositionToCurve(Entity markerEntity) {
+            if (!EntityManager.Exists(markerEntity)) return;
+            if (!EntityManager.HasComponent<Components.NT_MarkerLink>(markerEntity)) return;
+            if (!EntityManager.HasComponent<Components.NT_MarkerPosition>(markerEntity)) return;
+
+            var markerLink = EntityManager.GetComponentData<Components.NT_MarkerLink>(markerEntity);
+            var markerPos = EntityManager.GetComponentData<Components.NT_MarkerPosition>(markerEntity).Position;
+            var edgeEntity = markerLink.LinkedEdge;
+            var key = markerLink.Key;
+
+            if (!EntityManager.Exists(edgeEntity)) {
+                m_Log.Warn($"[ApplyMarkerPositionToCurve] Edge entity {edgeEntity} does not exist");
+                return;
+            }
+
+            // Get the current curve
+            var curve = EntityManager.GetComponentData<Curve>(edgeEntity);
+            var bezier = curve.m_Bezier;
+
+            // Update the appropriate control point based on key
+            switch (key) {
+                case 0:
+                    bezier.a = markerPos;
+                    break;
+                case 1:
+                    bezier.b = markerPos;
+                    break;
+                case 2:
+                    bezier.c = markerPos;
+                    break;
+                case 3:
+                    bezier.d = markerPos;
+                    break;
+                default:
+                    m_Log.Warn($"[ApplyMarkerPositionToCurve] Invalid key {key}");
+                    return;
+            }
+
+            // Apply the updated curve
+            curve.m_Bezier = bezier;
+            EntityManager.SetComponentData(edgeEntity, curve);
+
+            // Mark edge as updated so the game recalculates
+            if (!EntityManager.HasComponent<Updated>(edgeEntity)) {
+                EntityManager.AddComponent<Updated>(edgeEntity);
+            }
+
+            m_Log.Debug($"[ApplyMarkerPositionToCurve] Updated bezier point {key} to {markerPos}");
         }
 
         /// <summary>
@@ -401,6 +472,70 @@ namespace NetworkTools.Systems.Tools {
             return true;
         }
 
+        /// <summary>
+        /// Gets the closest marker entity that the camera ray intersects, treating markers as spheres.
+        /// </summary>
+        /// <param name="markerRadius">The radius of the invisible sphere around each marker.</param>
+        /// <returns>The closest marker entity hit, or Entity.Null if none.</returns>
+        private Entity GetClosestMarkerFromRay(float markerRadius) {
+            var camera = Camera.main;
+            if (camera == null) return Entity.Null;
+
+            var mousePos = Mouse.current.position.ReadValue();
+            var ray = camera.ScreenPointToRay(mousePos);
+            var rayOrigin = (float3)ray.origin;
+            var rayDir = math.normalize((float3)ray.direction);
+
+            var closestMarker = Entity.Null;
+            var closestT = float.MaxValue;
+
+            for (var i = 0; i < m_Markers.Length; i++) {
+                var markerEntity = m_Markers[i];
+                var markerPos = EntityManager.GetComponentData<Components.NT_MarkerPosition>(markerEntity).Position;
+
+                if (TryRaySphereIntersection(rayOrigin, rayDir, markerPos, markerRadius, out var t)) {
+                    if (t < closestT) {
+                        closestT = t;
+                        closestMarker = markerEntity;
+                    }
+                }
+            }
+
+            return closestMarker;
+        }
+
+        /// <summary>
+        /// Tests for intersection between a ray and a sphere.
+        /// </summary>
+        /// <param name="rayOrigin">The origin point of the ray.</param>
+        /// <param name="rayDir">The normalized direction of the ray.</param>
+        /// <param name="sphereCenter">The center of the sphere.</param>
+        /// <param name="radius">The radius of the sphere.</param>
+        /// <param name="t">The distance along the ray to the intersection point (if found).</param>
+        /// <returns>True if the ray intersects the sphere, false otherwise.</returns>
+        private static bool TryRaySphereIntersection(float3 rayOrigin, float3 rayDir, float3 sphereCenter, float radius, out float t) {
+            t = 0;
+
+            // Vector from ray origin to sphere center
+            var oc = rayOrigin - sphereCenter;
+
+            // Quadratic formula coefficients: at² + bt + c = 0
+            var a = math.dot(rayDir, rayDir);
+            var b = 2f * math.dot(oc, rayDir);
+            var c = math.dot(oc, oc) - radius * radius;
+
+            var discriminant = b * b - 4 * a * c;
+
+            // No intersection if discriminant is negative
+            if (discriminant < 0) return false;
+
+            // Find the nearest intersection point in front of the ray origin
+            t = (-b - math.sqrt(discriminant)) / (2f * a);
+
+            // If t is negative, the intersection is behind the camera
+            return t > 0;
+        }
+
         private void DeselectCurrentNode() {
             var node = m_SelectedNode.Value;
             if (node != Entity.Null) {
@@ -440,19 +575,9 @@ namespace NetworkTools.Systems.Tools {
             var controlPoint    = default(ControlPoint);
             var candidateEntity = Entity.Null;
 
-            // If we're in the NodeSelected state, we want to check if we're hitting a marker first before checking for edges or terrain
+            // If we're in the NodeSelected state, check for marker hits using ray-sphere intersection
             if (CurrentSelectionState == NodeControlSelectionState.NodeSelected) {
-                var minDistance = 2f; // Minimum distance to consider hitting a marker
-
-                for (var i = 0; i < m_Markers.Length; i++) {
-                    var markerEntity = m_Markers[i];
-                    var markerPosition = EntityManager.GetComponentData<Components.NT_MarkerPosition>(markerEntity).Position;
-                    var distanceToMarker = math.distance(hit.m_Position, markerPosition);
-                    if (distanceToMarker < minDistance) {
-                        candidateEntity = markerEntity;
-                        break;
-                    }
-                }
+                candidateEntity = GetClosestMarkerFromRay(MarkerHitRadius);
 
                 m_Log.Debug("[FilterRaycastResult] Marker check: " + (candidateEntity != Entity.Null ? "Hit" : "Miss"));
 

@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems.Tools.PathTransform {
+namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Unity.Mathematics;
@@ -25,14 +25,9 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         Straighten = 1,
 
         /// <summary>
-        /// Fit nodes to a smooth bezier curve.
+        /// Fit nodes to a smooth Bézier curve.
         /// </summary>
         Smooth = 2,
-
-        /// <summary>
-        /// Redistribute nodes evenly along the path.
-        /// </summary>
-        EqualSpacing = 3,
     }
 
     /// <summary>
@@ -71,13 +66,6 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         public static ShapeCurveConfig Smooth(float factor = 0.5f) => new ShapeCurveConfig {
             Template = ShapeTemplate.Smooth,
             SmoothingFactor = math.clamp(factor, 0f, 1f),
-        };
-
-        /// <summary>
-        /// Creates an equal spacing configuration.
-        /// </summary>
-        public static ShapeCurveConfig EqualSpacing() => new ShapeCurveConfig {
-            Template = ShapeTemplate.EqualSpacing,
         };
     }
 }

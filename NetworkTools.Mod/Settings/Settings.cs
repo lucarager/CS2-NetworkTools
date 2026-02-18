@@ -44,36 +44,36 @@ namespace NetworkTools.Settings {
         //[SettingsUIKeyboardBinding(BindingKeyboard.T, ToggleToolPanelStr, ctrl: true)]
         //public ProxyBinding ToggleToolPanel { get; set; }
 
-        [SettingsUISection(AboutGroupStr)]
-        public bool Discord {
-            set {
-                try {
-                    Application.OpenURL("https://discord.gg/QFxmPa2wCa");
-                } catch (Exception e) {
-                    Debug.LogException(e);
-                }
-            }
-        }
+        //[SettingsUISection(AboutGroupStr)]
+        //public bool Discord {
+        //    set {
+        //        try {
+        //            Application.OpenURL("https://discord.gg/QFxmPa2wCa");
+        //        } catch (Exception e) {
+        //            Debug.LogException(e);
+        //        }
+        //    }
+        //}
 
-        [SettingsUISection(AboutGroupStr)]
-        public bool Github {
-            set {
-                try {
-                    Application.OpenURL("https://github.com/lucarager/CS2-NetworkTools");
-                } catch (Exception e) {
-                    Debug.LogException(e);
-                }
-            }
-        }
+        //[SettingsUISection(AboutGroupStr)]
+        //public bool Github {
+        //    set {
+        //        try {
+        //            Application.OpenURL("https://github.com/lucarager/CS2-NetworkTools");
+        //        } catch (Exception e) {
+        //            Debug.LogException(e);
+        //        }
+        //    }
+        //}
 
-        [SettingsUISection(AboutGroupStr)]
-        public string Credits => CreditStr;
+        //[SettingsUISection(AboutGroupStr)]
+        //public string Credits => CreditStr;
 
-        [SettingsUISection(AboutGroupStr)]
-        public string InformationalVersion => NetworkToolsMod.InformationalVersion;
+        //[SettingsUISection(AboutGroupStr)]
+        //public string InformationalVersion => NetworkToolsMod.InformationalVersion;
 
-        [SettingsUISection(AboutGroupStr)]
-        public string Version => NetworkToolsMod.Version;
+        //[SettingsUISection(AboutGroupStr)]
+        //public string Version => NetworkToolsMod.Version;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NT_Settings"/> class.

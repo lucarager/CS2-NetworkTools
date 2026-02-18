@@ -11,7 +11,6 @@ namespace NetworkTools.Systems.Tools {
     using Game.Net;
     using Game.Prefabs;
     using Game.Tools;
-    using NetworkTools.Systems.Tools.PathTransform;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -30,8 +29,6 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         private const float XZDeltaSquaredThreshold = 0.000001f;
 
-        public const float QuayThreshold = 4f;
-        public const float RetainingWallThreshold = -4f;
         public const float TunnelThreshold = -12f;
         public const float ElevatedThreshold = 8f;
         public const float ForceGroundElevation = 0f;

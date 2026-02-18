@@ -5,7 +5,7 @@
 
 namespace NetworkTools.Tests.PathTransform {
     using Colossal.Mathematics;
-    using NetworkTools.Systems.Tools.PathTransform;
+    using NetworkTools.Systems.Tools;
     using NUnit.Framework;
     using Unity.Mathematics;
 
@@ -143,8 +143,8 @@ namespace NetworkTools.Tests.PathTransform {
 
             // All points should lie on the line y = x
             Assert.AreEqual(positions.Start.x,     positions.Start.y,     Tolerance);
-            Assert.AreEqual(positions.CtrlStart.x, positions.CtrlStart.y, Tolerance);
-            Assert.AreEqual(positions.CtrlEnd.x,   positions.CtrlEnd.y,   Tolerance);
+            Assert.AreEqual(positions.ControlPointStart.x, positions.ControlPointStart.y, Tolerance);
+            Assert.AreEqual(positions.ControlPointEnd.x,   positions.ControlPointEnd.y,   Tolerance);
             Assert.AreEqual(positions.End.x,       positions.End.y,       Tolerance);
         }
 
@@ -159,8 +159,8 @@ namespace NetworkTools.Tests.PathTransform {
                 new float2(100f, 0f));
 
             Assert.AreEqual(0f,        positions.Start.x,     Tolerance);
-            Assert.AreEqual(100f / 3f, positions.CtrlStart.x, Tolerance);
-            Assert.AreEqual(200f / 3f, positions.CtrlEnd.x,   Tolerance);
+            Assert.AreEqual(100f / 3f, positions.ControlPointStart.x, Tolerance);
+            Assert.AreEqual(200f / 3f, positions.ControlPointEnd.x,   Tolerance);
             Assert.AreEqual(100f,      positions.End.x,       Tolerance);
         }
 
@@ -176,8 +176,8 @@ namespace NetworkTools.Tests.PathTransform {
                 new float2(100f, 0f));
 
             Assert.AreEqual(50f,             positions.Start.x,     Tolerance);
-            Assert.AreEqual(50f + 50f / 3f,  positions.CtrlStart.x, Tolerance);
-            Assert.AreEqual(50f + 100f / 3f, positions.CtrlEnd.x,   Tolerance);
+            Assert.AreEqual(50f + 50f / 3f,  positions.ControlPointStart.x, Tolerance);
+            Assert.AreEqual(50f + 100f / 3f, positions.ControlPointEnd.x,   Tolerance);
             Assert.AreEqual(100f,            positions.End.x,       Tolerance);
         }
 
@@ -186,8 +186,8 @@ namespace NetworkTools.Tests.PathTransform {
             var bezier = CreateTestBezier();
             var positions = new EdgePositions {
                 Start     = new float2(10f, 20f),
-                CtrlStart = new float2(30f, 40f),
-                CtrlEnd   = new float2(50f, 60f),
+                ControlPointStart = new float2(30f, 40f),
+                ControlPointEnd   = new float2(50f, 60f),
                 End       = new float2(70f, 80f)
             };
 
@@ -208,14 +208,14 @@ namespace NetworkTools.Tests.PathTransform {
             var bezier = CreateTestBezier();
             var positions = new EdgePositions {
                 Start     = new float2(10f, 20f),
-                CtrlStart = new float2(30f, 40f),
-                CtrlEnd   = new float2(50f, 60f),
+                ControlPointStart = new float2(30f, 40f),
+                ControlPointEnd   = new float2(50f, 60f),
                 End       = new float2(70f, 80f)
             };
 
             var result = ShapeCalculator.ApplyPositionsToBezier(bezier, positions, false);
 
-            // Reversed: a=End, b=CtrlEnd, c=CtrlStart, d=Start
+            // Reversed: a=End, b=ControlPointEnd, c=ControlPointStart, d=Start
             Assert.AreEqual(70f, result.a.x, Tolerance);
             Assert.AreEqual(80f, result.a.z, Tolerance);
             Assert.AreEqual(50f, result.b.x, Tolerance);
@@ -231,8 +231,8 @@ namespace NetworkTools.Tests.PathTransform {
             var bezier = CreateTestBezier();
             var positions = new EdgePositions {
                 Start     = new float2(999f, 999f),
-                CtrlStart = new float2(999f, 999f),
-                CtrlEnd   = new float2(999f, 999f),
+                ControlPointStart = new float2(999f, 999f),
+                ControlPointEnd   = new float2(999f, 999f),
                 End       = new float2(999f, 999f)
             };
 

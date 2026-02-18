@@ -4,7 +4,7 @@
 // </copyright>
 
 namespace NetworkTools.Tests.PathTransform {
-    using NetworkTools.Systems.Tools.PathTransform;
+    using NetworkTools.Systems.Tools;
     using NUnit.Framework;
 
     [TestFixture]
@@ -57,26 +57,26 @@ namespace NetworkTools.Tests.PathTransform {
         public void ApplyCurve_Linear_ReturnsInputUnchanged() {
             var config = SlopeCurveConfig.Linear();
 
-            Assert.AreEqual(0f,    config.ApplyCurve(0f),    Tolerance);
-            Assert.AreEqual(0.25f, config.ApplyCurve(0.25f), Tolerance);
-            Assert.AreEqual(0.5f,  config.ApplyCurve(0.5f),  Tolerance);
-            Assert.AreEqual(0.75f, config.ApplyCurve(0.75f), Tolerance);
-            Assert.AreEqual(1f,    config.ApplyCurve(1f),    Tolerance);
+            Assert.AreEqual(0f,    SlopeCalculator.ApplyCurve(0f, in config),    Tolerance);
+            Assert.AreEqual(0.25f, SlopeCalculator.ApplyCurve(0.25f, in config), Tolerance);
+            Assert.AreEqual(0.5f,  SlopeCalculator.ApplyCurve(0.5f, in config),  Tolerance);
+            Assert.AreEqual(0.75f, SlopeCalculator.ApplyCurve(0.75f, in config), Tolerance);
+            Assert.AreEqual(1f,    SlopeCalculator.ApplyCurve(1f, in config),    Tolerance);
         }
 
         [Test]
         public void ApplyCurve_Preserve_ReturnsInputUnchanged() {
             var config = SlopeCurveConfig.Preserve();
 
-            Assert.AreEqual(0.5f, config.ApplyCurve(0.5f), Tolerance);
+            Assert.AreEqual(0.5f, SlopeCalculator.ApplyCurve(0.5f, in config), Tolerance);
         }
 
         [Test]
         public void ApplyCurve_EaseInOut_BoundaryValues() {
             var config = SlopeCurveConfig.EaseInOut();
 
-            Assert.AreEqual(0f, config.ApplyCurve(0f), Tolerance);
-            Assert.AreEqual(1f, config.ApplyCurve(1f), Tolerance);
+            Assert.AreEqual(0f, SlopeCalculator.ApplyCurve(0f, in config), Tolerance);
+            Assert.AreEqual(1f, SlopeCalculator.ApplyCurve(1f, in config), Tolerance);
         }
 
         [Test]
@@ -85,7 +85,7 @@ namespace NetworkTools.Tests.PathTransform {
 
             // In the middle region (0.25 to 0.75), the curve should be linear
             // So ApplyCurve(0.5) should equal 0.5
-            Assert.AreEqual(0.5f, config.ApplyCurve(0.5f), Tolerance);
+            Assert.AreEqual(0.5f, SlopeCalculator.ApplyCurve(0.5f, in config), Tolerance);
         }
 
         [Test]
@@ -94,7 +94,7 @@ namespace NetworkTools.Tests.PathTransform {
 
             // In the ease-in region, values should be below linear
             // At t=0.125 (halfway through ease-in), value should be less than 0.125
-            var result = config.ApplyCurve(0.125f);
+            var result = SlopeCalculator.ApplyCurve(0.125f, in config);
             Assert.Less(result, 0.125f);
             Assert.Greater(result, 0f);
         }
@@ -105,7 +105,7 @@ namespace NetworkTools.Tests.PathTransform {
 
             // In the ease-out region, values should be above linear progression toward 1
             // At t=0.875, we're halfway through ease-out
-            var result = config.ApplyCurve(0.875f);
+            var result = SlopeCalculator.ApplyCurve(0.875f, in config);
             Assert.Greater(result, 0.875f);
             Assert.Less(result, 1f);
         }
@@ -115,7 +115,7 @@ namespace NetworkTools.Tests.PathTransform {
             var config = SlopeCurveConfig.EaseInOut(0f, 0f);
 
             // With zero ease lengths, should behave like linear
-            Assert.AreEqual(0.5f, config.ApplyCurve(0.5f), Tolerance);
+            Assert.AreEqual(0.5f, SlopeCalculator.ApplyCurve(0.5f, in config), Tolerance);
         }
 
         [Test]
@@ -123,13 +123,13 @@ namespace NetworkTools.Tests.PathTransform {
             var config = SlopeCurveConfig.EaseInOut(0.5f, 0.5f);
 
             // When regions overlap, should use a smooth S-curve
-            Assert.AreEqual(0f,   config.ApplyCurve(0f),   Tolerance);
-            Assert.AreEqual(0.5f, config.ApplyCurve(0.5f), Tolerance);
-            Assert.AreEqual(1f,   config.ApplyCurve(1f),   Tolerance);
+            Assert.AreEqual(0f,   SlopeCalculator.ApplyCurve(0f, in config),   Tolerance);
+            Assert.AreEqual(0.5f, SlopeCalculator.ApplyCurve(0.5f, in config), Tolerance);
+            Assert.AreEqual(1f,   SlopeCalculator.ApplyCurve(1f, in config),   Tolerance);
 
             // S-curve should be symmetric
-            var at025 = config.ApplyCurve(0.25f);
-            var at075 = config.ApplyCurve(0.75f);
+            var at025 = SlopeCalculator.ApplyCurve(0.25f, in config);
+            var at075 = SlopeCalculator.ApplyCurve(0.75f, in config);
             Assert.AreEqual(1f - at025, at075, Tolerance);
         }
 
@@ -140,7 +140,7 @@ namespace NetworkTools.Tests.PathTransform {
             // Curve should be monotonically increasing
             var prev = 0f;
             for (var t = 0f; t <= 1f; t += 0.05f) {
-                var current = config.ApplyCurve(t);
+                var current = SlopeCalculator.ApplyCurve(t, in config);
                 Assert.GreaterOrEqual(current, prev, $"Curve not monotonic at t={t}");
                 prev = current;
             }
@@ -151,8 +151,8 @@ namespace NetworkTools.Tests.PathTransform {
             var config = SlopeCurveConfig.EaseInOut();
 
             // The curve should handle edge values gracefully
-            var atZero = config.ApplyCurve(0f);
-            var atOne = config.ApplyCurve(1f);
+            var atZero = SlopeCalculator.ApplyCurve(0f, in config);
+            var atOne = SlopeCalculator.ApplyCurve(1f, in config);
 
             Assert.AreEqual(0f, atZero, Tolerance);
             Assert.AreEqual(1f, atOne,  Tolerance);

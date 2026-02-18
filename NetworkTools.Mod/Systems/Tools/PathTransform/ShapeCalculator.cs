@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems.Tools.PathTransform {
+namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Colossal.Mathematics;
@@ -39,14 +39,14 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         /// <param name="bezier">The bezier curve.</param>
         /// <param name="length">The length of the curve.</param>
         /// <param name="isForward">True if edge direction matches path direction.</param>
-        /// <param name="ctrlStartRatio">Output: ratio of control point closer to path-start.</param>
-        /// <param name="ctrlEndRatio">Output: ratio of control point closer to path-end.</param>
+        /// <param name="controlPointStartRatio">Output: ratio of control point closer to path-start.</param>
+        /// <param name="controlPointEndRatio">Output: ratio of control point closer to path-end.</param>
         public static void CalculateControlPointRatios(
             in Bezier4x3 bezier,
             float        length,
             bool         isForward,
-            out float    ctrlStartRatio,
-            out float    ctrlEndRatio) {
+            out float    controlPointStartRatio,
+            out float    controlPointEndRatio) {
             // Calculate bezier control point ratios based on horizontal distance from 'a'
             var horizontalA = new float2(bezier.a.x, bezier.a.z);
             var horizontalB = new float2(bezier.b.x, bezier.b.z);
@@ -65,11 +65,11 @@ namespace NetworkTools.Systems.Tools.PathTransform {
             // Forward: B is closer to path-start, C is closer to path-end
             // Reversed: C is closer to path-start, B is closer to path-end
             if (isForward) {
-                ctrlStartRatio = bRatio;
-                ctrlEndRatio   = cRatio;
+                controlPointStartRatio = bRatio;
+                controlPointEndRatio   = cRatio;
             } else {
-                ctrlStartRatio = 1f - cRatio;
-                ctrlEndRatio   = 1f - bRatio;
+                controlPointStartRatio = 1f - cRatio;
+                controlPointEndRatio   = 1f - bRatio;
             }
         }
 
@@ -78,8 +78,8 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         /// </summary>
         /// <param name="cumulativeDistance">Distance along path at the start of this edge.</param>
         /// <param name="edgeLength">Length of this edge.</param>
-        /// <param name="ctrlStartRatio">Ratio of control point closer to path-start.</param>
-        /// <param name="ctrlEndRatio">Ratio of control point closer to path-end.</param>
+        /// <param name="controlPointStartRatio">Ratio of control point closer to path-start.</param>
+        /// <param name="controlPointEndRatio">Ratio of control point closer to path-end.</param>
         /// <param name="totalLength">Total length of the entire path.</param>
         /// <param name="pathStartXZ">XZ position at path start.</param>
         /// <param name="pathEndXZ">XZ position at path end.</param>
@@ -87,20 +87,20 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         public static EdgePositions CalculateStraightenedPositions(
             float  cumulativeDistance,
             float  edgeLength,
-            float  ctrlStartRatio,
-            float  ctrlEndRatio,
+            float  controlPointStartRatio,
+            float  controlPointEndRatio,
             float  totalLength,
             float2 pathStartXZ,
             float2 pathEndXZ) {
             var distStart     = cumulativeDistance;
-            var distCtrlStart = cumulativeDistance + edgeLength * ctrlStartRatio;
-            var distCtrlEnd   = cumulativeDistance + edgeLength * ctrlEndRatio;
+            var distCtrlStart = cumulativeDistance + edgeLength * controlPointStartRatio;
+            var distCtrlEnd   = cumulativeDistance + edgeLength * controlPointEndRatio;
             var distEnd       = cumulativeDistance + edgeLength;
 
             return new EdgePositions {
                 Start     = CalculatePositionLinear(distStart, totalLength, pathStartXZ, pathEndXZ),
-                CtrlStart = CalculatePositionLinear(distCtrlStart, totalLength, pathStartXZ, pathEndXZ),
-                CtrlEnd   = CalculatePositionLinear(distCtrlEnd, totalLength, pathStartXZ, pathEndXZ),
+                ControlPointStart = CalculatePositionLinear(distCtrlStart, totalLength, pathStartXZ, pathEndXZ),
+                ControlPointEnd   = CalculatePositionLinear(distCtrlEnd, totalLength, pathStartXZ, pathEndXZ),
                 End       = CalculatePositionLinear(distEnd, totalLength, pathStartXZ, pathEndXZ),
             };
         }
@@ -116,8 +116,8 @@ namespace NetworkTools.Systems.Tools.PathTransform {
             return CalculateStraightenedPositions(
                 state.CumulativeDistance,
                 state.Length,
-                state.CtrlStartRatio,
-                state.CtrlEndRatio,
+                state.ControlPointStartRatio,
+                state.ControlPointEndRatio,
                 ctx.TotalLength,
                 ctx.StartXZ,
                 ctx.EndXZ);
@@ -135,13 +135,13 @@ namespace NetworkTools.Systems.Tools.PathTransform {
 
             if (isForward) {
                 result.a.x = positions.Start.x;     result.a.z = positions.Start.y;
-                result.b.x = positions.CtrlStart.x; result.b.z = positions.CtrlStart.y;
-                result.c.x = positions.CtrlEnd.x;   result.c.z = positions.CtrlEnd.y;
+                result.b.x = positions.ControlPointStart.x; result.b.z = positions.ControlPointStart.y;
+                result.c.x = positions.ControlPointEnd.x;   result.c.z = positions.ControlPointEnd.y;
                 result.d.x = positions.End.x;       result.d.z = positions.End.y;
             } else {
                 result.a.x = positions.End.x;       result.a.z = positions.End.y;
-                result.b.x = positions.CtrlEnd.x;   result.b.z = positions.CtrlEnd.y;
-                result.c.x = positions.CtrlStart.x; result.c.z = positions.CtrlStart.y;
+                result.b.x = positions.ControlPointEnd.x;   result.b.z = positions.ControlPointEnd.y;
+                result.c.x = positions.ControlPointStart.x; result.c.z = positions.ControlPointStart.y;
                 result.d.x = positions.Start.x;     result.d.z = positions.Start.y;
             }
 
@@ -195,13 +195,13 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         /// </summary>
         /// <param name="cumulativeDistance">Distance along path at the start of this edge.</param>
         /// <param name="edgeLength">Length of this edge.</param>
-        /// <param name="ctrlStartRatio">Ratio of control point closer to path-start.</param>
-        /// <param name="ctrlEndRatio">Ratio of control point closer to path-end.</param>
+        /// <param name="controlPointStartRatio">Ratio of control point closer to path-start.</param>
+        /// <param name="controlPointEndRatio">Ratio of control point closer to path-end.</param>
         /// <param name="totalLength">Total length of the entire path.</param>
         /// <param name="pathStartXZ">XZ position at path start.</param>
         /// <param name="pathEndXZ">XZ position at path end.</param>
-        /// <param name="masterCtrl1">First control point of master bezier.</param>
-        /// <param name="masterCtrl2">Second control point of master bezier.</param>
+        /// <param name="masterControlPoint1">First control point of master bezier.</param>
+        /// <param name="masterControlPoint2">Second control point of master bezier.</param>
         /// <param name="smoothingFactor">How much to smooth (0 = original, 1 = full smooth).</param>
         /// <param name="originalBezier">Original bezier for blending.</param>
         /// <param name="isForward">True if edge direction matches path direction.</param>
@@ -209,27 +209,27 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         public static EdgePositions CalculateSmoothedPositions(
             float     cumulativeDistance,
             float     edgeLength,
-            float     ctrlStartRatio,
-            float     ctrlEndRatio,
+            float     controlPointStartRatio,
+            float     controlPointEndRatio,
             float     totalLength,
             float2    pathStartXZ,
             float2    pathEndXZ,
-            float2    masterCtrl1,
-            float2    masterCtrl2,
+            float2    masterControlPoint1,
+            float2    masterControlPoint2,
             float     smoothingFactor,
             in Bezier4x3 originalBezier,
             bool      isForward) {
             // Calculate t parameters for each point on this edge
             var tStart     = math.clamp(cumulativeDistance / totalLength, 0f, 1f);
-            var tCtrlStart = math.clamp((cumulativeDistance + edgeLength * ctrlStartRatio) / totalLength, 0f, 1f);
-            var tCtrlEnd   = math.clamp((cumulativeDistance + edgeLength * ctrlEndRatio) / totalLength, 0f, 1f);
+            var tCtrlStart = math.clamp((cumulativeDistance + edgeLength * controlPointStartRatio) / totalLength, 0f, 1f);
+            var tCtrlEnd   = math.clamp((cumulativeDistance + edgeLength * controlPointEndRatio) / totalLength, 0f, 1f);
             var tEnd       = math.clamp((cumulativeDistance + edgeLength) / totalLength, 0f, 1f);
 
             // Sample positions on the master smooth bezier
-            var smoothStart     = EvaluateBezier(pathStartXZ, masterCtrl1, masterCtrl2, pathEndXZ, tStart);
-            var smoothCtrlStart = EvaluateBezier(pathStartXZ, masterCtrl1, masterCtrl2, pathEndXZ, tCtrlStart);
-            var smoothCtrlEnd   = EvaluateBezier(pathStartXZ, masterCtrl1, masterCtrl2, pathEndXZ, tCtrlEnd);
-            var smoothEnd       = EvaluateBezier(pathStartXZ, masterCtrl1, masterCtrl2, pathEndXZ, tEnd);
+            var smoothStart     = EvaluateBezier(pathStartXZ, masterControlPoint1, masterControlPoint2, pathEndXZ, tStart);
+            var smoothCtrlStart = EvaluateBezier(pathStartXZ, masterControlPoint1, masterControlPoint2, pathEndXZ, tCtrlStart);
+            var smoothCtrlEnd   = EvaluateBezier(pathStartXZ, masterControlPoint1, masterControlPoint2, pathEndXZ, tCtrlEnd);
+            var smoothEnd       = EvaluateBezier(pathStartXZ, masterControlPoint1, masterControlPoint2, pathEndXZ, tEnd);
 
             // Get original positions
             float2 origStart, origCtrlStart, origCtrlEnd, origEnd;
@@ -248,8 +248,8 @@ namespace NetworkTools.Systems.Tools.PathTransform {
             // Blend between original and smooth positions based on smoothingFactor
             return new EdgePositions {
                 Start     = math.lerp(origStart, smoothStart, smoothingFactor),
-                CtrlStart = math.lerp(origCtrlStart, smoothCtrlStart, smoothingFactor),
-                CtrlEnd   = math.lerp(origCtrlEnd, smoothCtrlEnd, smoothingFactor),
+                ControlPointStart = math.lerp(origCtrlStart, smoothCtrlStart, smoothingFactor),
+                ControlPointEnd   = math.lerp(origCtrlEnd, smoothCtrlEnd, smoothingFactor),
                 End       = math.lerp(origEnd, smoothEnd, smoothingFactor),
             };
         }
@@ -260,24 +260,24 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         /// </summary>
         /// <param name="state">The edge transform state containing edge-level data.</param>
         /// <param name="ctx">The transform context containing path-level data.</param>
-        /// <param name="masterCtrl1">First control point of master bezier.</param>
-        /// <param name="masterCtrl2">Second control point of master bezier.</param>
+        /// <param name="masterControlPoint1">First control point of master bezier.</param>
+        /// <param name="masterControlPoint2">Second control point of master bezier.</param>
         /// <returns>XZ positions for all four control points in path order.</returns>
         public static EdgePositions CalculateSmoothedPositions(
             in EdgeTransformState state,
             in TransformContext   ctx,
-            float2                masterCtrl1,
-            float2                masterCtrl2) {
+            float2                masterControlPoint1,
+            float2                masterControlPoint2) {
             return CalculateSmoothedPositions(
                 state.CumulativeDistance,
                 state.Length,
-                state.CtrlStartRatio,
-                state.CtrlEndRatio,
+                state.ControlPointStartRatio,
+                state.ControlPointEndRatio,
                 ctx.TotalLength,
                 ctx.StartXZ,
                 ctx.EndXZ,
-                masterCtrl1,
-                masterCtrl2,
+                masterControlPoint1,
+                masterControlPoint2,
                 ctx.Config.Shape.SmoothingFactor,
                 state.Bezier,
                 state.IsForward);
@@ -292,24 +292,24 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         /// <param name="startTangentXZ">Tangent direction at path start (normalized).</param>
         /// <param name="endTangentXZ">Tangent direction at path end (normalized, pointing into end).</param>
         /// <param name="totalLength">Total length of the path.</param>
-        /// <param name="ctrl1">Output: First control point.</param>
-        /// <param name="ctrl2">Output: Second control point.</param>
+        /// <param name="controlPoint1">Output: First control point.</param>
+        /// <param name="controlPoint2">Output: Second control point.</param>
         public static void CalculateMasterBezierControls(
             float2    pathStartXZ,
             float2    pathEndXZ,
             float2    startTangentXZ,
             float2    endTangentXZ,
             float     totalLength,
-            out float2 ctrl1,
-            out float2 ctrl2) {
+            out float2 controlPoint1,
+            out float2 controlPoint2) {
             // Use 1/3 of total length as control point distance for a smooth curve
             var controlDistance = totalLength / 3f;
 
             // First control point: offset from start in the direction of start tangent
-            ctrl1 = pathStartXZ + math.normalizesafe(startTangentXZ) * controlDistance;
+            controlPoint1 = pathStartXZ + math.normalizesafe(startTangentXZ) * controlDistance;
 
             // Second control point: offset from end in the opposite direction of end tangent
-            ctrl2 = pathEndXZ - math.normalizesafe(endTangentXZ) * controlDistance;
+            controlPoint2 = pathEndXZ - math.normalizesafe(endTangentXZ) * controlDistance;
         }
 
         /// <summary>

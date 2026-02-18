@@ -97,6 +97,11 @@ namespace NetworkTools.Systems.Tools {
         public bool RenderEligibleNodes = false;
 
         /// <summary>
+        ///     Tool requests rendering markers
+        /// </summary>
+        public bool RenderMarkers = false;
+
+        /// <summary>
         ///     Tool requests rendering tooltips of slopes for selected edges
         /// </summary>
         public bool RenderSlopeTooltips = false;

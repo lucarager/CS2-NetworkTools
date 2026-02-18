@@ -4,7 +4,7 @@
 // </copyright>
 
 namespace NetworkTools.Tests.PathTransform {
-    using NetworkTools.Systems.Tools.PathTransform;
+    using NetworkTools.Systems.Tools;
     using NUnit.Framework;
 
     [TestFixture]
@@ -15,7 +15,6 @@ namespace NetworkTools.Tests.PathTransform {
 
             Assert.AreEqual(ShapeTemplate.Preserve, config.Shape.Template);
             Assert.AreEqual(SlopeTemplate.Preserve, config.Slope.Template);
-            Assert.AreEqual(TransformFlags.None,    config.Flags);
         }
 
         [Test]

@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Systems.Tools.PathTransform {
+namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Unity.Mathematics;
@@ -22,12 +22,12 @@ namespace NetworkTools.Systems.Tools.PathTransform {
         /// <summary>
         /// XZ position at control point closer to path-start.
         /// </summary>
-        public float2 CtrlStart;
+        public float2 ControlPointStart;
 
         /// <summary>
         /// XZ position at control point closer to path-end.
         /// </summary>
-        public float2 CtrlEnd;
+        public float2 ControlPointEnd;
 
         /// <summary>
         /// XZ position at path-end of segment.

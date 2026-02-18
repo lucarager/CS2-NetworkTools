@@ -140,7 +140,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_RemoveNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             // UI
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
-            updateSystem.UpdateAt<NT_RenderSystem>(SystemUpdatePhase.Rendering);
+            updateSystem.UpdateAt<NT_OverlayRenderSystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<NT_UITooltipSystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_ToolTooltipSystem>(SystemUpdatePhase.UITooltip);
 

@@ -11,7 +11,19 @@ namespace NetworkTools.Components {
     #endregion
 
     public struct NT_MarkerLink : IComponentData {
+        /// <summary>
+        /// The primary entity this marker is associated with (e.g., a node).
+        /// </summary>
         public Entity LinkedEntity;
+
+        /// <summary>
+        /// If this is a Bezier marker, the edge entity whose curve this marker controls.
+        /// </summary>
+        public Entity LinkedEdge;
+
+        /// <summary>
+        /// If this is a Bezier marker, the bezier control point index (0=a, 1=b, 2=c, 3=d).
+        /// </summary>
         public int Key;
     }
 }
