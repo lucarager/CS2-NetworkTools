@@ -85,9 +85,13 @@ namespace NetworkTools.Systems.Tools {
                 // === 4. Apply slope transforms (Y) ===
                 PathTransformUtility.ApplySlopeTransforms(edges, in context);
 
-                // === 5. Output results ===
-                Output(edges, in context);
+                // === 5. Gather intersection adjustments ===
+                var intersectionAdjustments = GatherIntersectionAdjustments(edges, in context);
 
+                // === 6. Output results ===
+                Output(edges, intersectionAdjustments, in context);
+
+                intersectionAdjustments.Dispose();
                 edges.Dispose();
             }
 
@@ -130,17 +134,7 @@ namespace NetworkTools.Systems.Tools {
                         state.IsForward = edge.m_Start == currentNode;
                     }
 
-                    if (UpgradedLookup.TryGetComponent(edgeEntity, out var upgraded)) {
-                        if ((upgraded.m_Flags.m_General & CompositionFlags.General.Elevated) != 0) {
-                            state.NetworkComposition = NetworkComposition.Elevated;
-                        }
-                        else if ((upgraded.m_Flags.m_General & CompositionFlags.General.Tunnel) != 0) {
-                            state.NetworkComposition = NetworkComposition.Tunnel;
-                        }
-                        else {
-                            state.NetworkComposition = NetworkComposition.Ground;
-                        }
-                    }
+                    state.NetworkComposition = GetNetworkComposition(edgeEntity);
 
                     // Get curve component for geometry
                     if (CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
@@ -169,90 +163,149 @@ namespace NetworkTools.Systems.Tools {
             /// <summary>
             ///     Outputs the transformed edges as either preview entities or applied changes.
             /// </summary>
-            private void Output(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
+            private void Output(
+                NativeArray<EdgeTransformState> edges,
+                NativeList<IntersectionEdgeAdjustment> intersectionAdjustments,
+                in TransformContext ctx) {
                 if (OutputMode == TransformOutputMode.Preview) {
-                    OutputPreview(edges);
+                    OutputPreview(edges, intersectionAdjustments);
                 }
                 else {
-                    OutputApply(edges, ctx);
+                    OutputApply(edges, intersectionAdjustments);
                 }
             }
 
             /// <summary>
             ///     Creates CreationDefinition + NetCourse entities for preview.
             /// </summary>
-            private void OutputPreview(NativeArray<EdgeTransformState> edges) {
+            private void OutputPreview(
+                NativeArray<EdgeTransformState> edges,
+                NativeList<IntersectionEdgeAdjustment> intersectionAdjustments) {
+                // Output path edges (both endpoints free)
                 for (var i = 0; i < edges.Length; i++) {
                     var state = edges[i];
-                    var definitionEntity = ECB.CreateEntity();
+                    OutputPreviewEdge(
+                        state.EdgeEntity,
+                        state.Bezier,
+                        MathUtils.Length(state.Bezier),
+                        state.NetworkComposition,
+                        Entity.Null,
+                        Entity.Null);
+                }
 
-                    var creationDefinition = new CreationDefinition {
-                        m_Original = state.EdgeEntity,
-                        m_Flags    = CreationFlags.Recreate | CreationFlags.Parent
-                    };
-
-                    if (PrefabRefLookup.TryGetComponent(state.EdgeEntity, out var prefabRef)) {
-                        creationDefinition.m_Prefab = prefabRef;
-                    }
-
-                    if (PseudoRandomSeedLookup.TryGetComponent(state.EdgeEntity, out var seed)) {
-                        creationDefinition.m_RandomSeed = seed.m_Seed;
-                    }
-
-                    ECB.AddComponent(definitionEntity, creationDefinition);
-                    ECB.AddComponent<Updated>(definitionEntity);
-
-                    var elevation = float2.zero;
-
-                    elevation = state.NetworkComposition switch {
-                        NetworkComposition.Elevated => ElevatedThreshold,
-                        NetworkComposition.Tunnel => TunnelThreshold,
-                        NetworkComposition.Ground => ForceGroundElevation,
-                        _ => elevation
-                    };
-
-                    var netCourse = new NetCourse {
-                        m_Curve      = state.Bezier,
-                        m_Length     = MathUtils.Length(state.Bezier),
-                        m_FixedIndex = -1,
-                        m_Elevation  = elevation,
-                        m_StartPosition = new CoursePos {
-                            m_Entity        = Entity.Null,
-                            m_Position      = state.Bezier.a,
-                            m_Rotation      = NetUtils.GetNodeRotation(MathUtils.StartTangent(state.Bezier)),
-                            m_CourseDelta   = 0,
-                            m_Elevation     = elevation,
-                            m_Flags         = 0,
-                            m_ParentMesh    = -1,
-                            m_SplitPosition = 0
-                        },
-                        m_EndPosition = new CoursePos {
-                            m_Entity        = Entity.Null,
-                            m_Position      = state.Bezier.d,
-                            m_Rotation      = NetUtils.GetNodeRotation(MathUtils.EndTangent(state.Bezier)),
-                            m_CourseDelta   = 1,
-                            m_Elevation     = elevation,
-                            m_Flags         = 0,
-                            m_ParentMesh    = -1,
-                            m_SplitPosition = 0
-                        }
-                    };
-
-                    ECB.AddComponent(definitionEntity, netCourse);
+                // Output intersection edge adjustments (far node fixed, path node free)
+                for (var i = 0; i < intersectionAdjustments.Length; i++) {
+                    var adj = intersectionAdjustments[i];
+                    OutputPreviewEdge(
+                        adj.EdgeEntity,
+                        adj.Bezier,
+                        adj.Length,
+                        adj.NetworkComposition,
+                        adj.PathNodeIsStart ? Entity.Null : adj.FarNode,
+                        adj.PathNodeIsStart ? adj.FarNode : Entity.Null);
                 }
             }
 
             /// <summary>
-            ///     Applies transformation changes to existing Curve components and handles intersection adjustments.
+            ///     Creates a preview entity for an edge with configurable node references.
             /// </summary>
-            private void OutputApply(NativeArray<EdgeTransformState> edges, in TransformContext ctx) {
-                // Build path edge set for intersection filtering
-                var pathEdgeSet = new NativeHashSet<Entity>(edges.Length, Allocator.Temp);
+            private void OutputPreviewEdge(
+                Entity edgeEntity,
+                Bezier4x3 bezier,
+                float length,
+                NetworkComposition composition,
+                Entity startNodeEntity,
+                Entity endNodeEntity) {
+                var definitionEntity = ECB.CreateEntity();
 
+                var creationDefinition = new CreationDefinition {
+                    m_Original = edgeEntity,
+                    m_Flags    = CreationFlags.Recreate | CreationFlags.Parent
+                };
+
+                if (PrefabRefLookup.TryGetComponent(edgeEntity, out var prefabRef)) {
+                    creationDefinition.m_Prefab = prefabRef;
+                }
+
+                if (PseudoRandomSeedLookup.TryGetComponent(edgeEntity, out var seed)) {
+                    creationDefinition.m_RandomSeed = seed.m_Seed;
+                }
+
+                ECB.AddComponent(definitionEntity, creationDefinition);
+                ECB.AddComponent<Updated>(definitionEntity);
+
+                var elevation = GetElevationFromComposition(composition);
+
+                var netCourse = new NetCourse {
+                    m_Curve      = bezier,
+                    m_Length     = length,
+                    m_FixedIndex = -1,
+                    m_Elevation  = elevation,
+                    m_StartPosition = new CoursePos {
+                        m_Entity        = startNodeEntity,
+                        m_Position      = bezier.a,
+                        m_Rotation      = NetUtils.GetNodeRotation(MathUtils.StartTangent(bezier)),
+                        m_CourseDelta   = 0,
+                        m_Elevation     = elevation,
+                        m_Flags         = 0,
+                        m_ParentMesh    = -1,
+                        m_SplitPosition = 0
+                    },
+                    m_EndPosition = new CoursePos {
+                        m_Entity        = endNodeEntity,
+                        m_Position      = bezier.d,
+                        m_Rotation      = NetUtils.GetNodeRotation(MathUtils.EndTangent(bezier)),
+                        m_CourseDelta   = 1,
+                        m_Elevation     = elevation,
+                        m_Flags         = 0,
+                        m_ParentMesh    = -1,
+                        m_SplitPosition = 0
+                    }
+                };
+
+                ECB.AddComponent(definitionEntity, netCourse);
+            }
+
+            /// <summary>
+            ///     Gets the elevation value for a network composition.
+            /// </summary>
+            private static float2 GetElevationFromComposition(NetworkComposition composition) {
+                return composition switch {
+                    NetworkComposition.Elevated => ElevatedThreshold,
+                    NetworkComposition.Tunnel => TunnelThreshold,
+                    NetworkComposition.Ground => ForceGroundElevation,
+                    _ => float2.zero
+                };
+            }
+
+            /// <summary>
+            ///     Gets the network composition from an entity's Upgraded component.
+            /// </summary>
+            private NetworkComposition GetNetworkComposition(Entity entity) {
+                if (!UpgradedLookup.TryGetComponent(entity, out var upgraded)) {
+                    return NetworkComposition.None;
+                }
+
+                if ((upgraded.m_Flags.m_General & CompositionFlags.General.Elevated) != 0) {
+                    return NetworkComposition.Elevated;
+                }
+
+                if ((upgraded.m_Flags.m_General & CompositionFlags.General.Tunnel) != 0) {
+                    return NetworkComposition.Tunnel;
+                }
+
+                return NetworkComposition.Ground;
+            }
+
+            /// <summary>
+            ///     Applies transformation changes to existing Curve components and intersection adjustments.
+            /// </summary>
+            private void OutputApply(
+                NativeArray<EdgeTransformState> edges,
+                NativeList<IntersectionEdgeAdjustment> intersectionAdjustments) {
                 // Apply curve changes to path edges
                 for (var i = 0; i < edges.Length; i++) {
                     var state = edges[i];
-                    pathEdgeSet.Add(state.EdgeEntity);
 
                     var curve = new Curve {
                         m_Bezier = state.Bezier,
@@ -264,19 +317,36 @@ namespace NetworkTools.Systems.Tools {
                     MarkNodeUpdated(state.EndNode);
                 }
 
-                // Handle intersection adjustments
-                HandleIntersections(edges, pathEdgeSet, ctx);
+                // Apply intersection adjustments
+                for (var i = 0; i < intersectionAdjustments.Length; i++) {
+                    var adjustment = intersectionAdjustments[i];
 
-                pathEdgeSet.Dispose();
+                    var curve = new Curve {
+                        m_Bezier = adjustment.Bezier,
+                        m_Length = adjustment.Length
+                    };
+                    ECB.SetComponent(adjustment.EdgeEntity, curve);
+
+                    MarkUpdated(adjustment.EdgeEntity);
+                    MarkUpdated(adjustment.PathNode);
+                    MarkUpdated(adjustment.FarNode);
+                }
             }
 
             /// <summary>
-            ///     Adjusts non-path edges connected to intersection nodes to preserve their original slopes and positions.
+            ///     Gathers all intersection edge adjustments for non-path edges connected to intersection nodes.
             /// </summary>
-            private void HandleIntersections(
+            private NativeList<IntersectionEdgeAdjustment> GatherIntersectionAdjustments(
                 NativeArray<EdgeTransformState> edges,
-                NativeHashSet<Entity> pathEdgeSet,
                 in TransformContext ctx) {
+                var adjustments = new NativeList<IntersectionEdgeAdjustment>(Allocator.Temp);
+
+                // Build path edge set for filtering
+                var pathEdgeSet = new NativeHashSet<Entity>(edges.Length, Allocator.Temp);
+                for (var i = 0; i < edges.Length; i++) {
+                    pathEdgeSet.Add(edges[i].EdgeEntity);
+                }
+
                 var firstNodePos = NodeLookup[CurrentPathNodes[0]].m_Position;
                 var firstNodeOldHeight = firstNodePos.y;
                 var firstNodeOldXZ = new float2(firstNodePos.x, firstNodePos.z);
@@ -326,28 +396,30 @@ namespace NetworkTools.Systems.Tools {
                         continue;
                     }
 
-                    // Adjust connected edges that are not part of the path
-                    AdjustConnectedEdges(nodeEntity,
+                    // Gather adjustments for connected edges that are not part of the path
+                    GatherConnectedEdgeAdjustments(
+                        nodeEntity,
                         connectedEdges,
                         pathEdgeSet,
                         heightDelta,
                         xzDelta,
-                        hasHeightDelta,
-                        hasXZDelta);
+                        adjustments);
                 }
+
+                pathEdgeSet.Dispose();
+                return adjustments;
             }
 
             /// <summary>
-            ///     Adjusts edges connected to an intersection node that are not part of the path.
+            ///     Gathers adjustments for edges connected to an intersection node that are not part of the path.
             /// </summary>
-            private void AdjustConnectedEdges(
+            private void GatherConnectedEdgeAdjustments(
                 Entity nodeEntity,
                 DynamicBuffer<ConnectedEdge> connectedEdges,
                 NativeHashSet<Entity> pathEdgeSet,
                 float heightDelta,
                 float2 xzDelta,
-                bool hasHeightDelta,
-                bool hasXZDelta) {
+                NativeList<IntersectionEdgeAdjustment> adjustments) {
                 for (var j = 0; j < connectedEdges.Length; j++) {
                     var connectedEdgeEntity = connectedEdges[j].m_Edge;
 
@@ -364,41 +436,35 @@ namespace NetworkTools.Systems.Tools {
                     }
 
                     var bezier = curve.m_Bezier;
+                    var pathNodeIsStart = connectedEdge.m_Start == nodeEntity;
 
-                    // Adjust endpoint and adjacent control point
-                    if (connectedEdge.m_Start == nodeEntity) {
-                        if (hasHeightDelta) {
-                            bezier.a.y += heightDelta;
-                            bezier.b.y += heightDelta;
-                        }
-
-                        if (hasXZDelta) {
-                            bezier.a.x += xzDelta.x;
-                            bezier.a.z += xzDelta.y;
-                            bezier.b.x += xzDelta.x;
-                            bezier.b.z += xzDelta.y;
-                        }
+                    // Apply delta to endpoint and adjacent control point
+                    if (pathNodeIsStart) {
+                        bezier.a.y += heightDelta;
+                        bezier.b.y += heightDelta;
+                        bezier.a.x += xzDelta.x;
+                        bezier.a.z += xzDelta.y;
+                        bezier.b.x += xzDelta.x;
+                        bezier.b.z += xzDelta.y;
                     }
-                    else if (connectedEdge.m_End == nodeEntity) {
-                        if (hasHeightDelta) {
-                            bezier.d.y += heightDelta;
-                            bezier.c.y += heightDelta;
-                        }
-
-                        if (hasXZDelta) {
-                            bezier.d.x += xzDelta.x;
-                            bezier.d.z += xzDelta.y;
-                            bezier.c.x += xzDelta.x;
-                            bezier.c.z += xzDelta.y;
-                        }
+                    else {
+                        bezier.d.y += heightDelta;
+                        bezier.c.y += heightDelta;
+                        bezier.d.x += xzDelta.x;
+                        bezier.d.z += xzDelta.y;
+                        bezier.c.x += xzDelta.x;
+                        bezier.c.z += xzDelta.y;
                     }
 
-                    var updatedCurve = new Curve { m_Bezier = bezier, m_Length = curve.m_Length };
-                    ECB.SetComponent(connectedEdgeEntity, updatedCurve);
-
-                    MarkUpdated(connectedEdgeEntity);
-                    MarkUpdated(connectedEdge.m_Start);
-                    MarkUpdated(connectedEdge.m_End);
+                    adjustments.Add(new IntersectionEdgeAdjustment {
+                        EdgeEntity         = connectedEdgeEntity,
+                        Bezier             = bezier,
+                        Length             = curve.m_Length,
+                        PathNode           = nodeEntity,
+                        FarNode            = pathNodeIsStart ? connectedEdge.m_End : connectedEdge.m_Start,
+                        PathNodeIsStart    = pathNodeIsStart,
+                        NetworkComposition = GetNetworkComposition(connectedEdgeEntity)
+                    });
                 }
             }
 
