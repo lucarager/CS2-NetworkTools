@@ -27,53 +27,53 @@ namespace NetworkTools.Settings {
         private const string CreditStr               = "Made with <3 by Luca.";
         public const  string KeybindingsGroupStr     = "KeybindingsGroupStr";
         public const  string AboutGroupStr           = "AboutGroupStr";
-        public const  string ApplyActionStr          = nameof(ApplyMimic);
-        public const  string SecondaryApplyActionStr = nameof(SecondaryApplyMimic);
+        //public const  string ApplyActionStr          = nameof(ApplyMimic);
+        //public const  string SecondaryApplyActionStr = nameof(SecondaryApplyMimic);
         //public const  string ToggleToolPanelStr      = nameof(ToggleToolPanel);
 
-        [SettingsUIMouseBinding(ApplyActionStr)]
-        [SettingsUIBindingMimic(InputManager.kToolMap, "Apply")]
-        [SettingsUIHidden]
-        public ProxyBinding ApplyMimic { get; set; }
+        //[SettingsUIMouseBinding(ApplyActionStr)]
+        //[SettingsUIBindingMimic(InputManager.kToolMap, "Apply")]
+        //[SettingsUIHidden]
+        //public ProxyBinding ApplyMimic { get; set; }
 
-        [SettingsUIMouseBinding(SecondaryApplyActionStr)]
-        [SettingsUIBindingMimic(InputManager.kToolMap, "Secondary Apply")]
-        [SettingsUIHidden]
-        public ProxyBinding SecondaryApplyMimic { get; set; }
+        //[SettingsUIMouseBinding(SecondaryApplyActionStr)]
+        //[SettingsUIBindingMimic(InputManager.kToolMap, "Secondary Apply")]
+        //[SettingsUIHidden]
+        //public ProxyBinding SecondaryApplyMimic { get; set; }
 
         //[SettingsUIKeyboardBinding(BindingKeyboard.T, ToggleToolPanelStr, ctrl: true)]
         //public ProxyBinding ToggleToolPanel { get; set; }
 
-        //[SettingsUISection(AboutGroupStr)]
-        //public bool Discord {
-        //    set {
-        //        try {
-        //            Application.OpenURL("https://discord.gg/QFxmPa2wCa");
-        //        } catch (Exception e) {
-        //            Debug.LogException(e);
-        //        }
-        //    }
-        //}
+        [SettingsUISection(AboutGroupStr)]
+        public bool Discord {
+            set {
+                try {
+                    Application.OpenURL("https://discord.gg/QFxmPa2wCa");
+                } catch (Exception e) {
+                    Debug.LogException(e);
+                }
+            }
+        }
 
-        //[SettingsUISection(AboutGroupStr)]
-        //public bool Github {
-        //    set {
-        //        try {
-        //            Application.OpenURL("https://github.com/lucarager/CS2-NetworkTools");
-        //        } catch (Exception e) {
-        //            Debug.LogException(e);
-        //        }
-        //    }
-        //}
+        [SettingsUISection(AboutGroupStr)]
+        public bool Github {
+            set {
+                try {
+                    Application.OpenURL("https://github.com/lucarager/CS2-NetworkTools");
+                } catch (Exception e) {
+                    Debug.LogException(e);
+                }
+            }
+        }
 
-        //[SettingsUISection(AboutGroupStr)]
-        //public string Credits => CreditStr;
+        [SettingsUISection(AboutGroupStr)]
+        public string Credits => CreditStr;
 
-        //[SettingsUISection(AboutGroupStr)]
-        //public string InformationalVersion => NetworkToolsMod.InformationalVersion;
+        [SettingsUISection(AboutGroupStr)]
+        public string InformationalVersion => NetworkToolsMod.InformationalVersion;
 
-        //[SettingsUISection(AboutGroupStr)]
-        //public string Version => NetworkToolsMod.Version;
+        [SettingsUISection(AboutGroupStr)]
+        public string Version => NetworkToolsMod.Version;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NT_Settings"/> class.

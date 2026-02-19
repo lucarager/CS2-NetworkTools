@@ -235,6 +235,16 @@ namespace NetworkTools.Systems.Tools {
                 ECB.AddComponent<Updated>(definitionEntity);
 
                 var elevation = GetElevationFromComposition(composition);
+                var compositionFlags = GetFlagsFromComposition(composition);
+
+                var startNodeFlags = compositionFlags;
+                var endNodeFlags = compositionFlags;
+
+                if (startNodeEntity != Entity.Null && endNodeEntity == Entity.Null) {
+                    startNodeFlags |= CoursePosFlags.IsFirst;
+                } else if (endNodeEntity != Entity.Null && startNodeEntity == Entity.Null) {
+                    endNodeFlags |= CoursePosFlags.IsFirst;
+                }
 
                 var netCourse = new NetCourse {
                     m_Curve      = bezier,
@@ -247,7 +257,7 @@ namespace NetworkTools.Systems.Tools {
                         m_Rotation      = NetUtils.GetNodeRotation(MathUtils.StartTangent(bezier)),
                         m_CourseDelta   = 0,
                         m_Elevation     = elevation,
-                        m_Flags         = 0,
+                        m_Flags         = startNodeFlags,
                         m_ParentMesh    = -1,
                         m_SplitPosition = 0
                     },
@@ -257,7 +267,7 @@ namespace NetworkTools.Systems.Tools {
                         m_Rotation      = NetUtils.GetNodeRotation(MathUtils.EndTangent(bezier)),
                         m_CourseDelta   = 1,
                         m_Elevation     = elevation,
-                        m_Flags         = 0,
+                        m_Flags         = endNodeFlags,
                         m_ParentMesh    = -1,
                         m_SplitPosition = 0
                     }
@@ -278,6 +288,17 @@ namespace NetworkTools.Systems.Tools {
                 };
             }
 
+            /// <summary>
+            ///     Gets the flags for a network composition.
+            /// </summary>
+            private static CoursePosFlags GetFlagsFromComposition(NetworkComposition composition) {
+                return composition switch {
+                    NetworkComposition.Elevated => CoursePosFlags.ForceElevatedEdge | CoursePosFlags.ForceElevatedNode,
+                    NetworkComposition.Tunnel => 0,
+                    NetworkComposition.Ground => 0,
+                    _ => 0
+                };
+            }
             /// <summary>
             ///     Gets the network composition from an entity's Upgraded component.
             /// </summary>

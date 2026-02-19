@@ -132,8 +132,8 @@ namespace NetworkTools.Systems.Tools {
             m_OverlayRenderSystem = World.GetOrCreateSystemManaged<OverlayRenderSystem>();
 
             // Actions
-            m_ApplyAction = NetworkToolsMod.Instance.Settings.GetAction(Settings.NT_Settings.ApplyActionStr);
-            m_SecondaryApplyAction = NetworkToolsMod.Instance.Settings.GetAction(Settings.NT_Settings.SecondaryApplyActionStr);
+            m_ApplyAction          = base.applyAction;
+            m_SecondaryApplyAction = base.secondaryApplyAction;
 
             // Native Collections 
             m_LastHoveredEntity = new NativeReference<Entity>(Allocator.Persistent);

@@ -37,8 +37,6 @@ namespace NetworkTools.Systems {
         private EntityQuery m_ParcelQuery;
         protected PrefabSystem m_PrefabSystem;
         private ToolSystem m_ToolSystem;
-        private InputHintTooltip m_Tooltip_Apply;
-        private InputHintTooltip m_Tooltip_SecondaryApply;
 
 
         /// <inheritdoc />
@@ -51,13 +49,6 @@ namespace NetworkTools.Systems {
             m_NtRemoveNodeToolSystem    = World.GetOrCreateSystemManaged<NT_RemoveNodeToolSystem>();
             m_NtPathTransformToolSystem = World.GetOrCreateSystemManaged<NT_PathTransformToolSystem>();
             m_NtNodeControlToolSystem   = World.GetOrCreateSystemManaged<NT_NodeControlToolSystem>();
-
-            m_Tooltip_Apply =
-                new InputHintTooltip(InputManager.instance.FindAction("NetworkTools.NetworkTools.NetworkToolsMod",
-                    NT_Settings.ApplyActionStr));
-            m_Tooltip_SecondaryApply =
-                new InputHintTooltip(InputManager.instance.FindAction("NetworkTools.NetworkTools.NetworkToolsMod",
-                    NT_Settings.SecondaryApplyActionStr));
         }
 
         /// <inheritdoc />
