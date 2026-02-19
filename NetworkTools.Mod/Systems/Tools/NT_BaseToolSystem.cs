@@ -4,7 +4,6 @@
 // </copyright>
 
 namespace NetworkTools.Systems.Tools {
-    using Game.Input;
     #region Using Statements
 
     using Game.Net;
@@ -12,6 +11,7 @@ namespace NetworkTools.Systems.Tools {
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+    using Game.Input;
     using NetworkTools.Settings;
     using NetworkTools.Utils;
     using Unity.Collections;
@@ -139,6 +139,9 @@ namespace NetworkTools.Systems.Tools {
             m_LastHoveredEntity = new NativeReference<Entity>(Allocator.Persistent);
             m_LastRaycastEntity = new NativeReference<Entity>(Allocator.Persistent);
 
+            // Initialize handle management
+            InitializeHandles();
+
             base.OnCreate();
 
             // Queries
@@ -159,6 +162,9 @@ namespace NetworkTools.Systems.Tools {
         }
 
         protected override void OnDestroy() {
+            // Dispose handle management
+            DisposeHandles();
+
             // Dispose native collections
             if (m_LastHoveredEntity.IsCreated) m_LastHoveredEntity.Dispose();
             if (m_LastRaycastEntity.IsCreated) m_LastRaycastEntity.Dispose();
@@ -203,6 +209,9 @@ namespace NetworkTools.Systems.Tools {
             if (DisableVanillaValidation) {
                 m_ValidationSystem.Enabled = true;
             }
+
+            // Cleanup handles
+            CleanupHandles();
 
             // Common cleanup
             PerformCommonCleanup();

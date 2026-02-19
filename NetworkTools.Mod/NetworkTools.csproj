@@ -1,18 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<Configurations>Debug;Release;Test</Configurations>
+		<OutputType>Library</OutputType>
 		<TargetFramework>net48</TargetFramework>
-		<!--The file where mod information which is required for publishing mod on PDX mods are stored-->
+		<Configurations>Debug;Release;I18N</Configurations>
+		<Title>NetworkTools</Title>
+		<AssemblyTitle>$(Title)</AssemblyTitle>
+		<Description>A Cities: Skylines 2 mod.</Description>
+		<Authors>Luca Rager</Authors>
+		<Product>$(Title)</Product>
+		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 		<PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<DebugType>portable</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<Version>1.0.0</Version>
+		<AssemblyVersion>$(Version).0</AssemblyVersion>
+		<FileVersion>$(Version).0</FileVersion>
 	</PropertyGroup>
 
-	<!--Imports must be after PropertyGroup block-->
-	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
-	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
-
 	<PropertyGroup>
-		<LangVersion>11.0</LangVersion>
+		<DefaultItemExcludes>obj\**;bin\**;node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants>$(DefineConstants);USE_BURST</DefineConstants>
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>$(DefineConstants);ENABLE_PROFILER;IS_DEBUG;</DefineConstants>
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='I18N|AnyCPU'">
+		<DefineConstants>$(DefineConstants);ENABLE_PROFILER;IS_DEBUG;EXPORT_EN_US;</DefineConstants>
+		<WarningLevel>4</WarningLevel>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -110,21 +134,35 @@
 		</PackageReference>
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="UI\src\mods\" />
-	</ItemGroup>
-
-	<Target Name="BuildUI" AfterTargets="AfterBuild">
+	<!--Build UI-->
+	<Target Name="BuildUI" AfterTargets="DeployWIP">
 		<Message Text="[BuildUI]" Importance="high" />
 		<Exec Command="npm run build" WorkingDirectory="$(ProjectDir)/UI" />
 	</Target>
 
-	<Target Name="CopyAssets" AfterTargets="AfterBuild">
-		<Message Text="[CopyAssets]" Importance="high" />
+	<!--Copy Assets-->
+	<Target Name="CopyIcons" AfterTargets="DeployWIP">
+		<Message Text="[CopyIcons]" Importance="high" />
 		<ItemGroup>
 			<_AssetsDir Include="$(ProjectDir)/Assets/**/*.*" />
 		</ItemGroup>
-		<Copy SourceFiles="@(_AssetsDir)" DestinationFolder="$(DeployDir)\Assets\%(RecursiveDir)" />
-</Target>
+		<Copy SourceFiles="@(_AssetsDir)" DestinationFolder="$(DeployDir)/Assets/%(RecursiveDir)" />
+	</Target>
+
+	<!--Imports must be after PropertyGroup block-->
+	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
+	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
+
+	<!--Override langVersion-->
+	<PropertyGroup>
+		<LangVersion>11.0</LangVersion>
+	</PropertyGroup>
+
+	<!--Override ModPostProcessorArgs to disable Mac/Linux for speed-->
+	<Target Name="CustomModPostProcessorConfig" AfterTargets="ModPostProcessorConfig">
+		<PropertyGroup>
+			<ModPostProcessorArgs>"$(ModPostProcessorFullPath)" PostProcess "$(TargetPath)" -u "$(UnityModProjectFullPath)" @(ReferencePath->'-r "%(Identity)"', ' ') -p Windows -d -v</ModPostProcessorArgs>
+		</PropertyGroup>
+	</Target>
 
 </Project>

@@ -125,6 +125,8 @@ namespace NetworkTools.Systems {
                     m_SelectedComponentTypeHandle         = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
                     m_NTHandleComponentTypeHandle         = SystemAPI.GetComponentTypeHandle<NT_Handle>(),
                     m_NTHandleLinkComponentTypeHandle     = SystemAPI.GetComponentTypeHandle<NT_HandleLink>(),
+                    m_HandleLineComponentTypeHandle       = SystemAPI.GetComponentTypeHandle<NT_HandleLine>(),
+                    m_HandleCircleComponentTypeHandle     = SystemAPI.GetComponentTypeHandle<NT_HandleCircle>(),
                     m_NodeLookup                          = SystemAPI.GetComponentLookup<Node>(true),
                     m_CurveLookup                         = SystemAPI.GetComponentLookup<Curve>(true),
                 };

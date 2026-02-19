@@ -43,7 +43,6 @@ namespace NetworkTools.Systems.Tools {
 
             // Data Structures
             m_SelectedNode = new NativeReference<Entity>(Allocator.Persistent);
-            m_Handles      = new NativeList<Entity>(16, Allocator.Persistent);
 
             // Queries
             m_NodesWithSelectedQuery = SystemAPI.QueryBuilder()
@@ -52,10 +51,8 @@ namespace NetworkTools.Systems.Tools {
         }
 
         protected override void OnDestroy() {
-            DestroyHandles();
-
+            // Base class handles handle cleanup via DisposeHandles()
             m_SelectedNode.Dispose();
-            m_Handles.Dispose();
 
             base.OnDestroy();
         }
@@ -65,23 +62,19 @@ namespace NetworkTools.Systems.Tools {
 
             // Reset internal state
             m_SelectedNode.Value = Entity.Null;
-            m_InputState = InputInteractionState.Idle;
-            m_MouseDownEntity = Entity.Null;
 
             // Transition to NoSelection state - all nodes become eligible
             StateTransitionNoSelection();
         }
+
         protected override void OnStopRunning() {
             base.OnStopRunning();
 
             // Tool-specific cleanup
             EntityManager.RemoveComponent<NT_Selected>(m_NodesWithSelectedQuery);
-            DestroyHandles();
 
             // Clear internal state
             m_SelectedNode.Value = Entity.Null;
-            m_InputState = InputInteractionState.Idle;
-            m_MouseDownEntity = Entity.Null;
         }
     }
 }
