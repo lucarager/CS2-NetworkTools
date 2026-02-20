@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>Library</OutputType>
 		<TargetFramework>net48</TargetFramework>
 		<Configurations>Debug;Release;I18N</Configurations>
 		<Title>NetworkTools</Title>
@@ -11,7 +10,6 @@
 		<Product>$(Title)</Product>
 		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 		<PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<DebugType>portable</DebugType>
 		<DebugSymbols>true</DebugSymbols>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
@@ -20,9 +18,23 @@
 		<FileVersion>$(Version).0</FileVersion>
 	</PropertyGroup>
 
+	<!--Imports must be after PropertyGroup block-->
+	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
+	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
+
 	<PropertyGroup>
-		<DefaultItemExcludes>obj\**;bin\**;node_modules\**;$(DefaultItemExcludes)</DefaultItemExcludes>
+		<Configurations>Debug;Release;I18N</Configurations>
+		<LangVersion>11.0</LangVersion>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CS2-ModdingTools" Version="1.0.5" />
+		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
+		<PackageReference Include="PolySharp" Version="1.15.0">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DefineConstants>$(DefineConstants);USE_BURST</DefineConstants>
@@ -40,50 +52,40 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="UI\node_modules\**" />
-	  <EmbeddedResource Remove="UI\node_modules\**" />
-	  <None Remove="UI\node_modules\**" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<InternalsVisibleTo Include="NetworkTools.Tests" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Reference Include="Colossal.TestFramework">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="cohtml.Net.dll">
-			<Private>false</Private>
-		</Reference>
 		<Reference Include="Game">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.AssetPipeline">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.Collections">
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Colossal.Core">
 			<Private>false</Private>
 		</Reference>
-		<Reference Include="Colossal.IO.AssetDatabase">
+		<Reference Include="Colossal.TestFramework">
 			<Private>false</Private>
 		</Reference>
-		<Reference Include="Colossal.Localization">
+		<Reference Include="Colossal.Collections">
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Colossal.Logging">
 			<Private>false</Private>
 		</Reference>
-		<Reference Include="Colossal.Mathematics">
+		<Reference Include="Colossal.IO.AssetDatabase">
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Colossal.UI">
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Colossal.UI.Binding">
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Colossal.Localization">
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Colossal.Mathematics">
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Unity.InputSystem">
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="UnityEngine.CoreModule">
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Unity.Burst">
@@ -96,12 +98,6 @@
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Unity.Mathematics">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Unity.InputSystem">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="UnityEngine.CoreModule">
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Newtonsoft.Json">
@@ -122,16 +118,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include=".github\copilot-instructions.md" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="CS2-ModdingTools" Version="1.0.5" />
-		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
-		<PackageReference Include="PolySharp" Version="1.15.0">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
+		<None Include="$(ModPropsFile)" Link="Properties\Mod.props" />
+		<None Include="$(ModTargetsFile)" Link="Properties\Mod.targets" />
 	</ItemGroup>
 
 	<!--Build UI-->
@@ -148,15 +136,6 @@
 		</ItemGroup>
 		<Copy SourceFiles="@(_AssetsDir)" DestinationFolder="$(DeployDir)/Assets/%(RecursiveDir)" />
 	</Target>
-
-	<!--Imports must be after PropertyGroup block-->
-	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
-	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
-
-	<!--Override langVersion-->
-	<PropertyGroup>
-		<LangVersion>11.0</LangVersion>
-	</PropertyGroup>
 
 	<!--Override ModPostProcessorArgs to disable Mac/Linux for speed-->
 	<Target Name="CustomModPostProcessorConfig" AfterTargets="ModPostProcessorConfig">

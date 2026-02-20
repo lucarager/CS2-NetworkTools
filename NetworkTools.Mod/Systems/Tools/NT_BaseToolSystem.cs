@@ -17,6 +17,12 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
+    using NetworkTools.Components;
+    using Unity.Collections;
+    using Unity.Entities;
+    using Unity.Mathematics;
+    using UnityEngine;
+    using UnityEngine.InputSystem;
 
     #endregion
 
@@ -119,6 +125,9 @@ namespace NetworkTools.Systems.Tools {
         public override string toolID => "NT_BaseToolSystem";
 
         protected override void OnCreate() {
+            base.OnCreate();
+
+            // Start disabled - tools must be explicitly enabled
             Enabled = false;
 
             // Logging
@@ -141,8 +150,6 @@ namespace NetworkTools.Systems.Tools {
 
             // Initialize handle management
             InitializeHandles();
-
-            base.OnCreate();
 
             // Queries
             m_DefinitionQuery = GetDefinitionQuery();
