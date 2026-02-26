@@ -59,7 +59,6 @@ namespace NetworkTools.Systems {
                 .WithNone<Deleted, Hidden>()
                 .Build();
 
-
             m_TempEdgeQuery = SystemAPI.QueryBuilder()
                 .WithAll<Edge, Temp>()
                 .WithNone<Deleted, Hidden>()

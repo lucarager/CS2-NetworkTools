@@ -58,12 +58,12 @@ namespace NetworkTools.Settings {
 
                 // Tool Tooltips - AddNode
                 { "Common.ACTION[NetworkTools.AddNode.Hover]", "Hover over a network segment" },
-                { "Common.ACTION[NetworkTools.AddNode.Apply]", "Click to add node" },
+                { "Common.ACTION[NetworkTools.AddNode.Apply]", "Add node" },
                 { "Common.ACTION[NetworkTools.AddNode.Cancel]", "Cancel" },
 
                 // Tool Tooltips - RemoveNode
                 { "Common.ACTION[NetworkTools.RemoveNode.Select]", "Select a node to remove" },
-                { "Common.ACTION[NetworkTools.RemoveNode.Apply]", "Click to remove node" },
+                { "Common.ACTION[NetworkTools.RemoveNode.Apply]", "Remove node" },
                 { "Common.ACTION[NetworkTools.RemoveNode.Cancel]", "Cancel" },
 
                 // Tool Tooltips - PathTransform

@@ -78,9 +78,10 @@ namespace NetworkTools.Systems {
             m_TooltipConfig = new Dictionary<(NT_ToolType, OperationPhase), List<TooltipEntry>> {
                 // AddNode Tool
                 [(NT_ToolType.AddNode, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("NetworkTools.AddNode.Hover", m_ApplyAction)
+                    new("NetworkTools.AddNode.Hover"),
+                    new("NetworkTools.AddNode.Cancel", m_SecondaryApplyAction)
                 },
-                [(NT_ToolType.AddNode, OperationPhase.Ready)] = new List<TooltipEntry> {
+                [(NT_ToolType.AddNode, OperationPhase.Configuring)] = new List<TooltipEntry> {
                     new("NetworkTools.AddNode.Apply", m_ApplyAction),
                     new("NetworkTools.AddNode.Cancel", m_SecondaryApplyAction)
                 },
@@ -89,7 +90,8 @@ namespace NetworkTools.Systems {
 
                 // RemoveNode Tool
                 [(NT_ToolType.RemoveNode, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("NetworkTools.RemoveNode.Select", m_ApplyAction)
+                    new("NetworkTools.RemoveNode.Select"),
+                    new("NetworkTools.RemoveNode.Cancel", m_SecondaryApplyAction)
                 },
                 [(NT_ToolType.RemoveNode, OperationPhase.Ready)] = new List<TooltipEntry> {
                     new("NetworkTools.RemoveNode.Apply", m_ApplyAction),
