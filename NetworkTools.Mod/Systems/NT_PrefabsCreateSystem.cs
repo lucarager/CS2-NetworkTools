@@ -10,43 +10,44 @@ namespace NetworkTools.Systems {
     using Colossal.Serialization.Entities;
     using Game;
     using Game.Prefabs;
+    using NetworkTools.Components;
+    using NetworkTools.Utils;
     using Unity.Entities;
     using UnityEngine;
-    using Utils;
 
     #endregion
 
     public partial class NT_PrefabsCreateSystem : GameSystemBase {
         /// <summary>
-        /// Stateful value to only run installation once.
+        ///     Stateful value to only run installation once.
         /// </summary>
         private static bool m_PrefabsAreInstalled;
 
         // Systems & References
         private static PrefabSystem m_PrefabSystem;
 
-        private int m_InstalledTools = 0;
-
         /// <summary>
-        /// Configuration for vanilla prefabas to load for further processing.
+        ///     Configuration for vanilla prefabas to load for further processing.
         /// </summary>
         private readonly Dictionary<string, PrefabID> m_SourcePrefabsDict = new() {
-            { "marker", new PrefabID("MarkerObjectPrefab", "Pedestrian Access Location") },
+            { "marker", new PrefabID("MarkerObjectPrefab", "Pedestrian Access Location") }
         };
 
-        private Dictionary<PrefabBase, Entity> m_PrefabEntities;
-
-        /// <summary>
-        /// Cache for prefabs.
-        /// </summary>
-        private List<PrefabBase> m_PrefabBases;
-
         internal Entity m_HandlePrefabEntity;
+
+        private int m_InstalledTools;
 
         // Logger
         private PrefixedLogger m_Log;
 
-        /// <inheritdoc/>
+        /// <summary>
+        ///     Cache for prefabs.
+        /// </summary>
+        private List<PrefabBase> m_PrefabBases;
+
+        private Dictionary<PrefabBase, Entity> m_PrefabEntities;
+
+        /// <inheritdoc />
         protected override void OnCreate() {
             base.OnCreate();
             m_Log = new PrefixedLogger(nameof(NT_PrefabsCreateSystem));
@@ -56,11 +57,11 @@ namespace NetworkTools.Systems {
             m_PrefabSystem   = World.GetOrCreateSystemManaged<PrefabSystem>();
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void OnUpdate() {
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void OnGameLoadingComplete(Purpose purpose,
             GameMode mode) {
             base.OnGameLoadingComplete(purpose, mode);
@@ -71,7 +72,7 @@ namespace NetworkTools.Systems {
             }
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void OnGamePreload(Purpose purpose, GameMode mode) {
             base.OnGamePreload(purpose, mode);
             var logMethodPrefix = $"OnGamePreload(purpose {purpose}, mode {mode}) --";
@@ -99,13 +100,14 @@ namespace NetworkTools.Systems {
                 prefabBaseDict[key] = prefabBase;
             }
 
-            CreateToolPrefab("Add Node",         "add.svg",      "", new Components.NT_AddNode(),       true);
-            CreateToolPrefab("Remove Node",      "remove.svg",   "", new Components.NT_RemoveNode(),    true);
-            CreateToolPrefab("Create Supernode", "super.svg",    "", new Components.NT_Select(),        false);
-            CreateToolPrefab("Path Shape Tools", "slope.svg",    "", new Components.NT_PathTransform(), true);
-            CreateToolPrefab("Secret Tools",     "curve.svg",    "", new Components.NT_NodeControl(),   true);
-            CreateToolPrefab("Connect",          "connect.svg",  "", new Components.NT_Select(),        false);
-            CreateToolPrefab("Adv. Parallel",    "parallel.svg", "", new Components.NT_Select(),        false);
+            CreateToolPrefab("add_node",     "Add Node",               "add.svg", "", new NT_AddNode(), true);
+            CreateToolPrefab("remove_node",  "Remove Node",            "remove.svg", "", new NT_RemoveNode(), false);
+            CreateToolPrefab("supernode",    "Create Supernode",       "super.svg", "", new NT_Select(), false);
+            CreateToolPrefab("shape_slope",  "Shape & Slope Tools",    "slope.svg", "", new NT_PathTransform(), true);
+            CreateToolPrefab("node_control", "Secret Tool",            "curve.svg", "", new NT_NodeControl(), false);
+            CreateToolPrefab("connect",      "Connection Tools",       "connect.svg", "", new NT_Select(), false);
+            CreateToolPrefab("parallel",     "Advanced Parallel Tool", "parallel.svg", "", new NT_Select(), false);
+            CreateToolPrefab("grid",         "Advanced Grid Tool",     "grid.svg", "", new NT_Select(), false);
 
             CreateHandlePrefab((MarkerObjectPrefab)prefabBaseDict["marker"]);
 
@@ -116,7 +118,7 @@ namespace NetworkTools.Systems {
             var prefabBase = ScriptableObject.CreateInstance<MarkerObjectPrefab>();
             prefabBase.name       = "NT_HandleObjectPrefab";
             prefabBase.m_Circular = true;
-            prefabBase.m_Mesh = pedestrianPrefab.m_Mesh;
+            prefabBase.m_Mesh     = pedestrianPrefab.m_Mesh;
 
             var success = m_PrefabSystem.AddPrefab(prefabBase);
 
@@ -130,10 +132,12 @@ namespace NetworkTools.Systems {
             return success;
         }
 
-        private bool CreateToolPrefab<T>(string name, string icon, string description, T component, bool active)
+        private bool CreateToolPrefab<T>(string id, string name, string icon, string description, T component,
+            bool active)
             where T : unmanaged, IComponentData {
             var toolPrefabBase = ScriptableObject.CreateInstance<NT_ToolPrefab>();
             toolPrefabBase.name        = name;
+            toolPrefabBase.Id          = id;
             toolPrefabBase.DisplayName = name;
             toolPrefabBase.Description = description;
             toolPrefabBase.Icon        = icon;

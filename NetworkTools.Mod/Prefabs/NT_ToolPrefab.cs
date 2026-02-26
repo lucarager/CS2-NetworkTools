@@ -12,6 +12,7 @@ namespace Game.Prefabs {
     #endregion
 
     public class NT_ToolPrefab : PrefabBase {
+        public string Id;
         public string DisplayName;
         public string Description;
         public string Icon;

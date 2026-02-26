@@ -237,6 +237,9 @@ namespace NetworkTools.Systems {
             public void Write(IJsonWriter writer) {
                 writer.TypeBegin(GetType().FullName);
 
+                writer.PropertyName("Id");
+                writer.Write(m_Prefab.Id);
+
                 writer.PropertyName("DisplayName");
                 writer.Write(m_Prefab.DisplayName);
 
@@ -252,7 +255,7 @@ namespace NetworkTools.Systems {
                 writer.PropertyName("Index");
                 writer.Write(m_Prefab.Index);
 
-                writer.PropertyName("ID");
+                writer.PropertyName("PrefabId");
                 writer.Write(m_Prefab.GetPrefabID().GetName());
 
                 writer.TypeEnd();
