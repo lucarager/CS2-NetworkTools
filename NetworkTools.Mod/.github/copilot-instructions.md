@@ -6,7 +6,7 @@ The mod uses the CS2 modding SDK with Unity ECS (Entity Component System) archit
 
 ## Technology Stack
 - **Framework**: .NET Framework 4.8
-- **Language**: C# 11.0
+- **Language**: C# 9.0
 - **Game Engine**: Unity (via Cities: Skylines 2 SDK)
 - **Architecture**: Unity ECS (Entity Component System)
 - **Patching**: Harmony for runtime patching
