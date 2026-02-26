@@ -40,12 +40,11 @@ namespace NetworkTools.Systems.Tools {
             if (GetRaycastResult(out var controlPoint)) {
                 // We hit something
                 var newEntityWasHit = m_LastHoveredEntity.Value != controlPoint.m_OriginalEntity;
-                updateNeeded = newEntityWasHit;
+                var positionChanged = !controlPoint.m_Position.Equals(m_LastControlPoint.m_Position);
+                updateNeeded = newEntityWasHit || positionChanged;
 
+                // Handle hover
                 HandleHover(controlPoint);
-
-                // Snap
-                //SnapControlPoints(inputDeps);
 
                 // Handle clicking
                 if (m_ApplyAction.WasPressedThisFrame()) {
@@ -57,11 +56,11 @@ namespace NetworkTools.Systems.Tools {
             }
 
             // Debug
-            var buffer = m_OverlayRenderSystem.GetBuffer(out var deps);
-            inputDeps = JobHandle.CombineDependencies(inputDeps, deps);
-            if (controlPoint.m_OriginalEntity != Entity.Null) {
-                buffer.DrawCircle(UnityEngine.Color.white, controlPoint.m_Position, 3f);
-            }
+            //var buffer = m_OverlayRenderSystem.GetBuffer(out var deps);
+            //inputDeps = JobHandle.CombineDependencies(inputDeps, deps);
+            //if (controlPoint.m_OriginalEntity != Entity.Null) {
+            //    buffer.DrawCircle(UnityEngine.Color.white, controlPoint.m_Position, 3f);
+            //}
 
             // Handle temp entities
             return HandleTempEntities(inputDeps, updateNeeded);

@@ -50,12 +50,11 @@ namespace NetworkTools.Systems.Tools {
                 return inputDeps;
             }
 
-            var canReuse = !updateNeeded;
 
-            //if (canReuse) {
-            //    applyMode = ApplyMode.None;
-            //    return inputDeps;
-            //}
+            if (!updateNeeded) {
+                applyMode = ApplyMode.None;
+                return inputDeps;
+            }
 
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
