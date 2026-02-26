@@ -55,6 +55,27 @@ namespace NetworkTools.Settings {
                 //},
                 //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Discord)), "Discord" },
                 //{ m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Discord)), "Opens link to join the CS:2 Modding Discord" },
+
+                // Tool Tooltips - AddNode
+                { "Common.ACTION[NetworkTools.AddNode.Hover]", "Hover over a network segment" },
+                { "Common.ACTION[NetworkTools.AddNode.Apply]", "Click to add node" },
+                { "Common.ACTION[NetworkTools.AddNode.Cancel]", "Cancel" },
+
+                // Tool Tooltips - RemoveNode
+                { "Common.ACTION[NetworkTools.RemoveNode.Select]", "Select a node to remove" },
+                { "Common.ACTION[NetworkTools.RemoveNode.Apply]", "Click to remove node" },
+                { "Common.ACTION[NetworkTools.RemoveNode.Cancel]", "Cancel" },
+
+                // Tool Tooltips - PathTransform
+                { "Common.ACTION[NetworkTools.PathTransform.SelectStart]", "Select a starting node" },
+                { "Common.ACTION[NetworkTools.PathTransform.SelectSecond]", "Select a second node" },
+                { "Common.ACTION[NetworkTools.PathTransform.RemoveLast]", "Remove last node" },
+                { "Common.ACTION[NetworkTools.PathTransform.ExtendPath]", "Select a new end node to extend the path" },
+
+                // Tool Tooltips - NodeControl
+                { "Common.ACTION[NetworkTools.NodeControl.Select]", "Select a node to control" },
+                { "Common.ACTION[NetworkTools.NodeControl.Adjust]", "Adjust node" },
+                { "Common.ACTION[NetworkTools.NodeControl.Cancel]", "Cancel" },
             };
         }
 

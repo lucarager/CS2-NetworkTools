@@ -36,7 +36,7 @@ namespace NetworkTools.Systems {
     /// <summary>
     ///     Tooltip System.
     /// </summary>
-    public partial class NT_ToolTooltipSystem : TooltipSystemBase {
+    public partial class NT_HintTooltipSystem : TooltipSystemBase {
         private NT_AddNodeToolSystem m_NtAddNodeToolSystem;
         private NT_NodeControlToolSystem m_NtNodeControlToolSystem;
         private NT_PathTransformToolSystem m_NtPathTransformToolSystem;
@@ -73,49 +73,49 @@ namespace NetworkTools.Systems {
             }
 
             m_ApplyAction = inputManager.FindAction(InputManager.kToolMap, "Apply");
-            m_SecondaryApplyAction = inputManager.FindAction(InputManager.kToolMap, "SecondaryApply");
+            m_SecondaryApplyAction = inputManager.FindAction(InputManager.kToolMap, "Secondary Apply");
 
             m_TooltipConfig = new Dictionary<(NT_ToolType, OperationPhase), List<TooltipEntry>> {
                 // AddNode Tool
                 [(NT_ToolType.AddNode, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("Hover over a network segment", m_ApplyAction)
+                    new("NetworkTools.AddNode.Hover", m_ApplyAction)
                 },
                 [(NT_ToolType.AddNode, OperationPhase.Ready)] = new List<TooltipEntry> {
-                    new("Click to add node", m_ApplyAction),
-                    new("Cancel", m_SecondaryApplyAction)
+                    new("NetworkTools.AddNode.Apply", m_ApplyAction),
+                    new("NetworkTools.AddNode.Cancel", m_SecondaryApplyAction)
                 },
                 [(NT_ToolType.AddNode, OperationPhase.Applying)] = new List<TooltipEntry> {
                 },
 
                 // RemoveNode Tool
                 [(NT_ToolType.RemoveNode, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("Select a node to remove", m_ApplyAction)
+                    new("NetworkTools.RemoveNode.Select", m_ApplyAction)
                 },
                 [(NT_ToolType.RemoveNode, OperationPhase.Ready)] = new List<TooltipEntry> {
-                    new("Click to remove node", m_ApplyAction),
-                    new("Cancel", m_SecondaryApplyAction)
+                    new("NetworkTools.RemoveNode.Apply", m_ApplyAction),
+                    new("NetworkTools.RemoveNode.Cancel", m_SecondaryApplyAction)
                 },
 
                 // PathTransform Tool
                 [(NT_ToolType.PathTransform, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("Select a starting node", m_ApplyAction)
+                    new("NetworkTools.PathTransform.SelectStart", m_ApplyAction)
                 },
                 [(NT_ToolType.PathTransform, OperationPhase.Configuring)] = new List<TooltipEntry> {
-                    new("Select a second node", m_ApplyAction),
-                    new("Remove last node", m_SecondaryApplyAction)
+                    new("NetworkTools.PathTransform.SelectSecond", m_ApplyAction),
+                    new("NetworkTools.PathTransform.RemoveLast", m_SecondaryApplyAction)
                 },
                 [(NT_ToolType.PathTransform, OperationPhase.Ready)] = new List<TooltipEntry> {
-                    new("Select a new end node to extend the path", m_ApplyAction),
-                    new("Remove last node", m_SecondaryApplyAction)
+                    new("NetworkTools.PathTransform.ExtendPath", m_ApplyAction),
+                    new("NetworkTools.PathTransform.RemoveLast", m_SecondaryApplyAction)
                 },
 
                 // NodeControl Tool
                 [(NT_ToolType.NodeControl, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("Select a node to control", m_ApplyAction)
+                    new("NetworkTools.NodeControl.Select", m_ApplyAction)
                 },
                 [(NT_ToolType.NodeControl, OperationPhase.Ready)] = new List<TooltipEntry> {
-                    new("Adjust node", m_ApplyAction),
-                    new("Cancel", m_SecondaryApplyAction)
+                    new("NetworkTools.NodeControl.Adjust", m_ApplyAction),
+                    new("NetworkTools.NodeControl.Cancel", m_SecondaryApplyAction)
                 }
             };
         }
@@ -174,7 +174,6 @@ namespace NetworkTools.Systems {
 
                     var inputHint = new InputHintTooltip(entry.Action);
                     inputHint.Refresh(device);
-                    //AddMouseTooltip(inputHint);
 
                     displayOverride.Dispose();
                 } else {
