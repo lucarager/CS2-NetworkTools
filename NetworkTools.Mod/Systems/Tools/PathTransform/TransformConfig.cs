@@ -5,21 +5,6 @@
 
 namespace NetworkTools.Systems.Tools {
     /// <summary>
-    ///     Determines how the transformation job outputs its results.
-    /// </summary>
-    public enum TransformOutputMode : byte {
-        /// <summary>
-        ///     Create CreationDefinition + NetCourse entities for preview.
-        /// </summary>
-        Preview,
-
-        /// <summary>
-        ///     Modify existing Curve components and handle intersection adjustments.
-        /// </summary>
-        Apply
-    }
-
-    /// <summary>
     ///     Unified configuration for path transformations.
     ///     Holds both shape (XZ) and slope (Y) settings.
     /// </summary>
