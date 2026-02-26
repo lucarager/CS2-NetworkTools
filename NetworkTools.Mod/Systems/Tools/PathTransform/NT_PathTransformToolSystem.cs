@@ -50,9 +50,6 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         private NativeList<Entity> m_CurrentPathNodes;
 
-        private EntityQuery m_EdgesWithHighlightedQuery;
-        private EntityQuery m_EdgesWithSelectedQuery;
-
         /// <summary>
         ///     List of currently eligible node entities for selection
         /// </summary>

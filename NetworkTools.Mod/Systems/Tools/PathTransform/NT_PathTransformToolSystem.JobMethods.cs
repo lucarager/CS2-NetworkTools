@@ -16,7 +16,7 @@ namespace NetworkTools.Systems.Tools {
     #endregion
 
     public partial class NT_PathTransformToolSystem {
-        private JobHandle SchedulePathTransformJob(JobHandle inputDeps, TransformOutputMode outputMode) {
+        private JobHandle SchedulePathTransformJob(JobHandle inputDeps, ToolOutputMode outputMode) {
             var jobHandle = new PathTransformJob {
                 SelectedNodes          = m_SelectedNodes,
                 CurrentPathEdges       = m_CurrentPathEdges,
@@ -48,7 +48,7 @@ namespace NetworkTools.Systems.Tools {
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
-            inputDeps = SchedulePathTransformJob(inputDeps, TransformOutputMode.Preview);
+            inputDeps = SchedulePathTransformJob(inputDeps, ToolOutputMode.Preview);
 
             // Reset the flag after processing
             m_UpdateNeeded = false;
@@ -65,7 +65,7 @@ namespace NetworkTools.Systems.Tools {
         private JobHandle Apply(JobHandle inputDeps) {
             applyMode = ApplyMode.Clear;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
-            var jobHandle = SchedulePathTransformJob(inputDeps, TransformOutputMode.Apply);
+            var jobHandle = SchedulePathTransformJob(inputDeps, ToolOutputMode.Apply);
 
             ResetToIdle();
 

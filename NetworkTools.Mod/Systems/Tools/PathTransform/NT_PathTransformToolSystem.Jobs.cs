@@ -60,7 +60,7 @@ namespace NetworkTools.Systems.Tools {
             [ReadOnly] public required ComponentLookup<PseudoRandomSeed> PseudoRandomSeedLookup;
             [ReadOnly] public required BufferLookup<ConnectedEdge> ConnectedEdgeLookup;
             [ReadOnly] public required ComponentLookup<Aggregated> AggregatedLookup;
-            public required TransformOutputMode OutputMode;
+            public required ToolOutputMode OutputMode;
             public required EntityCommandBuffer ECB;
 
             public void Execute() {
@@ -167,7 +167,7 @@ namespace NetworkTools.Systems.Tools {
                 NativeArray<EdgeTransformState> edges,
                 NativeList<IntersectionEdgeAdjustment> intersectionAdjustments,
                 in TransformContext ctx) {
-                if (OutputMode == TransformOutputMode.Preview) {
+                if (OutputMode == ToolOutputMode.Preview) {
                     OutputPreview(edges, intersectionAdjustments);
                 }
                 else {
