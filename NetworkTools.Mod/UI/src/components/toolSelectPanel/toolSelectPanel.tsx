@@ -11,7 +11,7 @@ export const ToolSelectPanel = () => {
     const tools = toolUIDataBinding.sort((a, b) => a.Index - b.Index);
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
     const { translate } = useLocalization();
-    const activeIndex = tools.findIndex((t) => t.ID === selectedBinding);
+    const activeIndex = tools.findIndex((t) => t.PrefabId === selectedBinding);
 
     return (
         <div className={[styles.wrapper, panels.nt_panel].join(" ")}>
@@ -27,13 +27,15 @@ export const ToolSelectPanel = () => {
                                 className={[
                                     styles.actionButton,
                                     tool.Active ? "" : styles.actionButton__inactive,
-                                    tool.ID == selectedBinding ? styles.actionButton__active : "",
+                                    tool.PrefabId == selectedBinding
+                                        ? styles.actionButton__active
+                                        : "",
                                 ].join(" ")}
                                 variant="flat"
                                 // disabled={!tool.Active}
-                                onSelect={() => GAME_TRIGGERS.SELECT_TOOL(tool.ID)}>
+                                onSelect={() => GAME_TRIGGERS.SELECT_TOOL(tool.PrefabId)}>
                                 <img
-                                    src={`coui://nt/Icons/${tool.ID == selectedBinding ? "Active" : "Normal"}/${tool.Icon}`}
+                                    src={`coui://nt/Icons/${tool.PrefabId == selectedBinding ? "Active" : "Normal"}/${tool.Icon}`}
                                     className={styles.icon}
                                 />
                             </Button>

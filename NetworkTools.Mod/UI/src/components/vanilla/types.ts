@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from "react";
-import { LocalizedString, UniqueFocusKey, WidgetType } from "cs2/bindings";
+import { LocalizedString, UniqueFocusKey } from "cs2/bindings";
 import { HTMLAttributes } from "react";
 import { InfoRowProps, InfoSectionProps } from "cs2/ui";
 
@@ -26,7 +26,6 @@ export interface IVanillaComponents {
     [key: string]: React.FC<any> | any;
 }
 
-
 export type Widget = {
     path: string;
     children: Tooltip[];
@@ -43,8 +42,8 @@ export type Tooltip = Widget & {
         value?: number;
         unit?: string;
         signed?: boolean;
-    },
-}
+    };
+};
 
 export enum Alignment {
     Start,
@@ -59,11 +58,11 @@ export type TooltipGroup = Widget & {
         position: {
             x: number;
             y: number;
-        },
+        };
         horizontalAlignment: Alignment;
         verticalAlignment: Alignment;
         category: string;
-    },
+    };
 };
 
 export enum TooltipType {
@@ -74,6 +73,7 @@ export enum TooltipType {
     "Game.UI.Tooltip.NotificationTooltip",
     "Game.UI.Tooltip.ZoningEvaluationTooltip",
     "Game.UI.Tooltip.InputHintTooltip",
+    "NetworkTools.UI.NT_InputHintTooltip",
 }
 
 export interface FLoatSliderProps {

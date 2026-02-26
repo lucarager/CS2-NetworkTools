@@ -3,25 +3,25 @@ import styles from "./toolActionPanel.module.scss";
 import panels from "../shared/panels.module.scss";
 import { GAME_BINDINGS } from "gameBindings";
 import { useValue } from "cs2/api";
-import { TransformControls } from "./transform";
+import { ShapeSlopeControls } from "./transform";
 
 // Registry of tool components mapped by tool ID
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
-    "Path Shape Tools": TransformControls,
+    shape_slope: ShapeSlopeControls,
 };
 
 export const ToolActionPanel = () => {
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
     const toolUIDataBinding = useValue(GAME_BINDINGS.UI_DATA.binding);
-    const activeIndex = toolUIDataBinding.findIndex((t) => t.ID === selectedBinding);
+    const activeTool = toolUIDataBinding.find((t) => t.PrefabId === selectedBinding);
 
-    if (activeIndex === -1) {
+    if (!activeTool) {
         return <div className={styles.wrapper}></div>;
     }
 
     console.log("Rendering ToolActionPanel for tool:", selectedBinding);
 
-    const ToolComponent = TOOL_COMPONENTS[selectedBinding];
+    const ToolComponent = TOOL_COMPONENTS[activeTool.Id];
 
     return (
         <div className={styles.wrapper}>

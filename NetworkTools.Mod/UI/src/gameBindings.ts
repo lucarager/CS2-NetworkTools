@@ -4,12 +4,13 @@ import { TwoWayBinding } from "utils/bidirectionalBinding";
 import { Entity } from "cs2/bindings";
 
 export type ToolUIData = {
+    Id: string;
     DisplayName: string;
     Icon: string;
     Description: string;
     Active: boolean;
     Index: number;
-    ID: string;
+    PrefabId: string;
 };
 
 export enum SelectedEntityType {
@@ -73,7 +74,10 @@ export const GAME_BINDINGS = {
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
     SLOPE_CONFIG: new TwoWayBinding<SlopeConfigData>("SLOPE_CONFIG", DEFAULT_SLOPE_CONFIG),
     SHAPE_CONFIG: new TwoWayBinding<ShapeConfigData>("SHAPE_CONFIG", DEFAULT_SHAPE_CONFIG),
-    TRANSFORM_CONFIG: new TwoWayBinding<TransformConfigData>("TRANSFORM_CONFIG", DEFAULT_TRANSFORM_CONFIG),
+    TRANSFORM_CONFIG: new TwoWayBinding<TransformConfigData>(
+        "TRANSFORM_CONFIG",
+        DEFAULT_TRANSFORM_CONFIG,
+    ),
 };
 
 export const GAME_TRIGGERS = {

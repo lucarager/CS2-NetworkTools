@@ -53,7 +53,7 @@ const modulePaths = [
     {
         path: "game-ui/common/tooltip/tooltip-renderer/tooltip-renderer.tsx",
         components: ["TooltipRenderer", "BoundTooltipGroup", "tooltipComponents"],
-    }
+    },
 ];
 
 const themePaths = [

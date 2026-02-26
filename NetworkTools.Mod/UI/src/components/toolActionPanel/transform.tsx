@@ -33,7 +33,7 @@ interface TransformControlProps {
     toolId?: string;
 }
 
-export const TransformControls: React.FC<TransformControlProps> = () => {
+export const ShapeSlopeControls: React.FC<TransformControlProps> = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
     const slopeConfig = useValue(GAME_BINDINGS.SLOPE_CONFIG.binding);
     const shapeConfig = useValue(GAME_BINDINGS.SHAPE_CONFIG.binding);
