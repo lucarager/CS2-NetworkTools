@@ -6,13 +6,12 @@
 namespace NetworkTools.Systems {
     #region Using Statements
 
-    using System;
+    using System.Collections.Generic;
     using Game.Input;
     using Game.Prefabs;
     using Game.Tools;
     using Game.UI.Tooltip;
     using NetworkTools.Components;
-    using NetworkTools.Settings;
     using NetworkTools.Systems.Tools;
     using Unity.Entities;
 
@@ -27,6 +26,14 @@ namespace NetworkTools.Systems {
     }
 
     /// <summary>
+    /// Configuration for a single tooltip entry.
+    /// </summary>
+    internal record TooltipEntry(
+        string Text,
+        ProxyAction Action = null
+    );
+
+    /// <summary>
     ///     Tooltip System.
     /// </summary>
     public partial class NT_ToolTooltipSystem : TooltipSystemBase {
@@ -34,10 +41,11 @@ namespace NetworkTools.Systems {
         private NT_NodeControlToolSystem m_NtNodeControlToolSystem;
         private NT_PathTransformToolSystem m_NtPathTransformToolSystem;
         private NT_RemoveNodeToolSystem m_NtRemoveNodeToolSystem;
-        private EntityQuery m_ParcelQuery;
         protected PrefabSystem m_PrefabSystem;
         private ToolSystem m_ToolSystem;
-
+        private Dictionary<(NT_ToolType, OperationPhase), List<TooltipEntry>> m_TooltipConfig;
+        private ProxyAction m_ApplyAction;
+        private ProxyAction m_SecondaryApplyAction;
 
         /// <inheritdoc />
         protected override void OnCreate() {
@@ -49,118 +57,129 @@ namespace NetworkTools.Systems {
             m_NtRemoveNodeToolSystem    = World.GetOrCreateSystemManaged<NT_RemoveNodeToolSystem>();
             m_NtPathTransformToolSystem = World.GetOrCreateSystemManaged<NT_PathTransformToolSystem>();
             m_NtNodeControlToolSystem   = World.GetOrCreateSystemManaged<NT_NodeControlToolSystem>();
+
+            InitializeTooltipConfig();
+        }
+
+        protected override void OnDestroy() {
+            base.OnDestroy();
+            m_TooltipConfig = null;
+        }
+
+        private void InitializeTooltipConfig() {
+            var inputManager = InputManager.instance;
+            if (inputManager == null) {
+                return;
+            }
+
+            m_ApplyAction = inputManager.FindAction(InputManager.kToolMap, "Apply");
+            m_SecondaryApplyAction = inputManager.FindAction(InputManager.kToolMap, "SecondaryApply");
+
+            m_TooltipConfig = new Dictionary<(NT_ToolType, OperationPhase), List<TooltipEntry>> {
+                // AddNode Tool
+                [(NT_ToolType.AddNode, OperationPhase.Idle)] = new List<TooltipEntry> {
+                    new("Hover over a network segment", m_ApplyAction)
+                },
+                [(NT_ToolType.AddNode, OperationPhase.Ready)] = new List<TooltipEntry> {
+                    new("Click to add node", m_ApplyAction),
+                    new("Cancel", m_SecondaryApplyAction)
+                },
+                [(NT_ToolType.AddNode, OperationPhase.Applying)] = new List<TooltipEntry> {
+                },
+
+                // RemoveNode Tool
+                [(NT_ToolType.RemoveNode, OperationPhase.Idle)] = new List<TooltipEntry> {
+                    new("Select a node to remove", m_ApplyAction)
+                },
+                [(NT_ToolType.RemoveNode, OperationPhase.Ready)] = new List<TooltipEntry> {
+                    new("Click to remove node", m_ApplyAction),
+                    new("Cancel", m_SecondaryApplyAction)
+                },
+
+                // PathTransform Tool
+                [(NT_ToolType.PathTransform, OperationPhase.Idle)] = new List<TooltipEntry> {
+                    new("Select a starting node", m_ApplyAction)
+                },
+                [(NT_ToolType.PathTransform, OperationPhase.Configuring)] = new List<TooltipEntry> {
+                    new("Select a second node", m_ApplyAction),
+                    new("Remove last node", m_SecondaryApplyAction)
+                },
+                [(NT_ToolType.PathTransform, OperationPhase.Ready)] = new List<TooltipEntry> {
+                    new("Select a new end node to extend the path", m_ApplyAction),
+                    new("Remove last node", m_SecondaryApplyAction)
+                },
+
+                // NodeControl Tool
+                [(NT_ToolType.NodeControl, OperationPhase.Idle)] = new List<TooltipEntry> {
+                    new("Select a node to control", m_ApplyAction)
+                },
+                [(NT_ToolType.NodeControl, OperationPhase.Ready)] = new List<TooltipEntry> {
+                    new("Adjust node", m_ApplyAction),
+                    new("Cancel", m_SecondaryApplyAction)
+                }
+            };
         }
 
         /// <inheritdoc />
         protected override void OnUpdate() {
-            if (m_ToolSystem.activePrefab is not NT_ToolPrefab) {
+            if (m_ToolSystem.activePrefab is not NT_ToolPrefab activePrefab) {
                 return;
             }
 
             var controlScheme = InputManager.instance.activeControlScheme;
-
             if (controlScheme is not InputManager.ControlScheme.KeyboardAndMouse) {
                 return;
             }
 
-            var activeToolType = NT_ToolType.None;
-            var activeTool = default(NT_BaseToolSystem);
-
-            // Check which tool is active
-            if (m_ToolSystem.activePrefab is NT_ToolPrefab activePrefab) {
-                if (m_PrefabSystem.HasComponent<NT_AddNode>(activePrefab)) {
-                    activeToolType = NT_ToolType.AddNode;
-                    activeTool     = m_NtAddNodeToolSystem;
-                }
-                else if (m_PrefabSystem.HasComponent<NT_RemoveNode>(activePrefab)) {
-                    activeToolType = NT_ToolType.RemoveNode;
-                    activeTool     = m_NtRemoveNodeToolSystem;
-                }
-                else if (m_PrefabSystem.HasComponent<NT_PathTransform>(activePrefab)) {
-                    activeToolType = NT_ToolType.PathTransform;
-                    activeTool     = m_NtPathTransformToolSystem;
-                }
-                else if (m_PrefabSystem.HasComponent<NT_NodeControl>(activePrefab)) {
-                    activeToolType = NT_ToolType.NodeControl;
-                    activeTool     = m_NtNodeControlToolSystem;
-                }
+            var (toolType, tool) = GetActiveToolInfo(activePrefab);
+            if (toolType == NT_ToolType.None || tool == null) {
+                return;
             }
 
-            switch (activeToolType) {
-                case NT_ToolType.AddNode:
-                    switch (activeTool.Phase) {
-                        case OperationPhase.Idle:
-                            // Add tooltips
-                            var idleTooltip = new StringTooltip {
-                                value = "Add Node: Idle"
-                            };
-                            AddMouseTooltip(idleTooltip);
-                            break;
-                        case OperationPhase.Configuring:
-                            break;
-                        case OperationPhase.Ready:
-                            break;
-                        case OperationPhase.Applying:
-                            break;
-                    }
+            ShowTooltipsForTool(toolType, tool.Phase, InputManager.DeviceType.Mouse);
+        }
 
-                    break;
-                case NT_ToolType.RemoveNode:
-                    switch (activeTool.Phase) {
-                        case OperationPhase.Idle:
-                            // Add tooltips
-                            var idleTooltip = new StringTooltip {
-                                value = "Remove Node: Idle"
-                            };
-                            AddMouseTooltip(idleTooltip);
-                            break;
-                        case OperationPhase.Configuring:
-                            break;
-                        case OperationPhase.Ready:
-                            break;
-                        case OperationPhase.Applying:
-                            break;
-                    }
+        private (NT_ToolType, NT_BaseToolSystem) GetActiveToolInfo(NT_ToolPrefab prefab) {
+            if (m_PrefabSystem.HasComponent<NT_AddNode>(prefab)) {
+                return (NT_ToolType.AddNode, m_NtAddNodeToolSystem);
+            }
+            if (m_PrefabSystem.HasComponent<NT_RemoveNode>(prefab)) {
+                return (NT_ToolType.RemoveNode, m_NtRemoveNodeToolSystem);
+            }
+            if (m_PrefabSystem.HasComponent<NT_PathTransform>(prefab)) {
+                return (NT_ToolType.PathTransform, m_NtPathTransformToolSystem);
+            }
+            if (m_PrefabSystem.HasComponent<NT_NodeControl>(prefab)) {
+                return (NT_ToolType.NodeControl, m_NtNodeControlToolSystem);
+            }
+            return (NT_ToolType.None, null);
+        }
 
-                    break;
-                case NT_ToolType.PathTransform:
-                    switch (activeTool.Phase) {
-                        case OperationPhase.Idle:
-                            // Add tooltips
-                            var idleTooltip = new StringTooltip {
-                                value = "PathTransform: Idle"
-                            };
-                            AddMouseTooltip(idleTooltip);
-                            break;
-                        case OperationPhase.Configuring:
-                            break;
-                        case OperationPhase.Ready:
-                            break;
-                        case OperationPhase.Applying:
-                            break;
-                    }
+        private void ShowTooltipsForTool(NT_ToolType toolType, OperationPhase phase, InputManager.DeviceType device) {
+            if (m_TooltipConfig == null || !m_TooltipConfig.TryGetValue((toolType, phase), out var tooltipEntries)) {
+                return;
+            }
 
-                    break;
-                case NT_ToolType.NodeControl:
-                    switch (activeTool.Phase) {
-                        case OperationPhase.Idle:
-                            // Add tooltips
-                            var idleTooltip = new StringTooltip {
-                                value = "Node Control: Idle"
-                            };
-                            AddMouseTooltip(idleTooltip);
-                            break;
-                        case OperationPhase.Configuring:
-                            break;
-                        case OperationPhase.Ready:
-                            break;
-                        case OperationPhase.Applying:
-                            break;
-                    }
+            foreach (var entry in tooltipEntries) {
+                if (entry.Action != null) {
+                    var displayOverride = new DisplayNameOverride(
+                        "NetworkTools.Tooltip",
+                        entry.Action,
+                        entry.Text,
+                        0,
+                        InputManager.DeviceType.All,
+                        UIBaseInputAction.Transform.None
+                    );
+                    displayOverride.active = true;
 
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                    var inputHint = new InputHintTooltip(entry.Action);
+                    inputHint.Refresh(device);
+                    //AddMouseTooltip(inputHint);
+
+                    displayOverride.Dispose();
+                } else {
+                    AddMouseTooltip(new StringTooltip { value = entry.Text });
+                }
             }
         }
     }
