@@ -37,7 +37,6 @@ namespace NetworkTools.Systems {
         private EntityQuery m_NodeQuery;
         private EntityQuery m_HandleQuery;
         private OverlayRenderSystem m_OverlayRenderSystem;
-        private PreCullingSystem m_PreCullingSystem;
         private ToolSystem m_ToolSystem;
 
         /// <inheritdoc />
@@ -73,7 +72,6 @@ namespace NetworkTools.Systems {
 
             // Systems & References
             m_OverlayRenderSystem = World.GetOrCreateSystemManaged<OverlayRenderSystem>();
-            m_PreCullingSystem    = World.GetOrCreateSystemManaged<PreCullingSystem>();
             m_ToolSystem          = World.GetOrCreateSystemManaged<ToolSystem>();
         }
 
@@ -83,16 +81,9 @@ namespace NetworkTools.Systems {
                 return;
             }
 
-            var nodeBufferJobHandle = default(JobHandle);
-            var markersBufferJobHandle = default(JobHandle);
-            var edgeBufferJobHandle = default(JobHandle);
-            var tempEdgeBufferJobHandle = default(JobHandle);
-            var lastJobHandle = Dependency;
-
             if (tool.RenderEligibleNodes) {
-                // Draw nodes
                 var drawNodesJob = new DrawNodesJob {
-                    m_Buffer                           = m_OverlayRenderSystem.GetBuffer(out nodeBufferJobHandle),
+                    m_Buffer                           = m_OverlayRenderSystem.GetBuffer(out var nodeBufferJobHandle),
                     m_EntityTypeHandle                 = SystemAPI.GetEntityTypeHandle(),
                     m_HighlightedComponentTypeHandle   = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
                     m_SelectedComponentTypeHandle      = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
@@ -112,13 +103,12 @@ namespace NetworkTools.Systems {
                         nodeBufferJobHandle));
 
                 m_OverlayRenderSystem.AddBufferWriter(drawNodesJobHandle);
-                lastJobHandle = drawNodesJobHandle;
+                Dependency = drawNodesJobHandle;
             }
 
             if (tool.RenderHandles) {
-                // Draw markers
                 var drawHandlesJob = new DrawHandlesJob {
-                    m_Buffer                              = m_OverlayRenderSystem.GetBuffer(out markersBufferJobHandle),
+                    m_Buffer                              = m_OverlayRenderSystem.GetBuffer(out var markersBufferJobHandle),
                     m_EntityTypeHandle                    = SystemAPI.GetEntityTypeHandle(),
                     m_NTHandlePositionComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandlePosition>(),
                     m_HighlightedComponentTypeHandle      = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
@@ -136,13 +126,12 @@ namespace NetworkTools.Systems {
                         markersBufferJobHandle));
 
                 m_OverlayRenderSystem.AddBufferWriter(drawHandlesJobHandle);
-                lastJobHandle = drawHandlesJobHandle;
+                Dependency = drawHandlesJobHandle;
             }
 
             if (tool.RenderEligibleEdges) {
-                // Draw edges
                 var drawEdgesJob = new DrawEdgesJob {
-                    m_Buffer                               = m_OverlayRenderSystem.GetBuffer(out edgeBufferJobHandle),
+                    m_Buffer                               = m_OverlayRenderSystem.GetBuffer(out var edgeBufferJobHandle),
                     m_HighlightedComponentTypeHandle       = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
                     m_SelectedComponentTypeHandle          = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
                     m_EdgeComponentTypeHandle              = SystemAPI.GetComponentTypeHandle<Edge>(),
@@ -154,36 +143,28 @@ namespace NetworkTools.Systems {
                 };
 
                 var drawEdgesJobHandle = drawEdgesJob.ScheduleByRef(m_EdgeQuery,
-                    JobHandle.CombineDependencies(lastJobHandle,
+                    JobHandle.CombineDependencies(Dependency,
                         edgeBufferJobHandle));
 
                 m_OverlayRenderSystem.AddBufferWriter(drawEdgesJobHandle);
-                lastJobHandle = drawEdgesJobHandle;
+                Dependency = drawEdgesJobHandle;
             }
 
             if (tool.RenderTempEdges) {
-                // Draw edges
                 var drawTempEdgesJob = new DrawTempEdgesJob {
-                    m_Buffer                               = m_OverlayRenderSystem.GetBuffer(out tempEdgeBufferJobHandle),
-                    m_HighlightedComponentTypeHandle       = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
-                    m_SelectedComponentTypeHandle          = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
-                    m_EdgeComponentTypeHandle              = SystemAPI.GetComponentTypeHandle<Edge>(),
-                    m_CurveComponentTypeHandle             = SystemAPI.GetComponentTypeHandle<Curve>(),
-                    m_EdgeGeometryComponentTypeHandle      = SystemAPI.GetComponentTypeHandle<EdgeGeometry>(),
-                    m_StartNodeGeometryComponentTypeHandle = SystemAPI.GetComponentTypeHandle<StartNodeGeometry>(),
-                    m_EndNodeGeometryComponentTypeHandle   = SystemAPI.GetComponentTypeHandle<EndNodeGeometry>(),
-                    m_NodeLookup                           = SystemAPI.GetComponentLookup<Node>(true)
+                    m_Buffer                   = m_OverlayRenderSystem.GetBuffer(out var tempEdgeBufferJobHandle),
+                    m_EdgeComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<Edge>(),
+                    m_CurveComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Curve>(),
+                    m_TempComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<Temp>(),
                 };
 
                 var drawTempEdgesJobHandle = drawTempEdgesJob.ScheduleByRef(m_TempEdgeQuery,
-                    JobHandle.CombineDependencies(lastJobHandle,
+                    JobHandle.CombineDependencies(Dependency,
                         tempEdgeBufferJobHandle));
 
                 m_OverlayRenderSystem.AddBufferWriter(drawTempEdgesJobHandle);
-                lastJobHandle = drawTempEdgesJobHandle;
+                Dependency = drawTempEdgesJobHandle;
             }
-
-            Dependency = lastJobHandle;
         }
     }
 }

@@ -3,6 +3,7 @@
     using Colossal.Mathematics;
     using Game.Net;
     using Game.Rendering;
+    using Game.Tools;
     using NetworkTools.Components;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
@@ -20,14 +21,9 @@
 #endif
         protected struct DrawTempEdgesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
-            [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NT_Selected> m_SelectedComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<Temp> m_TempComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Edge> m_EdgeComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Curve> m_CurveComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<EdgeGeometry> m_EdgeGeometryComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<StartNodeGeometry> m_StartNodeGeometryComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<EndNodeGeometry> m_EndNodeGeometryComponentTypeHandle;
-            [ReadOnly] public required ComponentLookup<Node> m_NodeLookup;
 
             /// <inheritdoc />
             public void Execute(in ArchetypeChunk chunk,
@@ -36,12 +32,16 @@
                 in v128 chunkEnabledMask) {
                 var edgesArray = chunk.GetNativeArray(ref m_EdgeComponentTypeHandle);
                 var curvesArray = chunk.GetNativeArray(ref m_CurveComponentTypeHandle);
-                var edgeGeometriesArray = chunk.GetNativeArray(ref m_EdgeGeometryComponentTypeHandle);
-                var startNodeGeometriesArray = chunk.GetNativeArray(ref m_StartNodeGeometryComponentTypeHandle);
-                var endNodeGeometriesArray = chunk.GetNativeArray(ref m_EndNodeGeometryComponentTypeHandle);
+                var tempArray = chunk.GetNativeArray(ref m_TempComponentTypeHandle);
 
                 for (var i = 0; i < edgesArray.Length; i++) {
                     var curve = curvesArray[i];
+                    var temp = tempArray[i];
+
+                    // Only draw the "new" edge (original is null) or if the edge is marked for replacement (flags has Replace).
+                    if (temp.m_Original != Entity.Null || (temp.m_Flags & TempFlags.Replace) != 0) {
+                        continue;
+                    }
 
                     // Determine visual style
                     var color = new Color(1f, 1f, 1f, 1f);
