@@ -4,8 +4,6 @@
 // </copyright>
 
 namespace NetworkTools.Systems {
-    #region Using Statements
-
     using System.Collections.Generic;
     using Game.Input;
     using Game.Prefabs;
@@ -13,9 +11,8 @@ namespace NetworkTools.Systems {
     using Game.UI.Tooltip;
     using NetworkTools.Components;
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.RoadShape;
     using Unity.Entities;
-
-    #endregion
 
     internal enum NT_ToolType {
         None = 0,
@@ -27,11 +24,17 @@ namespace NetworkTools.Systems {
 
     /// <summary>
     /// Configuration for a single tooltip entry.
+    /// Wraps text in Common.ACTION[] format when no action is provided.
     /// </summary>
-    internal record TooltipEntry(
-        string Text,
-        ProxyAction Action = null
-    );
+    internal record TooltipEntry {
+        public string Text { get; }
+        public ProxyAction Action { get; }
+
+        public TooltipEntry(string text, ProxyAction action = null) {
+            Action = action;
+            Text = action == null ? $"Common.ACTION[{text}]" : text;
+        }
+    }
 
     /// <summary>
     ///     Tooltip System.
@@ -39,7 +42,7 @@ namespace NetworkTools.Systems {
     public partial class NT_HintTooltipSystem : TooltipSystemBase {
         private NT_AddNodeToolSystem m_NtAddNodeToolSystem;
         private NT_NodeControlToolSystem m_NtNodeControlToolSystem;
-        private NT_PathTransformToolSystem m_NtPathTransformToolSystem;
+        private NT_RoadShapeToolSystem m_NtRoadShapeToolSystem;
         private NT_RemoveNodeToolSystem m_NtRemoveNodeToolSystem;
         protected PrefabSystem m_PrefabSystem;
         private ToolSystem m_ToolSystem;
@@ -55,7 +58,7 @@ namespace NetworkTools.Systems {
             m_PrefabSystem              = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_NtAddNodeToolSystem       = World.GetOrCreateSystemManaged<NT_AddNodeToolSystem>();
             m_NtRemoveNodeToolSystem    = World.GetOrCreateSystemManaged<NT_RemoveNodeToolSystem>();
-            m_NtPathTransformToolSystem = World.GetOrCreateSystemManaged<NT_PathTransformToolSystem>();
+            m_NtRoadShapeToolSystem = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
             m_NtNodeControlToolSystem   = World.GetOrCreateSystemManaged<NT_NodeControlToolSystem>();
 
             InitializeTooltipConfig();
@@ -149,7 +152,7 @@ namespace NetworkTools.Systems {
                 return (NT_ToolType.RemoveNode, m_NtRemoveNodeToolSystem);
             }
             if (m_PrefabSystem.HasComponent<NT_PathTransform>(prefab)) {
-                return (NT_ToolType.PathTransform, m_NtPathTransformToolSystem);
+                return (NT_ToolType.PathTransform, m_NtRoadShapeToolSystem);
             }
             if (m_PrefabSystem.HasComponent<NT_NodeControl>(prefab)) {
                 return (NT_ToolType.NodeControl, m_NtNodeControlToolSystem);
