@@ -102,7 +102,7 @@
 
                     // Select
                     var position = averagedPosition;
-                    var nodeDiameter = averagedSize;
+                    var nodeDiameter = averagedSize * 0.8f;
                     var nodeBorderWidth = math.min(1f, averagedSize);
 
                     // Lift node up slightly so it shows over other elements

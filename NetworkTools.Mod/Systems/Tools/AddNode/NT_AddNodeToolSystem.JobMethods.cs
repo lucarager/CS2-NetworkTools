@@ -11,8 +11,10 @@ namespace NetworkTools.Systems.Tools {
     using Game.Net;
     using Game.Prefabs;
     using Game.Tools;
+    using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
+    using Unity.Mathematics;
 
     #endregion
 
@@ -44,6 +46,37 @@ namespace NetworkTools.Systems.Tools {
             return createDefinitionJobHandle;
         }
 
+        private ControlPoint SnapControlPoint(ControlPoint controlPoint, JobHandle inputDeps) {
+            if (controlPoint.m_OriginalEntity == Entity.Null)
+            {
+                return controlPoint;
+            }
+
+            var snappedPosition = new NativeReference<float>(controlPoint.m_CurvePosition, Allocator.TempJob);
+            var snappedHitPosition = new NativeReference<float3>(controlPoint.m_HitPosition, Allocator.TempJob);
+
+            var snapJob = new SnapControlPointJob {
+                EdgeEntity            = controlPoint.m_OriginalEntity,
+                RawCurvePosition      = controlPoint.m_CurvePosition,
+                CurveLookup           = SystemAPI.GetComponentLookup<Curve>(true),
+                PrefabRefLookup       = SystemAPI.GetComponentLookup<PrefabRef>(true),
+                NetGeometryDataLookup = SystemAPI.GetComponentLookup<NetGeometryData>(true),
+                SnapMode              = SnapMode.Endpoints,
+                GridSize              = 8f,
+                SnappedCurvePosition  = snappedPosition,
+                SnappedHitPosition    = snappedHitPosition,
+            };
+
+            snapJob.Schedule(inputDeps).Complete(); // Sync completion
+
+            controlPoint.m_CurvePosition = snappedPosition.Value;
+            controlPoint.m_HitPosition   = snappedHitPosition.Value;
+
+            snappedPosition.Dispose();
+            snappedHitPosition.Dispose();
+
+            return controlPoint;
+        }
         private JobHandle Update(JobHandle inputDeps, bool updateNeeded) {
             // Guard
             if (m_LastHoveredEntity.Value == Entity.Null) {

@@ -667,7 +667,6 @@ namespace NetworkTools.Systems.Tools {
 
         /// <summary>
         /// Called when a handle drag operation starts.
-        /// Override to capture initial state for undo/redo.
         /// </summary>
         /// <param name="handle">The handle entity being dragged.</param>
         protected virtual void OnHandleDragStart(Entity handle) {
@@ -676,7 +675,6 @@ namespace NetworkTools.Systems.Tools {
 
         /// <summary>
         /// Called each frame while dragging a handle.
-        /// Override to apply live preview updates.
         /// </summary>
         /// <param name="handle">The handle entity being dragged.</param>
         protected virtual void OnHandleDragging(Entity handle) {
@@ -685,7 +683,6 @@ namespace NetworkTools.Systems.Tools {
 
         /// <summary>
         /// Called when a handle drag operation ends.
-        /// Override to finalize changes and commit to undo stack.
         /// </summary>
         /// <param name="handle">The handle entity that was dragged.</param>
         protected virtual void OnHandleDragEnd(Entity handle) {
@@ -694,7 +691,6 @@ namespace NetworkTools.Systems.Tools {
 
         /// <summary>
         /// Called when a handle is clicked (mouse down + up without dragging).
-        /// Override to handle handle selection or other click behaviors.
         /// </summary>
         /// <param name="handle">The handle entity that was clicked.</param>
         protected virtual void OnHandleClick(Entity handle) {
@@ -707,7 +703,6 @@ namespace NetworkTools.Systems.Tools {
 
         /// <summary>
         /// Processes handle input for the current frame.
-        /// Call this from OnUpdate when ShouldRaycastHandles is true.
         /// </summary>
         /// <returns>True if input was consumed by handle interaction.</returns>
         protected bool ProcessHandleInput() {

@@ -38,6 +38,9 @@ namespace NetworkTools.Systems.Tools {
 
             // Get raycast result
             if (GetRaycastResult(out var controlPoint)) {
+                // Snap the control point 
+                controlPoint = SnapControlPoint(controlPoint, inputDeps);
+
                 // We hit something
                 var newEntityWasHit = m_LastHoveredEntity.Value != controlPoint.m_OriginalEntity;
                 var positionChanged = !controlPoint.m_Position.Equals(m_LastControlPoint.m_Position);
@@ -54,13 +57,6 @@ namespace NetworkTools.Systems.Tools {
                 // No entity under cursor
                 HandleNoHover();
             }
-
-            // Debug
-            //var buffer = m_OverlayRenderSystem.GetBuffer(out var deps);
-            //inputDeps = JobHandle.CombineDependencies(inputDeps, deps);
-            //if (controlPoint.m_OriginalEntity != Entity.Null) {
-            //    buffer.DrawCircle(UnityEngine.Color.white, controlPoint.m_Position, 3f);
-            //}
 
             // Handle temp entities
             return HandleTempEntities(inputDeps, updateNeeded);

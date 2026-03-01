@@ -5,20 +5,120 @@
 // </copyright>
 
 namespace NetworkTools.Systems.Tools {
-    using Game.Net;
-    using Game.Common;
-    using Game.Prefabs;
-    using Game.Simulation;
-    using Game.Rendering;
-    using Game.Tools;
+    using System;
     using Colossal.Mathematics;
-    using Unity.Burst;
+    using Game.Common;
+    using Game.Net;
+    using Game.Prefabs;
+    using Game.Rendering;
+    using Game.Simulation;
+    using Game.Tools;
+    using NetworkTools.Systems.Tools.Utils;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
 
     public partial class NT_AddNodeToolSystem {
+        [Flags]
+        public enum SnapMode {
+            None = 0,
+            Endpoints = 1 << 0, // Prevent snapping too close to edge endpoints
+            Midpoint = 1 << 1, // Snap to curve midpoint
+            Grid = 1 << 2 // Snap to grid increments
+        }
+
+        /// <summary>
+        ///     Score multipliers for snap modes. Lower multiplier = higher priority.
+        /// </summary>
+        private static class SnapPriority {
+            public const float Midpoint = 0.1f; // Highest priority - midpoint snaps are intentional
+            public const float Grid = 0.5f; // Medium priority - grid is a soft preference
+            public const float None = 1.0f; // Baseline - raw cursor position
+        }
+
+#if BURST
+        [BurstCompile]
+#endif
+        private struct SnapControlPointJob : IJob {
+            [ReadOnly] public required Entity EdgeEntity;
+            [ReadOnly] public required float RawCurvePosition;
+            [ReadOnly] public required ComponentLookup<Curve> CurveLookup;
+            [ReadOnly] public required ComponentLookup<PrefabRef> PrefabRefLookup;
+            [ReadOnly] public required ComponentLookup<NetGeometryData> NetGeometryDataLookup;
+            [ReadOnly] public required SnapMode SnapMode;
+            [ReadOnly] public required float GridSize;
+            public required NativeReference<float> SnappedCurvePosition;
+            public required NativeReference<float3> SnappedHitPosition;
+
+            public void Execute() {
+                if (!CurveLookup.TryGetComponent(EdgeEntity, out var curve) ||
+                    !PrefabRefLookup.TryGetComponent(EdgeEntity, out var prefabRef) ||
+                    !NetGeometryDataLookup.TryGetComponent(prefabRef.m_Prefab, out var netGeometry)) {
+                    SnappedCurvePosition.Value = RawCurvePosition;
+                    return;
+                }
+
+                // Calculate endpoint constraints (hard limit, not scored)
+                var minCurvePosition = 0f;
+                var maxCurvePosition = 1f;
+                if ((SnapMode & SnapMode.Endpoints) != 0) {
+                    minCurvePosition = NT_EdgeUtils.GetMinimumSplitDistance(curve.m_Length,
+                        netGeometry.m_DefaultWidth,
+                        netGeometry.m_EdgeLengthRange.min);
+                    maxCurvePosition = 1f - minCurvePosition;
+                }
+
+                // Start with clamped raw position as baseline
+                var clampedRaw = math.clamp(RawCurvePosition, minCurvePosition, maxCurvePosition);
+                var bestPosition = clampedRaw;
+                var bestScore = float.MaxValue;
+
+                // Evaluate: No snap (baseline)
+                EvaluateCandidate(clampedRaw, clampedRaw, SnapPriority.None, ref bestPosition, ref bestScore);
+
+
+                // Evaluate: Midpoint snap
+                if ((SnapMode & SnapMode.Midpoint) != 0) {
+                    var midpoint = 0.5f;
+                    if (midpoint >= minCurvePosition && midpoint <= maxCurvePosition) {
+                        EvaluateCandidate(midpoint, clampedRaw, SnapPriority.Midpoint, ref bestPosition, ref bestScore);
+                    }
+                }
+
+                // Evaluate: Grid snap
+                if ((SnapMode & SnapMode.Grid) != 0) {
+                    var positionAlongCurve = clampedRaw * curve.m_Length;
+                    var snappedWorldPos = math.round(positionAlongCurve / GridSize) * GridSize;
+                    var gridPosition = math.clamp(snappedWorldPos / curve.m_Length, minCurvePosition, maxCurvePosition);
+                    EvaluateCandidate(gridPosition, clampedRaw, SnapPriority.Grid, ref bestPosition, ref bestScore);
+                }
+
+                SnappedCurvePosition.Value = bestPosition;
+                SnappedHitPosition.Value   = MathUtils.Position(curve.m_Bezier, bestPosition);
+            }
+
+            /// <summary>
+            ///     Evaluates a snap candidate and updates best match if it wins.
+            ///     Score = distance from original × priority multiplier. Lower wins.
+            /// </summary>
+            private static void EvaluateCandidate(
+                float candidate,
+                float original,
+                float priorityMultiplier,
+                ref float bestPosition,
+                ref float bestScore) {
+                var distance = math.abs(candidate - original);
+                var score = distance * priorityMultiplier;
+
+                if (score < bestScore) {
+                    bestScore    = score;
+                    bestPosition = candidate;
+                }
+            }
+        }
+
+
 #if BURST
         [BurstCompile]
 #endif
@@ -47,22 +147,25 @@ namespace NetworkTools.Systems.Tools {
                 if (!EdgeLookup.TryGetComponent(EdgeEntity, out var edge)) {
                     return;
                 }
+
                 if (!CurveLookup.TryGetComponent(EdgeEntity, out var curve)) {
                     return;
                 }
+
                 if (!PrefabRefLookup.TryGetComponent(EdgeEntity, out var prefabRef)) {
                     return;
                 }
+
                 if (!PseudoRandomSeedLookup.TryGetComponent(EdgeEntity, out var seed)) {
                     return;
                 }
 
                 // For now, no difference between preview and apply - both create the same definition entities
-                if (OutputMode == ToolOutputMode.Preview)
-                {
+                if (OutputMode == ToolOutputMode.Preview) {
                     OutputPreview(edge, curve, prefabRef, seed);
-                } else {
-                    OutputPreview(edge, curve, prefabRef, seed);
+                }
+                else {
+                    OutputApply(edge, curve, prefabRef, seed);
                 }
             }
 
@@ -74,38 +177,40 @@ namespace NetworkTools.Systems.Tools {
                     m_Flags    = CreationFlags.Recreate
                 };
 
-                if (prefabRef.m_Prefab != Entity.Null)
-                {
+                if (prefabRef.m_Prefab != Entity.Null) {
                     creationDefinition.m_Prefab = prefabRef;
                 }
+
                 creationDefinition.m_RandomSeed = seed.m_Seed;
 
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
                 var netCourse = new NetCourse {
-                    m_Curve = new Bezier4x3(HitPosition, HitPosition, HitPosition, HitPosition),
-                    m_Length = 0,
+                    m_Curve      = new Bezier4x3(HitPosition, HitPosition, HitPosition, HitPosition),
+                    m_Length     = 0,
                     m_FixedIndex = -1,
-                    m_Elevation = default,
+                    m_Elevation  = default,
                     m_StartPosition = new CoursePos {
-                        m_Entity = EdgeEntity,
-                        m_Position = HitPosition,
-                        m_Rotation = default,
+                        m_Entity      = EdgeEntity,
+                        m_Position    = HitPosition,
+                        m_Rotation    = default,
                         m_CourseDelta = 0,
-                        m_Elevation = default,
-                        m_Flags = CoursePosFlags.IsFirst | CoursePosFlags.IsLast | CoursePosFlags.IsRight | CoursePosFlags.IsLeft,
-                        m_ParentMesh = -1,
+                        m_Elevation   = default,
+                        m_Flags = CoursePosFlags.IsFirst | CoursePosFlags.IsLast | CoursePosFlags.IsRight |
+                                  CoursePosFlags.IsLeft,
+                        m_ParentMesh    = -1,
                         m_SplitPosition = CurvePosition
                     },
                     m_EndPosition = new CoursePos {
-                        m_Entity = EdgeEntity,
-                        m_Position = HitPosition,
-                        m_Rotation = default,
+                        m_Entity      = EdgeEntity,
+                        m_Position    = HitPosition,
+                        m_Rotation    = default,
                         m_CourseDelta = 1,
-                        m_Elevation = default,
-                        m_Flags = CoursePosFlags.IsFirst | CoursePosFlags.IsLast | CoursePosFlags.IsRight | CoursePosFlags.IsLeft,
-                        m_ParentMesh = -1,
+                        m_Elevation   = default,
+                        m_Flags = CoursePosFlags.IsFirst | CoursePosFlags.IsLast | CoursePosFlags.IsRight |
+                                  CoursePosFlags.IsLeft,
+                        m_ParentMesh    = -1,
                         m_SplitPosition = CurvePosition
                     }
                 };
@@ -115,115 +220,7 @@ namespace NetworkTools.Systems.Tools {
 
 
             private void OutputApply(Edge edge, Curve curve, PrefabRef prefabRef, PseudoRandomSeed seed) {
-
-            }
-
-            /// <summary>
-            /// Processes the curve definition to add a new node to an edge.
-            /// Splits the edge's bezier curve at the hit position, creating two new edges
-            /// connected by a new node.
-            /// </summary>
-            private void ProcessAddNodeDef(Edge edge, Curve curve, Entity edgeEntity) {
-                // Use MathUtils.Divide to split the bezier at the curve position
-                // This preserves the exact curve shape
-                MathUtils.Divide(curve.m_Bezier, out var bezier1, out var bezier2, CurvePosition);
-
-                // The new node position is at the split point (bezier1.d == bezier2.a)
-                var newNodePosition = bezier1.d;
-
-                // Get prefab info from original edge
-                PrefabRefLookup.TryGetComponent(edgeEntity, out var prefabRef);
-                PseudoRandomSeedLookup.TryGetComponent(edgeEntity, out var seed);
-
-                // === Create first edge definition (original start -> new node) ===
-                var definition1Entity = ECB.CreateEntity();
-
-                var creationDefinition1 = new CreationDefinition {
-                    m_Original = edgeEntity,
-                    m_Flags = CreationFlags.Recreate
-                };
-
-                if (prefabRef.m_Prefab != Entity.Null) {
-                    creationDefinition1.m_Prefab = prefabRef;
-                }
-                creationDefinition1.m_RandomSeed = seed.m_Seed;
-
-                ECB.AddComponent(definition1Entity, creationDefinition1);
-                ECB.AddComponent<Updated>(definition1Entity);
-
-                var netCourse1 = new NetCourse {
-                    m_Curve = bezier1,
-                    m_Length = MathUtils.Length(bezier1),
-                    m_FixedIndex = -1,
-                    m_Elevation = default,
-                    m_StartPosition = new CoursePos {
-                        m_Entity = edge.m_Start,
-                        m_Position = bezier1.a,
-                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.StartTangent(bezier1)),
-                        m_CourseDelta = 0,
-                        m_Elevation = default,
-                        m_Flags = CoursePosFlags.IsFirst,
-                        m_ParentMesh = -1,
-                        m_SplitPosition = 0
-                    },
-                    m_EndPosition = new CoursePos {
-                        m_Entity = Entity.Null, // New node - will be created by the system
-                        m_Position = bezier1.d,
-                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.EndTangent(bezier1)),
-                        m_CourseDelta = 1,
-                        m_Elevation = default,
-                        m_Flags = CoursePosFlags.IsLast,
-                        m_ParentMesh = -1,
-                        m_SplitPosition = 0
-                    }
-                };
-
-                ECB.AddComponent(definition1Entity, netCourse1);
-
-                // === Create second edge definition (new node -> original end) ===
-                var definition2Entity = ECB.CreateEntity();
-
-                var creationDefinition2 = new CreationDefinition {
-                    m_Original = Entity.Null, // New edge, not replacing anything
-                    m_Flags = default
-                };
-
-                if (prefabRef.m_Prefab != Entity.Null) {
-                    creationDefinition2.m_Prefab = prefabRef;
-                }
-                creationDefinition2.m_RandomSeed = seed.m_Seed;
-
-                ECB.AddComponent(definition2Entity, creationDefinition2);
-                ECB.AddComponent<Updated>(definition2Entity);
-
-                var netCourse2 = new NetCourse {
-                    m_Curve = bezier2,
-                    m_Length = MathUtils.Length(bezier2),
-                    m_FixedIndex = -1,
-                    m_Elevation = default,
-                    m_StartPosition = new CoursePos {
-                        m_Entity = Entity.Null, // Same new node as end of first edge
-                        m_Position = bezier2.a,
-                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.StartTangent(bezier2)),
-                        m_CourseDelta = 0,
-                        m_Elevation = default,
-                        m_Flags = CoursePosFlags.IsFirst,
-                        m_ParentMesh = -1,
-                        m_SplitPosition = 0
-                    },
-                    m_EndPosition = new CoursePos {
-                        m_Entity = edge.m_End,
-                        m_Position = bezier2.d,
-                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.EndTangent(bezier2)),
-                        m_CourseDelta = 1,
-                        m_Elevation = default,
-                        m_Flags = CoursePosFlags.IsLast,
-                        m_ParentMesh = -1,
-                        m_SplitPosition = 0
-                    }
-                };
-
-                ECB.AddComponent(definition2Entity, netCourse2);
+                OutputPreview(edge, curve, prefabRef, seed);
             }
         }
     }

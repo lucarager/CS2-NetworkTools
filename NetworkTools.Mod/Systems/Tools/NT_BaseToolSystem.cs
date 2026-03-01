@@ -6,14 +6,19 @@
 namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
+    using System.ComponentModel;
+
+    using Game.Common;
     using Game.Input;
     using Game.Net;
     using Game.Prefabs;
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+
     using NetworkTools.Components;
     using NetworkTools.Utils;
+
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -65,6 +70,8 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         public bool DisableVanillaValidation = false;
 
+        protected ComponentTypeSet HighlightedComponentTypeSet = new ComponentTypeSet(typeof(NT_Highlighted), typeof(Highlighted));
+
         /// <summary>
         ///     Apply action (usually left click)
         /// </summary>
@@ -95,6 +102,9 @@ namespace NetworkTools.Systems.Tools {
         protected EntityQuery m_NodesWithEligibleQuery;
         protected EntityQuery m_NodesWithHighlightedQuery;
         protected EntityQuery m_NodesWithoutEligibleQuery;
+        protected EntityQuery m_NodesWithSelectedFirstQuery;
+        protected EntityQuery m_NodesWithSelectedLastQuery;
+        protected EntityQuery m_NodesWithSelectedQuery;
         protected OverlayRenderSystem m_OverlayRenderSystem;
 
         /// <summary>
@@ -149,6 +159,11 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         public bool RenderTempEdges = false;
 
+        /// <summary>
+        ///     Tool requests rendering temp nodes
+        /// </summary>
+        public bool RenderTempNodes = false;
+
         public override string toolID => "NT_BaseToolSystem";
 
         protected override void OnCreate() {
@@ -189,10 +204,27 @@ namespace NetworkTools.Systems.Tools {
                 .WithAll<Node, NT_Eligible>()
                 .Build();
             m_NodesWithHighlightedQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, NT_Highlighted>()
+                .WithAll<Node>()
+                .WithAny<Highlighted, NT_Highlighted>()
                 .Build();
             m_EntitiesWithHighlightedQuery = SystemAPI.QueryBuilder()
-                .WithAll<NT_Highlighted>()
+                .WithAny<Highlighted, NT_Highlighted>()
+                .Build();
+            m_NodesWithSelectedQuery = SystemAPI.QueryBuilder()
+                .WithAll<Node, NT_Selected>()
+                .Build();
+            m_NodesWithSelectedFirstQuery = SystemAPI.QueryBuilder()
+                .WithAll<Node, NT_SelectedFirst>()
+                .Build();
+            m_NodesWithSelectedLastQuery = SystemAPI.QueryBuilder()
+                .WithAll<Node, NT_SelectedLast>()
+                .Build();
+            m_EdgesWithHighlightedQuery = SystemAPI.QueryBuilder()
+                .WithAll<Edge>()
+                .WithAny<Highlighted, NT_Highlighted>()
+                .Build();
+            m_EdgesWithSelectedQuery = SystemAPI.QueryBuilder()
+                .WithAll<Edge, NT_Selected>()
                 .Build();
         }
 
@@ -292,6 +324,18 @@ namespace NetworkTools.Systems.Tools {
             m_SecondaryApplyAction.shouldBeEnabled = true;
         }
 
+
+        /// <summary>
+        ///     Swaps highlighting between two entities (removes from old, adds to new).
+        ///     Simple single-node highlighting utility.
+        /// </summary>
+        /// <param name="oldEntity">Entity to remove highlighting from</param>
+        /// <param name="newEntity">Entity to add highlighting to</param>
+        protected virtual void SwapHighlitedEntities(Entity oldEntity, Entity newEntity, NT_Highlighted highlightData) {
+            RemoveHighlight(oldEntity);
+            AddHighlight(newEntity, highlightData);
+        }
+
         /// <summary>
         ///     Adds NT_Highlighted component to an entity.
         /// </summary>
@@ -301,6 +345,12 @@ namespace NetworkTools.Systems.Tools {
             }
 
             EntityManager.AddComponentData(entity, highlightData);
+            EntityManager.AddComponent<Highlighted>(entity);
+
+            if (!EntityManager.HasComponent<BatchesUpdated>(entity))
+            {
+                EntityManager.AddComponent<BatchesUpdated>(entity);
+            }
         }
 
         /// <summary>
@@ -311,7 +361,12 @@ namespace NetworkTools.Systems.Tools {
                 return;
             }
 
-            EntityManager.RemoveComponent<NT_Highlighted>(entity);
+            EntityManager.RemoveComponent(entity, HighlightedComponentTypeSet);
+
+            if (!EntityManager.HasComponent<BatchesUpdated>(entity))
+            {
+                EntityManager.AddComponent<BatchesUpdated>(entity);
+            }
         }
 
         /// <summary>
@@ -331,7 +386,7 @@ namespace NetworkTools.Systems.Tools {
                 return;
             }
 
-            EntityManager.RemoveComponent<NT_Highlighted>(m_EntitiesWithHighlightedQuery);
+            EntityManager.RemoveComponent(m_EntitiesWithHighlightedQuery, HighlightedComponentTypeSet);
         }
     }
 }

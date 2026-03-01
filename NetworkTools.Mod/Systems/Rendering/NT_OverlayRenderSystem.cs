@@ -33,6 +33,7 @@ namespace NetworkTools.Systems {
     public partial class NT_OverlayRenderSystem : GameSystemBase {
         private EntityQuery m_EdgeQuery;
         private EntityQuery m_TempEdgeQuery;
+        private EntityQuery m_TempNodeQuery;
         private PrefixedLogger m_Log;
         private EntityQuery m_NodeQuery;
         private EntityQuery m_HandleQuery;
@@ -61,6 +62,11 @@ namespace NetworkTools.Systems {
 
             m_TempEdgeQuery = SystemAPI.QueryBuilder()
                 .WithAll<Edge, Temp>()
+                .WithNone<Deleted, Hidden>()
+                .Build();
+
+            m_TempNodeQuery = SystemAPI.QueryBuilder()
+                .WithAll<Node, Temp>()
                 .WithNone<Deleted, Hidden>()
                 .Build();
 
@@ -163,6 +169,21 @@ namespace NetworkTools.Systems {
 
                 m_OverlayRenderSystem.AddBufferWriter(drawTempEdgesJobHandle);
                 Dependency = drawTempEdgesJobHandle;
+            }
+
+            if (tool.RenderTempNodes) {
+                var drawTempNodesJob = new DrawTempNodesJob {
+                    m_Buffer                  = m_OverlayRenderSystem.GetBuffer(out var tempNodeBufferJobHandle),
+                    m_TempComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Temp>(),
+                    m_NodeComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Node>()
+                };
+
+                var drawTempNodesJobHandle = drawTempNodesJob.ScheduleByRef(m_TempNodeQuery,
+                    JobHandle.CombineDependencies(Dependency,
+                        tempNodeBufferJobHandle));
+
+                m_OverlayRenderSystem.AddBufferWriter(drawTempNodesJobHandle);
+                Dependency = drawTempNodesJobHandle;
             }
         }
     }
