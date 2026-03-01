@@ -1,19 +1,8 @@
-﻿// <copyright file="NT_PathTransformToolSystem.cs" company="Luca Rager">
-// Copyright (c) Luca Rager. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-// </copyright>
-
-namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
+﻿namespace NetworkTools.Systems.Tools.RoadShape {
     using Colossal.Entities;
     using Game.Common;
-    using Game.Input;
     using Game.Net;
     using Game.Notifications;
-    using Game.Prefabs;
-    using Game.Rendering;
-    using Game.Simulation;
     using Game.Tools;
     using NetworkTools.Components;
     using Unity.Collections;
@@ -21,157 +10,7 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Jobs;
     using Unity.Mathematics;
 
-    #endregion
-
-    /// <summary>
-    ///     Represents the currentEntity selection state of the tool.
-    /// </summary>
-    public enum PathTransformSelectionState {
-        NoSelection = 0,
-        StartNodeSelected = 1,
-        EndNodeSelected = 2
-    }
-
-    /// <summary>
-    ///     # Continuous Edge (CE) Tool System
-    ///     Selection System that allows selecting a contiguous edge and performing operations on it.
-    ///     It selects all edge segments between a start and end node.
-    ///     - The *OperationState* tracks the current transformation operation (slope/curve) and its phase.
-    ///     - The *PathTransformSelectionState* handles user interactions for selecting nodes and edges.
-    /// </summary>
-    public partial class NT_PathTransformToolSystem : NT_BaseToolSystem {
-        /// <summary>
-        ///     Currently selected path of edges
-        /// </summary>
-        private NativeList<Entity> m_CurrentPathEdges;
-
-        /// <summary>
-        ///     Currently selected path of nodes
-        /// </summary>
-        private NativeList<Entity> m_CurrentPathNodes;
-
-        /// <summary>
-        ///     List of currently eligible node entities for selection
-        /// </summary>
-        private NativeList<Entity> m_EligibleNodes;
-
-        /// <summary>
-        ///     Caches the last hit position
-        /// </summary>
-        private float3 m_LastHitPosition;
-
-        /// <summary>
-        ///     Next path of edges (updated on hover)
-        /// </summary>
-        private NativeList<Entity> m_NextPathEdges;
-
-        /// <summary>
-        ///     Next path of nodes (updated on hover)
-        /// </summary>
-        private NativeList<Entity> m_NextPathNodes;
-
-        private EntityQuery m_NodesWithSelectedFirstQuery;
-        private EntityQuery m_NodesWithSelectedLastQuery;
-        private EntityQuery m_NodesWithSelectedQuery;
-
-        /// <summary>
-        ///     List of currently selected node entities, creating a contiguous path
-        /// </summary>
-        private NativeList<Entity> m_SelectedNodes;
-
-        /// <summary>
-        ///     Tracks whether an update/re-render is needed on the next frame.
-        ///     This is set to true when something changes that requires regenerating preview entities.
-        ///     Gets reset to false after being processed.
-        /// </summary>
-        private bool m_UpdateNeeded;
-
-        /// <summary>
-        ///     Current config
-        /// </summary>
-        public TransformConfig TransformConfig;
-
-        public override string toolID => "PathTransform Tool";
-
-        /// <summary>
-        ///     Current selection state (Happens during Configuring phase of OperationState)
-        ///     ## m_OperationState machine:
-        ///     ### NoSelection
-        ///     - All network nodes in the game have NT_Eligible component
-        ///     - Actions:
-        ///     - [Hover] over NT_Eligible Node: Clear NT_Highlighted. Adds NT_Highlighted to node.
-        ///     - [Hover] over nothing: Removes all NT_Highlighted.
-        ///     - [Apply]: Transition to `StartNodeSelected` with node.
-        ///     - [Cancel]: Exit Tool
-        ///     ### StartNodeSelected
-        ///     - When entering state with node, adds this node to the start of the "Nodes" list. This node is now the start node
-        ///     - First node has: NT_Selected, NT_SelectedFirst
-        ///     - Eligible nodes are nodes reachable via an uninterrupted edge (no intersections) from the start node.
-        ///     - Any eligible nodes have: NT_Eligible
-        ///     - Actions:
-        ///     - [Hover] over NT_Eligible Node: Clear NT_Highlighted. Adds NT_Highlighted to node. Add NT_Highlighted to Edges and
-        ///     Nodes between start and hovered node.
-        ///     - [Hover] over nothing: Removes all NT_Highlighted.
-        ///     - [Apply]: Transition to `EndNodeSelected` with node.
-        ///     - [Cancel]: Transition back to `NoSelection`
-        ///     ### EndNodeSelected
-        ///     - When entering state with node, adds this node to the "Nodes" list. The new node is now the end node.
-        ///     - First node has: NT_Selected, NT_SelectedFirst
-        ///     - Last node has: NT_Selected, NT_SelectedLast
-        ///     - Edges and Nodes in path between the two have: NT_Selected
-        ///     - Eligible nodes are nodes reachable via an uninterrupted edge (no intersections) from the end node. This allows
-        ///     "extending" the selected edge beyond intersections.
-        ///     - Any eligible nodes have: NT_Eligible
-        ///     - Actions:
-        ///     - [Hover] over NT_Eligible Node: Clear NT_Highlighted. Adds NT_Highlighted to node. Add NT_Highlighted to Edges and
-        ///     Nodes between currentEntity end node and hovered node.
-        ///     - [Hover] over nothing: Removes all NT_Highlighted.
-        ///     - [Apply]: Transition to `EndNodeSelected` with new end node.
-        ///     - [Cancel]: Pop last node from cache. If it's the last "end node", transition back to `StartNodeSelected`
-        /// </summary>
-        public PathTransformSelectionState CurrentSelectionState =>
-            m_SelectedNodes.Length switch {
-                0 => PathTransformSelectionState.NoSelection,
-                1 => PathTransformSelectionState.StartNodeSelected,
-                _ => PathTransformSelectionState.EndNodeSelected
-            };
-
-        /// <summary>
-        ///     Gets the array of currently selected node entities.
-        /// </summary>
-        /// <returns>Array of selected Entity objects.</returns>
-        public Entity[] GetSelectedNodes() {
-            return m_SelectedNodes.ToArray(Allocator.Temp).ToArray();
-        }
-
-        /// <summary>
-        ///     Configures the transformation from the UI.
-        /// </summary>
-        public void SetTransformationConfig(TransformConfig config) {
-            TransformConfig = config;
-            m_UpdateNeeded  = true;
-
-            // Enable/Disable rendering based on config
-            RenderSlopeTooltips = config.HasSlopeTransform;
-
-            m_Log.Debug(
-                $"Transformation config set: ShapeTemplate={config.Shape.Template}, SlopeTemplate={config.Slope.Template}");
-        }
-
-        /// <summary>
-        ///     Configures the slope transformation from the UI (backward-compatible).
-        /// </summary>
-        public void SetSlopeConfig(SlopeCurveConfig slopeConfig) {
-            SetTransformationConfig(TransformConfig.SlopeOnly(slopeConfig));
-        }
-
-        /// <summary>
-        ///     Configures the shape transformation from the UI.
-        /// </summary>
-        public void SetShapeConfig(ShapeCurveConfig shapeConfig) {
-            SetTransformationConfig(TransformConfig.ShapeOnly(shapeConfig));
-        }
-
+    public partial class NT_RoadShapeToolSystem {
         /// <summary>
         ///     Updates the operation phase based on the current selection state.
         ///     Should be called after any operation that changes the selected node count.
@@ -182,12 +21,26 @@ namespace NetworkTools.Systems.Tools {
                 return;
             }
 
+            var previousPhase = Phase;
+
             // Derive phase from node count
             Phase = m_SelectedNodes.Length switch {
                 0 => OperationPhase.Idle,
                 1 => OperationPhase.Configuring,
                 _ => OperationPhase.Ready
             };
+
+            // PHASE TRANSITION: Entering Ready
+            if (Phase == OperationPhase.Ready && previousPhase != OperationPhase.Ready)
+            {
+                CreateTransformHandles();
+            }
+
+            // PHASE TRANSITION: Leaving Ready
+            else if (Phase != OperationPhase.Ready && previousPhase == OperationPhase.Ready)
+            {
+                DestroyAllHandles();
+            }
         }
 
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
@@ -198,6 +51,11 @@ namespace NetworkTools.Systems.Tools {
                 HandleRemoveNode();
                 m_UpdateNeeded = true;
                 return inputDeps;
+            }
+
+            // Handle was hovered, clicked, or dragged                   
+            if (Phase == OperationPhase.Ready && ProcessHandleInput()) { 
+                return HandleTempEntities(inputDeps); 
             }
 
             // Get raycast result
@@ -258,13 +116,8 @@ namespace NetworkTools.Systems.Tools {
             ClearAllHighlights();
         }
 
-        private void UpdateActions() {
-            m_ApplyAction.shouldBeEnabled          = true;
-            m_SecondaryApplyAction.shouldBeEnabled = true;
-        }
-
         private void HandlePathUpdate(ControlPoint controlPoint) {
-            if (CurrentSelectionState == PathTransformSelectionState.NoSelection) {
+            if (CurrentSelectionState == SelectionState.NoSelection) {
                 return;
             }
 
@@ -289,15 +142,15 @@ namespace NetworkTools.Systems.Tools {
 
         private void HandleHover(ControlPoint controlPoint) {
             switch (CurrentSelectionState) {
-                case PathTransformSelectionState.NoSelection:
+                case SelectionState.NoSelection:
                     m_Log.Debug("[NoSelection] Hovering over potential start point.");
-                    SwapHighlitedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity);
+                    SwapHighlitedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity, NT_Highlighted.DefaultNode);
                     return;
-                case PathTransformSelectionState.StartNodeSelected:
+                case SelectionState.StartNodeSelected:
                     PreviewPath();
                     m_Log.Debug("[StartNodeSelected] Hovering over potential end point.");
                     return;
-                case PathTransformSelectionState.EndNodeSelected:
+                case SelectionState.EndNodeSelected:
                     PreviewPath();
                     m_Log.Debug("[EndNodeSelected] Hovering over another potential end point.");
                     return;
@@ -319,7 +172,7 @@ namespace NetworkTools.Systems.Tools {
 
             // Add Node
             switch (CurrentSelectionState) {
-                case PathTransformSelectionState.NoSelection:
+                case SelectionState.NoSelection:
                     m_Log.Debug("[NoSelection -> StartNodeSelected] Adding start point.");
                     m_SelectedNodes.Add(entity);
 
@@ -327,7 +180,7 @@ namespace NetworkTools.Systems.Tools {
                     EntityManager.AddComponentData(entity, NT_Selected.DefaultNode);
                     EntityManager.AddComponent<NT_SelectedFirst>(entity);
                     break;
-                case PathTransformSelectionState.StartNodeSelected:
+                case SelectionState.StartNodeSelected:
                     m_Log.Debug("[StartNodeSelected -> EndNodeSelected] Adding end point.");
                     m_SelectedNodes.Add(entity);
 
@@ -336,7 +189,7 @@ namespace NetworkTools.Systems.Tools {
                     EntityManager.AddComponent<NT_SelectedLast>(entity);
 
                     break;
-                case PathTransformSelectionState.EndNodeSelected:
+                case SelectionState.EndNodeSelected:
                     m_Log.Debug("[EndNodeSelected] Adding another end point.");
 
                     // Remove marker from previous end node
@@ -387,16 +240,16 @@ namespace NetworkTools.Systems.Tools {
         private void HandleRemoveNode() {
             var lastNode = m_SelectedNodes[^1];
             switch (CurrentSelectionState) {
-                case PathTransformSelectionState.NoSelection:
+                case SelectionState.NoSelection:
                     break;
-                case PathTransformSelectionState.StartNodeSelected:
+                case SelectionState.StartNodeSelected:
                     m_Log.Debug("[StartNodeSelected -> NoSelection] Removing start point.");
                     EntityManager.RemoveComponent<NT_Selected>(lastNode);
                     EntityManager.RemoveComponent<NT_SelectedFirst>(lastNode);
                     m_SelectedNodes.RemoveAt(m_SelectedNodes.Length - 1);
                     StateTransitionNoNodes();
                     break;
-                case PathTransformSelectionState.EndNodeSelected:
+                case SelectionState.EndNodeSelected:
                     if (m_SelectedNodes.Length > 2) {
                         m_Log.Debug(
                             $"[EndNodeSelected] Removing an end point. {m_SelectedNodes.Length - 1} end points remaining");
@@ -498,25 +351,6 @@ namespace NetworkTools.Systems.Tools {
             }
 
             return controlPoint;
-        }
-
-        /// <summary>
-        ///     Swaps highlighting between two entities (removes from old, adds to new).
-        ///     Simple single-node highlighting utility.
-        /// </summary>
-        /// <param name="oldEntity">Entity to remove highlighting from</param>
-        /// <param name="newEntity">Entity to add highlighting to</param>
-        private void SwapHighlitedEntities(Entity oldEntity, Entity newEntity) {
-            RemoveHighlight(oldEntity);
-            AddHighlight(newEntity);
-        }
-
-        private void AddHighlight(Entity entity) {
-            EntityManager.AddComponentData(entity, NT_Highlighted.DefaultNode);
-        }
-
-        private void RemoveHighlight(Entity entity) {
-            EntityManager.RemoveComponent<NT_Highlighted>(entity);
         }
 
         /// <summary>
@@ -725,10 +559,12 @@ namespace NetworkTools.Systems.Tools {
                     pathNodes.Add(startNode);
 
                     // Reverse path to go from start to end
-                    for (var i = pathNodes.Length - 1; i >= 0; i--) nodesPath.Add(pathNodes[i]);
+                    for (var i = pathNodes.Length - 1; i >= 0; i--)
+                        nodesPath.Add(pathNodes[i]);
 
                     // Reverse edges to go from start to end
-                    for (var i = pathEdges.Length - 1; i >= 0; i--) edgePath.Add(pathEdges[i]);
+                    for (var i = pathEdges.Length - 1; i >= 0; i--)
+                        edgePath.Add(pathEdges[i]);
                 }
 
                 pathNodes.Dispose();
@@ -754,18 +590,13 @@ namespace NetworkTools.Systems.Tools {
             ClearAllHighlights();
 
             // Add highlights to nodes
-            foreach (var node in m_NextPathNodes) EntityManager.AddComponentData(node, NT_Highlighted.DefaultNode);
+            foreach (var node in m_NextPathNodes)
+                AddHighlight(node, NT_Highlighted.DefaultNode);
 
             // Add highlights to edges
-            foreach (var edge in m_NextPathEdges) EntityManager.AddComponentData(edge, NT_Highlighted.DefaultEdge);
-        }
-
-        /// <summary>
-        ///     Clears all NT_Highlighted components from nodes and edges (batch operation).
-        /// </summary>
-        private void ClearAllHighlights() {
-            EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
-            EntityManager.RemoveComponent<NT_Highlighted>(m_EdgesWithHighlightedQuery);
+            foreach (var edge in m_NextPathEdges) {
+                AddHighlight(edge, NT_Highlighted.DefaultEdge);
+            }
         }
     }
 }

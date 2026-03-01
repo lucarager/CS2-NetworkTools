@@ -1,21 +1,27 @@
-import React, { useState } from "react";
+import React from "react";
 import styles from "./wrapper.module.scss";
 import { ToolActionPanel } from "components/toolActionPanel/toolActionPanel";
 import { ToolSelectPanel } from "components/toolSelectPanel/toolSelectPanel";
 import { Button, Tooltip } from "cs2/ui";
 import iconSrc from "../../assets/logo.svg";
+import { useValue } from "cs2/api";
+import { GAME_BINDINGS } from "gameBindings";
 
 export const Wrapper = () => {
-    const [enabled, setIsEnabled] = useState(false);
+    const panelOpenBinding = useValue(GAME_BINDINGS.PANEL_OPEN.binding);
 
     return (
         <>
             <Tooltip tooltip={`Network Tools`} delayTime={0} direction="down">
-                <Button variant="floating" onSelect={() => setIsEnabled(!enabled)} src={iconSrc} />
+                <Button
+                    variant="floating"
+                    onSelect={() => GAME_BINDINGS.PANEL_OPEN.set(!panelOpenBinding)}
+                    src={iconSrc}
+                />
             </Tooltip>
             <div className={styles.wrapper}>
-                {enabled && <ToolSelectPanel />}
-                {enabled && <ToolActionPanel />}
+                {panelOpenBinding && <ToolSelectPanel />}
+                {panelOpenBinding && <ToolActionPanel />}
             </div>
         </>
     );

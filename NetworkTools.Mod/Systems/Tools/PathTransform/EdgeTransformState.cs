@@ -1,16 +1,12 @@
-// <copyright file="EdgeTransformState.cs" company="Luca Rager">
+// <copyright file="EdgeState.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
 namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
     using Colossal.Mathematics;
     using Unity.Entities;
     using Unity.Mathematics;
-
-    #endregion
 
     /// <summary>
     /// An enum for network composition.

@@ -1,12 +1,4 @@
-﻿// <copyright file="NT_PathTransformToolSystem.Lifecycle.cs" company="Luca Rager">
-// Copyright (c) Luca Rager. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license
-// information.
-// </copyright>
-
-namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
+﻿namespace NetworkTools.Systems.Tools.RoadShape {
     using Game.Net;
     using Game.Prefabs;
     using Game.Rendering;
@@ -16,10 +8,10 @@ namespace NetworkTools.Systems.Tools {
     using NetworkTools.Settings;
     using Unity.Collections;
     using Unity.Entities;
+    using Game.Prefabs;
+    using NetworkTools.Components;
 
-    #endregion
-
-    public partial class NT_PathTransformToolSystem {
+    public partial class NT_RoadShapeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
             m_Log.Debug(
                 $"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_PathTransform>(prefab)}");
@@ -27,7 +19,8 @@ namespace NetworkTools.Systems.Tools {
                 prefab is NT_ToolPrefab &&
                 m_PrefabSystem.HasComponent<NT_PathTransform>(prefab);
 
-            if (!validRequest) {
+            if (!validRequest)
+            {
                 return false;
             }
 
@@ -38,37 +31,21 @@ namespace NetworkTools.Systems.Tools {
         protected override void OnCreate() {
             base.OnCreate();
 
-            m_Log.Prefix = nameof(NT_PathTransformToolSystem);
+            m_Log.Prefix = nameof(NT_RoadShapeToolSystem);
 
             // Configuration
             RenderEligibleNodes      = true;
-            RenderEligibleEdges      = true;
+            //RenderEligibleEdges      = true;
+            RenderHandles            = true;
             DisableVanillaValidation = true;
 
             // Data Structures
-            m_SelectedNodes = new NativeList<Entity>(32, Allocator.Persistent);
-            m_EligibleNodes = new NativeList<Entity>(64, Allocator.Persistent);
+            m_SelectedNodes    = new NativeList<Entity>(32, Allocator.Persistent);
+            m_EligibleNodes    = new NativeList<Entity>(64, Allocator.Persistent);
             m_CurrentPathNodes = new NativeList<Entity>(32, Allocator.Persistent);
             m_CurrentPathEdges = new NativeList<Entity>(32, Allocator.Persistent);
-            m_NextPathNodes = new NativeList<Entity>(32, Allocator.Persistent);
-            m_NextPathEdges = new NativeList<Entity>(32, Allocator.Persistent);
-
-            // Queries
-            m_NodesWithSelectedQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, NT_Selected>()
-                .Build();
-            m_NodesWithSelectedFirstQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, NT_SelectedFirst>()
-                .Build();
-            m_NodesWithSelectedLastQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, NT_SelectedLast>()
-                .Build();
-            m_EdgesWithHighlightedQuery = SystemAPI.QueryBuilder()
-                .WithAll<Edge, NT_Highlighted>()
-                .Build();
-            m_EdgesWithSelectedQuery = SystemAPI.QueryBuilder()
-                .WithAll<Edge, NT_Selected>()
-                .Build();
+            m_NextPathNodes    = new NativeList<Entity>(32, Allocator.Persistent);
+            m_NextPathEdges    = new NativeList<Entity>(32, Allocator.Persistent);
 
             // Override default query to exclude some networks
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
@@ -113,6 +90,41 @@ namespace NetworkTools.Systems.Tools {
             m_EligibleNodes.Clear();
             m_CurrentPathNodes.Clear();
             m_CurrentPathEdges.Clear();
+        }
+
+        public void MarkDirty() {
+            m_UpdateNeeded = true;
+        }
+
+        /// <summary>
+        ///     Sets a new transformation.
+        /// </summary>
+        public void SetTransformationConfig(ShapeTransformConfig config) {
+            ShapeTransformConfig = config;
+            m_UpdateNeeded       = true;
+
+            // Enable/Disable rendering based on config
+            RenderSlopeTooltips = config.RenderSlopeTooltips;
+
+            // RE-INITIALIZE: Config changed while in Ready phase
+            if (Phase == OperationPhase.Ready)
+            {
+                CreateTransformHandles(); // Re-creates handles + re-initializes transforms
+            }
+
+            m_Log.Debug(
+                $"Transformation config set: ShapeTemplate={config.Template}");
+        }
+
+        /// <summary>
+        ///     Configures the transformation from the UI.
+        /// </summary>
+        public void UpdateTransformationConfig(ShapeTransformConfig config) {
+            ShapeTransformConfig = config;
+            m_UpdateNeeded       = true;
+
+            m_Log.Debug(
+                $"Transformation config updated: ShapeTemplate={config.Template}");
         }
     }
 }

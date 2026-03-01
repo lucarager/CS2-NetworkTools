@@ -26,6 +26,7 @@ namespace NetworkTools {
     using HarmonyLib;
     using NetworkTools.Systems;
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Utils;
     using Newtonsoft.Json;
     using Settings;
@@ -134,7 +135,7 @@ namespace NetworkTools {
             // Activate Systems
             updateSystem.UpdateAt<NT_PrefabsCreateSystem>(SystemUpdatePhase.PrefabUpdate);
             // Tools
-            updateSystem.UpdateAt<NT_PathTransformToolSystem>(SystemUpdatePhase.ToolUpdate);
+            updateSystem.UpdateAt<NT_RoadShapeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_NodeControlToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_RemoveNodeToolSystem>(SystemUpdatePhase.ToolUpdate);

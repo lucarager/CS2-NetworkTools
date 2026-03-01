@@ -3,10 +3,8 @@ import styles from "./toolActionPanel.module.scss";
 import {
     GAME_BINDINGS,
     GAME_TRIGGERS,
-    SlopeConfigData,
     ShapeConfigData,
-    SlopeTemplate,
-    ShapeTemplate,
+    ShapeTransformTemplate,
 } from "gameBindings";
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
@@ -14,19 +12,36 @@ import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
 
 // Shape modes (XZ plane transformations)
-const SHAPE_MODES: { label: string; id: ShapeTemplate; icon: string }[] = [
-    { label: "Preserve", id: "preserve", icon: "coui://nt/Modes/Shape/Preserve.svg" },
-    { label: "Straighten", id: "straighten", icon: "coui://nt/Modes/Shape/Straight.svg" },
-    { label: "Smooth", id: "smooth", icon: "coui://nt/Modes/Shape/Smooth.svg" },
-    // { label: "Equal Spacing", id: "equalspacing", icon: "coui://nt/Modes/Shape/EqualSpacing.svg" },
-];
-
-// Slope modes (Y axis transformations)
-const SLOPE_MODES: { label: string; id: SlopeTemplate; icon: string }[] = [
-    { label: "Preserve", id: "preserve", icon: "coui://nt/Modes/Slope/Preserve.svg" },
-    { label: "Constant Slope", id: "linear", icon: "coui://nt/Modes/Slope/Linear.svg" },
-    { label: "EaseInOut Slope", id: "easeinout", icon: "coui://nt/Modes/Slope/Eased.svg" },
-    // { label: "Parabolic", id: "parabolic", icon: "coui://nt/Modes/Slope/Parabolic.svg" },
+const MODES: { label: string; tag?: string; id: ShapeTransformTemplate; icon: string }[] = [
+    {
+        label: "Preserve",
+        id: ShapeTransformTemplate.Preserve,
+        icon: "coui://nt/Modes/Shape/Preserve.svg",
+    },
+    {
+        label: "Straighten Curve",
+        tag: "curve",
+        id: ShapeTransformTemplate.CurveStraighten,
+        icon: "coui://nt/Modes/Shape/Straight.svg",
+    },
+    {
+        label: "Smooth Curve",
+        tag: "curve",
+        id: ShapeTransformTemplate.CurveSmooth,
+        icon: "coui://nt/Modes/Shape/Smooth.svg",
+    },
+    {
+        label: "Constant Slope",
+        tag: "slope",
+        id: ShapeTransformTemplate.SlopeLinear,
+        icon: "coui://nt/Modes/Slope/Linear.svg",
+    },
+    {
+        label: "EaseInOut Slope",
+        tag: "slope",
+        id: ShapeTransformTemplate.SlopeEaseInOut,
+        icon: "coui://nt/Modes/Slope/Eased.svg",
+    },
 ];
 
 interface TransformControlProps {
@@ -35,16 +50,7 @@ interface TransformControlProps {
 
 export const ShapeSlopeControls: React.FC<TransformControlProps> = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
-    const slopeConfig = useValue(GAME_BINDINGS.SLOPE_CONFIG.binding);
     const shapeConfig = useValue(GAME_BINDINGS.SHAPE_CONFIG.binding);
-
-    const handleSlopeParameterChange = (param: keyof SlopeConfigData, value: string | number) => {
-        const newConfig: SlopeConfigData = {
-            ...slopeConfig,
-            [param]: value,
-        };
-        GAME_BINDINGS.SLOPE_CONFIG.set(newConfig);
-    };
 
     const handleShapeParameterChange = (param: keyof ShapeConfigData, value: string | number) => {
         const newConfig: ShapeConfigData = {
@@ -55,7 +61,9 @@ export const ShapeSlopeControls: React.FC<TransformControlProps> = () => {
     };
 
     // Check if any transformation is configured
-    const hasTransform = shapeConfig.template !== "preserve" || slopeConfig.template !== "preserve";
+    const hasTransform = shapeConfig.template !== ShapeTransformTemplate.Preserve;
+
+    console.log(shapeConfig);
 
     return (
         <>
@@ -87,14 +95,13 @@ export const ShapeSlopeControls: React.FC<TransformControlProps> = () => {
             {/* Transform Controls - Show when 2+ nodes selected */}
             {selectedEntitiesBinding.length >= 2 && (
                 <>
-                    {/* Shape Controls (XZ) */}
                     <div className={styles.divider}></div>
                     <div className={styles.col}>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>Shape (XZ)</span>
+                                <span className={styles.paramLabel}>Mode</span>
                                 <div className={styles.buttonRow}>
-                                    {SHAPE_MODES.map((preset) => (
+                                    {MODES.map((preset) => (
                                         <Tooltip
                                             key={preset.id}
                                             tooltip={preset.label}
@@ -114,6 +121,9 @@ export const ShapeSlopeControls: React.FC<TransformControlProps> = () => {
                                                         preset.id,
                                                     )
                                                 }>
+                                                {preset.tag && (
+                                                    <div className={styles.tag}>{preset.tag}</div>
+                                                )}
                                                 <img src={preset.icon} className={styles.icon} />
                                             </Button>
                                         </Tooltip>
@@ -123,7 +133,7 @@ export const ShapeSlopeControls: React.FC<TransformControlProps> = () => {
                         </div>
 
                         {/* Smooth Parameters */}
-                        {shapeConfig.template === "smooth" && (
+                        {/* {shapeConfig.template === ShapeTransformTemplate.CurveSmooth && (
                             <div className={styles.sliderField}>
                                 <VC.FloatSliderField
                                     value={shapeConfig.smoothingFactor}
@@ -136,68 +146,32 @@ export const ShapeSlopeControls: React.FC<TransformControlProps> = () => {
                                     }}
                                 />
                             </div>
-                        )}
-                    </div>
-
-                    {/* Slope Controls (Y) */}
-                    <div className={styles.divider}></div>
-                    <div className={styles.col}>
-                        <div className={styles.controlRow}>
-                            <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>Slope (Y)</span>
-                                <div className={styles.buttonRow}>
-                                    {SLOPE_MODES.map((preset) => (
-                                        <Tooltip
-                                            key={preset.id}
-                                            tooltip={preset.label}
-                                            delayTime={0}>
-                                            <Button
-                                                key={preset.id}
-                                                variant="primary"
-                                                className={c(
-                                                    styles.iconButton,
-                                                    slopeConfig.template === preset.id
-                                                        ? styles.iconButton__active
-                                                        : null,
-                                                )}
-                                                onSelect={() =>
-                                                    handleSlopeParameterChange(
-                                                        "template",
-                                                        preset.id,
-                                                    )
-                                                }>
-                                                <img src={preset.icon} className={styles.icon} />
-                                            </Button>
-                                        </Tooltip>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                        )} */}
 
                         {/* EaseInOut Parameters */}
-                        {slopeConfig.template === "easeinout" && (
+                        {shapeConfig.template === ShapeTransformTemplate.SlopeEaseInOut && (
                             <>
                                 <div className={styles.sliderField}>
                                     <VC.FloatSliderField
-                                        value={slopeConfig.easeInLength}
+                                        value={shapeConfig.easeInLength}
                                         label={"Start easing strength"}
                                         min={0}
                                         max={0.5}
                                         fractionDigits={3}
                                         onChange={(e: number) => {
-                                            handleSlopeParameterChange("easeInLength", e);
+                                            handleShapeParameterChange("easeInLength", e);
                                         }}
                                     />
                                 </div>
                                 <div className={styles.sliderField}>
                                     <VC.FloatSliderField
-                                        value={slopeConfig.easeOutLength}
+                                        value={shapeConfig.easeOutLength}
                                         label={"End easing strength"}
                                         min={0}
                                         max={0.5}
                                         fractionDigits={3}
                                         onChange={(e: number) => {
-                                            handleSlopeParameterChange("easeOutLength", e);
+                                            handleShapeParameterChange("easeOutLength", e);
                                         }}
                                     />
                                 </div>
@@ -205,29 +179,29 @@ export const ShapeSlopeControls: React.FC<TransformControlProps> = () => {
                         )}
 
                         {/* Parabolic Parameters */}
-                        {slopeConfig.template === "parabolic" && (
+                        {shapeConfig.template === ShapeTransformTemplate.SlopeParabolic && (
                             <>
                                 <div className={styles.controlRow}>
                                     <VC.FloatSliderField
-                                        value={slopeConfig.archHeight}
+                                        value={shapeConfig.archHeight}
                                         label={"Arch Height"}
                                         min={-1}
                                         max={1}
                                         fractionDigits={3}
                                         onChange={(e: number) => {
-                                            handleSlopeParameterChange("archHeight", e);
+                                            handleShapeParameterChange("archHeight", e);
                                         }}
                                     />
                                 </div>
                                 <div className={styles.controlRow}>
                                     <VC.FloatSliderField
-                                        value={slopeConfig.archPosition}
+                                        value={shapeConfig.archPosition}
                                         label={"Arch Position"}
                                         min={0.1}
                                         max={0.9}
                                         fractionDigits={3}
                                         onChange={(e: number) => {
-                                            handleSlopeParameterChange("archPosition", e);
+                                            handleShapeParameterChange("archPosition", e);
                                         }}
                                     />
                                 </div>
@@ -249,7 +223,7 @@ export const ShapeSlopeControls: React.FC<TransformControlProps> = () => {
                             variant="primary"
                             className={styles.applyButton}
                             disabled={selectedEntitiesBinding.length < 2 || !hasTransform}
-                            onSelect={() => GAME_TRIGGERS.APPLY_SLOPE(slopeConfig.template)}>
+                            onSelect={() => GAME_TRIGGERS.APPLY_SLOPE()}>
                             Apply Transform
                         </Button>
                     )}
