@@ -21,6 +21,7 @@ end_of_line = native
 insert_final_newline = false
 
 # Microsoft .NET properties
+csharp_new_line_before_else = false
 csharp_new_line_before_members_in_object_initializers = false
 csharp_new_line_before_open_brace = accessors,anonymous_methods,control_blocks,events,indexers,lambdas,properties
 csharp_preferred_modifier_order = public, private, protected, internal, file, new, static, abstract, virtual, sealed, readonly, override, extern, unsafe, volatile, async, required:suggestion
@@ -114,7 +115,8 @@ dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
 
 # ReSharper properties
-resharper_braces_for_ifelse = required
+resharper_braces_for_ifelse = not_required_for_both
+resharper_braces_redundant = false
 resharper_csharp_allow_far_alignment = true
 resharper_csharp_wrap_arguments_style = chop_if_long
 resharper_enforce_line_ending_style = true
@@ -123,6 +125,7 @@ resharper_int_align_assignments = true
 resharper_int_align_invocations = true
 resharper_keep_existing_invocation_parens_arrangement = false
 resharper_other_braces = end_of_line
+resharper_parentheses_redundancy_style = remove
 resharper_qualified_using_at_nested_scope = true
 
 # ReSharper inspection severities
@@ -145,5 +148,5 @@ indent_size = 4
 tab_width = 4
 
 # Report when a symbol is shadowed or ambiguous
-dotnet_diagnostic.CS0104.severity = error
-dotnet_diagnostic.CS0433.severity = error
+dotnet_diagnostic.cs0104.severity = error
+dotnet_diagnostic.cs0433.severity = error
