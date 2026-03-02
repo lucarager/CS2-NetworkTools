@@ -25,25 +25,25 @@
         /// </summary>
         public enum SelectedEntityType {
             Unknown = 0,
-            Node = 1,
-            Edge = 2
+            Node    = 1,
+            Edge    = 2
         }
 
-        private int m_LastSelectedNodesHash;
-        private string m_LastSelectedPrefab;
-        private int m_LastToolPrefabCount;
-        private PrefixedLogger m_Log;
-        private NameSystem m_NameSystem;
-        private NT_RoadShapeToolSystem m_NtRoadShapeToolSystem;
-        private ValueBindingHelper<bool> m_PanelOpenBinding;
-        private PrefabSystem m_PrefabSystem;
-        private ValueBindingHelper<ToolSelectionData[]> m_SelectedEntitiesBinding;
-        private ValueBindingHelper<string> m_SelectedPrefabBinding;
+        private int                                      m_LastSelectedNodesHash;
+        private string                                   m_LastSelectedPrefab;
+        private int                                      m_LastToolPrefabCount;
+        private PrefixedLogger                           m_Log;
+        private NameSystem                               m_NameSystem;
+        private NT_RoadShapeToolSystem                   m_NtRoadShapeToolSystem;
+        private ValueBindingHelper<bool>                 m_PanelOpenBinding;
+        private PrefabSystem                             m_PrefabSystem;
+        private ValueBindingHelper<ToolSelectionData[]>  m_SelectedEntitiesBinding;
+        private ValueBindingHelper<string>               m_SelectedPrefabBinding;
         private ValueBindingHelper<ShapeTransformConfig> m_ShapeConfigBinding;
-        private ProxyAction m_ToggleToolPanelAction;
+        private ProxyAction                              m_ToggleToolPanelAction;
 
-        private EntityQuery m_ToolPrefabQuery;
-        private ToolSystem m_ToolSystem;
+        private EntityQuery                        m_ToolPrefabQuery;
+        private ToolSystem                         m_ToolSystem;
         private ValueBindingHelper<ToolUILookup[]> m_ToolUIDataBinding;
 
         /// <inheritdoc />
@@ -63,10 +63,10 @@
             m_PanelOpenBinding        = CreateBinding("PANEL_OPEN",        false, HandlePanelOpen);
             m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES", new ToolSelectionData[] { });
             m_ShapeConfigBinding = CreateBinding("SHAPE_CONFIG",
-                ShapeTransformConfig.Preserve(),
-                HandleUpdateShapeConfig,
-                new ValueWriter<ShapeTransformConfig>(),
-                new ValueReader<ShapeTransformConfig>());
+                                                 ShapeTransformConfig.Preserve(),
+                                                 HandleUpdateShapeConfig,
+                                                 new ValueWriter<ShapeTransformConfig>(),
+                                                 new ValueReader<ShapeTransformConfig>());
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
             CreateTrigger("APPLY_SLOPE", HandleApplySlope);
@@ -75,8 +75,8 @@
             m_ToggleToolPanelAction = NetworkToolsMod.Instance.Settings.GetAction(NT_Settings.ToggleToolPanelStr);
 
             m_ToolPrefabQuery = SystemAPI.QueryBuilder()
-                .WithAll<Components.NT_ToolData>()
-                .Build();
+                                         .WithAll<Components.NT_ToolData>()
+                                         .Build();
 
             // Always enable
             m_ToggleToolPanelAction.shouldBeEnabled = true;
@@ -94,7 +94,7 @@
             var entityCount = m_ToolPrefabQuery.CalculateEntityCount();
             if (entityCount != m_LastToolPrefabCount) {
                 m_LastToolPrefabCount = entityCount;
-                var entities = m_ToolPrefabQuery.ToEntityArray(Allocator.Temp);
+                var entities        = m_ToolPrefabQuery.ToEntityArray(Allocator.Temp);
                 var toolLookupArray = new ToolUILookup[entities.Length];
                 for (var i = 0; i < entities.Length; i++) {
                     var prefab = m_PrefabSystem.GetPrefab<NT_ToolPrefab>(entities[i]);
@@ -106,26 +106,26 @@
 
             // Update selected prefab binding when it changes
             var currentPrefab = m_ToolSystem.activePrefab != null
-                ? m_ToolSystem.activePrefab.GetPrefabID().GetName()
-                : "";
+                                    ? m_ToolSystem.activePrefab.GetPrefabID().GetName()
+                                    : "";
             if (currentPrefab != m_LastSelectedPrefab) {
                 m_LastSelectedPrefab          = currentPrefab;
                 m_SelectedPrefabBinding.Value = currentPrefab;
             }
 
             // Update selected entities binding when selection changes
-            var selectedNodes = m_NtRoadShapeToolSystem.GetSelectedNodes();
+            var selectedNodes    = m_NtRoadShapeToolSystem.GetSelectedNodes();
             var currentNodesHash = ComputeSelectionHash(selectedNodes);
             if (currentNodesHash != m_LastSelectedNodesHash) {
                 m_LastSelectedNodesHash = currentNodesHash;
                 var selectedEntitiesData = new ToolSelectionData[selectedNodes.Length];
 
                 for (var i = 0; i < selectedNodes.Length; i++) {
-                    var entity = selectedNodes[i];
+                    var entity     = selectedNodes[i];
                     var entityType = DetermineEntityType(entity);
                     var entityName = entityType == SelectedEntityType.Node
-                        ? $"Node {i + 1}"
-                        : m_NameSystem.GetRenderedLabelName(entity);
+                                         ? $"Node {i + 1}"
+                                         : m_NameSystem.GetRenderedLabelName(entity);
                     selectedEntitiesData[i] = new ToolSelectionData(entity, entityType, entityName);
                 }
 
@@ -176,10 +176,10 @@
             if (currentConfig.Template == configData.Template) {
                 m_ShapeConfigBinding.Value = configData;
                 m_NtRoadShapeToolSystem.UpdateTransformationConfig(configData);
-            }
-            else {
+            } else {
                 ShapeTransformConfig newConfig;
 
+                // Create new config with default values
                 switch (configData.Template) {
                     case ShapeTransformTemplate.Preserve:
                     default:
@@ -189,11 +189,10 @@
                         newConfig = ShapeTransformConfig.SlopeLinear();
                         break;
                     case ShapeTransformTemplate.SlopeEaseInOut:
-                        newConfig = ShapeTransformConfig.SlopeEaseInOut(configData.EaseInControlPoint,
-                            configData.EaseOutControlPoint);
+                        newConfig = ShapeTransformConfig.SlopeEaseInOut();
                         break;
                     case ShapeTransformTemplate.SlopeParabolic:
-                        newConfig = ShapeTransformConfig.SlopeParabolic(configData.ArchHeight, configData.ArchPosition);
+                        newConfig = ShapeTransformConfig.SlopeParabolic();
                         break;
                     case ShapeTransformTemplate.CurveStraighten:
                         newConfig = ShapeTransformConfig.CurveStraighten();
@@ -212,8 +211,8 @@
             m_Log.Debug($"HandleSelectTool(id: {id})");
 
             if (m_PrefabSystem.TryGetPrefab(new PrefabID("NT_ToolPrefab",
-                        id),
-                    out var prefab)) {
+                                                         id),
+                                            out var prefab)) {
                 m_ToolSystem.ActivatePrefabTool(prefab);
             }
         }
@@ -265,9 +264,9 @@
         ///     Struct to store and send selected entity data to the React UI.
         /// </summary>
         public readonly struct ToolSelectionData : IJsonWritable {
-            private readonly Entity m_Entity;
+            private readonly Entity             m_Entity;
             private readonly SelectedEntityType m_EntityType;
-            private readonly string m_EntityName;
+            private readonly string             m_EntityName;
 
             public ToolSelectionData(Entity entity, SelectedEntityType entityType, string entityName) {
                 m_Entity     = entity;
