@@ -34,8 +34,13 @@ namespace NetworkTools.Systems.Tools {
         private static class SnapPriority {
             public const float Midpoint = 0.1f; // Highest priority - midpoint snaps are intentional
             public const float Grid = 0.5f; // Medium priority - grid is a soft preference
-            public const float None = 1.0f; // Baseline - raw cursor position
         }
+
+        /// <summary>
+        ///     Snap threshold as a fraction of the curve length.
+        ///     Cursor must be within this distance of a snap point to activate snapping.
+        /// </summary>
+        private const float SnapThreshold = 0.05f; // 5% of curve length
 
 #if BURST
         [BurstCompile]
@@ -69,16 +74,21 @@ namespace NetworkTools.Systems.Tools {
                     maxCurvePosition = 1f - minCurvePosition;
                 }
 
+                // Edge too short to split - snap to midpoint as the only valid position
+                if (minCurvePosition >= maxCurvePosition) {
+                    SnappedCurvePosition.Value = 0.5f;
+                    SnappedHitPosition.Value   = MathUtils.Position(curve.m_Bezier, 0.5f);
+                    return;
+                }
+
                 // Start with clamped raw position as baseline
                 var clampedRaw = math.clamp(RawCurvePosition, minCurvePosition, maxCurvePosition);
                 var bestPosition = clampedRaw;
-                var bestScore = float.MaxValue;
+                // Baseline score: threshold acts as the "cost" of not snapping.
+                // Snap points within threshold with lower priority multipliers can beat this.
+                var bestScore = SnapThreshold;
 
-                // Evaluate: No snap (baseline)
-                EvaluateCandidate(clampedRaw, clampedRaw, SnapPriority.None, ref bestPosition, ref bestScore);
-
-
-                // Evaluate: Midpoint snap
+                // Evaluate: Midpoint snap (highest priority)
                 if ((SnapMode & SnapMode.Midpoint) != 0) {
                     var midpoint = 0.5f;
                     if (midpoint >= minCurvePosition && midpoint <= maxCurvePosition) {
@@ -101,6 +111,7 @@ namespace NetworkTools.Systems.Tools {
             /// <summary>
             ///     Evaluates a snap candidate and updates best match if it wins.
             ///     Score = distance from original × priority multiplier. Lower wins.
+            ///     Candidates beyond the snap threshold are rejected.
             /// </summary>
             private static void EvaluateCandidate(
                 float candidate,
@@ -109,6 +120,12 @@ namespace NetworkTools.Systems.Tools {
                 ref float bestPosition,
                 ref float bestScore) {
                 var distance = math.abs(candidate - original);
+
+                // Reject candidates outside snap threshold
+                if (distance > SnapThreshold) {
+                    return;
+                }
+
                 var score = distance * priorityMultiplier;
 
                 if (score < bestScore) {
@@ -134,7 +151,7 @@ namespace NetworkTools.Systems.Tools {
             [ReadOnly] public required BufferLookup<ConnectedEdge> ConnectedEdgeLookup;
             [ReadOnly] public required TerrainHeightData TerrainHeight;
             [ReadOnly] public required OverlayRenderSystem.Buffer RenderBuffer;
-            public required ToolOutputMode OutputMode;
+            [ReadOnly] public required ToolOutputMode OutputMode;
             public required EntityCommandBuffer ECB;
 
             public void Execute() {
@@ -217,7 +234,6 @@ namespace NetworkTools.Systems.Tools {
 
                 ECB.AddComponent(definitionEntity, netCourse);
             }
-
 
             private void OutputApply(Edge edge, Curve curve, PrefabRef prefabRef, PseudoRandomSeed seed) {
                 OutputPreview(edge, curve, prefabRef, seed);
