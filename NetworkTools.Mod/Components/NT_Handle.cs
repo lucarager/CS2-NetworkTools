@@ -71,6 +71,11 @@ namespace NetworkTools.Components {
 
         /// <summary>Circle/arc for radius control.</summary>
         Circle = 1 << 13,
+
+        // === Rendering Hints ===
+
+        /// <summary>Render with range indicator (dot at origin, line from origin to handle).</summary>
+        ParameterRange = 1 << 14,
     }
 
     /// <summary>

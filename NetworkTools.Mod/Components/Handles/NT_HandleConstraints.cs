@@ -34,6 +34,9 @@ namespace NetworkTools.Components {
 
         /// <summary>Snap movement to a specified axis direction.</summary>
         SnapToAxis = 1 << 4,
+
+        /// <summary>Clamp distance along axis to min/max values.</summary>
+        ClampAxisDistance = 1 << 5,
     }
 
     /// <summary>
@@ -68,6 +71,16 @@ namespace NetworkTools.Components {
         public float3 Origin;
 
         /// <summary>
+        /// Minimum distance from origin along axis (for ClampAxisDistance).
+        /// </summary>
+        public float MinAxisDistance;
+
+        /// <summary>
+        /// Maximum distance from origin along axis (for ClampAxisDistance).
+        /// </summary>
+        public float MaxAxisDistance;
+
+        /// <summary>
         /// Checks if a specific constraint flag is set.
         /// </summary>
         public bool HasFlag(ConstraintFlags flag) => (Flags & flag) != 0;
@@ -91,6 +104,23 @@ namespace NetworkTools.Components {
                 Flags = ConstraintFlags.SnapToAxis,
                 SnapAxis = math.normalizesafe(axis),
                 Origin = origin,
+            };
+        }
+
+        /// <summary>
+        /// Creates constraints that only allow movement along a specific axis with distance clamping.
+        /// </summary>
+        /// <param name="axis">The axis direction (will be normalized).</param>
+        /// <param name="origin">The origin point for the axis.</param>
+        /// <param name="minDistance">Minimum distance from origin along axis.</param>
+        /// <param name="maxDistance">Maximum distance from origin along axis.</param>
+        public static NT_HandleConstraints AxisWithBounds(float3 axis, float3 origin, float minDistance, float maxDistance) {
+            return new NT_HandleConstraints {
+                Flags = ConstraintFlags.SnapToAxis | ConstraintFlags.ClampAxisDistance,
+                SnapAxis = math.normalizesafe(axis),
+                Origin = origin,
+                MinAxisDistance = minDistance,
+                MaxAxisDistance = maxDistance,
             };
         }
 
