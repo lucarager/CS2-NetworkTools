@@ -151,7 +151,7 @@ namespace NetworkTools.Systems {
             if (m_PrefabSystem.HasComponent<NT_RemoveNode>(prefab)) {
                 return (NT_ToolType.RemoveNode, m_NtRemoveNodeToolSystem);
             }
-            if (m_PrefabSystem.HasComponent<NT_PathTransform>(prefab)) {
+            if (m_PrefabSystem.HasComponent<NT_ShapeTransform>(prefab)) {
                 return (NT_ToolType.PathTransform, m_NtRoadShapeToolSystem);
             }
             if (m_PrefabSystem.HasComponent<NT_NodeControl>(prefab)) {
