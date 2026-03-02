@@ -122,6 +122,7 @@ namespace NetworkTools.Systems {
                     m_NTHandleLinkComponentTypeHandle     = SystemAPI.GetComponentTypeHandle<NT_HandleLink>(),
                     m_HandleLineComponentTypeHandle       = SystemAPI.GetComponentTypeHandle<NT_HandleLine>(),
                     m_HandleCircleComponentTypeHandle     = SystemAPI.GetComponentTypeHandle<NT_HandleCircle>(),
+                    m_HandleConstraintsComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandleConstraints>(),
                     m_NodeLookup                          = SystemAPI.GetComponentLookup<Node>(true),
                     m_CurveLookup                         = SystemAPI.GetComponentLookup<Curve>(true),
                 };
@@ -161,6 +162,7 @@ namespace NetworkTools.Systems {
                     m_EdgeComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<Edge>(),
                     m_CurveComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Curve>(),
                     m_TempComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<Temp>(),
+                    m_TempLookup               = SystemAPI.GetComponentLookup<Temp>(true),
                 };
 
                 var drawTempEdgesJobHandle = drawTempEdgesJob.ScheduleByRef(m_TempEdgeQuery,
