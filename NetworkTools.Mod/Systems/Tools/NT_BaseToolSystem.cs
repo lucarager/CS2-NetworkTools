@@ -23,6 +23,8 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Entities;
     using Unity.Jobs;
 
+    using static Colossal.IO.AssetDatabase.AtlasFrame;
+
     #endregion
 
 
@@ -70,7 +72,7 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         public bool DisableVanillaValidation = false;
 
-        protected ComponentTypeSet HighlightedComponentTypeSet = new ComponentTypeSet(typeof(NT_Highlighted), typeof(Highlighted));
+        protected ComponentTypeSet HighlightedComponentTypeSet = new (typeof(NT_Highlighted), typeof(Highlighted));
 
         /// <summary>
         ///     Apply action (usually left click)
@@ -308,12 +310,11 @@ namespace NetworkTools.Systems.Tools {
         ///     Override to add tool-specific cleanup, but call base implementation.
         /// </summary>
         protected virtual void CleanupHighlights() {
-            if (m_NodesWithEligibleQuery.IsEmptyIgnoreFilter) {
-                return;
-            }
-
             EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
-            EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
+
+            // Add BatchesUpdated BEFORE removing components, because the query won't match after removal
+            EntityManager.AddComponent<BatchesUpdated>(m_EntitiesWithHighlightedQuery);
+            EntityManager.RemoveComponent(m_EntitiesWithHighlightedQuery, HighlightedComponentTypeSet);
         }
 
         /// <summary>
@@ -382,10 +383,8 @@ namespace NetworkTools.Systems.Tools {
         ///     Clears all NT_Highlighted components from nodes (batch operation).
         /// </summary>
         protected virtual void ClearAllHighlights() {
-            if (m_EntitiesWithHighlightedQuery.IsEmptyIgnoreFilter) {
-                return;
-            }
-
+            // Add BatchesUpdated BEFORE removing components, because the query won't match after removal
+            EntityManager.AddComponent<BatchesUpdated>(m_EntitiesWithHighlightedQuery);
             EntityManager.RemoveComponent(m_EntitiesWithHighlightedQuery, HighlightedComponentTypeSet);
         }
     }
