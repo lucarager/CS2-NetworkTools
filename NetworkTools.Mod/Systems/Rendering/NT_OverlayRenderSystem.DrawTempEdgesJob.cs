@@ -24,6 +24,7 @@
             [ReadOnly] public required ComponentTypeHandle<Temp> m_TempComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Edge> m_EdgeComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Curve> m_CurveComponentTypeHandle;
+            [ReadOnly] public required ComponentLookup<Temp> m_TempLookup;
 
             /// <inheritdoc />
             public void Execute(in ArchetypeChunk chunk,
@@ -35,6 +36,7 @@
                 var tempArray = chunk.GetNativeArray(ref m_TempComponentTypeHandle);
 
                 for (var i = 0; i < edgesArray.Length; i++) {
+                    var edge = edgesArray[i];
                     var curve = curvesArray[i];
                     var temp = tempArray[i];
 
@@ -48,29 +50,40 @@
                     var width = 1f;
                     var perpLineHalfLength = 2f;
 
-                    // Trim the bezier by a fixed absolute distance at each end
+                    // Determine which end is "inside" (temp node at split point) vs "outside" (existing node)
+                    // A temp node indicates the new split point; non-temp is the original endpoint
+                    var startIsTempNode = m_TempLookup.HasComponent(edge.m_Start);
+                    var endIsTempNode = m_TempLookup.HasComponent(edge.m_End);
+
+                    // Calculate trim amounts: only trim the inside end (where the new node is)
                     var absoluteTrimAmount = 4f;
                     var relativeTrim = math.clamp(absoluteTrimAmount / curve.m_Length, 0f, 0.49f);
-                    var trimmedBezier = MathUtils.Cut(curve.m_Bezier, new Bounds1(relativeTrim, 1f - relativeTrim));
+                    var startTrim = startIsTempNode ? relativeTrim : 0f;
+                    var endTrim = endIsTempNode ? relativeTrim : 0f;
+                    var trimmedBezier = MathUtils.Cut(curve.m_Bezier, new Bounds1(startTrim, 1f - endTrim));
 
                     // Draw the shortened curve bezier
                     m_Buffer.DrawCurve(color, trimmedBezier, width);
 
-                    // Calculate perpendicular lines at start
-                    var startPoint = trimmedBezier.a;
-                    var startTangent = math.normalize(MathUtils.Tangent(trimmedBezier, 0f));
-                    var startPerp = new float3(-startTangent.z, 0f, startTangent.x);
-                    var startLine = new Line3.Segment(startPoint - startPerp * perpLineHalfLength,
-                        startPoint + startPerp * perpLineHalfLength);
-                    m_Buffer.DrawLine(color, startLine, width);
+                    // Draw perpendicular line at start (only if trimmed)
+                    if (startIsTempNode) {
+                        var startPoint = trimmedBezier.a;
+                        var startTangent = math.normalize(MathUtils.Tangent(trimmedBezier, 0f));
+                        var startPerp = new float3(-startTangent.z, 0f, startTangent.x);
+                        var startLine = new Line3.Segment(startPoint - startPerp * perpLineHalfLength,
+                            startPoint + startPerp * perpLineHalfLength);
+                        m_Buffer.DrawLine(color, startLine, width);
+                    }
 
-                    // Calculate perpendicular lines at end
-                    var endPoint = trimmedBezier.d;
-                    var endTangent = math.normalize(MathUtils.Tangent(trimmedBezier, 1f));
-                    var endPerp = new float3(-endTangent.z, 0f, endTangent.x);
-                    var endLine = new Line3.Segment(endPoint - endPerp * perpLineHalfLength,
-                        endPoint + endPerp * perpLineHalfLength);
-                    m_Buffer.DrawLine(color, endLine, width);
+                    // Draw perpendicular line at end (only if trimmed)
+                    if (endIsTempNode) {
+                        var endPoint = trimmedBezier.d;
+                        var endTangent = math.normalize(MathUtils.Tangent(trimmedBezier, 1f));
+                        var endPerp = new float3(-endTangent.z, 0f, endTangent.x);
+                        var endLine = new Line3.Segment(endPoint - endPerp * perpLineHalfLength,
+                            endPoint + endPerp * perpLineHalfLength);
+                        m_Buffer.DrawLine(color, endLine, width);
+                    }
                 }
             }
         }
