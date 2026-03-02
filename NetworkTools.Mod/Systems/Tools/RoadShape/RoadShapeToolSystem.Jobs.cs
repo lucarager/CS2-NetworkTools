@@ -72,7 +72,7 @@
                         TransformPipeline.Execute(ref easeInOutTransform, ref edges, in Context, in Config);
                         NetworkToolsMod.Instance.Log.Debug($"First edge bezier y values are {edges[0].Bezier.y.ToJSONString()}");
                         break;
-                    case ShapeTransformTemplate.SlopeParabolic:
+                    case ShapeTransformTemplate.SlopeArch:
                         // TODO: Implement SlopeParabolicTransform
                         break;
                     case ShapeTransformTemplate.CurveStraighten:

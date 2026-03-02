@@ -115,7 +115,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 case ShapeTransformTemplate.SlopeEaseInOut:
                     new SlopeEaseInOutTransform().InitializeConfig(in m_ShapeTransformContext, ref ShapeTransformConfig);
                     break;
-                case ShapeTransformTemplate.SlopeParabolic:
+                case ShapeTransformTemplate.SlopeArch:
                     // TODO: Add when implemented
                     break;
                 case ShapeTransformTemplate.CurveStraighten:

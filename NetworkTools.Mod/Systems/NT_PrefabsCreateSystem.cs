@@ -100,15 +100,15 @@ namespace NetworkTools.Systems {
                 prefabBaseDict[key] = prefabBase;
             }
 
-            CreateToolPrefab("add_node",     "Add Node",               "add.svg", "", new NT_AddNode(), true);
-            CreateToolPrefab("remove_node", "Remove Node", "remove.svg", "", new NT_RemoveNode(), true);
-            CreateToolPrefab("slide_node", "Slide Node", "move.svg", "", new NT_Select(), false);
-            CreateToolPrefab("supernode",    "Create Supernode",       "super.svg", "", new NT_Select(), false);
-            CreateToolPrefab("shape_slope",  "Slope Tools",    "slope.svg", "", new NT_ShapeTransform(), true);
-            CreateToolPrefab("shape_curve", "Shape Tools",            "curve.svg", "", new NT_ShapeTransform(), false);
-            CreateToolPrefab("connect",      "Connection Tools",       "connect.svg", "", new NT_Select(), false);
-            CreateToolPrefab("parallel",     "Advanced Parallel Tool", "parallel.svg", "", new NT_Select(), false);
-            CreateToolPrefab("grid",         "Advanced Grid Tool",     "grid.svg", "", new NT_Select(), false);
+            CreateToolPrefab("add_node",    "Add Node",               "add.svg",      "", "node",       new NT_AddNode(), true);
+            CreateToolPrefab("remove_node", "Remove Node",            "remove.svg",   "", "node",       new NT_RemoveNode(), true);
+            CreateToolPrefab("slide_node",  "Slide Node",             "move.svg",     "", "node",       new NT_Select(), false);
+            CreateToolPrefab("supernode",   "Create Supernode",       "super.svg",    "", "node",       new NT_Select(), false);
+            CreateToolPrefab("shape_slope", "Slope Tools",            "slope.svg",    "", "shape",      new NT_ShapeSlope(), true);
+            CreateToolPrefab("shape_curve", "Shape Tools",            "curve.svg",    "", "shape",      new NT_ShapeCurve(), false);
+            CreateToolPrefab("connect",     "Connection Tools",       "connect.svg",  "", "generative", new NT_Select(), false);
+            CreateToolPrefab("parallel",    "Advanced Parallel Tool", "parallel.svg", "", "generative", new NT_Select(), false);
+            CreateToolPrefab("grid",        "Advanced Grid Tool",     "grid.svg",     "", "generative", new NT_Select(), false);
 
             CreateHandlePrefab((MarkerObjectPrefab)prefabBaseDict["marker"]);
 
@@ -133,7 +133,7 @@ namespace NetworkTools.Systems {
             return success;
         }
 
-        private bool CreateToolPrefab<T>(string id, string name, string icon, string description, T component,
+        private bool CreateToolPrefab<T>(string id, string name, string icon, string description, string category, T component,
             bool active)
             where T : unmanaged, IComponentData {
             var toolPrefabBase = ScriptableObject.CreateInstance<NT_ToolPrefab>();
@@ -142,6 +142,7 @@ namespace NetworkTools.Systems {
             toolPrefabBase.DisplayName = name;
             toolPrefabBase.Description = description;
             toolPrefabBase.Icon        = icon;
+            toolPrefabBase.Category    = category;
             toolPrefabBase.Active      = active;
             toolPrefabBase.Index       = m_InstalledTools++;
 

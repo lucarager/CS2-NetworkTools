@@ -16,7 +16,7 @@ namespace NetworkTools.Systems.Tools {
     #endregion
 
     public partial class NT_RemoveNodeToolSystem {
-        private JobHandle UpdateDefinitions(JobHandle inputDeps) {
+        private JobHandle UpdateDefinitions(JobHandle inputDeps, ToolOutputMode outputMode) {
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
             var createDefinitionJobHandle = new CreateDefinitionJob
@@ -25,12 +25,14 @@ namespace NetworkTools.Systems.Tools {
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
                 EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),
+                TempLookup             = SystemAPI.GetComponentLookup<Temp>(true),
                 PrefabRefLookup        = SystemAPI.GetComponentLookup<PrefabRef>(true),
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
                 ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 TerrainHeight          = m_TerrainSystem.GetHeightData(false),
                 ECB                    = m_Barrier.CreateCommandBuffer(),
                 RenderBuffer           = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle),
+                OutputMode = outputMode,
             }.Schedule(JobHandle.CombineDependencies(
                            inputDeps,
                            renderBufferJobHandle
@@ -56,7 +58,7 @@ namespace NetworkTools.Systems.Tools {
 
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
-            inputDeps = UpdateDefinitions(inputDeps);
+            inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Preview);
             return inputDeps;
         }
 
@@ -74,7 +76,7 @@ namespace NetworkTools.Systems.Tools {
 
             applyMode = ApplyMode.Apply;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
-            inputDeps = UpdateDefinitions(inputDeps);
+            inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Apply);
 
             // Clear state to completely blank
             Phase = OperationPhase.Idle;

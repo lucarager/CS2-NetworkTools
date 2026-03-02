@@ -8,6 +8,7 @@ export type ToolUIData = {
     DisplayName: string;
     Icon: string;
     Description: string;
+    Category: string;
     Active: boolean;
     Index: number;
     PrefabId: string;

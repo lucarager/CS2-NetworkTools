@@ -13,11 +13,13 @@
 
     public partial class NT_RoadShapeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
+            var hasShapeSlope = m_PrefabSystem.HasComponent<NT_ShapeSlope>(prefab);
+            var hasShapeCurve = m_PrefabSystem.HasComponent<NT_ShapeCurve>(prefab);
             m_Log.Debug(
-                $"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_ShapeTransform>(prefab)}");
+                $"TrySetPrefab {prefab is NT_ToolPrefab} hasShapeSlope={hasShapeSlope} hasShapeCurve={hasShapeCurve}");
             var validRequest =
                 prefab is NT_ToolPrefab &&
-                m_PrefabSystem.HasComponent<NT_ShapeTransform>(prefab);
+                (hasShapeSlope || hasShapeCurve);
 
             if (!validRequest)
             {

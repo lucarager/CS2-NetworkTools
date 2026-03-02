@@ -44,14 +44,13 @@ $barHeight: $iconSize + $iconPadding * 2;
 
 .activeBar {
     position: absolute;
-    top: 14rem;
+    top: 0;
     left: 0;
-    width: 2rem;
+    width: 4rem;
     height: $barHeight;
     background: $color-nt-3;
-    border-top-left-radius: 2rem;
-    border-bottom-left-radius: 2rem;
-    border-top-right-radius: 0;
+    border-top-right-radius: 20rem;
+    border-bottom-right-radius: 20rem;
     transition: transform 0.2s ease-out;
 }
 
@@ -79,12 +78,19 @@ $barHeight: $iconSize + $iconPadding * 2;
         background: rgba(255, 255, 255, 0.3);
     }
 
-
     &__inactive {
-        filter: grayscale(100%) opacity(50%);
+        filter: grayscale(100%) opacity(30%);
 
         &:hover {
             background: inherit;
         }
     }
+}
+
+.categoryDivider {
+    width: 70%;
+    height: 1rem;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 1rem;
+    margin: 4rem 0;
 }

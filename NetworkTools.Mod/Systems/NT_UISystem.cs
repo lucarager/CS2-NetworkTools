@@ -42,9 +42,9 @@
         private ValueBindingHelper<ShapeTransformConfig> m_ShapeConfigBinding;
         private ProxyAction                              m_ToggleToolPanelAction;
 
-        private EntityQuery                        m_ToolPrefabQuery;
-        private ToolSystem                         m_ToolSystem;
-        private ValueBindingHelper<ToolUILookup[]> m_ToolUIDataBinding;
+        private EntityQuery                          m_ToolPrefabQuery;
+        private ToolSystem                            m_ToolSystem;
+        private ValueBindingHelper<NT_ToolPrefab[]>   m_ToolUIDataBinding;
 
         /// <inheritdoc />
         protected override void OnCreate() {
@@ -58,7 +58,7 @@
             m_NtRoadShapeToolSystem = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
             m_NameSystem            = World.GetOrCreateSystemManaged<NameSystem>();
 
-            m_ToolUIDataBinding       = CreateBinding("UI_DATA",           new ToolUILookup[] { });
+            m_ToolUIDataBinding       = CreateBinding("UI_DATA",           new NT_ToolPrefab[] { });
             m_SelectedPrefabBinding   = CreateBinding("SELECTED_PREFAB",   "");
             m_PanelOpenBinding        = CreateBinding("PANEL_OPEN",        false, HandlePanelOpen);
             m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES", new ToolSelectionData[] { });
@@ -94,14 +94,13 @@
             var entityCount = m_ToolPrefabQuery.CalculateEntityCount();
             if (entityCount != m_LastToolPrefabCount) {
                 m_LastToolPrefabCount = entityCount;
-                var entities        = m_ToolPrefabQuery.ToEntityArray(Allocator.Temp);
-                var toolLookupArray = new ToolUILookup[entities.Length];
+                var entities       = m_ToolPrefabQuery.ToEntityArray(Allocator.Temp);
+                var toolPrefabArray = new NT_ToolPrefab[entities.Length];
                 for (var i = 0; i < entities.Length; i++) {
-                    var prefab = m_PrefabSystem.GetPrefab<NT_ToolPrefab>(entities[i]);
-                    toolLookupArray[i] = new ToolUILookup(prefab);
+                    toolPrefabArray[i] = m_PrefabSystem.GetPrefab<NT_ToolPrefab>(entities[i]);
                 }
 
-                m_ToolUIDataBinding.Value = toolLookupArray;
+                m_ToolUIDataBinding.Value = toolPrefabArray;
             }
 
             // Update selected prefab binding when it changes
@@ -191,8 +190,8 @@
                     case ShapeTransformTemplate.SlopeEaseInOut:
                         newConfig = ShapeTransformConfig.SlopeEaseInOut();
                         break;
-                    case ShapeTransformTemplate.SlopeParabolic:
-                        newConfig = ShapeTransformConfig.SlopeParabolic();
+                    case ShapeTransformTemplate.SlopeArch:
+                        newConfig = ShapeTransformConfig.SlopeArch();
                         break;
                     case ShapeTransformTemplate.CurveStraighten:
                         newConfig = ShapeTransformConfig.CurveStraighten();
@@ -219,45 +218,6 @@
 
         private void HandleApplySlope() {
             m_NtRoadShapeToolSystem.RequestApply();
-        }
-
-        /// <summary>
-        ///     Struct to store and send Zone Lookup and to the React UI.
-        /// </summary>
-        public readonly struct ToolUILookup : IJsonWritable {
-            private readonly NT_ToolPrefab m_Prefab;
-
-            public ToolUILookup(NT_ToolPrefab prefab) {
-                m_Prefab = prefab;
-            }
-
-            /// <inheritdoc />
-            public void Write(IJsonWriter writer) {
-                writer.TypeBegin(GetType().FullName);
-
-                writer.PropertyName("Id");
-                writer.Write(m_Prefab.Id);
-
-                writer.PropertyName("DisplayName");
-                writer.Write(m_Prefab.DisplayName);
-
-                writer.PropertyName("Icon");
-                writer.Write(m_Prefab.Icon);
-
-                writer.PropertyName("Description");
-                writer.Write(m_Prefab.Description);
-
-                writer.PropertyName("Active");
-                writer.Write(m_Prefab.Active);
-
-                writer.PropertyName("Index");
-                writer.Write(m_Prefab.Index);
-
-                writer.PropertyName("PrefabId");
-                writer.Write(m_Prefab.GetPrefabID().GetName());
-
-                writer.TypeEnd();
-            }
         }
 
         /// <summary>

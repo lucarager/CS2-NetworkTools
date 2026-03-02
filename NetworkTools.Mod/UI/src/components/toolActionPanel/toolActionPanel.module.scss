@@ -39,6 +39,10 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 2rem;
+
+    &__name {
+        opacity: 0.5;
+    }
 }
 
 .helper {
@@ -72,6 +76,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     flex: 1;
+    justify-content: flex-end;
 
     & > button + button {
         margin-left: 4rem;
@@ -106,7 +111,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8rem;
+    padding: 4rem;
     opacity: 0.6;
     position: relative;
     overflow: hidden;
@@ -121,8 +126,8 @@
 }
 
 .icon {
-    width: 56rem;
-    height: 56rem;
+    width: 36rem;
+    height: 36rem;
 }
 
 .applyButton {

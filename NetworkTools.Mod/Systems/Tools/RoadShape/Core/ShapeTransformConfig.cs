@@ -29,9 +29,9 @@
         SlopeEaseInOut = 2,
 
         /// <summary>
-        ///     Parabolic slope - creates an arch (hill) or dip (valley) along the path.
+        ///     Arch slope - creates an arch (hill) or dip (valley) along the path.
         /// </summary>
-        SlopeParabolic = 3,
+        SlopeArch = 3,
 
         /// <summary>
         ///     Straight curve - Align all nodes along a straight line between start/end.
@@ -115,10 +115,10 @@
 
         #endregion
 
-        #region SlopeParabolic
+        #region SlopeArch
 
         /// <summary>
-        ///     Height of the parabolic arch (-1 to 1).
+        ///     Height of the arch (-1 to 1).
         ///     Positive creates a hill, negative creates a valley.
         /// </summary>
         public float ArchHeight;
@@ -130,13 +130,13 @@
         public float ArchPosition;
 
         /// <summary>
-        ///     Creates a parabolic configuration with specified arch properties.
+        ///     Creates an arch configuration with specified arch properties.
         /// </summary>
         /// <param name="height">Arch height (-1 to 1, negative = valley, positive = hill)</param>
         /// <param name="position">Arch position (0 to 1, 0.5 = middle)</param>
-        public static ShapeTransformConfig SlopeParabolic(float height = 0.5f, float position = 0.5f) {
+        public static ShapeTransformConfig SlopeArch(float height = 0.5f, float position = 0.5f) {
             return new ShapeTransformConfig {
-                Template     = ShapeTransformTemplate.SlopeParabolic,
+                Template     = ShapeTransformTemplate.SlopeArch,
                 ArchHeight   = math.clamp(height,   -1f,  1f),
                 ArchPosition = math.clamp(position, 0.1f, 0.9f)
             };
