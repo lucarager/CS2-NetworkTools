@@ -536,6 +536,13 @@ namespace NetworkTools.Systems.Tools {
                 // Project mouse onto the axis line
                 if (TryGetAxisIntersection(constraints.Origin, constraints.SnapAxis, out var axisPoint)) {
                     newPos = axisPoint;
+
+                    // Apply axis distance clamping if enabled
+                    if (constraints.HasFlag(ConstraintFlags.ClampAxisDistance)) {
+                        var distanceFromOrigin = math.dot(newPos - constraints.Origin, constraints.SnapAxis);
+                        var clampedDistance = math.clamp(distanceFromOrigin, constraints.MinAxisDistance, constraints.MaxAxisDistance);
+                        newPos = constraints.Origin + constraints.SnapAxis * clampedDistance;
+                    }
                 }
             } else {
                 // Determine which plane to project onto based on lock flags
