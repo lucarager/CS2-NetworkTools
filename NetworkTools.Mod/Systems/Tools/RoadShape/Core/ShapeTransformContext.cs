@@ -58,11 +58,6 @@
         public float2 EndXZ => new float2(EndPosition.x, EndPosition.z);
 
         /// <summary>
-        /// The transformation configuration.
-        /// </summary>
-        public ShapeTransformConfig Config;
-
-        /// <summary>
         /// Whether this context has valid data for processing.
         /// </summary>
         public bool IsValid => TotalLength > 0f;
@@ -70,12 +65,11 @@
         /// <summary>
         /// Creates a new ShapeTransformContext from path endpoint positions.
         /// </summary>
-        public static ShapeTransformContext Create(float3 startPosition, float3 endPosition, ShapeTransformConfig config) {
+        public static ShapeTransformContext Create(float3 startPosition, float3 endPosition) {
             return new ShapeTransformContext {
                 StartPosition = startPosition,
                 EndPosition = endPosition,
                 TotalLength = 0f, // Set after gathering edges
-                Config = config,
             };
         }
     }

@@ -7,6 +7,7 @@ namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Colossal.Mathematics;
+    using NetworkTools.Systems.Tools.RoadShape;
     using Unity.Mathematics;
 
     #endregion
@@ -64,31 +65,6 @@ namespace NetworkTools.Systems.Tools {
                 CtrlEnd   = CalculateHeight(distCtrlEnd, totalLength, startHeight, deltaHeight, config),
                 End       = CalculateHeight(distEnd, totalLength, startHeight, deltaHeight, config),
             };
-        }
-
-        /// <summary>
-        /// Applies calculated controlPointHeights to a bezier curve, accounting for edge direction.
-        /// </summary>
-        /// <param name="bezier">The bezier curve to modify</param>
-        /// <param name="controlPointHeights">The calculated controlPointHeights in path order</param>
-        /// <param name="isForward">True if edge direction matches path direction</param>
-        /// <returns>The modified bezier curve</returns>
-        public static Bezier4x3 ApplyHeightsToBezier(in Bezier4x3 bezier, in EdgeControlPointHeights controlPointHeights, bool isForward) {
-            var result = bezier;
-
-            if (isForward) {
-                result.a.y = controlPointHeights.Start;
-                result.b.y = controlPointHeights.CtrlStart;
-                result.c.y = controlPointHeights.CtrlEnd;
-                result.d.y = controlPointHeights.End;
-            } else {
-                result.a.y = controlPointHeights.End;
-                result.b.y = controlPointHeights.CtrlEnd;
-                result.c.y = controlPointHeights.CtrlStart;
-                result.d.y = controlPointHeights.Start;
-            }
-
-            return result;
         }
 
         /// <summary>

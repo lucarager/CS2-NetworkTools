@@ -38,16 +38,16 @@ export enum ShapeTransformTemplate {
 export type ShapeConfigData = {
     template: ShapeTransformTemplate;
     smoothingFactor: number;
-    easeInControlPoint: number;
-    easeOutControlPoint: number;
+    easeInLength: number;
+    easeOutLength: number;
     archHeight: number;
     archPosition: number;
 };
 export const DEFAULT_SHAPE_CONFIG: ShapeConfigData = {
     template: ShapeTransformTemplate.Preserve,
     smoothingFactor: 0,
-    easeInControlPoint: 0,
-    easeOutControlPoint: 0,
+    easeInLength: 0,
+    easeOutLength: 0,
     archHeight: 0,
     archPosition: 0,
 };

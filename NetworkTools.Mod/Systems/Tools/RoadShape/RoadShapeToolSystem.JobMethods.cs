@@ -21,9 +21,22 @@
 
     public partial class NT_RoadShapeToolSystem {
         private JobHandle SchedulePathTransformJob(JobHandle inputDeps, ToolOutputMode outputMode) {
+            // Ensure path data is valid before scheduling
+            if (!m_PathDataValid || m_EdgeStates.Length == 0) {
+                m_Log.Debug("SchedulePathTransformJob: No valid path data, skipping");
+                return inputDeps;
+            }
+
+            m_Log.Debug($"SchedulePathTransformJob: Template={ShapeTransformConfig.Template}, EaseIn={ShapeTransformConfig.EaseInLength:F3}, EaseOut={ShapeTransformConfig.EaseOutLength:F3}");
+            m_Log.Debug($"  Path: Start={m_ShapeTransformContext.StartPosition}, End={m_ShapeTransformContext.EndPosition}, DeltaHeight={m_ShapeTransformContext.DeltaHeight:F2}");
+
             var jobHandle = new ShapeTransformJob {
-                SelectedNodes = m_SelectedNodes,
-                CurrentPathEdges = m_CurrentPathEdges,
+                // Pre-computed path data
+                EdgeStates = m_EdgeStates,
+                Context = m_ShapeTransformContext,
+                Config = ShapeTransformConfig,
+
+                // Lookups needed for output and intersection adjustments
                 CurrentPathNodes = m_CurrentPathNodes,
                 NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup = SystemAPI.GetComponentLookup<Curve>(true),
@@ -33,7 +46,6 @@
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
                 ConnectedEdgeLookup = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 AggregatedLookup = SystemAPI.GetComponentLookup<Aggregated>(true),
-                Config = ShapeTransformConfig,
                 OutputMode = outputMode,
                 ECB = m_Barrier.CreateCommandBuffer(),
             }.Schedule(inputDeps);

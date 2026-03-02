@@ -1,0 +1,316 @@
+namespace NetworkTools.Systems.Tools.RoadShape {
+    using Colossal.Mathematics;
+    using Game.Net;
+    using Game.Prefabs;
+    using NetworkTools.Components;
+    using Unity.Burst;
+    using Unity.Collections;
+    using Unity.Entities;
+    using Unity.Jobs;
+    using Unity.Mathematics;
+
+    /// <summary>
+    /// Partial class containing cached path data management.
+    /// Path data is gathered via sync Burst job when selection changes,
+    /// then used by handles and preview/apply jobs.
+    /// </summary>
+    public partial class NT_RoadShapeToolSystem {
+        #region Cached Path Data Fields
+
+        /// <summary>
+        /// Cached transform context, populated by RefreshPathData().
+        /// Contains path start/end positions, total length, and config.
+        /// </summary>
+        private ShapeTransformContext m_ShapeTransformContext;
+
+        /// <summary>
+        /// Cached edge states, populated by RefreshPathData().
+        /// Contains per-edge beziers, lengths, and cumulative distances.
+        /// </summary>
+        private NativeList<EdgeState> m_EdgeStates;
+
+        /// <summary>
+        /// Whether the cached path data is valid for use.
+        /// Set false when selection changes, set true after RefreshPathData().
+        /// </summary>
+        private bool m_PathDataValid;
+
+        #endregion
+
+        #region Path Data Refresh
+
+        /// <summary>
+        /// Gathers transform context and edge states via sync Burst job.
+        /// Called whenever entering Ready phase or when path changes while in Ready.
+        /// Stores results in m_ShapeTransformContext and m_EdgeStates.
+        /// </summary>
+        private void RefreshPathData() {
+            if (m_SelectedNodes.Length < 2 || m_CurrentPathEdges.Length == 0) {
+                m_Log.Debug("RefreshPathData: Insufficient selection, skipping");
+                m_PathDataValid = false;
+                return;
+            }
+
+            m_Log.Debug($"RefreshPathData: Gathering data for {m_CurrentPathEdges.Length} edges");
+
+            // Prepare output containers
+            var contextRef = new NativeReference<ShapeTransformContext>(Allocator.TempJob);
+            
+            // Resize edge states if needed
+            if (m_EdgeStates.Capacity < m_CurrentPathEdges.Length) {
+                m_EdgeStates.SetCapacity(m_CurrentPathEdges.Length);
+            }
+            m_EdgeStates.Clear();
+            m_EdgeStates.Resize(m_CurrentPathEdges.Length, NativeArrayOptions.ClearMemory);
+
+            // Run sync Burst job on main thread
+            new GatherPathDataJob {
+                SelectedNodes = m_SelectedNodes,
+                CurrentPathNodes = m_CurrentPathNodes,
+                CurrentPathEdges = m_CurrentPathEdges,
+                NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
+                CurveLookup = SystemAPI.GetComponentLookup<Curve>(true),
+                EdgeLookup = SystemAPI.GetComponentLookup<Edge>(true),
+                UpgradedLookup = SystemAPI.GetComponentLookup<Upgraded>(true),
+                OutContext = contextRef,
+                OutEdgeStates = m_EdgeStates,
+            }.Run();
+
+            // Copy result to cached field
+            m_ShapeTransformContext = contextRef.Value;
+            contextRef.Dispose();
+
+            m_PathDataValid = true;
+            m_Log.Debug($"RefreshPathData: Gathered {m_EdgeStates.Length} edges, TotalLength={m_ShapeTransformContext.TotalLength:F2}");
+
+            // InitializeConfig the current transform with the new path data
+            InitializeCurrentTransform();
+        }
+
+        /// <summary>
+        /// Invalidates cached path data. Called when selection changes.
+        /// </summary>
+        private void InvalidatePathData() {
+            m_PathDataValid = false;
+        }
+
+        /// <summary>
+        /// Calls InitializeConfig on the current transform to compute initial values.
+        /// Called after path data is gathered or when template changes.
+        /// </summary>
+        private void InitializeCurrentTransform() {
+            if (!m_PathDataValid) {
+                m_Log.Debug("InitializeCurrentTransform: Path data not valid, skipping");
+                return;
+            }
+
+            m_Log.Debug($"InitializeCurrentTransform: Initializing {ShapeTransformConfig.Template}");
+
+            // Each transform's InitializeConfig method may modify ShapeTransformConfig
+            // to store computed values needed for handles and transformation.
+            switch (ShapeTransformConfig.Template) {
+                case ShapeTransformTemplate.SlopeLinear:
+                    new SlopeLinearTransform().InitializeConfig(in m_ShapeTransformContext, ref ShapeTransformConfig);
+                    break;
+                case ShapeTransformTemplate.SlopeEaseInOut:
+                    new SlopeEaseInOutTransform().InitializeConfig(in m_ShapeTransformContext, ref ShapeTransformConfig);
+                    break;
+                case ShapeTransformTemplate.SlopeParabolic:
+                    // TODO: Add when implemented
+                    break;
+                case ShapeTransformTemplate.CurveStraighten:
+                    new CurveStraightenTransform().InitializeConfig(in m_ShapeTransformContext, ref ShapeTransformConfig);
+                    break;
+                case ShapeTransformTemplate.CurveSmooth:
+                    new CurveSmoothTransform().InitializeConfig(in m_ShapeTransformContext, ref ShapeTransformConfig);
+                    break;
+            }
+        }
+
+        #endregion
+
+        #region Handle Refresh
+
+        /// <summary>
+        /// Creates or refreshes transform handles using cached path data.
+        /// Called when entering Ready phase or when config/path changes.
+        /// </summary>
+        private void RefreshTransformHandles() {
+            if (!m_PathDataValid || m_EdgeStates.Length == 0) {
+                m_Log.Debug("RefreshTransformHandles: Path data not ready, skipping");
+                return;
+            }
+
+            DestroyAllHandles();
+
+            var pathStartPos = m_ShapeTransformContext.StartPosition;
+            var pathEndPos = m_ShapeTransformContext.EndPosition;
+
+            m_Log.Debug($"RefreshTransformHandles: Creating handles for template {ShapeTransformConfig.Template}");
+
+            // Get handle definitions for current template
+            var handleDefs = GetTransformHandleDefinitions(pathStartPos, pathEndPos);
+
+            foreach (var def in handleDefs) {
+                if ((def.TypeFlags & HandleTypeFlags.Parameter) != 0) {
+                    CreateParameterHandle(
+                        Entity.Null,
+                        def.Key,
+                        def.Position,
+                        def.Value,
+                        def.MinValue,
+                        def.MaxValue,
+                        def.TypeFlags,
+                        def.Constraints);
+                }
+                else if ((def.TypeFlags & HandleTypeFlags.Position) != 0) {
+                    CreatePositionHandle(
+                        Entity.Null,
+                        Entity.Null,
+                        def.Key,
+                        def.Position,
+                        def.TypeFlags,
+                        def.Constraints);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets handle definitions for the current transform template.
+        /// Creates a transform struct and calls GetHandleDefinitions if it implements IHandleableTransformation.
+        /// </summary>
+        private TransformHandleDefinition[] GetTransformHandleDefinitions(float3 pathStartPos, float3 pathEndPos) {
+            var edgeStatesArray = m_EdgeStates.AsArray();
+            switch (ShapeTransformConfig.Template) {
+                case ShapeTransformTemplate.SlopeEaseInOut:
+                    var easeInOutTransform = new SlopeEaseInOutTransform();
+                    return easeInOutTransform.GetHandleDefinitions(m_ShapeTransformContext, ShapeTransformConfig, pathStartPos, pathEndPos, in edgeStatesArray);
+
+                case ShapeTransformTemplate.SlopeLinear:
+                case ShapeTransformTemplate.CurveStraighten:
+                case ShapeTransformTemplate.CurveSmooth:
+                case ShapeTransformTemplate.Preserve:
+                default:
+                    // These templates don't have handles (don't implement IHandleableTransformation)
+                    return System.Array.Empty<TransformHandleDefinition>();
+            }
+        }
+
+        #endregion
+
+        #region GatherPathDataJob
+
+        /// <summary>
+        /// Burst-compiled job that gathers edge states and creates transform context.
+        /// Runs synchronously on main thread via .Run() for immediate availability.
+        /// </summary>
+#if BURST
+        [BurstCompile]
+#endif
+        internal struct GatherPathDataJob : IJob {
+            [ReadOnly] public NativeList<Entity> SelectedNodes;
+            [ReadOnly] public NativeList<Entity> CurrentPathNodes;
+            [ReadOnly] public NativeList<Entity> CurrentPathEdges;
+            [ReadOnly] public ComponentLookup<Node> NodeLookup;
+            [ReadOnly] public ComponentLookup<Curve> CurveLookup;
+            [ReadOnly] public ComponentLookup<Edge> EdgeLookup;
+            [ReadOnly] public ComponentLookup<Upgraded> UpgradedLookup;
+
+            public NativeReference<ShapeTransformContext> OutContext;
+            public NativeList<EdgeState> OutEdgeStates;
+
+            public void Execute() {
+                // 1. InitializeConfig context from path endpoints
+                var startPos = NodeLookup[SelectedNodes[0]].m_Position;
+                var endPos = NodeLookup[SelectedNodes[^1]].m_Position;
+
+                var ctx = ShapeTransformContext.Create(startPos, endPos);
+
+                // 2. Gather edge states
+                var edgeCount = CurrentPathEdges.Length;
+                var cumulativeDistance = 0f;
+
+                // First pass: gather edge data and calculate total length
+                for (var i = 0; i < edgeCount; i++) {
+                    var edgeEntity = CurrentPathEdges[i];
+                    var state = new EdgeState {
+                        EdgeEntity = edgeEntity,
+                        PathIndex = i,
+                        CumulativeDistance = cumulativeDistance
+                    };
+
+                    // Get edge component for direction and node references
+                    if (EdgeLookup.TryGetComponent(edgeEntity, out var edge)) {
+                        state.StartNode = edge.m_Start;
+                        state.EndNode = edge.m_End;
+
+                        var currentNode = CurrentPathNodes[i];
+                        state.IsForward = edge.m_Start == currentNode;
+                    }
+
+                    state.NetworkComposition = GetNetworkComposition(edgeEntity);
+
+                    // Get curve component for geometry
+                    if (CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
+                        state.Bezier = curve.m_Bezier;
+                        state.Length = curve.m_Length;
+                        state.CalculateControlPointRatios();
+                    }
+
+                    // Store original values for intersection delta calculations
+                    var pathEndNode = CurrentPathNodes[i + 1];
+                    if (NodeLookup.TryGetComponent(pathEndNode, out var pathEndNodeInfo)) {
+                        state.OriginalEndHeight = pathEndNodeInfo.m_Position.y;
+                        state.OriginalEndXZ = new float2(pathEndNodeInfo.m_Position.x, pathEndNodeInfo.m_Position.z);
+                    }
+
+                    OutEdgeStates[i] = state;
+                    cumulativeDistance += state.Length;
+                }
+
+                // Update context with total length
+                ctx.TotalLength = cumulativeDistance;
+
+                // Second pass: calculate absolute ratios for each control point
+                if (ctx.TotalLength > 0f) {
+                    for (var i = 0; i < edgeCount; i++) {
+                        var edge = OutEdgeStates[i];
+
+                        edge.StartPointAbsoluteRatio = edge.CumulativeDistance / ctx.TotalLength;
+                        edge.EndPointAbsoluteRatio = (edge.CumulativeDistance + edge.Length) / ctx.TotalLength;
+                        edge.StartControlPointAbsoluteRatio =
+                            (edge.CumulativeDistance + edge.StartControlPointRatio * edge.Length) / ctx.TotalLength;
+                        edge.EndControlPointAbsoluteRatio =
+                            (edge.CumulativeDistance + edge.EndControlPointRatio * edge.Length) / ctx.TotalLength;
+
+                        OutEdgeStates[i] = edge;
+                    }
+                }
+
+                // Output context
+                OutContext.Value = ctx;
+            }
+
+            /// <summary>
+            /// Gets the network composition from an entity's Upgraded component.
+            /// </summary>
+            private NetworkComposition GetNetworkComposition(Entity entity) {
+                if (!UpgradedLookup.TryGetComponent(entity, out var upgraded)) {
+                    return NetworkComposition.None;
+                }
+
+                if ((upgraded.m_Flags.m_General & CompositionFlags.General.Elevated) != 0) {
+                    return NetworkComposition.Elevated;
+                }
+
+                if ((upgraded.m_Flags.m_General & CompositionFlags.General.Tunnel) != 0) {
+                    return NetworkComposition.Tunnel;
+                }
+
+                return NetworkComposition.Ground;
+            }
+        }
+
+        #endregion
+    }
+}

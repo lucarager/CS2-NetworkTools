@@ -14,10 +14,10 @@
     public partial class NT_RoadShapeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
             m_Log.Debug(
-                $"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_PathTransform>(prefab)}");
+                $"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_ShapeTransform>(prefab)}");
             var validRequest =
                 prefab is NT_ToolPrefab &&
-                m_PrefabSystem.HasComponent<NT_PathTransform>(prefab);
+                m_PrefabSystem.HasComponent<NT_ShapeTransform>(prefab);
 
             if (!validRequest)
             {
@@ -47,6 +47,10 @@
             m_NextPathNodes    = new NativeList<Entity>(32, Allocator.Persistent);
             m_NextPathEdges    = new NativeList<Entity>(32, Allocator.Persistent);
 
+            // Cached path data for handles and jobs
+            m_EdgeStates = new NativeList<EdgeState>(32, Allocator.Persistent);
+            m_PathDataValid    = false;
+
             // Override default query to exclude some networks
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
                 .WithAll<Node, Road>()
@@ -61,6 +65,11 @@
             m_CurrentPathEdges.Dispose();
             m_NextPathNodes.Dispose();
             m_NextPathEdges.Dispose();
+
+            // Dispose cached path data
+            if (m_EdgeStates.IsCreated) {
+                m_EdgeStates.Dispose();
+            }
 
             base.OnDestroy();
         }
@@ -81,7 +90,6 @@
             // Tool-specific cleanup
             EntityManager.RemoveComponent<NT_Selected>(m_NodesWithSelectedQuery);
             EntityManager.RemoveComponent<NT_Selected>(m_EdgesWithSelectedQuery);
-            EntityManager.RemoveComponent<NT_Highlighted>(m_EdgesWithHighlightedQuery);
             EntityManager.RemoveComponent<NT_SelectedFirst>(m_NodesWithSelectedFirstQuery);
             EntityManager.RemoveComponent<NT_SelectedLast>(m_NodesWithSelectedLastQuery);
 
@@ -90,6 +98,9 @@
             m_EligibleNodes.Clear();
             m_CurrentPathNodes.Clear();
             m_CurrentPathEdges.Clear();
+
+            // Invalidate cached path data
+            InvalidatePathData();
         }
 
         public void MarkDirty() {
@@ -109,7 +120,11 @@
             // RE-INITIALIZE: Config changed while in Ready phase
             if (Phase == OperationPhase.Ready)
             {
-                CreateTransformHandles(); // Re-creates handles + re-initializes transforms
+                // InitializeConfig the transform (computes any needed initial values into config)
+                InitializeCurrentTransform();
+
+                // Re-create handles using the initialized config
+                RefreshTransformHandles();
             }
 
             m_Log.Debug(

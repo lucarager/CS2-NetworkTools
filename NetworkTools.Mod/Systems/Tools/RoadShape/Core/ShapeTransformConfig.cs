@@ -88,25 +88,28 @@
         ///     Length of ease-in transition at start (0 to 0.5).
         ///     Defines how much of the path has gradual slope increase.
         /// </summary>
-        public float3 EaseInControlPoint;
+        public float EaseInLength;
 
         /// <summary>
         ///     Length of ease-out transition at end (0 to 0.5).
         ///     Defines how much of the path has gradual slope decrease.
         /// </summary>
-        public float3 EaseOutControlPoint;
+        public float EaseOutLength;
+
+        public static float EaseInMax  = 0.4f;
+        public static float EaseOutMax = 0.4f;
 
         /// <summary>
         ///     Creates an ease-in-out configuration with specified transition lengths.
         /// </summary>
-        /// <param name="inPosition">Ease-in control point position</param>
-        /// <param name="outPosition">Ease-out control point position</param>
-        public static ShapeTransformConfig SlopeEaseInOut(float3 inPosition, float3 outPosition) {
+        /// <param name="easeInLength">Ease-in control point strength</param>
+        /// <param name="easeOutLength">Ease-out control point strength</param>
+        public static ShapeTransformConfig SlopeEaseInOut(float easeInLength = 0.1f, float easeOutLength = 0.1f) {
             return new ShapeTransformConfig {
                 Template            = ShapeTransformTemplate.SlopeEaseInOut,
                 RenderSlopeTooltips = true,
-                EaseInControlPoint  = inPosition,
-                EaseOutControlPoint = outPosition,
+                EaseInLength  = math.clamp(easeInLength, 0f, EaseInMax),
+                EaseOutLength = math.clamp(easeOutLength, 0f, EaseOutMax),
             };
         }
 
@@ -179,11 +182,11 @@
             writer.PropertyName("template");
             writer.Write((int)Template);
             
-            writer.PropertyName("easeInControlPoint");
-            writer.Write(EaseInControlPoint);
+            writer.PropertyName("easeInLength");
+            writer.Write(EaseInLength);
 
-            writer.PropertyName("easeOutControlPoint");
-            writer.Write(EaseOutControlPoint);
+            writer.PropertyName("easeOutLength");
+            writer.Write(EaseOutLength);
 
             writer.PropertyName("smoothingFactor");
             writer.Write(SmoothingFactor);
@@ -207,16 +210,16 @@
                 Template = (ShapeTransformTemplate)template;
             }
 
-            if (reader.ReadProperty("easeInControlPoint"))
+            if (reader.ReadProperty("easeInLength"))
             {
-                reader.Read(out float easeInControlPoint);
-                EaseInControlPoint = easeInControlPoint;
+                reader.Read(out float easeInLength);
+                EaseInLength = easeInLength;
             }
 
-            if (reader.ReadProperty("easeOutControlPoint"))
+            if (reader.ReadProperty("easeOutLength"))
             {
-                reader.Read(out float easeOutControlPoint);
-                EaseOutControlPoint = easeOutControlPoint;
+                reader.Read(out float easeOutLength);
+                EaseOutLength = easeOutLength;
             }
 
             if (reader.ReadProperty("smoothingFactor"))

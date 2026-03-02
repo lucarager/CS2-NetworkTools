@@ -7,24 +7,25 @@
     public static class TransformPipeline {
 
         public static void Execute<T>(
-            T transform,
+            ref T transform,
             ref NativeArray<EdgeState> edges,
-            ref ShapeTransformContext ctx)
+            in ShapeTransformContext ctx,
+            in ShapeTransformConfig config)
             where T : struct, IPathTransformation {
 
-            // 1. PreProcess (global calculations)
-            transform.PreProcess(ref edges, ref ctx);
+            // 1. PreProcess (global calculations - may set instance fields like ReferenceBezier)
+            transform.PreProcess(ref edges, in ctx, in config);
 
             // 2. Process each edge
             for (var i = 0; i < edges.Length; i++)
             {
                 var edge = edges[i];
-                transform.Process(ref edge, i, in ctx);
+                transform.Process(ref edge, i, in ctx, in config);
                 edges[i] = edge;
             }
 
             // 3. PostProcess (cleanup)
-            transform.PostProcess(ref edges, in ctx);
+            transform.PostProcess(ref edges, in ctx, in config);
         }
     }
 }

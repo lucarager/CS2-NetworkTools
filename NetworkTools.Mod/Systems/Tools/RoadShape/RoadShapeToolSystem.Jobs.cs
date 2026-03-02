@@ -1,4 +1,5 @@
 ﻿namespace NetworkTools.Systems.Tools.RoadShape {
+    using Colossal.Json;
     using Colossal.Mathematics;
     using Game.Common;
     using Game.Net;
@@ -14,20 +15,20 @@
         [BurstCompile]
 #endif
         internal struct ShapeTransformJob : IJob {
-            [ReadOnly] public required NativeList<Entity>                SelectedNodes;
-            [ReadOnly] public required NativeList<Entity>                CurrentPathEdges;
+            [ReadOnly] public required NativeList<EdgeState>   EdgeStates;
+            [ReadOnly] public required ShapeTransformContext   Context;
+            [ReadOnly] public required ShapeTransformConfig    Config;
             [ReadOnly] public required NativeList<Entity>                CurrentPathNodes;
             [ReadOnly] public required ComponentLookup<Node>             NodeLookup;
-            [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
-            [ReadOnly] public required ComponentLookup<Edge>             EdgeLookup;
-            [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
-            [ReadOnly] public required ShapeTransformConfig              Config;
             [ReadOnly] public required ComponentLookup<PrefabRef>        PrefabRefLookup;
             [ReadOnly] public required ComponentLookup<PseudoRandomSeed> PseudoRandomSeedLookup;
             [ReadOnly] public required BufferLookup<ConnectedEdge>       ConnectedEdgeLookup;
+            [ReadOnly] public required ComponentLookup<Edge>             EdgeLookup;
+            [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
+            [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Aggregated>       AggregatedLookup;
-            public required            ToolOutputMode                    OutputMode;
-            public required            EntityCommandBuffer               ECB;
+            public required ToolOutputMode       OutputMode;
+            public required EntityCommandBuffer  ECB;
 
             /// <summary>
             ///     Minimum height delta (in meters) to consider for intersection adjustments.
@@ -44,119 +45,55 @@
             private const float ForceGroundElevation = 0f;
 
             public void Execute() {
-                // 1. Initialize context
-                var ctx = ShapeTransformContext.Create(NodeLookup[SelectedNodes[0]].m_Position,
-                                                       NodeLookup[SelectedNodes[^1]].m_Position,
-                                                       Config);
-
-                // 2. Gather edge states
-                var edges = GatherEdgeStates(ref ctx);
-                if (edges.Length == 0) {
-                    edges.Dispose();
+                if (EdgeStates.Length == 0) {
+                    return;
                 }
 
-                // 3. Execute transformation
-                switch (ctx.Config.Template) {
+                // 1. Copy cached data to mutable arrays for transform pipeline
+                var edges = new NativeArray<EdgeState>(EdgeStates.Length, Allocator.Temp);
+                for (var i = 0; i < EdgeStates.Length; i++) {
+                    edges[i] = EdgeStates[i];
+                }
+
+                NetworkToolsMod.Instance.Log.Debug($"Executing ShapeTransformJob with {edges.Length} edges. TotalLength={Context.TotalLength}, StartHeight={Context.StartHeight}, DeltaHeight={Context.DeltaHeight}");
+
+                // 2. Execute transformation (context = path geometry, config = user settings)
+                switch (Config.Template) {
                     case ShapeTransformTemplate.SlopeLinear:
-                        TransformPipeline.Execute(new SlopeLinearTransform { Config = ctx.Config }, ref edges, ref ctx);
+                        var linearTransform = new SlopeLinearTransform();
+                        TransformPipeline.Execute(ref linearTransform, ref edges, in Context, in Config);
                         break;
                     case ShapeTransformTemplate.SlopeEaseInOut:
-                        TransformPipeline.Execute(new SlopeEaseInOutTransform { Config = ctx.Config },
-                                                  ref edges,
-                                                  ref ctx);
+                        NetworkToolsMod.Instance.Log.Debug("Applying SlopeEaseInOutTransform");
+                        NetworkToolsMod.Instance.Log.Debug($"Config: EaseInLength={Config.EaseInLength} EaseOutLength={Config.EaseOutLength}");
+                        NetworkToolsMod.Instance.Log.Debug($"Context: TotalLength={Context.TotalLength} StartHeight={Context.StartHeight} DeltaHeight={Context.DeltaHeight}");
+                        NetworkToolsMod.Instance.Log.Debug($"First edge bezier y values are {edges[0].Bezier.y.ToJSONString()}");
+                        var easeInOutTransform = new SlopeEaseInOutTransform();
+                        TransformPipeline.Execute(ref easeInOutTransform, ref edges, in Context, in Config);
+                        NetworkToolsMod.Instance.Log.Debug($"First edge bezier y values are {edges[0].Bezier.y.ToJSONString()}");
                         break;
                     case ShapeTransformTemplate.SlopeParabolic:
-                        //TransformPipeline.Execute(new SlopeParabolicTransform { Config = ctx.Config }, ref edges, ref ctx);
+                        // TODO: Implement SlopeParabolicTransform
                         break;
                     case ShapeTransformTemplate.CurveStraighten:
-                        TransformPipeline.Execute(new CurveStraightenTransform { Config = ctx.Config },
-                                                  ref edges,
-                                                  ref ctx);
+                        var straightenTransform = new CurveStraightenTransform();
+                        TransformPipeline.Execute(ref straightenTransform, ref edges, in Context, in Config);
                         break;
                     case ShapeTransformTemplate.CurveSmooth:
-                        TransformPipeline.Execute(new CurveSmoothTransform { Config = ctx.Config }, ref edges, ref ctx);
+                        var smoothTransform = new CurveSmoothTransform();
+                        TransformPipeline.Execute(ref smoothTransform, ref edges, in Context, in Config);
                         break;
                 }
 
-                // 4. Gather intersection adjustments
-                var adjustments = GatherIntersectionAdjustments(edges, in ctx);
+                // 3. Gather intersection adjustments
+                var adjustments = GatherIntersectionAdjustments(edges, in Context);
 
-                // 5. Output
-                Output(edges, adjustments, in ctx);
+                // 4. Output
+                Output(edges, adjustments, in Context);
 
                 // Cleanup
                 adjustments.Dispose();
                 edges.Dispose();
-            }
-
-
-            /// <summary>
-            ///     Gathers all edge data in a single loop, calculating cumulative distances
-            ///     and total path length. Updates context.TotalLength.
-            /// </summary>
-            private NativeArray<EdgeState> GatherEdgeStates(ref ShapeTransformContext context) {
-                var edgeCount          = CurrentPathEdges.Length;
-                var edges              = new NativeArray<EdgeState>(edgeCount, Allocator.Temp);
-                var cumulativeDistance = 0f;
-
-                // First pass: gather edge data and calculate total length
-                for (var i = 0; i < edgeCount; i++) {
-                    var edgeEntity = CurrentPathEdges[i];
-                    var state = new EdgeState {
-                        EdgeEntity         = edgeEntity,
-                        PathIndex          = i,
-                        CumulativeDistance = cumulativeDistance
-                    };
-
-                    // Get edge component for direction and node references
-                    if (EdgeLookup.TryGetComponent(edgeEntity, out var edge)) {
-                        state.StartNode = edge.m_Start;
-                        state.EndNode   = edge.m_End;
-
-                        var currentNode = CurrentPathNodes[i];
-                        state.IsForward = edge.m_Start == currentNode;
-                    }
-
-                    state.NetworkComposition = GetNetworkComposition(edgeEntity);
-
-                    // Get curve component for geometry
-                    if (CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
-                        state.Bezier = curve.m_Bezier;
-                        state.Length = curve.m_Length;
-                        state.CalculateControlPointRatios();
-                    }
-
-                    // Store original values for intersection delta calculations
-                    var pathEndNode = CurrentPathNodes[i + 1];
-                    if (NodeLookup.TryGetComponent(pathEndNode, out var pathEndNodeInfo)) {
-                        state.OriginalEndHeight = pathEndNodeInfo.m_Position.y;
-                        state.OriginalEndXZ = new float2(pathEndNodeInfo.m_Position.x, pathEndNodeInfo.m_Position.z);
-                    }
-
-                    edges[i]           =  state;
-                    cumulativeDistance += state.Length;
-                }
-
-                // Update context with total length
-                context.TotalLength = cumulativeDistance;
-
-                // Second pass: calculate absolute ratios for each control point
-                if (context.TotalLength > 0f) {
-                    for (var i = 0; i < edgeCount; i++) {
-                        var edge = edges[i];
-
-                        edge.StartPointAbsoluteRatio = edge.CumulativeDistance                 / context.TotalLength;
-                        edge.EndPointAbsoluteRatio   = (edge.CumulativeDistance + edge.Length) / context.TotalLength;
-                        edge.StartControlPointAbsoluteRatio =
-                            (edge.CumulativeDistance + edge.StartControlPointRatio * edge.Length) / context.TotalLength;
-                        edge.EndControlPointAbsoluteRatio =
-                            (edge.CumulativeDistance + edge.EndControlPointRatio * edge.Length) / context.TotalLength;
-
-                        edges[i] = edge;
-                    }
-                }
-
-                return edges;
             }
 
             /// <summary>

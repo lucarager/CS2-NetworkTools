@@ -32,7 +32,7 @@ export const ToolSelectPanel = () => {
                                         : "",
                                 ].join(" ")}
                                 variant="flat"
-                                // disabled={!tool.Active}
+                                disabled={!tool.Active}
                                 onSelect={() => GAME_TRIGGERS.SELECT_TOOL(tool.PrefabId)}>
                                 <img
                                     src={`coui://nt/Icons/${tool.PrefabId == selectedBinding ? "Active" : "Normal"}/${tool.Icon}`}

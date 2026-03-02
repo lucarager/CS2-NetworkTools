@@ -17,6 +17,9 @@ $color7: $bittersweet-shimmer-3;
 $opacityRest: 100%;
 $brighten: 10%;
 $color-nt-3: linear-gradient(to bottom, rgb(205, 56, 219) 0%,rgb(150, 69, 255) 100%);
+$iconSize: 26rem;
+$iconPadding: 6rem;
+$barHeight: $iconSize + $iconPadding * 2;
 
 .wrapper {
     animation: slideInLeft 0.16s ease-out forwards;
@@ -44,7 +47,7 @@ $color-nt-3: linear-gradient(to bottom, rgb(205, 56, 219) 0%,rgb(150, 69, 255) 1
     top: 14rem;
     left: 0;
     width: 2rem;
-    height: 40rem;
+    height: $barHeight;
     background: $color-nt-3;
     border-top-left-radius: 2rem;
     border-bottom-left-radius: 2rem;
@@ -53,10 +56,8 @@ $color-nt-3: linear-gradient(to bottom, rgb(205, 56, 219) 0%,rgb(150, 69, 255) 1
 }
 
 .column .actionButton {
-    $iconSize: 28rem;
-
     margin: 0;
-    padding: 8rem;
+    padding: $iconPadding;
     display: flex;
     flex-direction: row;
     background: transparent;

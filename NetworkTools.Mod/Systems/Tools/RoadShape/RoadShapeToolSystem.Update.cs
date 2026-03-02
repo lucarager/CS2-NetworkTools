@@ -12,13 +12,13 @@
 
     public partial class NT_RoadShapeToolSystem {
         /// <summary>
-        ///     Updates the operation phase based on the current selection state.
-        ///     Should be called after any operation that changes the selected node count.
+        /// Updates the operation phase based on the current selection state.
+        /// Called after selection changes. Returns the previous phase for transition detection.
         /// </summary>
-        private void UpdateOperationPhase() {
+        private OperationPhase UpdateOperationPhase() {
             // Don't interrupt an active apply operation
             if (Phase == OperationPhase.Applying) {
-                return;
+                return Phase;
             }
 
             var previousPhase = Phase;
@@ -30,64 +30,97 @@
                 _ => OperationPhase.Ready
             };
 
-            // PHASE TRANSITION: Entering Ready
-            if (Phase == OperationPhase.Ready && previousPhase != OperationPhase.Ready)
-            {
-                CreateTransformHandles();
-            }
-
-            // PHASE TRANSITION: Leaving Ready
-            else if (Phase != OperationPhase.Ready && previousPhase == OperationPhase.Ready)
-            {
-                DestroyAllHandles();
-            }
+            return previousPhase;
         }
 
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
 
-            // Right click => Remove last point from stack
-            if (m_SecondaryApplyAction.WasPressedThisFrame()) {
-                HandleRemoveNode();
+            // ═══════════════════════════════════════════════════════════════════════════
+            // HANDLE INTERACTION PIPELINE 
+            // ═══════════════════════════════════════════════════════════════════════════
+
+            if (Phase == OperationPhase.Ready && ProcessHandleInput()) {
+                // Handle consumed input this frame:
+                // - OnHandleDragging() may have updated ShapeTransformConfig
+                // - m_UpdateNeeded was set to true
+                // - Skip node selection, go straight to output
+                return HandleTempEntities(inputDeps);
+            }
+
+            // ═══════════════════════════════════════════════════════════════════════════
+            // NODE SELECTION: Input Detection 
+            // ═══════════════════════════════════════════════════════════════════════════
+
+            var rightClickPressed = m_SecondaryApplyAction.WasPressedThisFrame();
+            var leftClickPressed = m_ApplyAction.WasPressedThisFrame();
+            var raycastHit = false;
+            var hoveredEntity = Entity.Null;
+            var hitPosition = float3.zero;
+            ControlPoint controlPoint = default;
+
+            raycastHit = GetRaycastResult(out controlPoint);
+            if (raycastHit) {
+                hoveredEntity = controlPoint.m_OriginalEntity;
+                hitPosition = controlPoint.m_HitPosition;
+            }
+
+            // ═══════════════════════════════════════════════════════════════════════════
+            // NODE SELECTION: State Mutation
+            // ═══════════════════════════════════════════════════════════════════════════
+
+            var selectionChanged = false;
+
+            // Right-click: cancel/back (skips all raycast processing)
+            if (rightClickPressed) {
+                selectionChanged = HandleRemoveNode();
                 m_UpdateNeeded = true;
-                return inputDeps;
             }
-
-            // Handle was hovered, clicked, or dragged                   
-            if (Phase == OperationPhase.Ready && ProcessHandleInput()) { 
-                return HandleTempEntities(inputDeps); 
-            }
-
-            // Get raycast result
-            if (GetRaycastResult(out var controlPoint)) {
-                // We hit something
-                var hitPos = controlPoint.m_HitPosition;
-                var newEntityWasHit = m_LastHoveredEntity.Value != controlPoint.m_OriginalEntity;
-
-                if (newEntityWasHit) {
-                    // Calculate the path to the new entity if needed
+            // Raycast-based interactions
+            else if (raycastHit) {
+                // Update hover state first (so path preview is ready if user clicks)
+                var newEntityHovered = (hoveredEntity != m_LastHoveredEntity.Value);
+                if (newEntityHovered) {
                     HandlePathUpdate(controlPoint);
-                    // Handle hovering if entity changed
-                    HandleHover(controlPoint);
+                    HandleHover(hoveredEntity);
                     m_UpdateNeeded = true;
                 }
+                m_LastHoveredEntity.Value = hoveredEntity;
+                m_LastHitPosition = hitPosition;
 
-                // Update Cache
-                m_LastHoveredEntity.Value = controlPoint.m_OriginalEntity;
-                m_LastHitPosition         = hitPos;
-
-                // Handle clicking
-                if (m_ApplyAction.WasPressedThisFrame()) {
-                    HandleAddNode(controlPoint.m_OriginalEntity);
+                // Left-click: add node (after hover update, same frame OK)
+                if (leftClickPressed && hoveredEntity != Entity.Null) {
+                    selectionChanged = HandleAddNode(hoveredEntity);
                     m_UpdateNeeded = true;
                 }
             }
+            // No raycast hit
             else {
-                // No entity under cursor
                 HandleNoHover();
             }
 
-            // Handle temp entities
+            // ═══════════════════════════════════════════════════════════════════════════
+            // PHASE TRANSITION & PATH DATA REFRESH
+            // ═══════════════════════════════════════════════════════════════════════════
+
+            if (selectionChanged) {
+                var previousPhase = UpdateOperationPhase();
+
+                // In Ready: refresh path data + handles (covers entering AND extending)
+                if (Phase == OperationPhase.Ready) {
+                    RefreshPathData();
+                    RefreshTransformHandles();
+                }
+                // Exiting Ready: clean up handles
+                else if (previousPhase == OperationPhase.Ready) {
+                    DestroyAllHandles();
+                }
+            }
+
+            // ═══════════════════════════════════════════════════════════════════════════
+            // OUTPUT
+            // ═══════════════════════════════════════════════════════════════════════════
+
             return HandleTempEntities(inputDeps);
         }
 
@@ -140,20 +173,23 @@
             newPathEdges.Dispose();
         }
 
-        private void HandleHover(ControlPoint controlPoint) {
+        /// <summary>
+        /// Updates highlighting based on new hover state.
+        /// </summary>
+        private void HandleHover(Entity hoveredEntity) {
             switch (CurrentSelectionState) {
                 case SelectionState.NoSelection:
                     m_Log.Debug("[NoSelection] Hovering over potential start point.");
-                    SwapHighlitedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity, NT_Highlighted.DefaultNode);
-                    return;
+                    SwapHighlitedEntities(m_LastHoveredEntity.Value, hoveredEntity, NT_Highlighted.DefaultNode);
+                    break;
                 case SelectionState.StartNodeSelected:
                     PreviewPath();
                     m_Log.Debug("[StartNodeSelected] Hovering over potential end point.");
-                    return;
+                    break;
                 case SelectionState.EndNodeSelected:
                     PreviewPath();
                     m_Log.Debug("[EndNodeSelected] Hovering over another potential end point.");
-                    return;
+                    break;
             }
         }
 
@@ -165,149 +201,192 @@
             Phase = OperationPhase.Applying;
         }
 
-        private void HandleAddNode(Entity entity) {
+        /// <summary>
+        /// Attempts to add a node to the path. Returns true if selection changed.
+        /// Updates ECS markers, path caches, and eligible nodes.
+        /// </summary>
+        private bool HandleAddNode(Entity entity) {
             if (entity == Entity.Null || m_SelectedNodes.Contains(entity)) {
-                return;
+                return false;
             }
 
-            // Add Node
+            m_Log.Debug($"[{CurrentSelectionState}] Adding node: {entity}");
+
+            // 1. Add node to selection and mark with state-specific components
             switch (CurrentSelectionState) {
                 case SelectionState.NoSelection:
-                    m_Log.Debug("[NoSelection -> StartNodeSelected] Adding start point.");
+                    m_Log.Debug("→ StartNodeSelected");
                     m_SelectedNodes.Add(entity);
-
-                    // Add markers to first node
                     EntityManager.AddComponentData(entity, NT_Selected.DefaultNode);
                     EntityManager.AddComponent<NT_SelectedFirst>(entity);
                     break;
+
                 case SelectionState.StartNodeSelected:
-                    m_Log.Debug("[StartNodeSelected -> EndNodeSelected] Adding end point.");
+                    m_Log.Debug("→ EndNodeSelected");
                     m_SelectedNodes.Add(entity);
-
-                    // Add markers to end node
                     EntityManager.AddComponentData(entity, NT_Selected.DefaultNode);
                     EntityManager.AddComponent<NT_SelectedLast>(entity);
-
                     break;
+
                 case SelectionState.EndNodeSelected:
-                    m_Log.Debug("[EndNodeSelected] Adding another end point.");
+                    m_Log.Debug("→ Extending path");
 
-                    // Remove marker from previous end node
-                    var lastNode = m_SelectedNodes[^1];
-                    EntityManager.RemoveComponent<NT_SelectedLast>(lastNode);
+                    // Remove SelectedLast from old endpoint
+                    var previousEnd = m_SelectedNodes[^1];
+                    EntityManager.RemoveComponent<NT_SelectedLast>(previousEnd);
 
+                    // Add new endpoint
                     m_SelectedNodes.Add(entity);
-
-                    // Add markers to new end node
                     EntityManager.AddComponentData(entity, NT_Selected.DefaultNode);
                     EntityManager.AddComponent<NT_SelectedLast>(entity);
-
                     break;
             }
 
-            // Add the nodes to our cache and mark as selected
-            foreach (var node in m_NextPathNodes)
+            // 2. Merge preview path into persistent path
+            CommitNextPathToCurrentPath();
+
+            // 3. Update path indices for rendering
+            UpdatePathIndices();
+
+            // 4. Recalculate eligible nodes from new endpoint
+            RecalculateEligibleNodes(entity);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Merges the hovered preview path (m_NextPathNodes/Edges) into the committed path.
+        /// Called when a node is added — this confirms the hover preview.
+        /// </summary>
+        private void CommitNextPathToCurrentPath() {
+            // Add new path nodes
+            foreach (var node in m_NextPathNodes) {
                 if (!m_CurrentPathNodes.Contains(node)) {
                     m_CurrentPathNodes.Add(node);
                     EntityManager.AddComponentData(node, NT_Selected.DefaultNode);
                 }
+            }
 
-            // Add the edges to our cache and mark as selected
-            foreach (var edge in m_NextPathEdges)
+            // Add new path edges
+            foreach (var edge in m_NextPathEdges) {
                 if (!m_CurrentPathEdges.Contains(edge)) {
                     m_CurrentPathEdges.Add(edge);
                     EntityManager.AddComponentData(edge, NT_Selected.DefaultEdge);
                 }
+            }
 
-            // Update all path indices to ensure they're consecutive and correct
-            UpdatePathIndices();
+            // Clear preview (will be rebuilt on next hover)
+            m_NextPathNodes.Clear();
+            m_NextPathEdges.Clear();
 
-            // Remove NT_Eligible from ALL nodes (we will recalculate based on state)
-            EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
-
-            // Find all eligible nodes from new head of path
-            FindEligibleNodes(entity, m_EligibleNodes);
-
-            // Add NT_Eligible to eligible nodes
-            var eligibleArray = new NativeArray<Entity>(m_EligibleNodes.AsArray(), Allocator.Temp);
-            EntityManager.AddComponent<NT_Eligible>(eligibleArray);
-            eligibleArray.Dispose();
-
-            // Update phase based on new node count
-            UpdateOperationPhase();
+            m_Log.Debug($"CommitNextPathToCurrentPath: Path now {m_CurrentPathNodes.Length} nodes, {m_CurrentPathEdges.Length} edges");
         }
 
-        private void HandleRemoveNode() {
+        /// <summary>
+        /// Recalculates which nodes are eligible for selection from the current endpoint.
+        /// Replaces NT_Eligible on all nodes with only those reachable from the endpoint.
+        /// </summary>
+        private void RecalculateEligibleNodes(Entity fromNode) {
+            // Clear all NT_Eligible
+            EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
+
+            // Find new eligible nodes
+            m_EligibleNodes.Clear();
+            FindEligibleNodes(fromNode, m_EligibleNodes);
+
+            // Add NT_Eligible to newly eligible nodes
+            var eligibleArray = new NativeArray<Entity>(m_EligibleNodes.AsArray(), Allocator.Temp);
+            EntityManager.AddComponent<NT_Eligible>(eligibleArray);
+
+            m_Log.Debug($"RecalculateEligibleNodes: {m_EligibleNodes.Length} nodes reachable from endpoint");
+        }
+
+        /// <summary>
+        /// Removes the last node from the path. Returns true if selection changed.
+        /// Handles backtracking through all states.
+        /// </summary>
+        private bool HandleRemoveNode() {
+            if (m_SelectedNodes.Length == 0) {
+                return false;
+            }
+
             var lastNode = m_SelectedNodes[^1];
+            m_Log.Debug($"[{CurrentSelectionState}] Removing node: {lastNode}");
+
             switch (CurrentSelectionState) {
                 case SelectionState.NoSelection:
-                    break;
+                    return false;
+
                 case SelectionState.StartNodeSelected:
-                    m_Log.Debug("[StartNodeSelected -> NoSelection] Removing start point.");
+                    m_Log.Debug("→ NoSelection");
                     EntityManager.RemoveComponent<NT_Selected>(lastNode);
                     EntityManager.RemoveComponent<NT_SelectedFirst>(lastNode);
                     m_SelectedNodes.RemoveAt(m_SelectedNodes.Length - 1);
                     StateTransitionNoNodes();
-                    break;
-                case SelectionState.EndNodeSelected:
-                    if (m_SelectedNodes.Length > 2) {
-                        m_Log.Debug(
-                            $"[EndNodeSelected] Removing an end point. {m_SelectedNodes.Length - 1} end points remaining");
-                    }
-                    else {
-                        m_Log.Debug("[EndNodeSelected -> StartNodeSelected] Removing last end point.");
-                    }
+                    return true;
 
+                case SelectionState.EndNodeSelected:
+                    m_Log.Debug("→ Trimming path");
+
+                    // Remove endpoint marker from current last node
                     EntityManager.RemoveComponent<NT_Selected>(lastNode);
                     EntityManager.RemoveComponent<NT_SelectedLast>(lastNode);
                     m_SelectedNodes.RemoveAt(m_SelectedNodes.Length - 1);
 
-                    // Reduce our path - remove nodes and edges until we reach the new last node
-                    var newLastNode = m_SelectedNodes[^1];
-                    var done = false;
-                    while (!done) {
-                        var curNode = m_CurrentPathNodes[^1];
-                        if (curNode == newLastNode || m_CurrentPathNodes.Length == 1) {
-                            done = true;
-                            break;
-                        }
+                    // Trim path nodes/edges back to the new endpoint
+                    var newEndNode = m_SelectedNodes[^1];
+                    TrimPathToNode(newEndNode);
 
-                        EntityManager.RemoveComponent<NT_Selected>(curNode);
-                        m_CurrentPathNodes.RemoveAt(m_CurrentPathNodes.Length - 1);
-
-                        // Remove corresponding edge
-                        if (m_CurrentPathEdges.Length > 0) {
-                            var curEdge = m_CurrentPathEdges[^1];
-                            EntityManager.RemoveComponent<NT_Selected>(curEdge);
-                            m_CurrentPathEdges.RemoveAt(m_CurrentPathEdges.Length - 1);
-                        }
-                    }
-
-                    // Update all path indices to ensure they're consecutive and correct
+                    // Update rendering indices
                     UpdatePathIndices();
 
-                    // Remove NT_Eligible from ALL nodes (we will recalculate based on state)
-                    EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
+                    // Recalculate eligible nodes from new endpoint
+                    RecalculateEligibleNodes(newEndNode);
 
-                    // Find all eligible nodes from new head of path
-                    FindEligibleNodes(newLastNode, m_EligibleNodes);
-
-                    // Add NT_Eligible to eligible nodes
-                    var eligibleArray = new NativeArray<Entity>(m_EligibleNodes.AsArray(), Allocator.Temp);
-                    EntityManager.AddComponent<NT_Eligible>(eligibleArray);
-                    eligibleArray.Dispose();
-
+                    // If back to single node, it's still SelectedFirst (no change needed)
+                    // If still have 2+, mark the new last node
                     if (m_SelectedNodes.Length >= 2) {
-                        // Mark the new last node if we still have at least 2
-                        EntityManager.AddComponent<NT_SelectedLast>(newLastNode);
+                        EntityManager.AddComponent<NT_SelectedLast>(newEndNode);
                     }
 
-                    // Update phase based on new node count
-                    break;
+                    return true;
             }
 
-            // Update phase based on new node count
-            UpdateOperationPhase();
+            return false;
+        }
+
+        /// <summary>
+        /// Removes path nodes and edges from the end back to (and including) targetNode.
+        /// Used when backing up the path via right-click.
+        /// </summary>
+        private void TrimPathToNode(Entity targetNode) {
+            var trimmedNodes = 0;
+            var trimmedEdges = 0;
+
+            var done = false;
+            while (!done) {
+                // Stop if we've reached the target or emptied the path
+                if (m_CurrentPathNodes.Length == 0 || m_CurrentPathNodes[^1] == targetNode) {
+                    done = true;
+                    break;
+                }
+
+                // Remove trailing node
+                var nodeToRemove = m_CurrentPathNodes[^1];
+                EntityManager.RemoveComponent<NT_Selected>(nodeToRemove);
+                m_CurrentPathNodes.RemoveAt(m_CurrentPathNodes.Length - 1);
+                trimmedNodes++;
+
+                // Remove trailing edge
+                if (m_CurrentPathEdges.Length > 0) {
+                    var edgeToRemove = m_CurrentPathEdges[^1];
+                    EntityManager.RemoveComponent<NT_Selected>(edgeToRemove);
+                    m_CurrentPathEdges.RemoveAt(m_CurrentPathEdges.Length - 1);
+                    trimmedEdges++;
+                }
+            }
+
+            m_Log.Debug($"TrimPathToNode: Removed {trimmedNodes} nodes, {trimmedEdges} edges");
         }
 
         protected override bool GetRaycastResult(out ControlPoint controlPoint) {
@@ -384,16 +463,19 @@
             // Clear state to completely blank
             Phase = OperationPhase.Idle;
 
+            // Destroy any active handles
+            DestroyAllHandles();
+
             // Batch remove all marker components using cached queries
             EntityManager.RemoveComponent<NT_Selected>(m_NodesWithSelectedQuery);
             EntityManager.RemoveComponent<NT_Selected>(m_EdgesWithSelectedQuery);
             EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
-            EntityManager.RemoveComponent<NT_Highlighted>(m_NodesWithHighlightedQuery);
-            EntityManager.RemoveComponent<NT_Highlighted>(m_EdgesWithHighlightedQuery);
             EntityManager
                 .RemoveComponent<NT_SelectedFirst>(m_NodesWithSelectedFirstQuery);
             EntityManager
                 .RemoveComponent<NT_SelectedLast>(m_NodesWithSelectedLastQuery);
+
+            ClearAllHighlights();
 
             // Reset state
             StateTransitionNoNodes();

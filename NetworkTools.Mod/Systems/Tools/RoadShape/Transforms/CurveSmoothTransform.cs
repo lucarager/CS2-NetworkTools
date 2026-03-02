@@ -4,27 +4,23 @@
     using Unity.Collections;
 
     /// <summary>
-    /// Straightens all edges to lie on a direct line from path start to path end.
+    /// Smooths curves by fitting edges to a smooth Bezier curve.
     /// </summary>
     public struct CurveSmoothTransform : IPathTransformation {
-        public ShapeTransformConfig Config;
-
-        public void Initialize(
-            in ShapeTransformContext ctx,
-            in Bezier4x3        firstEdgeBezier,
-            bool                firstEdgeIsForward,
-            in Bezier4x3        lastEdgeBezier,
-            bool                lastEdgeIsForward) {
-
+        public void InitializeConfig(in ShapeTransformContext ctx, ref ShapeTransformConfig config) {
+            // TODO: Compute ideal bezier and store control points in config
+            // This allows GetHandleDefinitions to position handles correctly
         }
 
-        public void PreProcess(ref NativeArray<EdgeState> edges, ref ShapeTransformContext ctx) {
+        public void PreProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeTransformConfig config) {
+            // TODO: Implement curve smoothing using config.ControlPointB/C
         }
 
-        public void Process(ref EdgeState edge, int index, in ShapeTransformContext ctx) {
+        public void Process(ref EdgeState edge, int index, in ShapeTransformContext ctx, in ShapeTransformConfig config) {
+            // TODO: Implement curve smoothing
         }
 
-        public void PostProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx) {
+        public void PostProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeTransformConfig config) {
         }
     }
 }
