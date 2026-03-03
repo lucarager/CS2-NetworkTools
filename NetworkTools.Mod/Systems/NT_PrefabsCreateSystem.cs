@@ -23,7 +23,9 @@ namespace NetworkTools.Systems {
         /// </summary>
         private static bool m_PrefabsAreInstalled;
 
-        // Systems & References
+        /// <summary>
+        ///     PrefabSystem
+        /// </summary>
         private static PrefabSystem m_PrefabSystem;
 
         /// <summary>
@@ -33,11 +35,19 @@ namespace NetworkTools.Systems {
             { "marker", new PrefabID("MarkerObjectPrefab", "Pedestrian Access Location") }
         };
 
-        internal Entity m_HandlePrefabEntity;
+        /// <summary>
+        ///     Cached reference to the handle prefab entity.
+        /// </summary>
+        internal Entity HandlePrefabEntity;
 
+        /// <summary>
+        ///     Gets or sets the number of installed tools.
+        /// </summary>
         private int m_InstalledTools;
 
-        // Logger
+        /// <summary>
+        ///     Logger instance
+        /// </summary>
         private PrefixedLogger m_Log;
 
         /// <summary>
@@ -45,6 +55,9 @@ namespace NetworkTools.Systems {
         /// </summary>
         private List<PrefabBase> m_PrefabBases;
 
+        /// <summary>
+        ///     Cache for prefab entities.
+        /// </summary>
         private Dictionary<PrefabBase, Entity> m_PrefabEntities;
 
         /// <inheritdoc />
@@ -101,7 +114,7 @@ namespace NetworkTools.Systems {
             }
 
             CreateToolPrefab("add_node",    "Add Node",               "add.svg",      "", "node",       new NT_AddNode(), true);
-            CreateToolPrefab("remove_node", "Remove Node",            "remove.svg",   "", "node",       new NT_RemoveNode(), true);
+            CreateToolPrefab("remove_node", "Remove Node",            "remove.svg",   "", "node",       new NT_RemoveNode(), false);
             CreateToolPrefab("slide_node",  "Slide Node",             "move.svg",     "", "node",       new NT_Select(), false);
             CreateToolPrefab("supernode",   "Create Supernode",       "super.svg",    "", "node",       new NT_Select(), false);
             CreateToolPrefab("shape_slope", "Slope Tools",            "slope.svg",    "", "shape",      new NT_ShapeSlope(), true);
@@ -127,7 +140,7 @@ namespace NetworkTools.Systems {
                 var prefabEntity = m_PrefabSystem.GetEntity(prefabBase);
                 m_PrefabBases.Add(prefabBase);
                 m_PrefabEntities.Add(prefabBase, prefabEntity);
-                m_HandlePrefabEntity = prefabEntity;
+                HandlePrefabEntity = prefabEntity;
             }
 
             return success;
