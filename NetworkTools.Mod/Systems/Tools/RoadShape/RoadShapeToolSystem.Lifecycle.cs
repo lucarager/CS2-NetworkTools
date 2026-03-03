@@ -1,15 +1,10 @@
 ﻿namespace NetworkTools.Systems.Tools.RoadShape {
     using Game.Net;
     using Game.Prefabs;
-    using Game.Rendering;
-    using Game.Simulation;
     using Game.Tools;
     using NetworkTools.Components;
-    using NetworkTools.Settings;
     using Unity.Collections;
     using Unity.Entities;
-    using Game.Prefabs;
-    using NetworkTools.Components;
 
     public partial class NT_RoadShapeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
@@ -37,21 +32,15 @@
 
             // Configuration
             RenderEligibleNodes      = true;
-            //RenderEligibleEdges      = true;
             RenderHandles            = true;
             DisableVanillaValidation = true;
 
-            // Data Structures
-            m_SelectedNodes    = new NativeList<Entity>(32, Allocator.Persistent);
-            m_EligibleNodes    = new NativeList<Entity>(64, Allocator.Persistent);
-            m_CurrentPathNodes = new NativeList<Entity>(32, Allocator.Persistent);
-            m_CurrentPathEdges = new NativeList<Entity>(32, Allocator.Persistent);
-            m_NextPathNodes    = new NativeList<Entity>(32, Allocator.Persistent);
-            m_NextPathEdges    = new NativeList<Entity>(32, Allocator.Persistent);
+            // Initialize selection state (base class NativeLists)
+            InitializeSelectionState();
 
             // Cached path data for handles and jobs
             m_EdgeStates = new NativeList<EdgeState>(32, Allocator.Persistent);
-            m_PathDataValid    = false;
+            m_PathDataValid = false;
 
             // Override default query to exclude some networks
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
@@ -61,12 +50,8 @@
         }
 
         protected override void OnDestroy() {
-            m_SelectedNodes.Dispose();
-            m_EligibleNodes.Dispose();
-            m_CurrentPathNodes.Dispose();
-            m_CurrentPathEdges.Dispose();
-            m_NextPathNodes.Dispose();
-            m_NextPathEdges.Dispose();
+            // Dispose selection state (base class NativeLists)
+            DisposeSelectionState();
 
             // Dispose cached path data
             if (m_EdgeStates.IsCreated) {
@@ -81,25 +66,17 @@
 
             // Reset internal state
             m_LastHitPosition = default;
-            Phase             = OperationPhase.Idle;
+            Phase = OperationPhase.Idle;
 
-            StateTransitionNoNodes();
+            // Initialize selection state (makes all nodes eligible)
+            ResetToNoSelection();
         }
 
         protected override void OnStopRunning() {
             base.OnStopRunning();
 
-            // Tool-specific cleanup
-            EntityManager.RemoveComponent<NT_Selected>(m_NodesWithSelectedQuery);
-            EntityManager.RemoveComponent<NT_Selected>(m_EdgesWithSelectedQuery);
-            EntityManager.RemoveComponent<NT_SelectedFirst>(m_NodesWithSelectedFirstQuery);
-            EntityManager.RemoveComponent<NT_SelectedLast>(m_NodesWithSelectedLastQuery);
-
-            // Clear internal state
-            m_SelectedNodes.Clear();
-            m_EligibleNodes.Clear();
-            m_CurrentPathNodes.Clear();
-            m_CurrentPathEdges.Clear();
+            // Clear selection state
+            ClearSelectionState();
 
             // Invalidate cached path data
             InvalidatePathData();
