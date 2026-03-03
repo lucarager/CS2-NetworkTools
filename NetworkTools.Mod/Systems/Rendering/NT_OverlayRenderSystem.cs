@@ -15,6 +15,7 @@ namespace NetworkTools.Systems {
     using Game.Rendering;
     using Game.Tools;
     using NetworkTools.Components;
+    using NetworkTools.Components.Handles;
     using NetworkTools.Systems.Rendering;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Utils;

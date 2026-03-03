@@ -10,8 +10,10 @@ namespace NetworkTools.Systems.Tools {
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
-    using NetworkTools.Components;
+
+    using NetworkTools.Components.Tools;
     using NetworkTools.Settings;
+
     using Unity.Collections;
     using Unity.Entities;
 

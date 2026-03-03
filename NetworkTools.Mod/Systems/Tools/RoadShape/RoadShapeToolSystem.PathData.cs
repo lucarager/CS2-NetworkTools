@@ -1,8 +1,11 @@
 namespace NetworkTools.Systems.Tools.RoadShape {
     using Colossal.Mathematics;
+
     using Game.Net;
     using Game.Prefabs;
-    using NetworkTools.Components;
+
+    using NetworkTools.Components.Handles;
+
     using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;

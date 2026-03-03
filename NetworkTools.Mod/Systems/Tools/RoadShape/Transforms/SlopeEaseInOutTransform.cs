@@ -2,6 +2,8 @@
     using Colossal.Json;
     using Colossal.Mathematics;
     using NetworkTools.Components;
+    using NetworkTools.Components.Handles;
+
     using Unity.Collections;
     using Unity.Mathematics;
 

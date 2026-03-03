@@ -11,6 +11,9 @@ namespace NetworkTools.Systems.Tools {
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+
+    using NetworkTools.Components.Tools;
+
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -19,8 +22,8 @@ namespace NetworkTools.Systems.Tools {
 
     public partial class NT_RemoveNodeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<Components.NT_RemoveNode>(prefab)}");
-            var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<Components.NT_RemoveNode>(prefab);
+            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_RemoveNode>(prefab)}");
+            var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_RemoveNode>(prefab);
 
             if (!validRequest) {
                 return false;

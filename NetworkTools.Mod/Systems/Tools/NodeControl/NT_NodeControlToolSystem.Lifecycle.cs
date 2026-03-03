@@ -10,6 +10,8 @@ namespace NetworkTools.Systems.Tools {
     using Game.Prefabs;
     using Game.Tools;
     using NetworkTools.Components;
+    using NetworkTools.Components.Tools;
+
     using Unity.Collections;
     using Unity.Entities;
 

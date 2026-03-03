@@ -6,6 +6,7 @@
     using Game.Net;
     using Game.Rendering;
     using NetworkTools.Components;
+    using NetworkTools.Components.Handles;
     using NetworkTools.Systems.Rendering;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;

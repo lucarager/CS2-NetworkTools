@@ -5,13 +5,16 @@
 
 namespace NetworkTools.Systems {
     using System.Collections.Generic;
+
     using Game.Input;
     using Game.Prefabs;
     using Game.Tools;
     using Game.UI.Tooltip;
-    using NetworkTools.Components;
+
+    using NetworkTools.Components.Tools;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.RoadShape;
+
     using Unity.Entities;
 
     internal enum NT_ToolType {

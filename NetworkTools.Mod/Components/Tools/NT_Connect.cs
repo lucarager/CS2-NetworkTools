@@ -3,12 +3,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Components {
+namespace NetworkTools.Components.Tools {
     #region Using Statements
 
     using Unity.Entities;
 
     #endregion
 
-    public struct NT_ShapeTransform : IComponentData { }
+    public struct NT_Connect : IComponentData { }
 }

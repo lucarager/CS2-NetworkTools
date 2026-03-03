@@ -129,6 +129,13 @@
 		<None Include=".github\copilot-instructions.md" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Systems\Tools\Connect\" />
+	  <Folder Include="Systems\Tools\Grid\" />
+	  <Folder Include="Systems\Tools\SuperNode\" />
+	  <Folder Include="Systems\Tools\SlideNode\" />
+	</ItemGroup>
+
 	<!--Build UI-->
 	<Target Name="BuildUI" AfterTargets="DeployWIP">
 		<Message Text="[BuildUI]" Importance="high" />

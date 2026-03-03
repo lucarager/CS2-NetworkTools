@@ -1,6 +1,8 @@
 ﻿namespace NetworkTools.Systems.Tools.RoadShape {
     using Game.Net;
-    using NetworkTools.Components;
+
+    using NetworkTools.Components.Handles;
+
     using Unity.Entities;
     using Unity.Mathematics;
 
