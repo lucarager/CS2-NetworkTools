@@ -24,6 +24,11 @@
         public const float SAFETY_MARGIN = 1f;
 
         /// <summary>
+        ///     Multiplier applied to minimum split distance when an edge end is connected to other roads.
+        /// </summary>
+        public const float CONNECTED_END_MULTIPLIER = 2f;
+
+        /// <summary>
         ///     Calculates the minimum split distance (in curve position 0-1) from edge endpoints.
         /// </summary>
         /// <param name="edgeLength">Total length of the edge curve.</param>
@@ -49,6 +54,47 @@
             var minCurvePosition = minEdgeLength / edgeLength;
 
             return math.saturate(minCurvePosition);
+        }
+
+        /// <summary>
+        ///     Calculates asymmetric minimum and maximum curve positions for splitting,
+        ///     accounting for whether each end is connected to other roads.
+        ///     Connected ends require a larger minimum distance (approximately double).
+        /// </summary>
+        /// <param name="edgeLength">Total length of the edge curve.</param>
+        /// <param name="roadWidth">Default width of the road (NetGeometryData.m_DefaultWidth).</param>
+        /// <param name="minEdgeLengthRange">
+        ///     Minimum edge length from prefab (NetGeometryData.m_EdgeLengthRange.min). Pass 0 if unknown.
+        /// </param>
+        /// <param name="startConnected">True if the start node is connected to other edges.</param>
+        /// <param name="endConnected">True if the end node is connected to other edges.</param>
+        /// <param name="minCurvePosition">Output: minimum valid curve position (from start).</param>
+        /// <param name="maxCurvePosition">Output: maximum valid curve position (from end).</param>
+        public static void GetMinMaxSplitPositions(
+            float edgeLength,
+            float roadWidth,
+            float minEdgeLengthRange,
+            bool startConnected,
+            bool endConnected,
+            out float minCurvePosition,
+            out float maxCurvePosition) {
+            if (edgeLength <= 0f) {
+                minCurvePosition = 0.5f;
+                maxCurvePosition = 0.5f;
+                return;
+            }
+
+            var baseMinDistance = GetMinimumSplitDistance(edgeLength, roadWidth, minEdgeLengthRange);
+
+            // Apply multiplier for connected ends
+            minCurvePosition = startConnected ? baseMinDistance * CONNECTED_END_MULTIPLIER : baseMinDistance;
+            maxCurvePosition = endConnected ? 1f - (baseMinDistance * CONNECTED_END_MULTIPLIER) : 1f - baseMinDistance;
+
+            // Ensure min doesn't exceed max (clamp to midpoint if edge is too short)
+            if (minCurvePosition >= maxCurvePosition) {
+                minCurvePosition = 0.5f;
+                maxCurvePosition = 0.5f;
+            }
         }
 
         /// <summary>

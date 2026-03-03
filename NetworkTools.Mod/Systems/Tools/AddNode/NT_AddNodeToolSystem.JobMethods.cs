@@ -58,9 +58,11 @@ namespace NetworkTools.Systems.Tools {
             var snapJob = new SnapControlPointJob {
                 EdgeEntity            = controlPoint.m_OriginalEntity,
                 RawCurvePosition      = controlPoint.m_CurvePosition,
+                EdgeLookup            = SystemAPI.GetComponentLookup<Edge>(true),
                 CurveLookup           = SystemAPI.GetComponentLookup<Curve>(true),
                 PrefabRefLookup       = SystemAPI.GetComponentLookup<PrefabRef>(true),
                 NetGeometryDataLookup = SystemAPI.GetComponentLookup<NetGeometryData>(true),
+                ConnectedEdgeLookup   = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 SnapMode              = SnapMode.Endpoints,
                 GridSize              = 8f,
                 SnappedCurvePosition  = snappedPosition,

@@ -89,14 +89,14 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private void HandleNoHover() {
-            RemoveHighlight(m_LastHoveredEntity.Value);
+            //RemoveHighlight(m_LastHoveredEntity.Value);
             m_LastHoveredEntity.Value = Entity.Null;
             m_LastControlPoint        = default;
             Phase    = OperationPhase.Idle;
         }
 
         private void HandleHover(ControlPoint controlPoint) {
-            AddHighlight(controlPoint.m_OriginalEntity, Components.NT_Highlighted.DefaultNode);
+            //AddHighlight(controlPoint.m_OriginalEntity, Components.NT_Highlighted.DefaultNode);
             // Update Cache
             m_LastHoveredEntity.Value = controlPoint.m_OriginalEntity;
             m_LastControlPoint        = controlPoint;

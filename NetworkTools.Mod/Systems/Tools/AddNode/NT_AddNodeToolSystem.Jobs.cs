@@ -48,16 +48,19 @@ namespace NetworkTools.Systems.Tools {
         private struct SnapControlPointJob : IJob {
             [ReadOnly] public required Entity EdgeEntity;
             [ReadOnly] public required float RawCurvePosition;
+            [ReadOnly] public required ComponentLookup<Edge> EdgeLookup;
             [ReadOnly] public required ComponentLookup<Curve> CurveLookup;
             [ReadOnly] public required ComponentLookup<PrefabRef> PrefabRefLookup;
             [ReadOnly] public required ComponentLookup<NetGeometryData> NetGeometryDataLookup;
+            [ReadOnly] public required BufferLookup<ConnectedEdge> ConnectedEdgeLookup;
             [ReadOnly] public required SnapMode SnapMode;
             [ReadOnly] public required float GridSize;
             public required NativeReference<float> SnappedCurvePosition;
             public required NativeReference<float3> SnappedHitPosition;
 
             public void Execute() {
-                if (!CurveLookup.TryGetComponent(EdgeEntity, out var curve) ||
+                if (!EdgeLookup.TryGetComponent(EdgeEntity, out var edge) ||
+                    !CurveLookup.TryGetComponent(EdgeEntity, out var curve) ||
                     !PrefabRefLookup.TryGetComponent(EdgeEntity, out var prefabRef) ||
                     !NetGeometryDataLookup.TryGetComponent(prefabRef.m_Prefab, out var netGeometry)) {
                     SnappedCurvePosition.Value = RawCurvePosition;
@@ -65,13 +68,21 @@ namespace NetworkTools.Systems.Tools {
                 }
 
                 // Calculate endpoint constraints (hard limit, not scored)
+                // Connected ends (nodes with multiple edges) require larger minimum distance
                 var minCurvePosition = 0f;
                 var maxCurvePosition = 1f;
                 if ((SnapMode & SnapMode.Endpoints) != 0) {
-                    minCurvePosition = NT_EdgeUtils.GetMinimumSplitDistance(curve.m_Length,
+                    var startConnected = ConnectedEdgeLookup.TryGetBuffer(edge.m_Start, out var startEdges) && startEdges.Length > 1;
+                    var endConnected = ConnectedEdgeLookup.TryGetBuffer(edge.m_End, out var endEdges) && endEdges.Length > 1;
+
+                    NT_EdgeUtils.GetMinMaxSplitPositions(
+                        curve.m_Length,
                         netGeometry.m_DefaultWidth,
-                        netGeometry.m_EdgeLengthRange.min);
-                    maxCurvePosition = 1f - minCurvePosition;
+                        netGeometry.m_EdgeLengthRange.min,
+                        startConnected,
+                        endConnected,
+                        out minCurvePosition,
+                        out maxCurvePosition);
                 }
 
                 // Edge too short to split - snap to midpoint as the only valid position
