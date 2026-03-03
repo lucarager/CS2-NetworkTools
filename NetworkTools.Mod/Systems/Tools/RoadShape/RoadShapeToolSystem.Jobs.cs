@@ -155,18 +155,20 @@
                                       Entity.Null);
                 }
 
-                // Output connected edges at each node
-                for (var i = 0; i < edges.Length; i++) {
-                    var state = edges[i];
+                // For now, disable previewing connected edges until we fix the temp connection bug.
 
-                    if (processedNodes.Add(state.StartNode)) {
-                        PreviewConnectedEdges(state.StartNode, nodePositions[state.StartNode], edges);
-                    }
+                //// Output connected edges at each node
+                //for (var i = 0; i < edges.Length; i++) {
+                //    var state = edges[i];
 
-                    if (processedNodes.Add(state.EndNode)) {
-                        PreviewConnectedEdges(state.EndNode, nodePositions[state.EndNode], edges);
-                    }
-                }
+                //    if (processedNodes.Add(state.StartNode)) {
+                //        PreviewConnectedEdges(state.StartNode, nodePositions[state.StartNode], edges);
+                //    }
+
+                //    if (processedNodes.Add(state.EndNode)) {
+                //        PreviewConnectedEdges(state.EndNode, nodePositions[state.EndNode], edges);
+                //    }
+                //}
 
                 processedNodes.Dispose();
                 nodePositions.Dispose();
