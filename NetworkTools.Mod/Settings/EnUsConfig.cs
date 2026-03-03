@@ -56,26 +56,29 @@ namespace NetworkTools.Settings {
                 //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Discord)), "Discord" },
                 //{ m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Discord)), "Opens link to join the CS:2 Modding Discord" },
 
-                // Tool Tooltips - AddNode
-                { "Common.ACTION[NetworkTools.AddNode.Hover]", "Hover over a network segment" },
-                { "Common.ACTION[NetworkTools.AddNode.Apply]", "Add node" },
-                { "Common.ACTION[NetworkTools.AddNode.Cancel]", "Cancel" },
+                // Hint Tooltips - Common
+                { "Common.ACTION[NetworkTools.HintTooltip.Common.Exit]", "Exit Tool" },
 
-                // Tool Tooltips - RemoveNode
-                { "Common.ACTION[NetworkTools.RemoveNode.Select]", "Select a node to remove" },
-                { "Common.ACTION[NetworkTools.RemoveNode.Apply]", "Remove node" },
-                { "Common.ACTION[NetworkTools.RemoveNode.Cancel]", "Cancel" },
+                // Hint Tooltips - AddNode
+                { "Common.ACTION[NetworkTools.HintTooltip.AddNode.Hover]", "Hover over a network segment" },
+                { "Common.ACTION[NetworkTools.HintTooltip.AddNode.Apply]", "Add node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.AddNode.Cancel]", "Cancel" },
 
-                // Tool Tooltips - PathTransform
-                { "Common.ACTION[NetworkTools.PathTransform.SelectStart]", "Select a starting node" },
-                { "Common.ACTION[NetworkTools.PathTransform.SelectSecond]", "Select a second node" },
-                { "Common.ACTION[NetworkTools.PathTransform.RemoveLast]", "Remove last node" },
-                { "Common.ACTION[NetworkTools.PathTransform.ExtendPath]", "Select a new end node to extend the path" },
+                // Hint Tooltips - RemoveNode
+                { "Common.ACTION[NetworkTools.HintTooltip.RemoveNode.Select]", "Select a node to remove" },
+                { "Common.ACTION[NetworkTools.HintTooltip.RemoveNode.Apply]", "Remove node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.RemoveNode.Cancel]", "Cancel" },
 
-                // Tool Tooltips - NodeControl
-                { "Common.ACTION[NetworkTools.NodeControl.Select]", "Select a node to control" },
-                { "Common.ACTION[NetworkTools.NodeControl.Adjust]", "Adjust node" },
-                { "Common.ACTION[NetworkTools.NodeControl.Cancel]", "Cancel" },
+                // Hint Tooltips - RoadShape
+                { "Common.ACTION[NetworkTools.HintTooltip.RoadShape.SelectStart]", "Select a starting node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.RoadShape.SelectSecond]", "Select a second node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.RoadShape.RemoveLast]", "Remove last node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.RoadShape.ExtendPath]", "Select a new end node to extend the path" },
+
+                // Hint Tooltips - NodeControl
+                { "Common.ACTION[NetworkTools.HintTooltip.NodeControl.Select]", "Select a node to control" },
+                { "Common.ACTION[NetworkTools.HintTooltip.NodeControl.Adjust]", "Adjust node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.NodeControl.Cancel]", "Cancel" },
             };
         }
 

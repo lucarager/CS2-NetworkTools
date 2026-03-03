@@ -18,7 +18,7 @@ namespace NetworkTools.Systems {
         None = 0,
         AddNode,
         RemoveNode,
-        PathTransform,
+        RoadShape,
         NodeControl
     }
 
@@ -81,46 +81,48 @@ namespace NetworkTools.Systems {
             m_TooltipConfig = new Dictionary<(NT_ToolType, OperationPhase), List<TooltipEntry>> {
                 // AddNode Tool
                 [(NT_ToolType.AddNode, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("NetworkTools.AddNode.Hover"),
-                    new("NetworkTools.AddNode.Cancel", m_SecondaryApplyAction)
+                    new("NetworkTools.HintTooltip.AddNode.Hover"),
+                    new("NetworkTools.HintTooltip.Common.Exit", m_SecondaryApplyAction)
                 },
                 [(NT_ToolType.AddNode, OperationPhase.Configuring)] = new List<TooltipEntry> {
-                    new("NetworkTools.AddNode.Apply", m_ApplyAction),
-                    new("NetworkTools.AddNode.Cancel", m_SecondaryApplyAction)
+                    new("NetworkTools.HintTooltip.AddNode.Apply", m_ApplyAction),
+                    new("NetworkTools.HintTooltip.Common.Exit", m_SecondaryApplyAction)
                 },
                 [(NT_ToolType.AddNode, OperationPhase.Applying)] = new List<TooltipEntry> {
                 },
 
                 // RemoveNode Tool
                 [(NT_ToolType.RemoveNode, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("NetworkTools.RemoveNode.Select"),
-                    new("NetworkTools.RemoveNode.Cancel", m_SecondaryApplyAction)
+                    new("NetworkTools.HintTooltip.RemoveNode.Select"),
+                    new("NetworkTools.HintTooltip.Common.Exit", m_SecondaryApplyAction)
                 },
                 [(NT_ToolType.RemoveNode, OperationPhase.Ready)] = new List<TooltipEntry> {
-                    new("NetworkTools.RemoveNode.Apply", m_ApplyAction),
-                    new("NetworkTools.RemoveNode.Cancel", m_SecondaryApplyAction)
+                    new("NetworkTools.HintTooltip.RemoveNode.Apply", m_ApplyAction),
+                    new("NetworkTools.HintTooltip.Common.Exit", m_SecondaryApplyAction)
                 },
 
-                // PathTransform Tool
-                [(NT_ToolType.PathTransform, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("NetworkTools.PathTransform.SelectStart", m_ApplyAction)
+                // RoadShape Tool
+                [(NT_ToolType.RoadShape, OperationPhase.Idle)] = new List<TooltipEntry> {
+                    new("NetworkTools.HintTooltip.RoadShape.SelectStart", m_ApplyAction),
+                    new("NetworkTools.HintTooltip.Common.Exit", m_SecondaryApplyAction),
                 },
-                [(NT_ToolType.PathTransform, OperationPhase.Configuring)] = new List<TooltipEntry> {
-                    new("NetworkTools.PathTransform.SelectSecond", m_ApplyAction),
-                    new("NetworkTools.PathTransform.RemoveLast", m_SecondaryApplyAction)
+                [(NT_ToolType.RoadShape, OperationPhase.Configuring)] = new List<TooltipEntry> {
+                    new("NetworkTools.HintTooltip.RoadShape.SelectSecond", m_ApplyAction),
+                    new("NetworkTools.HintTooltip.RoadShape.RemoveLast", m_SecondaryApplyAction)
                 },
-                [(NT_ToolType.PathTransform, OperationPhase.Ready)] = new List<TooltipEntry> {
-                    new("NetworkTools.PathTransform.ExtendPath", m_ApplyAction),
-                    new("NetworkTools.PathTransform.RemoveLast", m_SecondaryApplyAction)
+                [(NT_ToolType.RoadShape, OperationPhase.Ready)] = new List<TooltipEntry> {
+                    new("NetworkTools.HintTooltip.RoadShape.ExtendPath", m_ApplyAction),
+                    new("NetworkTools.HintTooltip.RoadShape.RemoveLast", m_SecondaryApplyAction)
                 },
 
                 // NodeControl Tool
                 [(NT_ToolType.NodeControl, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("NetworkTools.NodeControl.Select", m_ApplyAction)
+                    new("NetworkTools.HintTooltip.NodeControl.Select", m_ApplyAction),
+                    new("NetworkTools.HintTooltip.Common.Exit", m_SecondaryApplyAction),
                 },
                 [(NT_ToolType.NodeControl, OperationPhase.Ready)] = new List<TooltipEntry> {
-                    new("NetworkTools.NodeControl.Adjust", m_ApplyAction),
-                    new("NetworkTools.NodeControl.Cancel", m_SecondaryApplyAction)
+                    new("NetworkTools.HintTooltip.NodeControl.Adjust", m_ApplyAction),
+                    new("NetworkTools.HintTooltip.NodeControl.Cancel", m_SecondaryApplyAction)
                 }
             };
         }
@@ -152,7 +154,7 @@ namespace NetworkTools.Systems {
                 return (NT_ToolType.RemoveNode, m_NtRemoveNodeToolSystem);
             }
             if (m_PrefabSystem.HasComponent<NT_ShapeTransform>(prefab)) {
-                return (NT_ToolType.PathTransform, m_NtRoadShapeToolSystem);
+                return (NT_ToolType.RoadShape, m_NtRoadShapeToolSystem);
             }
             if (m_PrefabSystem.HasComponent<NT_NodeControl>(prefab)) {
                 return (NT_ToolType.NodeControl, m_NtNodeControlToolSystem);
@@ -168,7 +170,7 @@ namespace NetworkTools.Systems {
             foreach (var entry in tooltipEntries) {
                 if (entry.Action != null) {
                     var displayOverride = new DisplayNameOverride(
-                        "NetworkTools.Tooltip",
+                        "NetworkTools.HintTooltip.Tooltip",
                         entry.Action,
                         entry.Text,
                         0,
