@@ -3,6 +3,7 @@
     using Game.Net;
     using Game.Rendering;
     using NetworkTools.Components;
+    using NetworkTools.Systems.Rendering;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
     using Unity.Entities;
@@ -19,6 +20,7 @@
 #endif
         protected struct DrawNodesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
+            [ReadOnly] public required RenderColors m_Colors;
             [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Selected> m_SelectedComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Eligible> m_EligibleComponentTypeHandle;
@@ -102,37 +104,31 @@
 
                     // Select
                     var position = averagedPosition;
-                    var nodeDiameter = averagedSize * 0.8f;
+                    var nodeDiameter = averagedSize * 0.5f;
                     var nodeBorderWidth = math.min(1f, averagedSize);
-
-                    // Lift node up slightly so it shows over other elements
-                    position.y += 1f;
-
+                    
                     if (isSelectedFirst || isSelectedLast) {
                         // First or last path node
-                        fillColor   = new Color(0.58f, 0.27f, 1f, 1f);
-                        borderColor = new Color(0.58f, 0.27f, 1f, 1f);
+                        fillColor   = (Color)(Vector4)m_Colors.NodeSelectedFirstFill;
+                        borderColor = (Color)(Vector4)m_Colors.NodeSelectedFirstBorder;
                         diameter    = nodeDiameter;
                         borderWidth = nodeBorderWidth;
                     }
                     else if (isSelected) {
-                        //Intermediate path nodes
-                        fillColor   = new Color(1f, 1f, 1f, 1f);
-                        borderColor = new Color(1f, 1f, 1f, 1f);
-                        diameter    = 2f;
-                        borderWidth = 0.1f;
+                        // Intermediate path nodes - don't render
+                        continue;
                     }
                     else if (isHighlighted) {
                         // Hovered eligible node or path nodes
-                        fillColor   = new Color(1f, 1f, 1f, 1f);
-                        borderColor = new Color(1f, 1f, 1f, 1f);
+                        fillColor   = (Color)(Vector4)m_Colors.NodeHighlightedFill;
+                        borderColor = (Color)(Vector4)m_Colors.NodeHighlightedBorder;
                         diameter    = nodeDiameter;
                         borderWidth = nodeBorderWidth;
                     }
                     else if (isEligible) {
                         // Eligible but not hovered
-                        fillColor   = new Color(1f, 1f, 1f, 0.2f);
-                        borderColor = new Color(1f, 1f, 1f, 0.6f);
+                        fillColor   = (Color)(Vector4)m_Colors.NodeEligibleFill;
+                        borderColor = (Color)(Vector4)m_Colors.NodeEligibleBorder;
                         diameter    = nodeDiameter;
                         borderWidth = nodeBorderWidth;
                     }

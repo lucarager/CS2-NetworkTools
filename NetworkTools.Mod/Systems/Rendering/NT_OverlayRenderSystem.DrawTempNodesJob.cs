@@ -3,6 +3,7 @@ namespace NetworkTools.Systems {
     using Game.Net;
     using Game.Rendering;
     using Game.Tools;
+    using NetworkTools.Systems.Rendering;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
     using Unity.Entities;
@@ -19,6 +20,7 @@ namespace NetworkTools.Systems {
 #endif
         protected struct DrawTempNodesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
+            [ReadOnly] public required RenderColors m_Colors;
             [ReadOnly] public required ComponentTypeHandle<Temp> m_TempComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Node> m_NodeComponentTypeHandle;
 
@@ -39,18 +41,14 @@ namespace NetworkTools.Systems {
                         continue;
                     }
 
-                    // Use node position, lifted slightly so it shows over other elements
-                    var position = node.m_Position;
-                    position.y += 1f;
-
                     // Draw a simple 3f wide white dot
-                    var color = new Color(1f, 1f, 1f, 1f);
+                    var color = (Color)(Vector4)m_Colors.TempNode;
                     m_Buffer.DrawCircle(color,
                         color,
                         0.1f,
                         0,
                         new float2(0, 1),
-                        position,
+                        node.m_Position,
                         3f);
                 }
             }

@@ -15,6 +15,7 @@ namespace NetworkTools.Systems {
     using Game.Rendering;
     using Game.Tools;
     using NetworkTools.Components;
+    using NetworkTools.Systems.Rendering;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Utils;
     using Unity.Burst;
@@ -89,6 +90,7 @@ namespace NetworkTools.Systems {
             if (tool.RenderEligibleNodes) {
                 var drawNodesJob = new DrawNodesJob {
                     m_Buffer                           = m_OverlayRenderSystem.GetBuffer(out var nodeBufferJobHandle),
+                    m_Colors                           = RenderColors.Default,
                     m_EntityTypeHandle                 = SystemAPI.GetEntityTypeHandle(),
                     m_HighlightedComponentTypeHandle   = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
                     m_SelectedComponentTypeHandle      = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
@@ -114,6 +116,7 @@ namespace NetworkTools.Systems {
             if (tool.RenderHandles) {
                 var drawHandlesJob = new DrawHandlesJob {
                     m_Buffer                              = m_OverlayRenderSystem.GetBuffer(out var markersBufferJobHandle),
+                    m_Colors                              = RenderColors.Default,
                     m_EntityTypeHandle                    = SystemAPI.GetEntityTypeHandle(),
                     m_NTHandlePositionComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandlePosition>(),
                     m_HighlightedComponentTypeHandle      = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
@@ -138,6 +141,7 @@ namespace NetworkTools.Systems {
             if (tool.RenderEligibleEdges) {
                 var drawEdgesJob = new DrawEdgesJob {
                     m_Buffer                               = m_OverlayRenderSystem.GetBuffer(out var edgeBufferJobHandle),
+                    m_Colors                               = RenderColors.Default,
                     m_HighlightedComponentTypeHandle       = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
                     m_SelectedComponentTypeHandle          = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
                     m_EdgeComponentTypeHandle              = SystemAPI.GetComponentTypeHandle<Edge>(),
@@ -159,6 +163,7 @@ namespace NetworkTools.Systems {
             if (tool.RenderTempEdges) {
                 var drawTempEdgesJob = new DrawTempEdgesJob {
                     m_Buffer                   = m_OverlayRenderSystem.GetBuffer(out var tempEdgeBufferJobHandle),
+                    m_Colors                   = RenderColors.Default,
                     m_EdgeComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<Edge>(),
                     m_CurveComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Curve>(),
                     m_TempComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<Temp>(),
@@ -176,6 +181,7 @@ namespace NetworkTools.Systems {
             if (tool.RenderTempNodes) {
                 var drawTempNodesJob = new DrawTempNodesJob {
                     m_Buffer                  = m_OverlayRenderSystem.GetBuffer(out var tempNodeBufferJobHandle),
+                    m_Colors                  = RenderColors.Default,
                     m_TempComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Temp>(),
                     m_NodeComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Node>()
                 };

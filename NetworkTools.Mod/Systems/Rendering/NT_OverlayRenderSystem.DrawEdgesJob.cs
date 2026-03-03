@@ -3,6 +3,7 @@
     using Game.Net;
     using Game.Rendering;
     using NetworkTools.Components;
+    using NetworkTools.Systems.Rendering;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
     using Unity.Entities;
@@ -18,6 +19,7 @@
 #endif
         protected struct DrawEdgesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
+            [ReadOnly] public required RenderColors m_Colors;
             [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Selected> m_SelectedComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Edge> m_EdgeComponentTypeHandle;
@@ -55,12 +57,12 @@
 
                     if (isSelected) {
                         // Selected edge - primary purple/bright
-                        color = new Color(0.58f, 0.27f, 1f, 1f);
+                        color = (Color)(Vector4)m_Colors.EdgeSelected;
                         width = 2f;
                     }
                     else if (isHighlighted) {
                         // Hovered/highlighted edge - primary purple/subtle
-                        color = new Color(0.58f, 0.27f, 1f, 1f);
+                        color = (Color)(Vector4)m_Colors.EdgeHighlighted;
                         width = 2f;
                     }
                     else {

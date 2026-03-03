@@ -6,6 +6,7 @@
     using Game.Net;
     using Game.Rendering;
     using NetworkTools.Components;
+    using NetworkTools.Systems.Rendering;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
     using Unity.Entities;
@@ -25,6 +26,7 @@
 #endif
         protected struct DrawHandlesJob : IJobChunk {
             [ReadOnly] public required OverlayRenderSystem.Buffer                m_Buffer;
+            [ReadOnly] public required RenderColors                              m_Colors;
             [ReadOnly] public required ComponentTypeHandle<NT_HandlePosition>    m_NTHandlePositionComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleLink>        m_NTHandleLinkComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Handle>            m_NTHandleComponentTypeHandle;
@@ -78,14 +80,14 @@
                     // Determine handle type and render accordingly
                     if (handle.HasAnyFlag(HandleTypeFlags.Line) && hasLineComponent) {
                         var line = lineArray[i];
-                        RenderLineHandle(line, handle, isHighlighted, isSelected, m_Buffer);
+                        RenderLineHandle(line, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.Circle) && hasCircleComponent) {
                         var circle = circleArray[i];
-                        RenderCircleHandle(circle, handle, isHighlighted, isSelected, m_Buffer);
+                        RenderCircleHandle(circle, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.ParameterRange) && hasConstraintsComponent) {
                         // Parameter handle with range indicator (origin dot + line to handle)
                         var constraints = constraintsArray[i];
-                        RenderParameterRangeHandle(position, constraints, handle, isHighlighted, isSelected, m_Buffer);
+                        RenderParameterRangeHandle(position, constraints, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.BezierPoint)) {
                         // Bezier point handles
                         if (m_NodeLookup.HasComponent(link.LinkedEntity) &&
@@ -100,11 +102,12 @@
                                                     isControlPoint,
                                                     isHighlighted,
                                                     isSelected,
+                                                    m_Colors,
                                                     m_Buffer);
                         }
                     } else {
                         // Default point handle
-                        RenderPointHandle(position, handle, isHighlighted, isSelected, m_Buffer);
+                        RenderPointHandle(position, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
                     }
                 }
             }
@@ -114,8 +117,9 @@
             /// </summary>
             private static void RenderPointHandle(NT_HandlePosition          position,      NT_Handle handle,
                                                   bool                       isHighlighted, bool      isSelected,
+                                                  RenderColors               colors,
                                                   OverlayRenderSystem.Buffer buffer) {
-                var color    = GetHandleColor(handle, isHighlighted, isSelected);
+                var color    = GetHandleColor(handle, isHighlighted, isSelected, colors);
                 var diameter = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 4f : 2.5f;
 
                 buffer.DrawCircle(color, color, 0.5f, 0, new float2(0, 1), position.Position, diameter);
@@ -126,9 +130,10 @@
             /// </summary>
             private static void RenderParameterRangeHandle(NT_HandlePosition position, NT_HandleConstraints constraints,
                                                            NT_Handle handle, bool isHighlighted, bool isSelected,
+                                                           RenderColors colors,
                                                            OverlayRenderSystem.Buffer buffer) {
-                var color       = GetHandleColor(handle, isHighlighted, isSelected);
-                var originColor = new Color(1f, 1f, 1f, 1f); // Slightly transparent for origin
+                var color       = GetHandleColor(handle, isHighlighted, isSelected, colors);
+                var originColor = (Color)(Vector4)colors.HandleOrigin;
                 var diameter    = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 4f : 2.5f;
 
                 // Draw origin dot (small circle at the start of valid range)
@@ -147,8 +152,9 @@
             private static void RenderBezierPointHandle(Curve curve, NT_HandlePosition position, NT_Handle handle,
                                                         NT_HandleLink link, bool isControlPoint, bool isHighlighted,
                                                         bool isSelected,
+                                                        RenderColors colors,
                                                         OverlayRenderSystem.Buffer buffer) {
-                var color = GetHandleColor(handle, isHighlighted, isSelected);
+                var color = GetHandleColor(handle, isHighlighted, isSelected, colors);
                 var diameter = handle.HasAnyFlag(HandleTypeFlags.Primary)   ? 4f :
                                handle.HasAnyFlag(HandleTypeFlags.Secondary) ? 2.5f : 3f;
 
@@ -166,8 +172,9 @@
             /// </summary>
             private static void RenderLineHandle(NT_HandleLine              line,          NT_Handle handle,
                                                  bool                       isHighlighted, bool      isSelected,
+                                                 RenderColors               colors,
                                                  OverlayRenderSystem.Buffer buffer) {
-                var color = GetHandleColor(handle, isHighlighted, isSelected);
+                var color = GetHandleColor(handle, isHighlighted, isSelected, colors);
                 var width = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1.5f : 1f;
 
                 buffer.DrawLine(color, new Line3.Segment(line.PointA, line.PointB), width);
@@ -182,8 +189,9 @@
             /// </summary>
             private static void RenderCircleHandle(NT_HandleCircle            circle,        NT_Handle handle,
                                                    bool                       isHighlighted, bool      isSelected,
+                                                   RenderColors               colors,
                                                    OverlayRenderSystem.Buffer buffer) {
-                var color       = GetHandleColor(handle, isHighlighted, isSelected);
+                var color       = GetHandleColor(handle, isHighlighted, isSelected, colors);
                 var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
 
                 // Draw the circle outline
@@ -196,25 +204,25 @@
             /// <summary>
             ///     Gets the appropriate color for a handle based on its state.
             /// </summary>
-            private static Color GetHandleColor(NT_Handle handle, bool isHighlighted, bool isSelected) {
+            private static Color GetHandleColor(NT_Handle handle, bool isHighlighted, bool isSelected, RenderColors colors) {
                 if (isSelected) {
-                    return new Color(1f, 0.3f, 0.3f, 1f); // Red for selected/dragging
+                    return (Color)(Vector4)colors.HandleSelected;
                 }
 
                 if (isHighlighted) {
-                    return new Color(0.3f, 1f, 0.3f, 1f); // Green for hovered
+                    return (Color)(Vector4)colors.HandleHighlighted;
                 }
 
                 // Default colors based on handle purpose
                 if (handle.HasAnyFlag(HandleTypeFlags.SlopeControl)) {
-                    return new Color(0.5f, 0.7f, 1f, 1f); // Light blue for slope
+                    return (Color)(Vector4)colors.HandleSlopeControl;
                 }
 
                 if (handle.HasAnyFlag(HandleTypeFlags.ShapeControl)) {
-                    return new Color(1f, 0.7f, 0.3f, 1f); // Orange for shape
+                    return (Color)(Vector4)colors.HandleShapeControl;
                 }
 
-                return new Color(0.4f, 0.6f, 1f, 1f); // Default blue
+                return (Color)(Vector4)colors.HandleDefault;
             }
         }
     }
