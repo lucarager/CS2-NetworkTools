@@ -11,6 +11,21 @@
 
     public static class SlopeUtils {
         /// <summary>
+        ///     Height thresholds that forces a road to be a tunnel
+        /// </summary>
+        public static float2 TunnelThreshold = new(-12f, -12f);
+
+        /// <summary>
+        ///     Height thresholds that forces a road to be elevated. 
+        /// </summary>
+        public static float2 ElevatedThreshold = new(8f, 8f);
+
+        /// <summary>
+        ///     Height that places road on at ground level.
+        /// </summary>
+        public static float2 ForceGroundElevation = new(0f, 0f);
+
+        /// <summary>
         /// Gets the height at a given bezier parameter t.
         /// Use this for uniformly-parameterized curves (like linear slopes).
         /// </summary>

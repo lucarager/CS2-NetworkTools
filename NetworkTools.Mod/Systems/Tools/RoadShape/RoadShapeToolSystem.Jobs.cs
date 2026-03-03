@@ -1,5 +1,4 @@
 ﻿namespace NetworkTools.Systems.Tools.RoadShape {
-    using Colossal.Json;
     using Colossal.Mathematics;
     using Game.Common;
     using Game.Net;
@@ -15,9 +14,9 @@
         [BurstCompile]
 #endif
         internal struct ShapeTransformJob : IJob {
-            [ReadOnly] public required NativeList<EdgeState>   EdgeStates;
-            [ReadOnly] public required ShapeTransformContext   Context;
-            [ReadOnly] public required ShapeTransformConfig    Config;
+            [ReadOnly] public required NativeList<EdgeState>             EdgeStates;
+            [ReadOnly] public required ShapeTransformContext             Context;
+            [ReadOnly] public required ShapeTransformConfig              Config;
             [ReadOnly] public required NativeList<Entity>                CurrentPathNodes;
             [ReadOnly] public required ComponentLookup<Node>             NodeLookup;
             [ReadOnly] public required ComponentLookup<PrefabRef>        PrefabRefLookup;
@@ -27,8 +26,8 @@
             [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
             [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Aggregated>       AggregatedLookup;
-            public required ToolOutputMode       OutputMode;
-            public required EntityCommandBuffer  ECB;
+            public required            ToolOutputMode                    OutputMode;
+            public required            EntityCommandBuffer               ECB;
 
             /// <summary>
             ///     Minimum height delta (in meters) to consider for intersection adjustments.
@@ -39,10 +38,6 @@
             ///     Minimum XZ delta squared (in meters²) to consider for intersection adjustments.
             /// </summary>
             private const float XZDeltaSquaredThreshold = 0.000001f;
-
-            private const float TunnelThreshold      = -12f;
-            private const float ElevatedThreshold    = 8f;
-            private const float ForceGroundElevation = 0f;
 
             public void Execute() {
                 if (EdgeStates.Length == 0) {
@@ -55,8 +50,6 @@
                     edges[i] = EdgeStates[i];
                 }
 
-                NetworkToolsMod.Instance.Log.Debug($"Executing ShapeTransformJob with {edges.Length} edges. TotalLength={Context.TotalLength}, StartHeight={Context.StartHeight}, DeltaHeight={Context.DeltaHeight}");
-
                 // 2. Execute transformation (context = path geometry, config = user settings)
                 switch (Config.Template) {
                     case ShapeTransformTemplate.SlopeLinear:
@@ -64,13 +57,8 @@
                         TransformPipeline.Execute(ref linearTransform, ref edges, in Context, in Config);
                         break;
                     case ShapeTransformTemplate.SlopeEaseInOut:
-                        NetworkToolsMod.Instance.Log.Debug("Applying SlopeEaseInOutTransform");
-                        NetworkToolsMod.Instance.Log.Debug($"Config: EaseInLength={Config.EaseInLength} EaseOutLength={Config.EaseOutLength}");
-                        NetworkToolsMod.Instance.Log.Debug($"Context: TotalLength={Context.TotalLength} StartHeight={Context.StartHeight} DeltaHeight={Context.DeltaHeight}");
-                        NetworkToolsMod.Instance.Log.Debug($"First edge bezier y values are {edges[0].Bezier.y.ToJSONString()}");
                         var easeInOutTransform = new SlopeEaseInOutTransform();
                         TransformPipeline.Execute(ref easeInOutTransform, ref edges, in Context, in Config);
-                        NetworkToolsMod.Instance.Log.Debug($"First edge bezier y values are {edges[0].Bezier.y.ToJSONString()}");
                         break;
                     case ShapeTransformTemplate.SlopeArch:
                         // TODO: Implement SlopeParabolicTransform
@@ -85,14 +73,10 @@
                         break;
                 }
 
-                // 3. Gather intersection adjustments
-                var adjustments = GatherIntersectionAdjustments(edges, in Context);
-
-                // 4. Output
-                Output(edges, adjustments, in Context);
+                // 3. Output
+                Output(edges, in Context);
 
                 // Cleanup
-                adjustments.Dispose();
                 edges.Dispose();
             }
 
@@ -115,156 +99,52 @@
                 return NetworkComposition.Ground;
             }
 
-            /// <summary>
-            ///     Gathers all intersection edge adjustments for non-path edges connected to intersection nodes.
-            /// </summary>
-            private NativeList<IntersectionEdgeAdjustment> GatherIntersectionAdjustments(
+            private void Output(
                 NativeArray<EdgeState>   edges,
                 in ShapeTransformContext ctx) {
-                var adjustments = new NativeList<IntersectionEdgeAdjustment>(Allocator.Temp);
-
-                // Build path edge set for filtering
-                var pathEdgeSet = new NativeHashSet<Entity>(edges.Length, Allocator.Temp);
-                for (var i = 0; i < edges.Length; i++) pathEdgeSet.Add(edges[i].EdgeEntity);
-
-                var firstNodePos       = NodeLookup[CurrentPathNodes[0]].m_Position;
-                var firstNodeOldHeight = firstNodePos.y;
-                var firstNodeOldXZ     = new float2(firstNodePos.x, firstNodePos.z);
-
-                for (var i = 0; i < CurrentPathNodes.Length; i++) {
-                    var nodeEntity = CurrentPathNodes[i];
-
-                    if (!ConnectedEdgeLookup.TryGetBuffer(nodeEntity, out var connectedEdges)) {
-                        continue;
-                    }
-
-                    // Only process intersection nodes (more than 2 connected edges)
-                    if (connectedEdges.Length <= 2) {
-                    }
-
-                    // Get cumulative distance at this node
-                    //var cumulativeDistance = i == 0 ? 0f : PathTransformUtility.GetCumulativeDistanceAtNode(edges, i);
-
-                    // Calculate height delta for this node
-                    //var heightDelta = 0f;
-                    //if (ctx.Config.HasSlopeTransform) {
-                    //    var oldHeight = i == 0 ? firstNodeOldHeight : edges[i - 1].OriginalEndHeight;
-                    //    var newHeight = SlopeCalculator.CalculateHeight(cumulativeDistance,
-                    //                                                    ctx.TotalLength,
-                    //                                                    ctx.StartHeight,
-                    //                                                    ctx.DeltaHeight,
-                    //                                                    ctx.Config.Slope);
-                    //    heightDelta = newHeight - oldHeight;
-                    //}
-
-                    //// Calculate XZ delta for this node
-                    //var xzDelta = float2.zero;
-                    //if (ctx.Config.HasShapeTransform && ctx.Config.Shape.Template == ShapeTemplate.Straighten) {
-                    //    var oldXZ = i == 0 ? firstNodeOldXZ : edges[i - 1].OriginalEndXZ;
-                    //    var newXZ = ShapeCalculator.CalculatePositionLinear(cumulativeDistance,
-                    //                                                        ctx.TotalLength,
-                    //                                                        ctx.StartXZ,
-                    //                                                        ctx.EndXZ);
-                    //    xzDelta = newXZ - oldXZ;
-                    //}
-
-                    //var hasHeightDelta = math.abs(heightDelta)  >= HeightDeltaThreshold;
-                    //var hasXZDelta     = math.lengthsq(xzDelta) >= XZDeltaSquaredThreshold;
-
-                    //if (!hasHeightDelta && !hasXZDelta) {
-                    //    continue;
-                    //}
-
-                    //// Gather adjustments for connected edges that are not part of the path
-                    //GatherConnectedEdgeAdjustments(nodeEntity,
-                    //                               connectedEdges,
-                    //                               pathEdgeSet,
-                    //                               heightDelta,
-                    //                               xzDelta,
-                    //                               adjustments);
+                if (OutputMode == ToolOutputMode.Preview) {
+                    OutputPreview(edges);
+                } else {
+                    OutputApply(edges);
                 }
-
-                pathEdgeSet.Dispose();
-                return adjustments;
             }
 
             /// <summary>
-            ///     Gathers adjustments for edges connected to an intersection node that are not part of the path.
+            ///     Collects the new position for each node after transformation.
             /// </summary>
-            private void GatherConnectedEdgeAdjustments(
-                Entity                                 nodeEntity,
-                DynamicBuffer<ConnectedEdge>           connectedEdges,
-                NativeHashSet<Entity>                  pathEdgeSet,
-                float                                  heightDelta,
-                float2                                 xzDelta,
-                NativeList<IntersectionEdgeAdjustment> adjustments) {
-                for (var j = 0; j < connectedEdges.Length; j++) {
-                    var connectedEdgeEntity = connectedEdges[j].m_Edge;
-
-                    if (pathEdgeSet.Contains(connectedEdgeEntity)) {
-                        continue;
-                    }
-
-                    if (!EdgeLookup.TryGetComponent(connectedEdgeEntity, out var connectedEdge)) {
-                        continue;
-                    }
-
-                    if (!CurveLookup.TryGetComponent(connectedEdgeEntity, out var curve)) {
-                        continue;
-                    }
-
-                    var bezier          = curve.m_Bezier;
-                    var pathNodeIsStart = connectedEdge.m_Start == nodeEntity;
-
-                    // Apply delta to endpoint and adjacent control point
-                    if (pathNodeIsStart) {
-                        bezier.a.y += heightDelta;
-                        bezier.b.y += heightDelta;
-                        bezier.a.x += xzDelta.x;
-                        bezier.a.z += xzDelta.y;
-                        bezier.b.x += xzDelta.x;
-                        bezier.b.z += xzDelta.y;
-                    }
-                    else {
-                        bezier.d.y += heightDelta;
-                        bezier.c.y += heightDelta;
-                        bezier.d.x += xzDelta.x;
-                        bezier.d.z += xzDelta.y;
-                        bezier.c.x += xzDelta.x;
-                        bezier.c.z += xzDelta.y;
-                    }
-
-                    adjustments.Add(new IntersectionEdgeAdjustment {
-                        EdgeEntity         = connectedEdgeEntity,
-                        Bezier             = bezier,
-                        Length             = curve.m_Length,
-                        PathNode           = nodeEntity,
-                        FarNode            = pathNodeIsStart ? connectedEdge.m_End : connectedEdge.m_Start,
-                        PathNodeIsStart    = pathNodeIsStart,
-                        NetworkComposition = GetNetworkComposition(connectedEdgeEntity)
-                    });
+            private static NativeHashMap<Entity, float3> CollectNodePositions(NativeArray<EdgeState> edges) {
+                var nodePositions = new NativeHashMap<Entity, float3>(edges.Length * 2, Allocator.Temp);
+                for (var i = 0; i < edges.Length; i++) {
+                    var state    = edges[i];
+                    var startPos = state.IsForward ? state.Bezier.a : state.Bezier.d;
+                    var endPos   = state.IsForward ? state.Bezier.d : state.Bezier.a;
+                    nodePositions.TryAdd(state.StartNode, startPos);
+                    nodePositions.TryAdd(state.EndNode,   endPos);
                 }
+
+                return nodePositions;
             }
 
-            private void Output(
-                NativeArray<EdgeState>                 edges,
-                NativeList<IntersectionEdgeAdjustment> intersectionAdjustments,
-                in ShapeTransformContext               ctx) {
-                if (OutputMode == ToolOutputMode.Preview) {
-                    OutputPreview(edges, intersectionAdjustments);
+            /// <summary>
+            ///     Gets the height delta for a node, or zero if the node doesn't exist or delta is negligible.
+            /// </summary>
+            private float GetNodeHeightDelta(Entity nodeEntity, float3 newPosition) {
+                if (!NodeLookup.TryGetComponent(nodeEntity, out var node)) {
+                    return 0f;
                 }
-                else {
-                    OutputApply(edges, intersectionAdjustments);
-                }
+
+                var delta = newPosition.y - node.m_Position.y;
+                return math.abs(delta) < HeightDeltaThreshold ? 0f : delta;
             }
 
             /// <summary>
             ///     Creates CreationDefinition + NetCourse entities for preview.
             /// </summary>
-            private void OutputPreview(
-                NativeArray<EdgeState>                 edges,
-                NativeList<IntersectionEdgeAdjustment> intersectionAdjustments) {
-                // Output path edges (both endpoints free)
+            private void OutputPreview(NativeArray<EdgeState> edges) {
+                var processedNodes = new NativeHashSet<Entity>(edges.Length * 2, Allocator.Temp);
+                var nodePositions  = CollectNodePositions(edges);
+
+                // Output selected edges
                 for (var i = 0; i < edges.Length; i++) {
                     var state = edges[i];
                     OutputPreviewEdge(state.EdgeEntity,
@@ -275,16 +155,87 @@
                                       Entity.Null);
                 }
 
-                // Output intersection edge adjustments (far node fixed, path node free)
-                for (var i = 0; i < intersectionAdjustments.Length; i++) {
-                    var adj = intersectionAdjustments[i];
-                    OutputPreviewEdge(adj.EdgeEntity,
-                                      adj.Bezier,
-                                      adj.Length,
-                                      adj.NetworkComposition,
-                                      adj.PathNodeIsStart ? Entity.Null : adj.FarNode,
-                                      adj.PathNodeIsStart ? adj.FarNode : Entity.Null);
+                // Output connected edges at each node
+                for (var i = 0; i < edges.Length; i++) {
+                    var state = edges[i];
+
+                    if (processedNodes.Add(state.StartNode)) {
+                        PreviewConnectedEdges(state.StartNode, nodePositions[state.StartNode], edges);
+                    }
+
+                    if (processedNodes.Add(state.EndNode)) {
+                        PreviewConnectedEdges(state.EndNode, nodePositions[state.EndNode], edges);
+                    }
                 }
+
+                processedNodes.Dispose();
+                nodePositions.Dispose();
+            }
+
+            /// <summary>
+            ///     Creates preview entities for edges connected to a node that are not in the selection.
+            /// </summary>
+            private void PreviewConnectedEdges(
+                Entity                 nodeEntity,
+                float3                 newPosition,
+                NativeArray<EdgeState> selectedEdges) {
+                var heightDelta = GetNodeHeightDelta(nodeEntity, newPosition);
+                if (heightDelta == 0f) {
+                    return;
+                }
+
+                if (!ConnectedEdgeLookup.TryGetBuffer(nodeEntity, out var connectedEdges)) {
+                    return;
+                }
+
+                for (var i = 0; i < connectedEdges.Length; i++) {
+                    var connectedEdgeEntity = connectedEdges[i].m_Edge;
+
+                    if (IsEdgeInSelection(connectedEdgeEntity, selectedEdges)) {
+                        continue;
+                    }
+
+                    OutputPreviewConnectedEdge(connectedEdgeEntity, nodeEntity, heightDelta);
+                }
+            }
+
+            /// <summary>
+            ///     Creates a preview entity for a connected edge with adjusted control points at the intersection.
+            /// </summary>
+            private void OutputPreviewConnectedEdge(Entity edgeEntity, Entity nodeEntity, float heightDelta) {
+                if (!EdgeLookup.TryGetComponent(edgeEntity, out var edge)) {
+                    return;
+                }
+
+                if (!CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
+                    return;
+                }
+
+                var    bezier = curve.m_Bezier;
+                Entity startNodeRef;
+                Entity endNodeRef;
+
+                if (edge.m_Start == nodeEntity) {
+                    bezier.a.y   += heightDelta;
+                    bezier.b.y   += heightDelta;
+                    startNodeRef =  Entity.Null;
+                    endNodeRef   =  edge.m_End;
+                } else if (edge.m_End == nodeEntity) {
+                    bezier.d.y   += heightDelta;
+                    bezier.c.y   += heightDelta;
+                    startNodeRef =  edge.m_Start;
+                    endNodeRef   =  Entity.Null;
+                } else {
+                    return;
+                }
+
+                var composition = GetNetworkComposition(edgeEntity);
+                OutputPreviewEdge(edgeEntity,
+                                  bezier,
+                                  MathUtils.Length(bezier),
+                                  composition,
+                                  startNodeRef,
+                                  endNodeRef);
             }
 
             /// <summary>
@@ -315,29 +266,38 @@
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
-                var elevation        = GetElevationFromComposition(composition);
-                var compositionFlags = GetFlagsFromComposition(composition);
+                var startNodeFlags = GetFlagsFromComposition(composition);
+                var endNodeFlags   = GetFlagsFromComposition(composition);
 
-                var startNodeFlags = compositionFlags;
-                var endNodeFlags   = compositionFlags;
+                // FreeHeight tells the game to respect our custom heights
+                startNodeFlags |= CoursePosFlags.FreeHeight | CoursePosFlags.IsGrid | CoursePosFlags.IsRight;
+                endNodeFlags   |= CoursePosFlags.FreeHeight | CoursePosFlags.IsGrid | CoursePosFlags.IsRight;
 
+                // Add flags to force connections
                 if (startNodeEntity != Entity.Null && endNodeEntity == Entity.Null) {
                     startNodeFlags |= CoursePosFlags.IsFirst | CoursePosFlags.IsGrid;
+                    endNodeFlags |= CoursePosFlags.IsLast | CoursePosFlags.IsGrid;
                 } else if (endNodeEntity != Entity.Null && startNodeEntity == Entity.Null) {
                     endNodeFlags |= CoursePosFlags.IsFirst | CoursePosFlags.IsGrid;
+                    startNodeFlags |= CoursePosFlags.IsLast | CoursePosFlags.IsGrid;
                 }
+
+                // Initialize elevations from bezier heights
+                var startElevation = new float2(bezier.a.y, bezier.a.y);
+                var endElevation = new float2(bezier.d.y, bezier.d.y);
+                var courseElevation = new float2(bezier.a.y, bezier.d.y);
 
                 var netCourse = new NetCourse {
                     m_Curve      = bezier,
                     m_Length     = length,
                     m_FixedIndex = -1,
-                    m_Elevation  = elevation,
+                    m_Elevation  = courseElevation,
                     m_StartPosition = new CoursePos {
                         m_Entity        = startNodeEntity,
                         m_Position      = bezier.a,
                         m_Rotation      = NetUtils.GetNodeRotation(MathUtils.StartTangent(bezier)),
                         m_CourseDelta   = 0,
-                        m_Elevation     = elevation,
+                        m_Elevation     = startElevation,
                         m_Flags         = startNodeFlags,
                         m_ParentMesh    = -1,
                         m_SplitPosition = 0
@@ -347,26 +307,51 @@
                         m_Position      = bezier.d,
                         m_Rotation      = NetUtils.GetNodeRotation(MathUtils.EndTangent(bezier)),
                         m_CourseDelta   = 1,
-                        m_Elevation     = elevation,
+                        m_Elevation     = endElevation,
                         m_Flags         = endNodeFlags,
                         m_ParentMesh    = -1,
                         m_SplitPosition = 0
                     }
                 };
 
+                // Apply composition constraints (ground/tunnel/elevated)
+                ApplyCompositionToNetCourse(ref netCourse, composition);
+
                 ECB.AddComponent(definitionEntity, netCourse);
             }
 
             /// <summary>
-            ///     Gets the elevation value for a network composition.
+            ///     Applies network composition constraints to a NetCourse.
+            ///     Ground: forces elevation to 0.
+            ///     Tunnel: ensures elevation is at most the tunnel threshold.
+            ///     Elevated: ensures elevation is at least the elevated threshold.
             /// </summary>
-            private static float2 GetElevationFromComposition(NetworkComposition composition) {
-                return composition switch {
-                    NetworkComposition.Elevated => ElevatedThreshold,
-                    NetworkComposition.Tunnel   => TunnelThreshold,
-                    NetworkComposition.Ground   => ForceGroundElevation,
-                    _                           => float2.zero
-                };
+            private static void ApplyCompositionToNetCourse(ref NetCourse netCourse, NetworkComposition composition) {
+                switch (composition) {
+                    case NetworkComposition.Ground:
+                        netCourse.m_Elevation = SlopeUtils.ForceGroundElevation;
+                        netCourse.m_StartPosition.m_Elevation = SlopeUtils.ForceGroundElevation;
+                        netCourse.m_EndPosition.m_Elevation = SlopeUtils.ForceGroundElevation;
+                        break;
+
+                    case NetworkComposition.Tunnel:
+                        netCourse.m_Elevation.x = math.min(netCourse.m_Elevation.x, SlopeUtils.TunnelThreshold.x);
+                        netCourse.m_Elevation.y = math.min(netCourse.m_Elevation.y, SlopeUtils.TunnelThreshold.y);
+                        netCourse.m_StartPosition.m_Elevation.x = math.min(netCourse.m_StartPosition.m_Elevation.x, SlopeUtils.TunnelThreshold.x);
+                        netCourse.m_StartPosition.m_Elevation.y = math.min(netCourse.m_StartPosition.m_Elevation.y, SlopeUtils.TunnelThreshold.y);
+                        netCourse.m_EndPosition.m_Elevation.x = math.min(netCourse.m_EndPosition.m_Elevation.x, SlopeUtils.TunnelThreshold.x);
+                        netCourse.m_EndPosition.m_Elevation.y = math.min(netCourse.m_EndPosition.m_Elevation.y, SlopeUtils.TunnelThreshold.y);
+                        break;
+
+                    case NetworkComposition.Elevated:
+                        netCourse.m_Elevation.x = math.max(netCourse.m_Elevation.x, SlopeUtils.ElevatedThreshold.x);
+                        netCourse.m_Elevation.y = math.max(netCourse.m_Elevation.y, SlopeUtils.ElevatedThreshold.y);
+                        netCourse.m_StartPosition.m_Elevation.x = math.max(netCourse.m_StartPosition.m_Elevation.x, SlopeUtils.ElevatedThreshold.x);
+                        netCourse.m_StartPosition.m_Elevation.y = math.max(netCourse.m_StartPosition.m_Elevation.y, SlopeUtils.ElevatedThreshold.y);
+                        netCourse.m_EndPosition.m_Elevation.x = math.max(netCourse.m_EndPosition.m_Elevation.x, SlopeUtils.ElevatedThreshold.x);
+                        netCourse.m_EndPosition.m_Elevation.y = math.max(netCourse.m_EndPosition.m_Elevation.y, SlopeUtils.ElevatedThreshold.y);
+                        break;
+                }
             }
 
             /// <summary>
@@ -382,39 +367,114 @@
             }
 
             /// <summary>
-            ///     Applies transformation changes to existing Curve components and intersection adjustments.
+            ///     Applies transformation changes to existing Curve components, node positions, and intersection adjustments.
             /// </summary>
-            private void OutputApply(
-                NativeArray<EdgeState>                 edges,
-                NativeList<IntersectionEdgeAdjustment> intersectionAdjustments) {
-                // Apply curve changes to path edges
+            private void OutputApply(NativeArray<EdgeState> edges) {
+                var processedNodes = new NativeHashSet<Entity>(edges.Length * 2, Allocator.Temp);
+                var nodePositions  = CollectNodePositions(edges);
+
+                // Apply curve changes to selected edges
+                for (var i = 0; i < edges.Length; i++) {
+                    var state = edges[i];
+                    ECB.SetComponent(state.EdgeEntity,
+                                     new Curve {
+                                         m_Bezier = state.Bezier,
+                                         m_Length = MathUtils.Length(state.Bezier)
+                                     });
+                }
+
+                // Update nodes and connected edges
                 for (var i = 0; i < edges.Length; i++) {
                     var state = edges[i];
 
-                    var curve = new Curve {
-                        m_Bezier = state.Bezier,
-                        m_Length = MathUtils.Length(state.Bezier)
-                    };
-                    ECB.SetComponent(state.EdgeEntity, curve);
+                    if (processedNodes.Add(state.StartNode)) {
+                        UpdateNodeAndConnectedEdges(state.StartNode, nodePositions[state.StartNode], edges);
+                    }
 
-                    MarkNodeUpdated(state.StartNode);
-                    MarkNodeUpdated(state.EndNode);
+                    if (processedNodes.Add(state.EndNode)) {
+                        UpdateNodeAndConnectedEdges(state.EndNode, nodePositions[state.EndNode], edges);
+                    }
                 }
 
-                // Apply intersection adjustments
-                for (var i = 0; i < intersectionAdjustments.Length; i++) {
-                    var adjustment = intersectionAdjustments[i];
+                processedNodes.Dispose();
+                nodePositions.Dispose();
+            }
 
-                    var curve = new Curve {
-                        m_Bezier = adjustment.Bezier,
-                        m_Length = adjustment.Length
-                    };
-                    ECB.SetComponent(adjustment.EdgeEntity, curve);
+            /// <summary>
+            ///     Updates a node's position and adjusts connected edges not in the selection.
+            /// </summary>
+            private void UpdateNodeAndConnectedEdges(
+                Entity                 nodeEntity,
+                float3                 newPosition,
+                NativeArray<EdgeState> selectedEdges) {
+                // Update node position
+                ECB.SetComponent(nodeEntity, new Node { m_Position = newPosition });
+                MarkNodeUpdated(nodeEntity);
 
-                    MarkUpdated(adjustment.EdgeEntity);
-                    MarkUpdated(adjustment.PathNode);
-                    MarkUpdated(adjustment.FarNode);
+                var heightDelta = GetNodeHeightDelta(nodeEntity, newPosition);
+                if (heightDelta == 0f) {
+                    return;
                 }
+
+                if (!ConnectedEdgeLookup.TryGetBuffer(nodeEntity, out var connectedEdges)) {
+                    return;
+                }
+
+                for (var i = 0; i < connectedEdges.Length; i++) {
+                    var connectedEdgeEntity = connectedEdges[i].m_Edge;
+
+                    if (IsEdgeInSelection(connectedEdgeEntity, selectedEdges)) {
+                        continue;
+                    }
+
+                    AdjustConnectedEdgeAtNode(connectedEdgeEntity, nodeEntity, heightDelta);
+                }
+            }
+
+            /// <summary>
+            ///     Adjusts a connected edge's bezier control points at the intersection node.
+            /// </summary>
+            private void AdjustConnectedEdgeAtNode(Entity edgeEntity, Entity nodeEntity, float heightDelta) {
+                if (!EdgeLookup.TryGetComponent(edgeEntity, out var edge)) {
+                    return;
+                }
+
+                if (!CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
+                    return;
+                }
+
+                var bezier = curve.m_Bezier;
+
+                // Adjust the endpoint and control point at the intersection
+                if (edge.m_Start == nodeEntity) {
+                    bezier.a.y += heightDelta;
+                    bezier.b.y += heightDelta;
+                } else if (edge.m_End == nodeEntity) {
+                    bezier.d.y += heightDelta;
+                    bezier.c.y += heightDelta;
+                } else {
+                    return;
+                }
+
+                ECB.SetComponent(edgeEntity,
+                                 new Curve {
+                                     m_Bezier = bezier,
+                                     m_Length = MathUtils.Length(bezier)
+                                 });
+                MarkUpdated(edgeEntity);
+            }
+
+            /// <summary>
+            ///     Checks if an edge entity is in the selection.
+            /// </summary>
+            private static bool IsEdgeInSelection(Entity edgeEntity, NativeArray<EdgeState> selectedEdges) {
+                for (var i = 0; i < selectedEdges.Length; i++) {
+                    if (selectedEdges[i].EdgeEntity == edgeEntity) {
+                        return true;
+                    }
+                }
+
+                return false;
             }
 
 
@@ -451,8 +511,7 @@
 
                     if (edge.m_Start != nodeEntity) {
                         MarkUpdated(edge.m_Start);
-                    }
-                    else if (edge.m_End != nodeEntity) {
+                    } else if (edge.m_End != nodeEntity) {
                         MarkUpdated(edge.m_End);
                     }
 
