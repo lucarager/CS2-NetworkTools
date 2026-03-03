@@ -28,13 +28,20 @@ namespace NetworkTools.Systems.Tools {
     /// </summary>
     public partial class NT_AddNodeToolSystem : NT_BaseToolSystem {
         private ControlPoint m_LastControlPoint;
+        private bool         m_UpdateNeeded;
 
         public override string toolID => "AddNode Tool";
 
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
 
-            var updateNeeded = false;
+            // Right click => Cancel / Deselect
+            if (m_SecondaryApplyAction.WasPressedThisFrame())
+            {
+                CancelHandleInteraction();
+                HandleCancel();
+                return inputDeps;
+            }
 
             // Get raycast result
             if (GetRaycastResult(out var controlPoint)) {
@@ -44,7 +51,7 @@ namespace NetworkTools.Systems.Tools {
                 // We hit something
                 var newEntityWasHit = m_LastHoveredEntity.Value != controlPoint.m_OriginalEntity;
                 var positionChanged = !controlPoint.m_Position.Equals(m_LastControlPoint.m_Position);
-                updateNeeded = newEntityWasHit || positionChanged;
+                m_UpdateNeeded = newEntityWasHit || positionChanged;
 
                 // Handle hover
                 HandleHover(controlPoint);
@@ -59,7 +66,12 @@ namespace NetworkTools.Systems.Tools {
             }
 
             // Handle temp entities
-            return HandleTempEntities(inputDeps, updateNeeded);
+            return HandleTempEntities(inputDeps);
+        }
+
+        private void HandleCancel() {
+            m_Log.Debug("Cancel pressed, exiting tool.");
+            RequestDisable();
         }
 
         private void HandleApply(Entity controlPointEntity) {
@@ -74,13 +86,13 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         /// <param name="inputDeps"></param>
         /// <returns>inputDeps</returns>
-        private JobHandle HandleTempEntities(JobHandle inputDeps, bool updateNeeded) {
+        private JobHandle HandleTempEntities(JobHandle inputDeps) {
             return Phase switch
             {
                 // No temp entities needed
                 OperationPhase.Idle => inputDeps,
                 // Preview temp entities
-                OperationPhase.Ready or OperationPhase.Configuring => Update(inputDeps, updateNeeded),
+                OperationPhase.Ready or OperationPhase.Configuring => Update(inputDeps),
                 // Apply real entities
                 OperationPhase.Applying => Apply(inputDeps),
                 // Clear otherwise
@@ -89,15 +101,12 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private void HandleNoHover() {
-            //RemoveHighlight(m_LastHoveredEntity.Value);
             m_LastHoveredEntity.Value = Entity.Null;
             m_LastControlPoint        = default;
             Phase    = OperationPhase.Idle;
         }
 
         private void HandleHover(ControlPoint controlPoint) {
-            //AddHighlight(controlPoint.m_OriginalEntity, Components.NT_Highlighted.DefaultNode);
-            // Update Cache
             m_LastHoveredEntity.Value = controlPoint.m_OriginalEntity;
             m_LastControlPoint        = controlPoint;
             Phase    = OperationPhase.Configuring;

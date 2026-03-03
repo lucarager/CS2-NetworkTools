@@ -79,14 +79,14 @@ namespace NetworkTools.Systems.Tools {
 
             return controlPoint;
         }
-        private JobHandle Update(JobHandle inputDeps, bool updateNeeded) {
+        private JobHandle Update(JobHandle inputDeps) {
             // Guard
             if (m_LastHoveredEntity.Value == Entity.Null) {
                 return inputDeps;
             }
 
 
-            if (!updateNeeded) {
+            if (!m_UpdateNeeded) {
                 applyMode = ApplyMode.None;
                 return inputDeps;
             }
@@ -94,6 +94,10 @@ namespace NetworkTools.Systems.Tools {
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
             inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Preview);
+            
+            // Reset the flag after processing
+            m_UpdateNeeded = false;
+
             return inputDeps;
         }
 
