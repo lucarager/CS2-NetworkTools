@@ -88,7 +88,7 @@ export const ShapeSlopeControls: React.FC = () => {
                         </div>
 
                         {/* EaseInOut Parameters */}
-                        {shapeConfig.template === ShapeTransformTemplate.SlopeEaseInOut && (
+                        {/* {shapeConfig.template === ShapeTransformTemplate.SlopeEaseInOut && (
                             <>
                                 <div className={styles.sliderField}>
                                     <VC.FloatSliderField
@@ -115,7 +115,7 @@ export const ShapeSlopeControls: React.FC = () => {
                                     />
                                 </div>
                             </>
-                        )}
+                        )} */}
 
                         {/* Parabolic Parameters */}
                         {shapeConfig.template === ShapeTransformTemplate.SlopeParabolic && (

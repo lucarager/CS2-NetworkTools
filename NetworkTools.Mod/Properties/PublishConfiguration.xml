@@ -20,15 +20,28 @@
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.0.4" />
+	<ModVersion Value="1.1.0" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.5.*" />
 	<!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
 	<RequiredDLC Value="" />
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog Value="Significant refactor of slope tool" />
-	<!--<ChangeLog>
-	</ChangeLog>-->
+	<ChangeLog>
+		- Now Available for testing: AddNode tool
+			- Allows adding nodes to existing road segments.
+		- Significantly improved: Slope tool.
+			- Completely rewritten from scratch, the slope tool should now behave more reliably and give better, more consistent results. 
+			- Adds in-world handles for shape manipulation &amp; parameter control. For now this is only used in the EaseInOut slope tool.
+            - For now, the slope tool is limited to roads until more testing and improvements can be done for it to work on other types of networks.
+            - Updates the selection overlay, now outlines the selected segment like in the base game
+		- New tooltip hint system that gives real-time instructions for using tools. 
+        - More accurately determine the size of nodes when rendering the overlay - should fix "giant circles" 
+		- Redesigned tool icons and polished UI.
+		- Added a few more planned tools to the UI as placeholders.
+		- For now, removes curve / shape tools until they can be re-implemented in the new system.
+		- Many other internal improvements and changes.
+	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
 	<ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
 	<ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
