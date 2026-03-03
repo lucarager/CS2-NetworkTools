@@ -115,11 +115,9 @@
             private static NativeHashMap<Entity, float3> CollectNodePositions(NativeArray<EdgeState> edges) {
                 var nodePositions = new NativeHashMap<Entity, float3>(edges.Length * 2, Allocator.Temp);
                 for (var i = 0; i < edges.Length; i++) {
-                    var state    = edges[i];
-                    var startPos = state.IsForward ? state.Bezier.a : state.Bezier.d;
-                    var endPos   = state.IsForward ? state.Bezier.d : state.Bezier.a;
-                    nodePositions.TryAdd(state.StartNode, startPos);
-                    nodePositions.TryAdd(state.EndNode,   endPos);
+                    var state = edges[i];
+                    nodePositions.TryAdd(state.StartNode, state.Bezier.a);
+                    nodePositions.TryAdd(state.EndNode, state.Bezier.d);
                 }
 
                 return nodePositions;
