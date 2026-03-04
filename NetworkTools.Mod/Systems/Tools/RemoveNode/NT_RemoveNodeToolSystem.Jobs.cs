@@ -19,83 +19,6 @@
 #if BURST
         [BurstCompile]
 #endif
-        private struct MinimalNodeRemovalJob : IJob {
-            [ReadOnly] public required Entity                      m_NodeToRemove;
-            [ReadOnly] public required ComponentLookup<Node>       m_NodeData;
-            [ReadOnly] public required ComponentLookup<Edge>       m_EdgeData;
-            [ReadOnly] public required ComponentLookup<Curve>      m_CurveData;
-            [ReadOnly] public required ComponentLookup<Temp>       m_TempData;
-            [ReadOnly] public required BufferLookup<ConnectedEdge> m_ConnectedEdges;
-
-            public void Execute() {
-                // 1. Get the two connected edges
-                var connectedEdges = m_ConnectedEdges[m_NodeToRemove];
-                var edge1          = connectedEdges[0].m_Edge;
-                var edge2          = connectedEdges[1].m_Edge;
-
-                // 2. Determine edge orientation relative to node
-                var edgeData1         = m_EdgeData[edge1];
-                var edgeData2         = m_EdgeData[edge2];
-                var edge1StartsAtNode = edgeData1.m_Start == m_NodeToRemove;
-                var edge2EndsAtNode   = edgeData2.m_End   == m_NodeToRemove;
-
-                // 3. Get curves and orient them: edge1 → node → edge2
-                var curve1 = m_CurveData[edge1];
-                var curve2 = m_CurveData[edge2];
-                if (edge1StartsAtNode) {
-                    curve1.m_Bezier = MathUtils.Invert(curve1.m_Bezier);
-                }
-
-                if (edge2EndsAtNode) {
-                    curve2.m_Bezier = MathUtils.Invert(curve2.m_Bezier);
-                }
-
-                // 4. Join curves into one
-                var joinedCurve = MathUtils.Join(curve1.m_Bezier, curve2.m_Bezier);
-
-                // 5. Mark node for deletion
-                var nodeTemp = m_TempData[m_NodeToRemove];
-                nodeTemp.m_Flags           = TempFlags.Delete | TempFlags.Hidden;
-                m_TempData[m_NodeToRemove] = nodeTemp;
-
-                // 6. Update surviving edge (edge2) with joined curve
-                curve2.m_Bezier = joinedCurve;
-                if (edge2EndsAtNode) {
-                    curve2.m_Bezier = MathUtils.Invert(curve2.m_Bezier);
-                }
-
-                curve2.m_Length    = MathUtils.Length(curve2.m_Bezier);
-                m_CurveData[edge2] = curve2;
-
-                // 7. Update surviving edge's connection to far node of deleted edge
-                var farNode = edge1StartsAtNode ? edgeData1.m_End : edgeData1.m_Start;
-                if (edge2EndsAtNode) {
-                    edgeData2.m_End = farNode;
-                } else {
-                    edgeData2.m_Start = farNode;
-                }
-
-                m_EdgeData[edge2] = edgeData2;
-
-                // 8. Update far node's ConnectedEdge buffer (switch edge1 → edge2)
-                var farNodeEdges = m_ConnectedEdges[farNode];
-                for (var i = 0; i < farNodeEdges.Length; i++)
-                    if (farNodeEdges[i].m_Edge == edge1) {
-                        farNodeEdges[i] = new ConnectedEdge(edge2);
-                        break;
-                    }
-
-                // 9. Mark deleted edge
-                var edge1Temp = m_TempData[edge1];
-                edge1Temp.m_Flags = TempFlags.Delete | TempFlags.Hidden;
-                m_TempData[edge1] = edge1Temp;
-            }
-        }
-
-
-#if BURST
-        [BurstCompile]
-#endif
         /// <summary>
         ///     Creates definitions for the merged edge when removing a node.
         ///     Given a node with exactly 2 connected edges, creates a NetCourse that
@@ -166,71 +89,16 @@
                 ProcessEdgeDeletionDef(edge2Entity, edge2);
             }
 
-            private void OutputApply(Entity edge1Entity, Entity edge2Entity, Entity nodeEntity, Edge edge1, Edge edge2,
-                                     Curve  curve1,      Curve  curve2) {
-                // 1. Determine edge orientation relative to node
-                var edge1StartsAtNode = edge1.m_Start == nodeEntity;
-                var edge2EndsAtNode   = edge2.m_End   == nodeEntity;
-
-                // 2. Orient curves: edge1 → node → edge2
-                var bezier1 = curve1.m_Bezier;
-                var bezier2 = curve2.m_Bezier;
-                if (edge1StartsAtNode) {
-                    bezier1 = MathUtils.Invert(bezier1);
-                }
-                if (edge2EndsAtNode) {
-                    bezier2 = MathUtils.Invert(bezier2);
-                }
-
-                // 3. Join curves into one
-                var joinedCurve = MathUtils.Join(bezier1, bezier2);
-
-                // 4. Mark node for deletion
-                var nodeTemp = TempLookup.TryGetComponent(nodeEntity, out var existingNodeTemp)
-                    ? existingNodeTemp
-                    : new Temp();
-                nodeTemp.m_Flags = TempFlags.Delete | TempFlags.Hidden;
-                ECB.SetComponent(nodeEntity, nodeTemp);
-
-                // 5. Update surviving edge (edge2) with joined curve
-                var newCurve = curve2;
-                newCurve.m_Bezier = joinedCurve;
-                if (edge2EndsAtNode) {
-                    newCurve.m_Bezier = MathUtils.Invert(newCurve.m_Bezier);
-                }
-                newCurve.m_Length = MathUtils.Length(newCurve.m_Bezier);
-                ECB.SetComponent(edge2Entity, newCurve);
-
-                // 6. Update surviving edge's connection to far node of deleted edge
-                var farNode = edge1StartsAtNode ? edge1.m_End : edge1.m_Start;
-                var newEdge2 = edge2;
-                if (edge2EndsAtNode) {
-                    newEdge2.m_End = farNode;
-                } else {
-                    newEdge2.m_Start = farNode;
-                }
-                ECB.SetComponent(edge2Entity, newEdge2);
-
-                // 7. Update far node's ConnectedEdge buffer (switch edge1 → edge2)
-                if (ConnectedEdgeLookup.TryGetBuffer(farNode, out var farNodeEdges)) {
-                    var buffer = ECB.SetBuffer<ConnectedEdge>(farNode);
-                    for (var i = 0; i < farNodeEdges.Length; i++) {
-                        if (farNodeEdges[i].m_Edge == edge1Entity) {
-                            buffer.Add(new ConnectedEdge(edge2Entity));
-                        } else {
-                            buffer.Add(farNodeEdges[i]);
-                        }
-                    }
-                }
-
-                // 8. Mark deleted edge
-                var edge1Temp = TempLookup.TryGetComponent(edge1Entity, out var existingEdge1Temp)
-                    ? existingEdge1Temp
-                    : new Temp();
-                edge1Temp.m_Flags = TempFlags.Delete | TempFlags.Hidden;
-                ECB.SetComponent(edge1Entity, edge1Temp);
+            private void OutputApply(Entity edge1Entity, Entity edge2Entity, Entity nodeEntity, Edge edge1,
+                           Edge edge2, Curve curve1, Curve curve2) {
+                // Create the new merged curve (as a new edge)
+                ProcessNewCurveDef(nodeEntity, edge1, edge2, curve1, curve2, edge1Entity);
+                // Delete the redundant edge
+                ProcessEdgeDeletionDef(edge2Entity, edge2);
+                // Delete the node
+                ECB.AddComponent(nodeEntity, new Deleted());
             }
-
+            
             /// <summary>
             ///     Processes the edge definition for deletion.
             /// </summary>
@@ -261,44 +129,6 @@
                 };
 
 
-                ECB.AddComponent(definitionEntity, creationDefinition);
-                ECB.AddComponent(definitionEntity, netCourse);
-                ECB.AddComponent<Updated>(definitionEntity);
-            }
-
-            /// <summary>
-            ///     Processes the node definition for removal.
-            /// </summary>
-            /// <param name="nodeEntity"></param>
-            private void ProcessNodeDeletionDef(Entity nodeEntity) {
-                var definitionEntity = ECB.CreateEntity();
-                var creationDefinition = new CreationDefinition {
-                    m_Original = nodeEntity,
-                    m_Flags    = CreationFlags.Delete | CreationFlags.Hidden
-                };
-                var node = NodeLookup[nodeEntity];
-                var netCourse = new NetCourse {
-                    m_Curve =
-                        new Bezier4x3(node.m_Position, node.m_Position, node.m_Position, node.m_Position),
-                    m_Length     = 0f,
-                    m_FixedIndex = -1,
-                    m_StartPosition = new CoursePos {
-                        m_Entity      = nodeEntity,
-                        m_Position    = node.m_Position,
-                        m_Rotation    = node.m_Rotation,
-                        m_CourseDelta = 0f,
-                        m_Flags = CoursePosFlags.IsLeft |
-                                  CoursePosFlags.IsRight
-                    },
-                    m_EndPosition = new CoursePos {
-                        m_Entity      = nodeEntity,
-                        m_Position    = node.m_Position,
-                        m_Rotation    = node.m_Rotation,
-                        m_CourseDelta = 1f,
-                        m_Flags = CoursePosFlags.IsLeft |
-                                  CoursePosFlags.IsRight
-                    }
-                };
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent(definitionEntity, netCourse);
                 ECB.AddComponent<Updated>(definitionEntity);
@@ -384,47 +214,18 @@
             }
 
             /// <summary>
-            ///     Computes a merged bezier curve connecting two neighbor nodes,
-            ///     by retaining the original control points from each edge.
-            ///     This preserves the exact original curve shape at each end.
+            ///     Computes a merged bezier curve connecting two neighbor nodes.
             /// </summary>
             private Bezier4x3 ComputeMergedBezier(Entity nodeEntity,
                                                   Edge   edge1,
                                                   Curve  curve1,
                                                   Edge   edge2,
                                                   Curve  curve2) {
-                // New bezier goes: neighbor1 -> neighbor2
-                // We take a, b from edge1 (neighbor1 side) and c, d from edge2 (neighbor2 side)
+                // Orient each curve so .a is at the neighbor end (pointing away from the removed node).
+                var b1 = edge1.m_Start == nodeEntity ? MathUtils.Invert(curve1.m_Bezier) : curve1.m_Bezier;
+                var b2 = edge2.m_End   == nodeEntity ? MathUtils.Invert(curve2.m_Bezier) : curve2.m_Bezier;
 
-                float3 a, b, c, d;
-
-                // Edge1: get a, b from the neighbor1 side
-                if (edge1.m_Start != nodeEntity) {
-                    // edge1: neighbor1 -> nodeEntity
-                    // neighbor1 is at the start (a side)
-                    a = curve1.m_Bezier.a;
-                    b = curve1.m_Bezier.b;
-                } else {
-                    // edge1: nodeEntity -> neighbor1
-                    // neighbor1 is at the end (d side)
-                    a = curve1.m_Bezier.d;
-                    b = curve1.m_Bezier.c;
-                }
-
-                // Edge2: get c, d from the neighbor2 side
-                if (edge2.m_End != nodeEntity) {
-                    // edge2: nodeEntity -> neighbor2
-                    // neighbor2 is at the end (d side)
-                    c = curve2.m_Bezier.c;
-                    d = curve2.m_Bezier.d;
-                } else {
-                    // edge2: neighbor2 -> nodeEntity
-                    // neighbor2 is at the start (a side)
-                    c = curve2.m_Bezier.b;
-                    d = curve2.m_Bezier.a;
-                }
-
-                return new Bezier4x3 { a = a, b = b, c = c, d = d };
+                return new Bezier4x3 { a = b1.a, b = b1.b, c = b2.c, d = b2.d };
             }
         }
     }
