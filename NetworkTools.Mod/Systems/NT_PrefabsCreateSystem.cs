@@ -115,7 +115,7 @@ namespace NetworkTools.Systems {
             }
 
             CreateToolPrefab("add_node",    "Add Node",               "add.svg",      "node",       new NT_AddNode(), true);
-            CreateToolPrefab("remove_node", "Remove Node",            "remove.svg",   "node",       new NT_RemoveNode(), false);
+            CreateToolPrefab("remove_node", "Remove Node",            "remove.svg",   "node",       new NT_RemoveNode(), true);
             CreateToolPrefab("slide_node",  "Slide Node",             "move.svg",     "node",       new NT_SlideNode(), false);
             CreateToolPrefab("supernode",   "Create Supernode",       "super.svg",    "node",       new NT_SuperNode(), false);
             CreateToolPrefab("shape_slope", "Slope Tools",            "slope.svg",    "shape",      new NT_ShapeSlope(), true);
