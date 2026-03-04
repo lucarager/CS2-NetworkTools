@@ -111,17 +111,15 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         /// <returns>True if a node was removed and selection changed.</returns>
         protected bool HandleRemoveNode() {
-            if (m_SelectedNodes.Length == 0) {
-                return false;
-            }
+            var lastNode = m_SelectedNodes.Length == 0 ? m_SelectedNodes[^1] : Entity.Null;
 
-            var lastNode = m_SelectedNodes[^1];
-            var previousPhase = Phase;
             m_Log.Debug($"[{CurrentSelectionState}] Removing node: {lastNode}");
 
             switch (CurrentSelectionState) {
                 case SelectionState.NoSelection:
-                    return false;
+                    m_Log.Debug("Cancel pressed, exiting tool.");
+                    RequestDisable();
+                    break;
 
                 case SelectionState.StartNodeSelected:
                     m_Log.Debug("→ NoSelection");
