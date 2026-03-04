@@ -10,18 +10,16 @@ namespace NetworkTools.Systems {
     using Game.Prefabs;
     using Game.Tools;
     using Game.UI.Tooltip;
-
     using NetworkTools.Components.Tools;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.RoadShape;
-
-    using Unity.Entities;
 
     internal enum NT_ToolType {
         None = 0,
         AddNode,
         RemoveNode,
-        RoadShape,
+        ShapeSlope,
+        ShapeCurve,
         NodeControl
     }
 
@@ -104,18 +102,18 @@ namespace NetworkTools.Systems {
                     new("NetworkTools.HintTooltip.Common.Exit", m_SecondaryApplyAction)
                 },
 
-                // RoadShape Tool
-                [(NT_ToolType.RoadShape, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("NetworkTools.HintTooltip.RoadShape.SelectStart", m_ApplyAction),
+                // ShapeSlope Tool
+                [(NT_ToolType.ShapeSlope, OperationPhase.Idle)] = new List<TooltipEntry> {
+                    new("NetworkTools.HintTooltip.ShapeSlope.SelectStart", m_ApplyAction),
                     new("NetworkTools.HintTooltip.Common.Exit", m_SecondaryApplyAction),
                 },
-                [(NT_ToolType.RoadShape, OperationPhase.Configuring)] = new List<TooltipEntry> {
-                    new("NetworkTools.HintTooltip.RoadShape.SelectSecond", m_ApplyAction),
-                    new("NetworkTools.HintTooltip.RoadShape.RemoveLast", m_SecondaryApplyAction)
+                [(NT_ToolType.ShapeSlope, OperationPhase.Configuring)] = new List<TooltipEntry> {
+                    new("NetworkTools.HintTooltip.ShapeSlope.SelectSecond", m_ApplyAction),
+                    new("NetworkTools.HintTooltip.ShapeSlope.RemoveLast", m_SecondaryApplyAction)
                 },
-                [(NT_ToolType.RoadShape, OperationPhase.Ready)] = new List<TooltipEntry> {
-                    new("NetworkTools.HintTooltip.RoadShape.ExtendPath", m_ApplyAction),
-                    new("NetworkTools.HintTooltip.RoadShape.RemoveLast", m_SecondaryApplyAction)
+                [(NT_ToolType.ShapeSlope, OperationPhase.Ready)] = new List<TooltipEntry> {
+                    new("NetworkTools.HintTooltip.ShapeSlope.ExtendPath", m_ApplyAction),
+                    new("NetworkTools.HintTooltip.ShapeSlope.RemoveLast", m_SecondaryApplyAction)
                 },
 
                 // NodeControl Tool
@@ -156,8 +154,8 @@ namespace NetworkTools.Systems {
             if (m_PrefabSystem.HasComponent<NT_RemoveNode>(prefab)) {
                 return (NT_ToolType.RemoveNode, m_NtRemoveNodeToolSystem);
             }
-            if (m_PrefabSystem.HasComponent<NT_ShapeTransform>(prefab)) {
-                return (NT_ToolType.RoadShape, m_NtRoadShapeToolSystem);
+            if (m_PrefabSystem.HasComponent<NT_ShapeSlope>(prefab)) {
+                return (NT_ToolType.ShapeSlope, m_NtRoadShapeToolSystem);
             }
             if (m_PrefabSystem.HasComponent<NT_NodeControl>(prefab)) {
                 return (NT_ToolType.NodeControl, m_NtNodeControlToolSystem);

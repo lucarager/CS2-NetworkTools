@@ -69,11 +69,11 @@ namespace NetworkTools.Settings {
                 { "Common.ACTION[NetworkTools.HintTooltip.RemoveNode.Apply]", "Remove node" },
                 { "Common.ACTION[NetworkTools.HintTooltip.RemoveNode.Cancel]", "Cancel" },
 
-                // Hint Tooltips - RoadShape
-                { "Common.ACTION[NetworkTools.HintTooltip.RoadShape.SelectStart]", "Select a starting node" },
-                { "Common.ACTION[NetworkTools.HintTooltip.RoadShape.SelectSecond]", "Select a second node" },
-                { "Common.ACTION[NetworkTools.HintTooltip.RoadShape.RemoveLast]", "Remove last node" },
-                { "Common.ACTION[NetworkTools.HintTooltip.RoadShape.ExtendPath]", "Select a new end node to extend the path" },
+                // Hint Tooltips - ShapeSlope
+                { "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.SelectStart]", "Select a starting node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.SelectSecond]", "Select a second node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.RemoveLast]", "Remove last node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.ExtendPath]", "Select a new end node to extend the path" },
 
                 // Hint Tooltips - NodeControl
                 { "Common.ACTION[NetworkTools.HintTooltip.NodeControl.Select]", "Select a node to control" },
