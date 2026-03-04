@@ -26,18 +26,27 @@ namespace NetworkTools.Systems.Tools {
     /// # Remove Node System
     /// </summary>
     public partial class NT_RemoveNodeToolSystem : NT_BaseToolSystem {
+        private         bool   m_UpdateNeeded;
         public override string toolID => "RemoveNode Tool";
 
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
 
-            var updateNeeded = false;
+            m_UpdateNeeded = false;
+
+            // Right click => Cancel / Deselect
+            if (m_SecondaryApplyAction.WasPressedThisFrame())
+            {
+                CancelHandleInteraction();
+                HandleCancel();
+                return inputDeps;
+            }
 
             // Get raycast result
             if (GetRaycastResult(out var controlPoint)) {
                 // We hit something
                 var newEntityWasHit = m_LastHoveredEntity.Value != controlPoint.m_OriginalEntity;
-                updateNeeded = newEntityWasHit;
+                m_UpdateNeeded = newEntityWasHit;
 
                 if (newEntityWasHit) {
                     HandleHover(controlPoint);
@@ -57,7 +66,12 @@ namespace NetworkTools.Systems.Tools {
             }
 
             // Handle temp entities
-            return HandleTempEntities(inputDeps, updateNeeded);
+            return HandleTempEntities(inputDeps);
+        }
+
+        private void HandleCancel() {
+            m_Log.Debug("Cancel pressed, exiting tool.");
+            RequestDisable();
         }
 
         private void HandleApply() {
@@ -71,11 +85,11 @@ namespace NetworkTools.Systems.Tools {
         /// <param name="inputDeps"></param>
         /// <param name="updateNeeded"></param>
         /// <returns>inputDeps</returns>
-        private JobHandle HandleTempEntities(JobHandle inputDeps, bool updateNeeded) {
+        private JobHandle HandleTempEntities(JobHandle inputDeps) {
             return Phase switch {
                 OperationPhase.Ready =>
                     // Show preview when hovering over a valid (eligible) node
-                    Update(inputDeps, updateNeeded),
+                    Update(inputDeps),
                 OperationPhase.Applying =>
                     // Apply removal
                     Apply(inputDeps),

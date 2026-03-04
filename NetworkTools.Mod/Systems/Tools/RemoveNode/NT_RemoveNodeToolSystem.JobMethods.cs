@@ -43,18 +43,17 @@ namespace NetworkTools.Systems.Tools {
             return createDefinitionJobHandle;
         }
 
-        private JobHandle Update(JobHandle inputDeps, bool updateNeeded) {
+        private JobHandle Update(JobHandle inputDeps) {
             // Guard
             if (m_LastHoveredEntity.Value == Entity.Null) {
                 return inputDeps;
             }
 
-            var canReuse = !updateNeeded;
-
-            //if (canReuse) {
-            //    applyMode = ApplyMode.None;
-            //    return inputDeps;
-            //}
+            if (!m_UpdateNeeded)
+            {
+                applyMode = ApplyMode.None;
+                return inputDeps;
+            }
 
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
