@@ -153,20 +153,21 @@
                                       Entity.Null);
                 }
 
-                // For now, disable previewing connected edges until we fix the temp connection bug.
+                // Output connected edges at each node
+                for (var i = 0; i < edges.Length; i++)
+                {
+                    var state = edges[i];
 
-                //// Output connected edges at each node
-                //for (var i = 0; i < edges.Length; i++) {
-                //    var state = edges[i];
+                    if (processedNodes.Add(state.StartNode))
+                    {
+                        PreviewConnectedEdges(state.StartNode, nodePositions[state.StartNode], edges);
+                    }
 
-                //    if (processedNodes.Add(state.StartNode)) {
-                //        PreviewConnectedEdges(state.StartNode, nodePositions[state.StartNode], edges);
-                //    }
-
-                //    if (processedNodes.Add(state.EndNode)) {
-                //        PreviewConnectedEdges(state.EndNode, nodePositions[state.EndNode], edges);
-                //    }
-                //}
+                    if (processedNodes.Add(state.EndNode))
+                    {
+                        PreviewConnectedEdges(state.EndNode, nodePositions[state.EndNode], edges);
+                    }
+                }
 
                 processedNodes.Dispose();
                 nodePositions.Dispose();
@@ -177,9 +178,9 @@
             /// </summary>
             private void PreviewConnectedEdges(
                 Entity                 nodeEntity,
-                float3                 newPosition,
+                float3                 nodePosition,
                 NativeArray<EdgeState> selectedEdges) {
-                var heightDelta = GetNodeHeightDelta(nodeEntity, newPosition);
+                var heightDelta = GetNodeHeightDelta(nodeEntity, nodePosition);
                 if (heightDelta == 0f) {
                     return;
                 }
@@ -195,14 +196,15 @@
                         continue;
                     }
 
-                    OutputPreviewConnectedEdge(connectedEdgeEntity, nodeEntity, heightDelta);
+                    OutputPreviewConnectedEdge(connectedEdgeEntity, nodeEntity, nodePosition);
                 }
             }
 
             /// <summary>
             ///     Creates a preview entity for a connected edge with adjusted control points at the intersection.
+            ///     Uses the node position directly to ensure exact floating-point match with selected edges.
             /// </summary>
-            private void OutputPreviewConnectedEdge(Entity edgeEntity, Entity nodeEntity, float heightDelta) {
+            private void OutputPreviewConnectedEdge(Entity edgeEntity, Entity nodeEntity, float3 nodePosition) {
                 if (!EdgeLookup.TryGetComponent(edgeEntity, out var edge)) {
                     return;
                 }
@@ -216,13 +218,15 @@
                 Entity endNodeRef;
 
                 if (edge.m_Start == nodeEntity) {
-                    bezier.a.y   += heightDelta;
-                    bezier.b.y   += heightDelta;
+                    var delta    =  nodePosition - bezier.a;
+                    bezier.a     =  nodePosition;
+                    bezier.b     += delta;
                     startNodeRef =  Entity.Null;
                     endNodeRef   =  edge.m_End;
                 } else if (edge.m_End == nodeEntity) {
-                    bezier.d.y   += heightDelta;
-                    bezier.c.y   += heightDelta;
+                    var delta    =  nodePosition - bezier.d;
+                    bezier.d     =  nodePosition;
+                    bezier.c     += delta;
                     startNodeRef =  edge.m_Start;
                     endNodeRef   =  Entity.Null;
                 } else {
@@ -427,14 +431,15 @@
                         continue;
                     }
 
-                    AdjustConnectedEdgeAtNode(connectedEdgeEntity, nodeEntity, heightDelta);
+                    AdjustConnectedEdgeAtNode(connectedEdgeEntity, nodeEntity, newPosition);
                 }
             }
 
             /// <summary>
             ///     Adjusts a connected edge's bezier control points at the intersection node.
+            ///     Uses the node position directly to ensure curve endpoints match the node.
             /// </summary>
-            private void AdjustConnectedEdgeAtNode(Entity edgeEntity, Entity nodeEntity, float heightDelta) {
+            private void AdjustConnectedEdgeAtNode(Entity edgeEntity, Entity nodeEntity, float3 nodePosition) {
                 if (!EdgeLookup.TryGetComponent(edgeEntity, out var edge)) {
                     return;
                 }
@@ -447,11 +452,13 @@
 
                 // Adjust the endpoint and control point at the intersection
                 if (edge.m_Start == nodeEntity) {
-                    bezier.a.y += heightDelta;
-                    bezier.b.y += heightDelta;
+                    var delta = nodePosition - bezier.a;
+                    bezier.a  = nodePosition;
+                    bezier.b += delta;
                 } else if (edge.m_End == nodeEntity) {
-                    bezier.d.y += heightDelta;
-                    bezier.c.y += heightDelta;
+                    var delta = nodePosition - bezier.d;
+                    bezier.d  = nodePosition;
+                    bezier.c += delta;
                 } else {
                     return;
                 }
