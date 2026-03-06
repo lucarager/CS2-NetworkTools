@@ -4,12 +4,11 @@
 	<!--Name of the mod to display to players-->
 	<DisplayName Value="NetworkTools" />
 	<!--Short description of the mod-->
-	<ShortDescription Value="NetworkTools (Bleeding Edge)" />
+	<ShortDescription Value="NetworkTools (Early Access)" />
 	<!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
 	<!--LongDescription Value="This is a long description" /-->
 	<LongDescription>
-		NetworkTools (Bleeding Edge)
-		The latest experimental version of NetworkTools. May be unstable and contain bugs.
+		NetworkTools (Early Access)
 	</LongDescription>
 	<!--Thumbnail-->
 	<Thumbnail Value="Properties/thumbnail.png" />
@@ -20,19 +19,14 @@
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.1.1" />
+	<ModVersion Value="1.1.2" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.5.*" />
 	<!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
 	<RequiredDLC Value="" />
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-		- New: RemoveNode Tool. Allows you to remove nodes on road segments.
-		- Fixed: Slope tool's ease-in-out handles would not correctly compute the full range when they weren't pointing straight at the start/end.
-		- Fixed: Hint tooltips were inconsistent.
-		- Fixed: Right-clicking would not exit certain tools.
-		- Improved various tooltips and hints.
-		- A few internal refactors to prepare for upcoming tools and features.
+- Adds paths as valid targets for slope editing.
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
 	<ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
