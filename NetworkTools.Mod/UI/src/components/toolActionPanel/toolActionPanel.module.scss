@@ -45,6 +45,29 @@
     }
 }
 
+.entityPreview {
+    border: 1rem solid rgba(255, 255, 255, 0.1);
+    border-radius: 3rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4rem;
+    flex: 2;
+    overflow: hidden;
+
+    &__thumbnail {
+        width: 32rem;
+        height: 32rem;
+        margin-right: 4rem;
+    }
+
+    &__name {
+        font-size: var(--fontSizeS);
+        line-height: 1.25em;
+        color: rgba(255, 255, 255, 0.75);
+    }
+}
+
 .helper {
     font-size: var(--fontSizeS);
     line-height: 1.25em;
@@ -60,15 +83,22 @@
     }
 }
 
-.controlRow .controlRowInner {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+.controlRow {
+    .controlRowInner {
+        display: flex;
+        flex-direction: row;
 
-    .paramLabel {
-        flex: 2;
-        min-width: 100rem;
+        .paramLabel {
+            flex: 2;
+            width: 150rem;
+            margin-top: 10rem;
+            margin-right: 8rem;
+        }
     }
+}
+
+.controlRow + .controlRow {
+    margin-top: 8rem;
 }
 
 .buttonRow {

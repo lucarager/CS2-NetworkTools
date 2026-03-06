@@ -80,9 +80,14 @@ namespace NetworkTools.Systems.Tools {
         internal IProxyAction m_ApplyAction;
 
         /// <summary>
-        ///     Common systems used by derived tools
+        ///     Barrier
         /// </summary>
         protected ToolOutputBarrier m_Barrier;
+
+        /// <summary>
+        ///     Tool System
+        /// </summary>
+        protected ToolSystem m_ToolSystem;
 
         /// <summary>
         ///     Common entity queries for node management
@@ -104,6 +109,7 @@ namespace NetworkTools.Systems.Tools {
         protected EntityQuery m_NodesWithEligibleQuery;
         protected EntityQuery m_NodesWithHighlightedQuery;
         protected EntityQuery m_NodesWithoutEligibleQuery;
+        protected EntityQuery m_UnselectedNodesWithoutEligibleQuery;
         protected EntityQuery m_NodesWithSelectedFirstQuery;
         protected EntityQuery m_NodesWithSelectedLastQuery;
         protected EntityQuery m_NodesWithSelectedQuery;
@@ -182,7 +188,13 @@ namespace NetworkTools.Systems.Tools {
             m_ValidationSystem    = World.GetOrCreateSystemManaged<ValidationSystem>();
             m_NodeReductionSystem = World.GetOrCreateSystemManaged<NodeReductionSystem>();
             m_Barrier             = World.GetOrCreateSystemManaged<ToolOutputBarrier>();
-            m_TerrainSystem       = World.GetOrCreateSystemManaged<TerrainSystem>();
+            m_ToolSystem = World.GetOrCreateSystemManaged<ToolSystem>();
+
+            // Move this tool to the front of the tool stack so it takes priority over vanilla tools
+            m_ToolSystem.tools.Remove(this);
+            m_ToolSystem.tools.Insert(0, this);
+
+            m_TerrainSystem = World.GetOrCreateSystemManaged<TerrainSystem>();
             m_OverlayRenderSystem = World.GetOrCreateSystemManaged<OverlayRenderSystem>();
 
             // Actions
@@ -201,6 +213,10 @@ namespace NetworkTools.Systems.Tools {
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
                 .WithAll<Node>()
                 .WithNone<NT_Eligible>()
+                .Build();
+            m_UnselectedNodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
+                .WithAll<Node>()
+                .WithNone<NT_Eligible, NT_Selected>()
                 .Build();
             m_NodesWithEligibleQuery = SystemAPI.QueryBuilder()
                 .WithAll<Node, NT_Eligible>()

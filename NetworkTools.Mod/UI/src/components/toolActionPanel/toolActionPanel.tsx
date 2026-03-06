@@ -5,17 +5,21 @@ import { GAME_BINDINGS } from "gameBindings";
 import { useValue } from "cs2/api";
 import { ShapeSlopeControls } from "./shapeSlope";
 import { ShapeCurveControls } from "./shapeCurve";
+import { ConnectControls } from "./connect";
 
 // Registry of tool components mapped by tool ID
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
     shape_slope: ShapeSlopeControls,
     shape_curve: ShapeCurveControls,
+    connect: ConnectControls,
 };
 
 export const ToolActionPanel = () => {
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
     const toolUIDataBinding = useValue(GAME_BINDINGS.UI_DATA.binding);
     const activeTool = toolUIDataBinding.find((t) => t.PrefabId === selectedBinding);
+
+    console.log("Active Tool ID:", activeTool);
 
     if (!activeTool) {
         return <div className={styles.wrapper}></div>;

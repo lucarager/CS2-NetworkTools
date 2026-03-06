@@ -22,8 +22,6 @@ function GetAlignment(e: Alignment) {
 export const TooltipRenderer = () => {
     const tooltipGroups = useValue(tooltipGroups$);
 
-    console.log(tooltipGroups);
-
     return (
         <div className={styles.wrapper}>
             {tooltipGroups.map((group, index) => (

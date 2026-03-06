@@ -54,7 +54,7 @@ namespace NetworkTools.Systems.Tools {
     ///     - [Apply]: Nothing.
     ///     - [Cancel]: Deselect node and return to NoSelection state
     /// </summary>
-    public partial class NT_NodeControlToolSystem : NT_BaseToolSystem {
+    public partial class NT_NodeControlToolSystem : NT_BaseToolSystem, INodeSelectionProvider {
         public override string toolID => "NodeControl Tool";
 
         private EntityQuery m_NodesWithSelectedQuery;
@@ -86,6 +86,13 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         /// <returns>The selected Entity, or Entity.Null if none selected.</returns>
         public Entity GetSelectedNode() => m_SelectedNode.Value;
+
+        /// <inheritdoc />
+        public Entity[] GetSelectedNodes() {
+            return m_SelectedNode.Value == Entity.Null
+                       ? System.Array.Empty<Entity>()
+                       : new[] { m_SelectedNode.Value };
+        }
 
         /// <summary>
         /// Override to enable handle raycasting only when a node is selected.

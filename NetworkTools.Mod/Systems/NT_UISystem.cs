@@ -9,6 +9,8 @@
     using Game.UI;
     using NetworkTools.Extensions;
     using NetworkTools.Settings;
+    using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Utils;
     using Unity.Collections;
@@ -29,14 +31,19 @@
             Edge    = 2
         }
 
+        private ValueBindingHelper<int>                  m_ConnectModeBinding;
+        private int                                      m_LastConnectMode;
+        private Entity                                   m_LastNetPrefabEntity;
         private int                                      m_LastSelectedNodesHash;
         private string                                   m_LastSelectedPrefab;
         private int                                      m_LastToolPrefabCount;
         private PrefixedLogger                           m_Log;
         private NameSystem                               m_NameSystem;
+        private NT_ConnectToolSystem                     m_NtConnectToolSystem;
         private NT_RoadShapeToolSystem                   m_NtRoadShapeToolSystem;
         private ValueBindingHelper<bool>                 m_PanelOpenBinding;
         private PrefabSystem                             m_PrefabSystem;
+        private ValueBindingHelper<NetPrefabData>        m_SelectedNetPrefabBinding;
         private ValueBindingHelper<ToolSelectionData[]>  m_SelectedEntitiesBinding;
         private ValueBindingHelper<string>               m_SelectedPrefabBinding;
         private ValueBindingHelper<ShapeTransformConfig> m_ShapeConfigBinding;
@@ -55,18 +62,21 @@
 
             m_PrefabSystem          = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_ToolSystem            = World.GetOrCreateSystemManaged<ToolSystem>();
+            m_NtConnectToolSystem   = World.GetOrCreateSystemManaged<NT_ConnectToolSystem>();
             m_NtRoadShapeToolSystem = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
             m_NameSystem            = World.GetOrCreateSystemManaged<NameSystem>();
 
-            m_ToolUIDataBinding       = CreateBinding("UI_DATA",           new NT_ToolPrefab[] { });
-            m_SelectedPrefabBinding   = CreateBinding("SELECTED_PREFAB",   "");
-            m_PanelOpenBinding        = CreateBinding("PANEL_OPEN",        false, HandlePanelOpen);
-            m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES", new ToolSelectionData[] { });
+            m_ToolUIDataBinding       = CreateBinding("UI_DATA",             new NT_ToolPrefab[] { });
+            m_SelectedPrefabBinding   = CreateBinding("SELECTED_PREFAB",     "");
+            m_PanelOpenBinding        = CreateBinding("PANEL_OPEN",          false, HandlePanelOpen);
+            m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES",   new ToolSelectionData[] { });
+            m_SelectedNetPrefabBinding = CreateBinding("SELECTED_NET_PREFAB", NetPrefabData.Empty);
             m_ShapeConfigBinding = CreateBinding("SHAPE_CONFIG",
                                                  ShapeTransformConfig.Preserve(),
                                                  HandleUpdateShapeConfig,
                                                  new ValueWriter<ShapeTransformConfig>(),
                                                  new ValueReader<ShapeTransformConfig>());
+            m_ConnectModeBinding = CreateBinding("CONNECT_MODE", (int)ConnectMode.None, HandleUpdateConnectMode);
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
             CreateTrigger("APPLY_SLOPE", HandleApplySlope);
@@ -113,7 +123,9 @@
             }
 
             // Update selected entities binding when selection changes
-            var selectedNodes    = m_NtRoadShapeToolSystem.GetSelectedNodes();
+            var selectedNodes    = m_ToolSystem.activeTool is INodeSelectionProvider selectionProvider
+                                       ? selectionProvider.GetSelectedNodes()
+                                       : System.Array.Empty<Entity>();
             var currentNodesHash = ComputeSelectionHash(selectedNodes);
             if (currentNodesHash != m_LastSelectedNodesHash) {
                 m_LastSelectedNodesHash = currentNodesHash;
@@ -129,6 +141,28 @@
                 }
 
                 m_SelectedEntitiesBinding.Value = selectedEntitiesData;
+            }
+
+            // Update connect mode binding when the tool changes it
+            var currentConnectMode = (int)m_NtConnectToolSystem.CurrentMode;
+            if (currentConnectMode != m_LastConnectMode) {
+                m_LastConnectMode          = currentConnectMode;
+                m_ConnectModeBinding.Value = currentConnectMode;
+            }
+
+            // Update net prefab binding when the active tool's selection changes
+            var netPrefabProvider  = m_ToolSystem.activeTool as INetPrefabSelectionProvider;
+            var currentNetPrefabEntity = netPrefabProvider != null
+                                             ? netPrefabProvider.SelectedNetPrefabEntity
+                                             : Entity.Null;
+            if (currentNetPrefabEntity != m_LastNetPrefabEntity) {
+                m_LastNetPrefabEntity = currentNetPrefabEntity;
+                var prefab            = netPrefabProvider?.SelectedNetPrefab;
+                m_SelectedNetPrefabBinding.Value = prefab != null
+                                                       ? new NetPrefabData(currentNetPrefabEntity,
+                                                                           ImageSystem.GetThumbnail(prefab),
+                                                                           prefab.name)
+                                                       : NetPrefabData.Empty;
             }
 
             if (m_ToggleToolPanelAction.WasPerformedThisFrame()) {
@@ -216,6 +250,13 @@
             }
         }
 
+        private void HandleUpdateConnectMode(int mode) {
+            m_Log.Debug($"HandleUpdateConnectMode(mode: {mode})");
+            var connectMode = (ConnectMode)mode;
+            m_NtConnectToolSystem.CurrentMode = connectMode;
+            m_ConnectModeBinding.Value        = mode;
+        }
+
         private void HandleApplySlope() {
             m_NtRoadShapeToolSystem.RequestApply();
         }
@@ -246,6 +287,42 @@
 
                 writer.PropertyName("Name");
                 writer.Write(m_EntityName);
+
+                writer.TypeEnd();
+            }
+        }
+
+        /// <summary>
+        ///     Struct to store and send selected net prefab data to the React UI.
+        /// </summary>
+        public readonly struct NetPrefabData : IJsonWritable {
+            private readonly Entity m_Entity;
+            private readonly string m_Thumbnail;
+            private readonly string m_Name;
+
+            public NetPrefabData(Entity entity, string thumbnail, string name) {
+                m_Entity    = entity;
+                m_Thumbnail = thumbnail;
+                m_Name      = name;
+            }
+
+            /// <summary>
+            ///     Returns a <see cref="NetPrefabData" /> representing no selection.
+            /// </summary>
+            public static NetPrefabData Empty => new(Entity.Null, "", "");
+
+            /// <inheritdoc />
+            public void Write(IJsonWriter writer) {
+                writer.TypeBegin(GetType().FullName);
+
+                writer.PropertyName("Entity");
+                writer.Write(m_Entity);
+
+                writer.PropertyName("Thumbnail");
+                writer.Write(m_Thumbnail);
+
+                writer.PropertyName("Name");
+                writer.Write(m_Name);
 
                 writer.TypeEnd();
             }

@@ -21,8 +21,6 @@
 #endif
         /// <summary>
         ///     Creates definitions for the merged edge when removing a node.
-        ///     Given a node with exactly 2 connected edges, creates a NetCourse that
-        ///     connects the two neighbor nodes, effectively previewing the removal.
         /// </summary>
         private struct CreateDefinitionJob : IJob {
             [ReadOnly] public required NativeReference<Entity>           HoveredNode;
@@ -168,7 +166,7 @@
                 // CreationDefinition - use first edge's prefab
                 var creationDefinition = new CreationDefinition {
                     m_Original = edge1Entity,
-                    m_Flags    = CreationFlags.Recreate
+                    m_Flags    = CreationFlags.Parent | CreationFlags.Recreate
                 };
 
                 if (PrefabRefLookup.TryGetComponent(edge1Entity, out var prefabRef)) {

@@ -43,7 +43,7 @@ namespace NetworkTools.Systems.Tools {
     ///         </item>
     ///     </list>
     /// </remarks>
-    public abstract partial class NT_PathSelectionToolSystem : NT_BaseToolSystem {
+    public abstract partial class NT_PathSelectionToolSystem : NT_BaseToolSystem, INodeSelectionProvider {
         #region Template Methods
 
         /// <summary>

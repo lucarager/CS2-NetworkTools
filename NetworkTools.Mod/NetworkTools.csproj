@@ -130,7 +130,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Systems\Tools\Connect\" />
 	  <Folder Include="Systems\Tools\Grid\" />
 	  <Folder Include="Systems\Tools\SuperNode\" />
 	  <Folder Include="Systems\Tools\SlideNode\" />

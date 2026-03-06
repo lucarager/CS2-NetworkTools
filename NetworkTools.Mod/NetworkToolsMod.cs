@@ -26,6 +26,7 @@ namespace NetworkTools {
     using HarmonyLib;
     using NetworkTools.Systems;
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Utils;
     using Newtonsoft.Json;
@@ -132,13 +133,15 @@ namespace NetworkTools {
             // Apply input bindings.
             Settings.RegisterKeyBindings();
 
-            // Activate Systems
+            // ## Activate Systems
+            // Core systems
             updateSystem.UpdateAt<NT_PrefabsCreateSystem>(SystemUpdatePhase.PrefabUpdate);
             // Tools
             updateSystem.UpdateAt<NT_RoadShapeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
-            updateSystem.UpdateAt<NT_NodeControlToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_RemoveNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
+            updateSystem.UpdateAt<NT_NodeControlToolSystem>(SystemUpdatePhase.ToolUpdate);
+            updateSystem.UpdateAt<NT_ConnectToolSystem>(SystemUpdatePhase.ToolUpdate);
             // UI
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_OverlayRenderSystem>(SystemUpdatePhase.Rendering);
