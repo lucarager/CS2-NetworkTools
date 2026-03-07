@@ -154,7 +154,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_ConnectToolSystem>(SystemUpdatePhase.ToolUpdate);
             // UI
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
-            updateSystem.UpdateAt<NT_OverlayRenderSystem>(SystemUpdatePhase.Rendering);
+            updateSystem.UpdateAt<NT_OverlaySystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<NT_UITooltipSystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_HintTooltipSystem>(SystemUpdatePhase.UITooltip);
             // Rendering

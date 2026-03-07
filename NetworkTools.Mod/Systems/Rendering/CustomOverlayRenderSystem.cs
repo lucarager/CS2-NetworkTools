@@ -31,6 +31,13 @@
             DepthFadeBelow = 4
         }
 
+        private readonly ComputeBuffer[]               m_CustomMeshBuffer = new ComputeBuffer[3];
+        private readonly NativeList<CustomMeshdData>[] m_CustomMeshData   = new NativeList<CustomMeshdData>[3];
+
+        private readonly int[] m_CustomMeshInstanceCount = new int[3];
+
+        private readonly Material[] m_CustomMeshMaterial = new Material[3];
+
         private ComputeBuffer         m_AbsoluteBuffer;
         private NativeList<CurveData> m_AbsoluteData;
 
@@ -48,17 +55,10 @@
 
         private int m_CurveBufferID;
 
-        private readonly ComputeBuffer[] m_CustomMeshBuffer = new ComputeBuffer[3];
+        private int m_CustomMeshBufferID;
 
-        private          int                           m_CustomMeshBufferID;
-        private readonly NativeList<CustomMeshdData>[] m_CustomMeshData = new NativeList<CustomMeshdData>[3];
-
-        private Mesh[] m_customMeshes = new Mesh[3];
-
-        private readonly int[]                       m_CustomMeshInstanceCount = new int[3];
+        private readonly Mesh[]                      m_customMeshes = new Mesh[3];
         private          NativeList<CustomMeshdData> m_CustomMeshJobData;
-
-        private readonly Material[] m_CustomMeshMaterial = new Material[3];
 
         private int m_FaceDilateID;
 
@@ -178,8 +178,130 @@
         /// <param name="cameras"></param>
         private void Render(ScriptableRenderContext context, List<Camera> cameras) {
             if (!m_RenderingSystem.hideOverlay) {
+                var num = 0;
+                if (m_ProjectedInstanceCount != 0) {
+                    num += 5;
+                }
+
+                if (m_AbsoluteInstanceCount != 0) {
+                    num += 5;
+                }
+
+                var customMeshInstanceCount = m_CustomMeshInstanceCount;
+                for (var i = 0; i < customMeshInstanceCount.Length; i++) {
+                    if (customMeshInstanceCount[i] != 0) {
+                        num += 5;
+                    }
+                }
+
+                if (num != 0) {
+                    if (m_ArgsBuffer != null && m_ArgsBuffer.count < num) {
+                        m_ArgsBuffer.Release();
+                        m_ArgsBuffer = null;
+                    }
+
+                    if (m_ArgsBuffer == null) {
+                        m_ArgsBuffer      = new ComputeBuffer(num, 4, ComputeBufferType.DrawIndirect);
+                        m_ArgsBuffer.name = "Overlay args buffer";
+                    }
+
+                    if (m_ArgsArray == null) {
+                        m_ArgsArray = new List<uint>();
+                    }
+
+                    m_ArgsArray.Clear();
+                    var bounds = RenderingUtils.ToBounds(m_BoundsData.value.m_CurveBounds);
+                    var num2   = 0;
+                    var num3   = 0;
+                    var array  = new int[3];
+                    if (m_ProjectedInstanceCount != 0) {
+                        GetMesh(ref m_BoxMesh, true);
+                        GetCurveMaterial(ref m_ProjectedMaterial, true);
+                        num2 = m_ArgsArray.Count;
+                        m_ArgsArray.Add(m_BoxMesh.GetIndexCount(0));
+                        m_ArgsArray.Add((uint)m_ProjectedInstanceCount);
+                        m_ArgsArray.Add(m_BoxMesh.GetIndexStart(0));
+                        m_ArgsArray.Add(m_BoxMesh.GetBaseVertex(0));
+                        m_ArgsArray.Add(0U);
+                    }
+
+                    if (m_AbsoluteInstanceCount != 0) {
+                        GetMesh(ref m_QuadMesh, false);
+                        GetCurveMaterial(ref m_AbsoluteMaterial, false);
+                        num3 = m_ArgsArray.Count;
+                        m_ArgsArray.Add(m_QuadMesh.GetIndexCount(0));
+                        m_ArgsArray.Add((uint)m_AbsoluteInstanceCount);
+                        m_ArgsArray.Add(m_QuadMesh.GetIndexStart(0));
+                        m_ArgsArray.Add(m_QuadMesh.GetBaseVertex(0));
+                        m_ArgsArray.Add(0U);
+                    }
+
+                    for (var j = 0; j < 3; j++) {
+                        if (m_CustomMeshInstanceCount[j] != 0) {
+                            GetCustomMeshMesh(ref m_customMeshes[j], (OverlayRenderSystem.CustomMeshType)j);
+                            GetSolidObjectMaterial(ref m_CustomMeshMaterial[j]);
+                            array[j] = m_ArgsArray.Count;
+                            m_ArgsArray.Add(m_customMeshes[j].GetIndexCount(0));
+                            m_ArgsArray.Add((uint)m_CustomMeshInstanceCount[j]);
+                            m_ArgsArray.Add(m_customMeshes[j].GetIndexStart(0));
+                            m_ArgsArray.Add(m_customMeshes[j].GetBaseVertex(0));
+                            m_ArgsArray.Add(0U);
+                        }
+                    }
+
+                    foreach (var camera in cameras) {
+                        if (camera.cameraType == CameraType.Game || camera.cameraType == CameraType.SceneView) {
+                            if (m_ProjectedInstanceCount != 0) {
+                                Graphics.DrawMeshInstancedIndirect(m_BoxMesh,
+                                                                   0,
+                                                                   m_ProjectedMaterial,
+                                                                   bounds,
+                                                                   m_ArgsBuffer,
+                                                                   num2 * 4,
+                                                                   null,
+                                                                   ShadowCastingMode.Off,
+                                                                   false,
+                                                                   0,
+                                                                   camera);
+                            }
+
+                            if (m_AbsoluteInstanceCount != 0) {
+                                Graphics.DrawMeshInstancedIndirect(m_QuadMesh,
+                                                                   0,
+                                                                   m_AbsoluteMaterial,
+                                                                   bounds,
+                                                                   m_ArgsBuffer,
+                                                                   num3 * 4,
+                                                                   null,
+                                                                   ShadowCastingMode.Off,
+                                                                   false,
+                                                                   0,
+                                                                   camera);
+                            }
+
+                            for (var k = 0; k < 3; k++) {
+                                if (m_CustomMeshInstanceCount[k] != 0) {
+                                    Graphics.DrawMeshInstancedIndirect(m_customMeshes[k],
+                                                                       0,
+                                                                       m_CustomMeshMaterial[k],
+                                                                       bounds,
+                                                                       m_ArgsBuffer,
+                                                                       array[k] * 4,
+                                                                       null,
+                                                                       ShadowCastingMode.Off,
+                                                                       false,
+                                                                       0,
+                                                                       camera);
+                                }
+                            }
+                        }
+                    }
+
+                    m_ArgsBuffer.SetData(m_ArgsArray, 0, 0, m_ArgsArray.Count);
+                }
             }
         }
+
 
         /// <summary>
         ///     Public Buffer getter method.

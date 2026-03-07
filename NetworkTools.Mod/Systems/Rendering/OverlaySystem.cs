@@ -1,4 +1,4 @@
-﻿// <copyright file="NT_OverlayRenderSystem.cs" company="Luca Rager">
+﻿// <copyright file="NT_OverlaySystem.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -32,14 +32,14 @@ namespace NetworkTools.Systems {
     /// <summary>
     ///     Overlay Rendering System.
     /// </summary>
-    public partial class NT_OverlayRenderSystem : GameSystemBase {
+    public partial class NT_OverlaySystem : GameSystemBase {
         private EntityQuery m_EdgeQuery;
         private EntityQuery m_TempEdgeQuery;
         private EntityQuery m_TempNodeQuery;
         private PrefixedLogger m_Log;
         private EntityQuery m_NodeQuery;
         private EntityQuery m_HandleQuery;
-        private OverlayRenderSystem m_OverlayRenderSystem;
+        private CustomOverlayRenderSystem m_OverlayRenderSystem;
         private ToolSystem m_ToolSystem;
 
         /// <inheritdoc />
@@ -47,7 +47,7 @@ namespace NetworkTools.Systems {
             base.OnCreate();
 
             // Logger
-            m_Log = new PrefixedLogger(nameof(NT_OverlayRenderSystem));
+            m_Log = new PrefixedLogger(nameof(NT_OverlaySystem));
             m_Log.Debug("OnCreate()");
 
             m_NodeQuery = SystemAPI.QueryBuilder()
@@ -78,7 +78,7 @@ namespace NetworkTools.Systems {
                 .Build();
 
             // Systems & References
-            m_OverlayRenderSystem = World.GetOrCreateSystemManaged<OverlayRenderSystem>();
+            m_OverlayRenderSystem = World.GetOrCreateSystemManaged<CustomOverlayRenderSystem>();
             m_ToolSystem          = World.GetOrCreateSystemManaged<ToolSystem>();
         }
 

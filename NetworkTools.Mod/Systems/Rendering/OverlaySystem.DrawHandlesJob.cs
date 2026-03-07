@@ -16,7 +16,7 @@
 
     #endregion
 
-    public partial class NT_OverlayRenderSystem {
+    public partial class NT_OverlaySystem {
         /// <summary>
         ///     Job to draw handle overlays.
         ///     Supports point, line, and circle handle types.
@@ -26,7 +26,7 @@
         [BurstCompile]
 #endif
         protected struct DrawHandlesJob : IJobChunk {
-            [ReadOnly] public required OverlayRenderSystem.Buffer                m_Buffer;
+            [ReadOnly] public required CustomOverlayRenderSystem.Buffer                m_Buffer;
             [ReadOnly] public required RenderColors                              m_Colors;
             [ReadOnly] public required ComponentTypeHandle<NT_HandlePosition>    m_NTHandlePositionComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleLink>        m_NTHandleLinkComponentTypeHandle;
@@ -137,7 +137,7 @@
             private static void RenderPointHandle(NT_HandlePosition          position,      NT_Handle handle,
                                                   bool                       isHighlighted, bool      isSelected,
                                                   RenderColors               colors,
-                                                  OverlayRenderSystem.Buffer buffer) {
+                                                  CustomOverlayRenderSystem.Buffer buffer) {
                 var color    = GetHandleColor(handle, isHighlighted, isSelected, colors);
                 var diameter = handle.Radius * 2f;
 
@@ -150,7 +150,7 @@
             private static void RenderParameterRangeHandle(NT_HandlePosition position, NT_HandleConstraints constraints,
                                                            NT_Handle handle, bool isHighlighted, bool isSelected,
                                                            RenderColors colors,
-                                                           OverlayRenderSystem.Buffer buffer) {
+                                                           CustomOverlayRenderSystem.Buffer buffer) {
                 var color       = GetHandleColor(handle, isHighlighted, isSelected, colors);
                 var originColor = (Color)(Vector4)colors.HandleOrigin;
                 var diameter    = handle.Radius * 2f;
@@ -172,7 +172,7 @@
                                                         NT_HandleLink link, bool isControlPoint, bool isHighlighted,
                                                         bool isSelected,
                                                         RenderColors colors,
-                                                        OverlayRenderSystem.Buffer buffer) {
+                                                        CustomOverlayRenderSystem.Buffer buffer) {
                 var color = GetHandleColor(handle, isHighlighted, isSelected, colors);
                 var diameter = handle.Radius * 2f;
 
@@ -191,7 +191,7 @@
             private static void RenderLineHandle(NT_HandleLine              line,          NT_Handle handle,
                                                  bool                       isHighlighted, bool      isSelected,
                                                  RenderColors               colors,
-                                                 OverlayRenderSystem.Buffer buffer) {
+                                                 CustomOverlayRenderSystem.Buffer buffer) {
                 var color = GetHandleColor(handle, isHighlighted, isSelected, colors);
                 var width = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1.5f : 1f;
 
@@ -208,7 +208,7 @@
             private static void RenderCircleHandle(NT_HandleCircle            circle,        NT_Handle handle,
                                                    bool                       isHighlighted, bool      isSelected,
                                                    RenderColors               colors,
-                                                   OverlayRenderSystem.Buffer buffer) {
+                                                   CustomOverlayRenderSystem.Buffer buffer) {
                 var color       = GetHandleColor(handle, isHighlighted, isSelected, colors);
                 var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
 
