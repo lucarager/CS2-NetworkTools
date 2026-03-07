@@ -36,6 +36,8 @@
             [ReadOnly] public required ComponentTypeHandle<NT_HandleLine>        m_HandleLineComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleCircle>      m_HandleCircleComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleConstraints> m_HandleConstraintsComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_HandleParent>      m_HandleParentComponentTypeHandle;
+            [ReadOnly] public required ComponentLookup<NT_HandlePosition>         m_HandlePositionLookup;
             [ReadOnly] public required ComponentLookup<Node>                     m_NodeLookup;
             [ReadOnly] public required ComponentLookup<Curve>                    m_CurveLookup;
             [ReadOnly] public required EntityTypeHandle                          m_EntityTypeHandle;
@@ -52,10 +54,12 @@
                 var hasLineComponent        = chunk.Has(ref m_HandleLineComponentTypeHandle);
                 var hasCircleComponent      = chunk.Has(ref m_HandleCircleComponentTypeHandle);
                 var hasConstraintsComponent = chunk.Has(ref m_HandleConstraintsComponentTypeHandle);
+                var hasParentComponent      = chunk.Has(ref m_HandleParentComponentTypeHandle);
 
                 NativeArray<NT_HandleLine>        lineArray        = default;
                 NativeArray<NT_HandleCircle>      circleArray      = default;
                 NativeArray<NT_HandleConstraints> constraintsArray = default;
+                NativeArray<NT_HandleParent>      parentArray      = default;
 
                 if (hasLineComponent) {
                     lineArray = chunk.GetNativeArray(ref m_HandleLineComponentTypeHandle);
@@ -67,6 +71,10 @@
 
                 if (hasConstraintsComponent) {
                     constraintsArray = chunk.GetNativeArray(ref m_HandleConstraintsComponentTypeHandle);
+                }
+
+                if (hasParentComponent) {
+                    parentArray = chunk.GetNativeArray(ref m_HandleParentComponentTypeHandle);
                 }
 
                 for (var i = 0; i < entitiesArray.Length; i++) {
@@ -109,6 +117,16 @@
                     } else {
                         // Default point handle
                         RenderPointHandle(position, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
+                    }
+
+                    // Draw dashed line from child to parent handle
+                    if (hasParentComponent) {
+                        var parentEntity = parentArray[i].Parent;
+                        if (parentEntity != Entity.Null && m_HandlePositionLookup.HasComponent(parentEntity)) {
+                            var parentPos = m_HandlePositionLookup[parentEntity].Position;
+                            var lineColor = (Color)(Vector4)m_Colors.HandleDefault;
+                            m_Buffer.DrawDashedLine(lineColor, new Line3.Segment(position.Position, parentPos), 0.3f, 2f, 2f);
+                        }
                     }
                 }
             }
