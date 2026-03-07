@@ -1,11 +1,11 @@
 ﻿namespace NetworkTools.Systems.Tools.Connect {
     using Game.Net;
     using Game.Prefabs;
-    using Game.Tools;
 
     using NetworkTools.Components;
+    using NetworkTools.Components.Handles;
     using NetworkTools.Components.Tools;
-    using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Base;
     using NetworkTools.Systems.Tools.RoadShape;
 
     using Unity.Collections;
@@ -17,22 +17,19 @@
     /// </summary>
     public partial class NT_ConnectToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {m_ToolSystem.activeTool}");
-            m_Log.Debug($"TrySetPrefab {m_ToolSystem.activePrefab}");
-            m_Log.Debug($"TrySetPrefab {prefab}");
             m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_Connect>(prefab)}");
 
             // If we're setting a NetPrefab, we cache it as the desired prefab for later.
             if (prefab is NetPrefab netPrefab) {
-                m_SelectedNetPrefab = netPrefab;
+                m_SelectedNetPrefab       = netPrefab;
                 m_SelectedNetPrefabEntity = m_PrefabSystem.GetEntity(netPrefab);
-                
+
                 // If the currently active tool is this tool, we want to override the base game NetTool
                 if (m_ToolSystem.activeTool is NT_ConnectToolSystem) {
                     return true;
-                } else {
-                    // Otherwise, we just cache the selected NetPrefab and wait for the user to select the ConnectTool to apply it.
                 }
+
+                // Otherwise, we just cache the selected NetPrefab and wait for the user to select the ConnectTool to apply it.
                 return false;
             }
 
@@ -40,13 +37,68 @@
             var validRequest = prefab is NT_ToolPrefab &&
                                m_PrefabSystem.HasComponent<NT_Connect>(prefab);
 
-            if (!validRequest)
-            {
+            if (!validRequest) {
                 return false;
             }
 
             m_Prefab = prefab;
             return true;
+        }
+
+        /// <summary>
+        ///     Sets a new transformation.
+        /// </summary>
+        public void SetMode(ConnectMode mode) {
+            CurrentMode    = mode;
+            m_UpdateNeeded = true;
+
+            // Re-initialize configs
+            InitializeConfig();
+
+            m_Log.Debug($"Mode set: mode={mode}");
+        }
+
+
+        /// <summary>
+        ///     Calls InitializeConfig on the current generator to compute initial values.
+        /// </summary>
+        private void InitializeConfig() {
+            m_Log.Debug($"InitializeConfig: Initializing {CurrentMode}");
+
+            // Only initialize config when we have 2 valid nodes selected (Ready phase)
+            if (Phase != OperationPhase.Ready) {
+                return;
+            }
+
+            var startNodeEntity = m_SelectedNodes[0];
+            var endNodeEntity   = m_SelectedNodes[1];
+            var startNode       = EntityManager.GetComponentData<Node>(startNodeEntity);
+            var endNode         = EntityManager.GetComponentData<Node>(endNodeEntity);
+            var startPosition   = startNode.m_Position;
+            var endPosition     = endNode.m_Position;
+
+            // Calculate initial direction as the horizontal vector pointing towards the other node.
+            // Flatten to XZ so the direction stays level regardless of elevation difference.
+            var delta = endPosition - startPosition;
+            delta.y = 0f;
+            var horizontalDir = math.normalizesafe(delta, new float3(1, 0, 0));
+
+            var startDirection = horizontalDir;
+            var endDirection   = -horizontalDir;
+
+            var config = new ConnectConfig(startPosition, endPosition, startDirection, endDirection);
+
+            // Each transform's InitializeConfig method may modify ShapeTransformConfig
+            // to store computed values needed for handles and transformation.
+            switch (CurrentMode) {
+                case ConnectMode.SimpleCurve:
+                    new SimpleCurveGenerator().InitializeConfig(in CurrentMode, ref config);
+                    break;
+            }
+
+            CurrentConfig = config;
+
+            RefreshTransformHandles();
         }
 
         protected override void OnCreate() {
@@ -55,8 +107,8 @@
             m_Log.Prefix = nameof(NT_RoadShapeToolSystem);
 
             // Configuration
-            RenderEligibleNodes = true;
-            RenderHandles = true;
+            RenderEligibleNodes      = true;
+            RenderHandles            = true;
             DisableVanillaValidation = true;
 
             // Data
@@ -64,10 +116,10 @@
 
             // Override default query to exclude some networks
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node>()
-                .WithAny<Road, LocalConnect>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                                   .WithAll<Node>()
+                                                   .WithAny<Road, LocalConnect>()
+                                                   .WithNone<NT_Eligible>()
+                                                   .Build();
         }
 
         protected override void OnDestroy() {
@@ -81,7 +133,7 @@
 
             // Reset internal state
             m_LastHitPosition = default;
-            Phase = OperationPhase.Idle;
+            Phase             = OperationPhase.Idle;
 
             // Initialize selection state (makes all nodes eligible)
             ResetToIdle();

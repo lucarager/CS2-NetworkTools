@@ -2,7 +2,6 @@
     using Game.Prefabs;
 
     using NetworkTools.Systems.Tools;
-    using NetworkTools.Systems.Tools.RoadShape;
 
     using Unity.Collections;
     using Unity.Entities;
@@ -81,11 +80,11 @@
         /// <summary>
         ///     Currently selected ConnectMode.
         /// </summary>
-        public ConnectMode CurrentMode { get; set; } = ConnectMode.None;
+        public ConnectMode CurrentMode = ConnectMode.None;
 
         /// <summary>
         ///     Current config.
         /// </summary>
-        internal ConnectConfig CurrentConfig { get; set; } = ConnectConfig.Default();
+        internal ConnectConfig CurrentConfig = new ConnectConfig();
     }
 }

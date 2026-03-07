@@ -253,7 +253,7 @@
         private void HandleUpdateConnectMode(int mode) {
             m_Log.Debug($"HandleUpdateConnectMode(mode: {mode})");
             var connectMode = (ConnectMode)mode;
-            m_NtConnectToolSystem.CurrentMode = connectMode;
+            m_NtConnectToolSystem.SetMode(connectMode);
             m_ConnectModeBinding.Value        = mode;
         }
 

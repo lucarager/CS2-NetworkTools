@@ -179,6 +179,9 @@
             // Recalculate eligible nodes
             MarkEligibleNodes();
 
+            // Re-initialize config
+            InitializeConfig();
+
             return true;
         }
 
