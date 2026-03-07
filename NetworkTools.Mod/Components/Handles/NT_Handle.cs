@@ -85,9 +85,24 @@ namespace NetworkTools.Components.Handles {
     /// </summary>
     public struct NT_Handle : IComponentData {
         /// <summary>
+        /// Radius for primary (prominent) handles.
+        /// </summary>
+        public const float PrimaryRadius = 6f;
+
+        /// <summary>
+        /// Radius for secondary (subdued) handles.
+        /// </summary>
+        public const float SecondaryRadius = 3f;
+
+        /// <summary>
         /// Type flags defining the handle's purpose and behavior.
         /// </summary>
         public HandleTypeFlags TypeFlags;
+
+        /// <summary>
+        /// Radius used for both hit detection and visual rendering (diameter = Radius * 2).
+        /// </summary>
+        public float Radius;
 
         /// <summary>
         /// Checks if the handle has all of the specified flags.
@@ -100,10 +115,10 @@ namespace NetworkTools.Components.Handles {
         public bool HasAnyFlag(HandleTypeFlags flags) => (TypeFlags & flags) != HandleTypeFlags.None;
 
         /// <summary>
-        /// Creates a handle with the specified type flags.
+        /// Creates a handle with the specified type flags and radius.
         /// </summary>
-        public static NT_Handle Create(HandleTypeFlags typeFlags) {
-            return new NT_Handle { TypeFlags = typeFlags };
+        public static NT_Handle Create(HandleTypeFlags typeFlags, float radius = PrimaryRadius) {
+            return new NT_Handle { TypeFlags = typeFlags, Radius = radius };
         }
     }
 }

@@ -59,6 +59,8 @@ namespace NetworkTools.Systems.Tools.Connect {
         /// Creates a handle entity from a definition, dispatching by type flags.
         /// </summary>
         private Entity CreateHandleFromDefinition(TransformHandleDefinition def) {
+            var radius = def.Radius > 0f ? def.Radius : NT_Handle.PrimaryRadius;
+
             if ((def.TypeFlags & HandleTypeFlags.Parameter) != 0) {
                 return CreateParameterHandle(
                     Entity.Null,
@@ -68,7 +70,8 @@ namespace NetworkTools.Systems.Tools.Connect {
                     def.MinValue,
                     def.MaxValue,
                     def.TypeFlags,
-                    def.Constraints);
+                    def.Constraints,
+                    radius);
             }
 
             return CreatePositionHandle(
@@ -77,7 +80,8 @@ namespace NetworkTools.Systems.Tools.Connect {
                 def.Key,
                 def.Position,
                 def.TypeFlags,
-                def.Constraints);
+                def.Constraints,
+                radius);
         }
 
         /// <summary>

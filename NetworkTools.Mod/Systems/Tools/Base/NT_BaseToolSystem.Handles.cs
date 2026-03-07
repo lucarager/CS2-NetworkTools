@@ -46,11 +46,6 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         protected const float HandleDragThreshold = 0.5f;
 
-        /// <summary>
-        ///     Radius of the invisible sphere around each point handle for ray intersection hit detection.
-        /// </summary>
-        protected const float HandleHitRadius = 2f;
-
         #endregion
 
         #region Handle State
@@ -127,6 +122,7 @@ namespace NetworkTools.Systems.Tools {
         /// <param name="position">Initial world position of the handle.</param>
         /// <param name="typeFlags">Type flags defining the handle's purpose.</param>
         /// <param name="constraints">Optional movement constraints.</param>
+        /// <param name="radius">Hit detection and visual radius.</param>
         /// <returns>The created handle entity.</returns>
         protected Entity CreatePositionHandle(
             Entity                linkedEntity,
@@ -134,10 +130,11 @@ namespace NetworkTools.Systems.Tools {
             int                   key,
             float3                position,
             HandleTypeFlags       typeFlags,
-            NT_HandleConstraints? constraints = null) {
+            NT_HandleConstraints? constraints = null,
+            float                 radius = NT_Handle.PrimaryRadius) {
             var handle = EntityManager.CreateEntity();
 
-            EntityManager.AddComponentData(handle, NT_Handle.Create(typeFlags | HandleTypeFlags.Position));
+            EntityManager.AddComponentData(handle, NT_Handle.Create(typeFlags | HandleTypeFlags.Position, radius));
             EntityManager.AddComponentData(handle,
                                            new NT_HandleLink {
                                                LinkedEntity = linkedEntity,
@@ -169,6 +166,7 @@ namespace NetworkTools.Systems.Tools {
         /// <param name="maxValue">Maximum allowed value.</param>
         /// <param name="typeFlags">Type flags defining the handle's purpose.</param>
         /// <param name="constraints">Optional movement constraints.</param>
+        /// <param name="radius">Hit detection and visual radius.</param>
         /// <returns>The created handle entity.</returns>
         protected Entity CreateParameterHandle(
             Entity                linkedEntity,
@@ -178,10 +176,11 @@ namespace NetworkTools.Systems.Tools {
             float                 minValue,
             float                 maxValue,
             HandleTypeFlags       typeFlags,
-            NT_HandleConstraints? constraints = null) {
+            NT_HandleConstraints? constraints = null,
+            float                 radius = NT_Handle.PrimaryRadius) {
             var handle = EntityManager.CreateEntity();
 
-            EntityManager.AddComponentData(handle, NT_Handle.Create(typeFlags | HandleTypeFlags.Parameter));
+            EntityManager.AddComponentData(handle, NT_Handle.Create(typeFlags | HandleTypeFlags.Parameter, radius));
             EntityManager.AddComponentData(handle,
                                            new NT_HandleLink {
                                                LinkedEntity = linkedEntity,
@@ -327,9 +326,8 @@ namespace NetworkTools.Systems.Tools {
         ///     Gets the closest handle entity from the current camera ray.
         ///     Performs type-aware intersection testing (point, line, circle).
         /// </summary>
-        /// <param name="handleRadius">Hit detection radius for point handles.</param>
         /// <returns>The closest handle entity, or Entity.Null if none hit.</returns>
-        protected Entity GetClosestHandleFromRay(float handleRadius = HandleHitRadius) {
+        protected Entity GetClosestHandleFromRay() {
             if (!m_Handles.IsCreated || m_Handles.Length == 0) return Entity.Null;
 
             var camera = Camera.main;
@@ -348,11 +346,12 @@ namespace NetworkTools.Systems.Tools {
                 if (!EntityManager.Exists(handleEntity)) continue;
 
                 var   handleData = EntityManager.GetComponentData<NT_Handle>(handleEntity);
+                var   radius     = handleData.Radius > 0f ? handleData.Radius : NT_Handle.PrimaryRadius;
                 float t;
 
                 if (handleData.HasAnyFlag(HandleTypeFlags.Line)) {
                     var line = EntityManager.GetComponentData<NT_HandleLine>(handleEntity);
-                    if (TryRayLineIntersection(rayOrigin, rayDir, line.PointA, line.PointB, handleRadius, out t)) {
+                    if (TryRayLineIntersection(rayOrigin, rayDir, line.PointA, line.PointB, radius, out t)) {
                         if (t < closestT) {
                             closestT      = t;
                             closestHandle = handleEntity;
@@ -365,7 +364,7 @@ namespace NetworkTools.Systems.Tools {
                                                  circle.Center,
                                                  circle.Radius,
                                                  circle.Normal,
-                                                 handleRadius,
+                                                 radius,
                                                  out t)) {
                         if (t < closestT) {
                             closestT      = t;
@@ -375,7 +374,7 @@ namespace NetworkTools.Systems.Tools {
                 } else {
                     // Default: point/sphere intersection
                     var handlePos = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
-                    if (TryRaySphereIntersection(rayOrigin, rayDir, handlePos, handleRadius, out t)) {
+                    if (TryRaySphereIntersection(rayOrigin, rayDir, handlePos, radius, out t)) {
                         if (t < closestT) {
                             closestT      = t;
                             closestHandle = handleEntity;

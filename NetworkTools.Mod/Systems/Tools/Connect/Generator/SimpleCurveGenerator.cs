@@ -65,24 +65,28 @@
                 new TransformHandleDefinition {
                     Key = HandleKeys.CurveStartPointPosition,
                     TypeFlags = HandleTypeFlags.Position,
-                    Position = config.CurveStartPointPosition
+                    Position = config.CurveStartPointPosition,
+                    Radius = NT_Handle.PrimaryRadius
                 },
                 new TransformHandleDefinition {
                     Key = HandleKeys.CurveStartControlPointPosition,
                     TypeFlags = HandleTypeFlags.Position,
                     Position = config.CurveStartControlPointPosition,
-                    ParentKey = HandleKeys.CurveStartPointPosition
+                    ParentKey = HandleKeys.CurveStartPointPosition,
+                    Radius = NT_Handle.SecondaryRadius
                 },
                 new TransformHandleDefinition {
                     Key = HandleKeys.CurveEndControlPointPosition,
                     TypeFlags = HandleTypeFlags.Position,
                     Position = config.CurveEndControlPointPosition,
-                    ParentKey = HandleKeys.CurveEndPointPosition
+                    ParentKey = HandleKeys.CurveEndPointPosition,
+                    Radius = NT_Handle.SecondaryRadius
                 },
                 new TransformHandleDefinition {
                     Key = HandleKeys.CurveEndPointPosition,
                     TypeFlags = HandleTypeFlags.Position,
-                    Position = config.CurveEndPointPosition
+                    Position = config.CurveEndPointPosition,
+                    Radius = NT_Handle.PrimaryRadius
                 }
             };
         }

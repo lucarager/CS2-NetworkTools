@@ -27,6 +27,11 @@
         public NT_HandleConstraints? Constraints;
 
         /// <summary>
+        /// Hit detection and visual radius. Defaults to <see cref="NT_Handle.PrimaryRadius"/>.
+        /// </summary>
+        public float Radius;
+
+        /// <summary>
         /// Key of the parent handle. When the parent is dragged, this handle moves with it.
         /// Set to <see cref="NoParent"/> (default) for root handles.
         /// </summary>

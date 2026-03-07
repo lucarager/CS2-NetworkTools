@@ -139,7 +139,7 @@
                                                   RenderColors               colors,
                                                   OverlayRenderSystem.Buffer buffer) {
                 var color    = GetHandleColor(handle, isHighlighted, isSelected, colors);
-                var diameter = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 4f : 2.5f;
+                var diameter = handle.Radius * 2f;
 
                 buffer.DrawCircle(color, color, 0.5f, 0, new float2(0, 1), position.Position, diameter);
             }
@@ -153,7 +153,7 @@
                                                            OverlayRenderSystem.Buffer buffer) {
                 var color       = GetHandleColor(handle, isHighlighted, isSelected, colors);
                 var originColor = (Color)(Vector4)colors.HandleOrigin;
-                var diameter    = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 4f : 2.5f;
+                var diameter    = handle.Radius * 2f;
 
                 // Draw origin dot (small circle at the start of valid range)
                 buffer.DrawCircle(originColor, originColor, 0.3f, 0, new float2(0, 1), constraints.Origin, 1f);
@@ -174,8 +174,7 @@
                                                         RenderColors colors,
                                                         OverlayRenderSystem.Buffer buffer) {
                 var color = GetHandleColor(handle, isHighlighted, isSelected, colors);
-                var diameter = handle.HasAnyFlag(HandleTypeFlags.Primary)   ? 4f :
-                               handle.HasAnyFlag(HandleTypeFlags.Secondary) ? 2.5f : 3f;
+                var diameter = handle.Radius * 2f;
 
                 buffer.DrawCircle(color, color, 0.5f, 0, new float2(0, 1), position.Position, diameter);
 
