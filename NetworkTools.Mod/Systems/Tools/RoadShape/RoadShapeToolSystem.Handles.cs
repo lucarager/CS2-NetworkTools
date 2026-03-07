@@ -27,7 +27,7 @@
 
             switch (link.Key)
             {
-                case TransformHandleKeys.EaseInLength:
+                case HandleKeys.EaseInLength:
                     var easeInAxis = GetHandleConstraintAxisXZ(handle, m_ShapeTransformContext.StartPosition, m_ShapeTransformContext.EndPosition);
                     var easeInParam = CalculateEaseParameter(
                         handlePos,
@@ -38,7 +38,7 @@
                     ShapeTransformConfig.EaseInLength = easeInParam;
                     break;
 
-                case TransformHandleKeys.EaseOutLength:
+                case HandleKeys.EaseOutLength:
                     var easeOutAxis = GetHandleConstraintAxisXZ(handle, m_ShapeTransformContext.EndPosition, m_ShapeTransformContext.StartPosition);
                     var easeOutParam = CalculateEaseParameter(
                         handlePos,

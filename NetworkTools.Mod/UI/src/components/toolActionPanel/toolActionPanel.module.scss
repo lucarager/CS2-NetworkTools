@@ -8,7 +8,7 @@
 .panel {
     margin-left: 4rem;
     animation: slideIn 0.16s ease-out forwards;
-    width: 320rem;
+    width: 352rem;
 }
 
 .divider {
@@ -52,7 +52,7 @@
     flex-direction: row;
     align-items: center;
     padding: 4rem;
-    flex: 2;
+    flex: 1;
     overflow: hidden;
 
     &__thumbnail {
@@ -87,13 +87,7 @@
     .controlRowInner {
         display: flex;
         flex-direction: row;
-
-        .paramLabel {
-            flex: 2;
-            width: 150rem;
-            margin-top: 10rem;
-            margin-right: 8rem;
-        }
+        align-items: flex-start;
     }
 }
 
@@ -106,10 +100,10 @@
     flex-direction: row;
     flex-wrap: wrap;
     flex: 1;
-    justify-content: flex-end;
 
-    & > button + button {
-        margin-left: 4rem;
+    & > button {
+        margin-bottom: 2rem;
+        margin-right: 4rem;
     }
 }
 
@@ -179,15 +173,15 @@
 }
 
 .paramLabel {
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: 33%;
     font-size: var(--fontSizeS);
     line-height: 1.25em;
     overflow-x: hidden;
     overflow-y: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    width: 120rem;
+    margin-top: 11rem;
+    margin-right: 8rem;
 }
 
 .textInput {

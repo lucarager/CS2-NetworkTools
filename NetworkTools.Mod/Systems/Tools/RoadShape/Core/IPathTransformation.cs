@@ -7,7 +7,7 @@
     using Colossal.Mathematics;
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
-
+    using NetworkTools.Systems.Tools.Base;
     using Unity.Collections;
     using Unity.Mathematics;
 
@@ -74,18 +74,5 @@
             float3 pathStartPos,
             float3 pathEndPos,
             in NativeArray<EdgeState> edgeStates);
-    }
-
-    /// <summary>
-    /// Definition for a transform handle.
-    /// </summary>
-    public struct TransformHandleDefinition {
-        public int Key;
-        public float3 Position;
-        public HandleTypeFlags TypeFlags;
-        public float Value;        // For parameter handles
-        public float MinValue;
-        public float MaxValue;
-        public NT_HandleConstraints? Constraints;
     }
 }

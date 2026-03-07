@@ -1,0 +1,35 @@
+﻿namespace NetworkTools.Systems.Tools.Base {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
+    using NetworkTools.Components.Handles;
+
+    using Unity.Mathematics;
+
+    /// <summary>
+    /// Definition for a transform handle.
+    /// </summary>
+    public struct TransformHandleDefinition {
+        /// <summary>
+        /// No parent handle.
+        /// </summary>
+        public const int NoParent = -1;
+
+        public int Key;
+        public float3 Position;
+        public HandleTypeFlags TypeFlags;
+        public float Value;        // For parameter handles
+        public float MinValue;
+        public float MaxValue;
+        public NT_HandleConstraints? Constraints;
+
+        /// <summary>
+        /// Key of the parent handle. When the parent is dragged, this handle moves with it.
+        /// Set to <see cref="NoParent"/> (default) for root handles.
+        /// </summary>
+        public int ParentKey;
+    }
+}

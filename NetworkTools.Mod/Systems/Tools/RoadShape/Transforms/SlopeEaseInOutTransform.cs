@@ -3,7 +3,7 @@
     using Colossal.Mathematics;
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
-
+    using NetworkTools.Systems.Tools.Base;
     using Unity.Collections;
     using Unity.Mathematics;
 
@@ -132,7 +132,7 @@
 
             return new[] {
                 new TransformHandleDefinition {
-                    Key = TransformHandleKeys.EaseInLength,
+                    Key = HandleKeys.EaseInLength,
                     Position = easeInPos,
                     TypeFlags = HandleTypeFlags.SlopeControl | HandleTypeFlags.Parameter | HandleTypeFlags.ParameterRange,
                     Value = config.EaseInLength,
@@ -142,7 +142,7 @@
                     Constraints = NT_HandleConstraints.AxisWithBounds(easeInDirection, pathStartPos + elevation, 0f, halfPathLength),
                 },
                 new TransformHandleDefinition {
-                    Key = TransformHandleKeys.EaseOutLength,
+                    Key = HandleKeys.EaseOutLength,
                     Position = easeOutPos,
                     TypeFlags = HandleTypeFlags.SlopeControl | HandleTypeFlags.Parameter | HandleTypeFlags.ParameterRange,
                     Value = config.EaseOutLength,

@@ -9,7 +9,7 @@
     /// Constants for transform handle identification.
     /// Used in NT_HandleLink.Key to map handles to config parameters.
     /// </summary>
-    public static class TransformHandleKeys {
+    public static class HandleKeys {
         // Shape handles (100-199)
         public const int SmoothCtrl1 = 100;
         public const int SmoothCtrl2 = 101;
