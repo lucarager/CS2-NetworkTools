@@ -25,6 +25,7 @@
 	<PropertyGroup>
 		<Configurations>Debug;Release;I18N</Configurations>
 		<LangVersion>11.0</LangVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -92,6 +93,9 @@
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="UnityEngine.CoreModule">
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Unity.RenderPipelines.HighDefinition.Runtime">
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Unity.Burst">
