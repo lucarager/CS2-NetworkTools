@@ -12,6 +12,7 @@ namespace NetworkTools {
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
+
     using Colossal;
     using Colossal.IO.AssetDatabase;
     using Colossal.Json;
@@ -20,18 +21,27 @@ namespace NetworkTools {
     using Colossal.Reflection;
     using Colossal.TestFramework;
     using Colossal.UI;
+
     using Game;
     using Game.Modding;
+    using Game.Rendering;
     using Game.SceneFlow;
+
     using HarmonyLib;
+
     using NetworkTools.Systems;
+    using NetworkTools.Systems.Rendering;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Utils;
+
     using Newtonsoft.Json;
+
     using Settings;
+
     using UnityEngine;
+
     using StreamReader = System.IO.StreamReader;
 
     #endregion
@@ -147,6 +157,8 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_OverlayRenderSystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<NT_UITooltipSystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_HintTooltipSystem>(SystemUpdatePhase.UITooltip);
+            // Rendering
+            updateSystem.UpdateAt<CustomOverlayRenderSystem>(SystemUpdatePhase.Rendering);
 
             // Harmony
             InitializeHarmonyPatches();
