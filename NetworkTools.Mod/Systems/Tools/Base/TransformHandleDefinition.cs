@@ -14,9 +14,9 @@
     /// </summary>
     public struct TransformHandleDefinition {
         /// <summary>
-        /// No parent handle.
+        /// Indicates no parent handle. Matches the struct default for <see cref="ParentKey"/>.
         /// </summary>
-        public const int NoParent = -1;
+        public const int NoParent = 0;
 
         public int Key;
         public float3 Position;

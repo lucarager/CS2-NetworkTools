@@ -153,29 +153,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
 
             // Get handle definitions for current template
             var handleDefs = GetTransformHandleDefinitions(pathStartPos, pathEndPos);
-
-            foreach (var def in handleDefs) {
-                if ((def.TypeFlags & HandleTypeFlags.Parameter) != 0) {
-                    CreateParameterHandle(
-                        Entity.Null,
-                        def.Key,
-                        def.Position,
-                        def.Value,
-                        def.MinValue,
-                        def.MaxValue,
-                        def.TypeFlags,
-                        def.Constraints);
-                }
-                else if ((def.TypeFlags & HandleTypeFlags.Position) != 0) {
-                    CreatePositionHandle(
-                        Entity.Null,
-                        Entity.Null,
-                        def.Key,
-                        def.Position,
-                        def.TypeFlags,
-                        def.Constraints);
-                }
-            }
+            CreateHandlesFromDefinitions(handleDefs);
         }
 
         /// <summary>

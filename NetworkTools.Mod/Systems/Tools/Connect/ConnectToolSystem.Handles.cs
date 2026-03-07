@@ -1,6 +1,4 @@
 namespace NetworkTools.Systems.Tools.Connect {
-    using System.Collections.Generic;
-
     using Game.Net;
     using Game.Prefabs;
 
@@ -18,7 +16,6 @@ namespace NetworkTools.Systems.Tools.Connect {
     public partial class NT_ConnectToolSystem {
         /// <summary>
         /// Creates or refreshes handles based on the current mode and config.
-        /// Two-pass: creates root handles first, then children with NT_HandleParent resolved.
         /// </summary>
         private void RefreshTransformHandles() {
             DestroyAllHandles();
@@ -26,62 +23,7 @@ namespace NetworkTools.Systems.Tools.Connect {
             m_Log.Debug($"RefreshTransformHandles: Creating handles");
 
             var handleDefs = GetHandleDefinitions();
-
-            // Key → Entity mapping for resolving parent references
-            var keyToEntity = new Dictionary<int, Entity>(handleDefs.Length);
-
-            // Pass 1: create root handles (no parent)
-            foreach (var def in handleDefs) {
-                if (def.ParentKey != TransformHandleDefinition.NoParent) {
-                    continue;
-                }
-
-                var entity = CreateHandleFromDefinition(def);
-                keyToEntity[def.Key] = entity;
-            }
-
-            // Pass 2: create child handles and attach NT_HandleParent
-            foreach (var def in handleDefs) {
-                if (def.ParentKey == TransformHandleDefinition.NoParent) {
-                    continue;
-                }
-
-                var entity = CreateHandleFromDefinition(def);
-                keyToEntity[def.Key] = entity;
-
-                if (keyToEntity.TryGetValue(def.ParentKey, out var parentEntity)) {
-                    EntityManager.AddComponentData(entity, new NT_HandleParent { Parent = parentEntity });
-                }
-            }
-        }
-
-        /// <summary>
-        /// Creates a handle entity from a definition, dispatching by type flags.
-        /// </summary>
-        private Entity CreateHandleFromDefinition(TransformHandleDefinition def) {
-            var radius = def.Radius > 0f ? def.Radius : NT_Handle.PrimaryRadius;
-
-            if ((def.TypeFlags & HandleTypeFlags.Parameter) != 0) {
-                return CreateParameterHandle(
-                    Entity.Null,
-                    def.Key,
-                    def.Position,
-                    def.Value,
-                    def.MinValue,
-                    def.MaxValue,
-                    def.TypeFlags,
-                    def.Constraints,
-                    radius);
-            }
-
-            return CreatePositionHandle(
-                Entity.Null,
-                Entity.Null,
-                def.Key,
-                def.Position,
-                def.TypeFlags,
-                def.Constraints,
-                radius);
+            CreateHandlesFromDefinitions(handleDefs);
         }
 
         /// <summary>
@@ -114,18 +56,19 @@ namespace NetworkTools.Systems.Tools.Connect {
             // Update config for the dragged handle
             ApplyConfigPosition(link.Key, handlePos);
 
-            // Propagate delta to child handles
+            // Propagate delta to child handles and update their configs
             if (math.lengthsq(delta) > 0f) {
                 PropagateToChildren(handle, delta);
+                ApplyChildConfigs(handle);
             }
 
             m_UpdateNeeded = true;
         }
 
         /// <summary>
-        /// Moves all child handles of the given parent by the specified delta.
+        /// Syncs config positions for all children of the given parent handle.
         /// </summary>
-        private void PropagateToChildren(Entity parentHandle, float3 delta) {
+        private void ApplyChildConfigs(Entity parentHandle) {
             for (var i = 0; i < m_Handles.Length; i++) {
                 var child = m_Handles[i];
                 if (!EntityManager.HasComponent<NT_HandleParent>(child)) {
@@ -137,15 +80,9 @@ namespace NetworkTools.Systems.Tools.Connect {
                     continue;
                 }
 
-                // Move child position
-                var childPos = EntityManager.GetComponentData<NT_HandlePosition>(child);
-                var newChildPos = childPos.Position + delta;
-                childPos.Position = newChildPos;
-                EntityManager.SetComponentData(child, childPos);
-
-                // Update config for the child
                 var childLink = EntityManager.GetComponentData<NT_HandleLink>(child);
-                ApplyConfigPosition(childLink.Key, newChildPos);
+                var childPos = EntityManager.GetComponentData<NT_HandlePosition>(child).Position;
+                ApplyConfigPosition(childLink.Key, childPos);
             }
         }
 

@@ -1,8 +1,12 @@
 namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
+    using System.Collections.Generic;
+
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Tools.Base;
+
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Mathematics;
@@ -274,6 +278,95 @@ namespace NetworkTools.Systems.Tools {
 
             m_Handles.Add(handle);
             return handle;
+        }
+
+        /// <summary>
+        ///     Creates handle entities from an array of definitions.
+        ///     Two-pass: roots first (ParentKey == NoParent), then children with NT_HandleParent resolved.
+        /// </summary>
+        /// <param name="definitions">Handle definitions describing position, type, and parent relationships.</param>
+        protected void CreateHandlesFromDefinitions(TransformHandleDefinition[] definitions) {
+            if (definitions == null || definitions.Length == 0) return;
+
+            // Key → Entity mapping for resolving parent references
+            var keyToEntity = new Dictionary<int, Entity>(definitions.Length);
+
+            // Pass 1: create root handles (no parent)
+            foreach (var def in definitions) {
+                if (def.ParentKey != TransformHandleDefinition.NoParent) {
+                    continue;
+                }
+
+                var entity = CreateHandleFromDefinition(def);
+                keyToEntity[def.Key] = entity;
+            }
+
+            // Pass 2: create child handles and attach NT_HandleParent
+            foreach (var def in definitions) {
+                if (def.ParentKey == TransformHandleDefinition.NoParent) {
+                    continue;
+                }
+
+                var entity = CreateHandleFromDefinition(def);
+                keyToEntity[def.Key] = entity;
+
+                if (keyToEntity.TryGetValue(def.ParentKey, out var parentEntity)) {
+                    EntityManager.AddComponentData(entity, new NT_HandleParent { Parent = parentEntity });
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Creates a single handle entity from a definition, dispatching by type flags.
+        /// </summary>
+        private Entity CreateHandleFromDefinition(TransformHandleDefinition def) {
+            var radius = def.Radius > 0f ? def.Radius : NT_Handle.PrimaryRadius;
+
+            if ((def.TypeFlags & HandleTypeFlags.Parameter) != 0) {
+                return CreateParameterHandle(
+                    Entity.Null,
+                    def.Key,
+                    def.Position,
+                    def.Value,
+                    def.MinValue,
+                    def.MaxValue,
+                    def.TypeFlags,
+                    def.Constraints,
+                    radius);
+            }
+
+            return CreatePositionHandle(
+                Entity.Null,
+                Entity.Null,
+                def.Key,
+                def.Position,
+                def.TypeFlags,
+                def.Constraints,
+                radius);
+        }
+
+        /// <summary>
+        ///     Moves all child handles of the given parent by the specified delta.
+        ///     Updates the position of each child that has an NT_HandleParent pointing to the parent.
+        /// </summary>
+        /// <param name="parentHandle">The parent handle entity whose children should move.</param>
+        /// <param name="delta">The world-space offset to apply to each child.</param>
+        protected void PropagateToChildren(Entity parentHandle, float3 delta) {
+            for (var i = 0; i < m_Handles.Length; i++) {
+                var child = m_Handles[i];
+                if (!EntityManager.HasComponent<NT_HandleParent>(child)) {
+                    continue;
+                }
+
+                var parentComponent = EntityManager.GetComponentData<NT_HandleParent>(child);
+                if (parentComponent.Parent != parentHandle) {
+                    continue;
+                }
+
+                var childPos = EntityManager.GetComponentData<NT_HandlePosition>(child);
+                childPos.Position += delta;
+                EntityManager.SetComponentData(child, childPos);
+            }
         }
 
         #endregion
