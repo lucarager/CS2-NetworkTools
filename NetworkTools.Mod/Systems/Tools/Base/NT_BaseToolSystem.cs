@@ -74,6 +74,8 @@ namespace NetworkTools.Systems.Tools {
 
         protected ComponentTypeSet HighlightedComponentTypeSet = new (typeof(NT_Highlighted), typeof(Highlighted));
 
+        protected ComponentTypeSet AllNtComponentsTypeSet = new (typeof(NT_Eligible), typeof(NT_Highlighted), typeof(NT_Selected), typeof(NT_SelectedFirst), typeof(NT_SelectedLast));
+
         /// <summary>
         ///     Apply action (usually left click)
         /// </summary>
@@ -105,14 +107,15 @@ namespace NetworkTools.Systems.Tools {
 
         protected NativeReference<Entity> m_LastRaycastEntity;
 
-        internal PrefixedLogger m_Log;
-        protected EntityQuery m_NodesWithEligibleQuery;
-        protected EntityQuery m_NodesWithHighlightedQuery;
-        protected EntityQuery m_NodesWithoutEligibleQuery;
-        protected EntityQuery m_UnselectedNodesWithoutEligibleQuery;
-        protected EntityQuery m_NodesWithSelectedFirstQuery;
-        protected EntityQuery m_NodesWithSelectedLastQuery;
-        protected EntityQuery m_NodesWithSelectedQuery;
+        internal  PrefixedLogger      m_Log;
+        protected EntityQuery         m_NodesWithEligibleQuery;
+        protected EntityQuery         m_NodesWithHighlightedQuery;
+        protected EntityQuery         m_NodesWithoutEligibleQuery;
+        protected EntityQuery         m_UnselectedNodesWithoutEligibleQuery;
+        protected EntityQuery         m_NodesWithSelectedFirstQuery;
+        protected EntityQuery         m_NodesWithSelectedLastQuery;
+        protected EntityQuery         m_NodesWithSelectedQuery;
+        protected EntityQuery         m_AllNtComponentsQuery;
         protected OverlayRenderSystem m_OverlayRenderSystem;
 
         /// <summary>
@@ -230,6 +233,9 @@ namespace NetworkTools.Systems.Tools {
                 .Build();
             m_NodesWithSelectedQuery = SystemAPI.QueryBuilder()
                 .WithAll<Node, NT_Selected>()
+                .Build();
+            m_AllNtComponentsQuery = SystemAPI.QueryBuilder()
+                .WithAny<NT_Eligible, NT_Highlighted, NT_Selected, NT_SelectedFirst, NT_SelectedLast>()
                 .Build();
             m_NodesWithSelectedFirstQuery = SystemAPI.QueryBuilder()
                 .WithAll<Node, NT_SelectedFirst>()

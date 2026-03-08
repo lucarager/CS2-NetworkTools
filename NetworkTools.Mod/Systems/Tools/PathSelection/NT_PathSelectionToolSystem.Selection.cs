@@ -111,7 +111,7 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         /// <returns>True if a node was removed and selection changed.</returns>
         protected bool HandleRemoveNode() {
-            var lastNode = m_SelectedNodes.Length == 0 ? m_SelectedNodes[^1] : Entity.Null;
+            var lastNode = m_SelectedNodes.Length > 0 ? m_SelectedNodes[^1] : Entity.Null;
 
             m_Log.Debug($"[{CurrentSelectionState}] Removing node: {lastNode}");
 
@@ -274,8 +274,8 @@ namespace NetworkTools.Systems.Tools {
         ///     Resets to NoSelection state. Makes all nodes eligible.
         ///     Called when starting the tool or clearing selection.
         /// </summary>
-        protected void ResetToNoSelection() {
-            m_Log.Debug("ResetToNoSelection()");
+        protected void ResetToNoSelection(bool resetEligibleNodes = true) {
+            m_Log.Debug($"ResetToNoSelection(resetEligibleNodes= {resetEligibleNodes})");
 
             // Clear caches
             m_SelectedNodes.Clear();
@@ -284,25 +284,26 @@ namespace NetworkTools.Systems.Tools {
             m_CurrentPathEdges.Clear();
 
             // Add NT_Eligible to ALL nodes 
-            EntityManager.AddComponent<NT_Eligible>(m_NodesWithoutEligibleQuery);
+            if (resetEligibleNodes) {
+                EntityManager.AddComponent<NT_Eligible>(m_NodesWithoutEligibleQuery);
+            }
         }
 
         /// <summary>
         ///     Clears all selection state and resets to idle.
         ///     Called when tool stops or user explicitly resets.
         /// </summary>
-        protected void ClearSelectionState() {
-            // Batch remove all marker components using cached queries
-            EntityManager.RemoveComponent<NT_Selected>(m_NodesWithSelectedQuery);
-            EntityManager.RemoveComponent<NT_Selected>(m_EdgesWithSelectedQuery);
-            EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
-            EntityManager.RemoveComponent<NT_SelectedFirst>(m_NodesWithSelectedFirstQuery);
-            EntityManager.RemoveComponent<NT_SelectedLast>(m_NodesWithSelectedLastQuery);
+        protected void ClearSelectionState(bool resetEligibleNodes = true) {
+            m_Log.Debug("ClearSelectionState()");
 
+            // Batch remove all NT components using a batch operation
+            EntityManager.RemoveComponent(m_AllNtComponentsQuery, AllNtComponentsTypeSet);
+
+            // Explicitly remove highlights via batch update
             ClearAllHighlights();
 
             // Reset state
-            ResetToNoSelection();
+            ResetToNoSelection(resetEligibleNodes);
         }
 
         #endregion

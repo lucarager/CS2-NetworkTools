@@ -14,9 +14,9 @@ namespace NetworkTools.Systems.Tools {
     /// </summary>
     public abstract partial class NT_PathSelectionToolSystem {
         /// <summary>
-        ///     Finds all nodes eligible for selection from a starting node.
+        ///     Finds all nodes eligible for selection reachable from a starting node.
         ///     Traverses in all directions until hitting intersections (>2 edges) or road ends.
-        ///     The start node itself is always included, even if it's an intersection.
+        ///     The start node itself is excluded from the results.
         ///     Skips nodes that are already in the current path to avoid backing up.
         /// </summary>
         /// <param name="startNode">The node to start traversal from.</param>
@@ -27,10 +27,8 @@ namespace NetworkTools.Systems.Tools {
             var toVisit = new NativeQueue<Entity>(Allocator.Temp);
             var visited = new NativeHashSet<Entity>(64, Allocator.Temp);
 
-            // Start node is always eligible
             toVisit.Enqueue(startNode);
             visited.Add(startNode);
-            outEligibleNodes.Add(startNode);
 
             while (toVisit.TryDequeue(out var current)) {
                 // Get connected edges
