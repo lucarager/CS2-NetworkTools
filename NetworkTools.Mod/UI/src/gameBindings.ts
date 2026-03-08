@@ -79,15 +79,15 @@ export const GAME_BINDINGS = {
     PANEL_OPEN: new TwoWayBinding<boolean>("PANEL_OPEN", false),
     SHAPE_CONFIG: new TwoWayBinding<ShapeConfigData>("SHAPE_CONFIG", DEFAULT_SHAPE_CONFIG),
     CONNECT_MODE: new TwoWayBinding<number>("CONNECT_MODE", ConnectMode.None),
-    SELECTED_NET_PREFAB: new TwoWayBinding<NetPrefabData>("SELECTED_NET_PREFAB", EMPTY_NET_PREFAB_DATA),
+    SELECTED_NET_PREFAB: new TwoWayBinding<NetPrefabData>(
+        "SELECTED_NET_PREFAB",
+        EMPTY_NET_PREFAB_DATA,
+    ),
 };
 
 export const GAME_TRIGGERS = {
     SELECT_TOOL: (tool: string) => {
         trigger(mod.id, "TRIGGER:SELECT_TOOL", tool);
-    },
-    APPLY_SLOPE: () => {
-        trigger(mod.id, "TRIGGER:APPLY_SLOPE");
     },
     APPLY_TRANSFORM: () => {
         trigger(mod.id, "TRIGGER:APPLY_TRANSFORM");

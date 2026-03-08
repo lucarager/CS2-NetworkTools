@@ -79,7 +79,7 @@
             m_ConnectModeBinding = CreateBinding("CONNECT_MODE", (int)ConnectMode.None, HandleUpdateConnectMode);
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
-            CreateTrigger("APPLY_SLOPE", HandleApplySlope);
+            CreateTrigger("APPLY_TRANSFORM", HandleApplyTransform);
 
             // Actions
             m_ToggleToolPanelAction = NetworkToolsMod.Instance.Settings.GetAction(NT_Settings.ToggleToolPanelStr);
@@ -257,7 +257,7 @@
             m_ConnectModeBinding.Value        = mode;
         }
 
-        private void HandleApplySlope() {
+        private void HandleApplyTransform() {
             m_NtRoadShapeToolSystem.RequestApply();
         }
 

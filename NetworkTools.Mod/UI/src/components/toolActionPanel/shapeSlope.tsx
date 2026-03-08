@@ -162,7 +162,7 @@ export const ShapeSlopeControls: React.FC = () => {
                             variant="primary"
                             className={styles.applyButton}
                             disabled={selectedEntitiesBinding.length < 2 || !hasTransform}
-                            onSelect={() => GAME_TRIGGERS.APPLY_SLOPE()}>
+                            onSelect={() => GAME_TRIGGERS.APPLY_TRANSFORM()}>
                             Apply Slope
                         </Button>
                     )}
