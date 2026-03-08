@@ -1,4 +1,4 @@
-﻿namespace NetworkTools.Systems.Rendering {
+namespace NetworkTools.Systems.Rendering {
     using System;
     using System.Collections.Generic;
     using Colossal.Collections;
@@ -32,7 +32,9 @@
         }
 
         private readonly ComputeBuffer[]               m_CustomMeshBuffer = new ComputeBuffer[3];
-        private readonly NativeList<CustomMeshdData>[] m_CustomMeshData   = new NativeList<CustomMeshdData>[3];
+        private readonly NativeList<CustomMeshData>[] m_CustomMeshData   = new NativeList<CustomMeshData>[3];
+
+        private readonly Mesh[] m_CustomMeshes = new Mesh[3];
 
         private readonly int[] m_CustomMeshInstanceCount = new int[3];
 
@@ -55,14 +57,9 @@
 
         private int m_CurveBufferID;
 
-        private int m_CustomMeshBufferID;
+        private int                         m_CustomMeshBufferID;
+        private NativeList<CustomMeshData> m_CustomMeshJobData;
 
-        private readonly Mesh[]                      m_customMeshes = new Mesh[3];
-        private          NativeList<CustomMeshdData> m_CustomMeshJobData;
-
-        private int m_FaceDilateID;
-
-        private int          m_GradientScaleID;
         private PrefabSystem m_PrefabSystem;
 
         private ComputeBuffer         m_ProjectedBuffer;
@@ -75,25 +72,91 @@
         private Mesh            m_QuadMesh;
         private RenderingSystem m_RenderingSystem;
 
-        private int           m_ScaleRatioAID;
         private EntityQuery   m_SettingsQuery;
         private TerrainSystem m_TerrainSystem;
-
-        private Material m_textMaterial;
 
         protected override void OnCreate() {
             base.OnCreate();
             m_RenderingSystem = World.GetOrCreateSystemManaged<RenderingSystem>();
-            m_TerrainSystem   = World.GetOrCreateSystemManaged<TerrainSystem>();
-            m_PrefabSystem    = World.GetOrCreateSystemManaged<PrefabSystem>();
-
-            // Register with render pipeline
+            m_TerrainSystem = World.GetOrCreateSystemManaged<TerrainSystem>();
+            m_PrefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
+            m_SettingsQuery = GetEntityQuery(ComponentType.ReadOnly<OverlayConfigurationData>());
+            m_CurveBufferID = Shader.PropertyToID("colossal_OverlayCurveBuffer");
+            m_CustomMeshBufferID = Shader.PropertyToID("colossal_OverlayCustomMeshBuffer");
             RenderPipelineManager.beginContextRendering += Render;
         }
 
         protected override void OnDestroy() {
-            // Unregister from render pipeline
             RenderPipelineManager.beginContextRendering -= Render;
+            if (m_BoxMesh != null) {
+                UnityEngine.Object.Destroy(m_BoxMesh);
+            }
+
+            var customMeshes = m_CustomMeshes;
+            for (var i = 0; i < customMeshes.Length; i++) {
+                if (customMeshes[i] != null) {
+                    UnityEngine.Object.Destroy(customMeshes[i]);
+                }
+            }
+
+            if (m_QuadMesh != null) {
+                UnityEngine.Object.Destroy(m_QuadMesh);
+            }
+
+            if (m_ProjectedMaterial != null) {
+                UnityEngine.Object.Destroy(m_ProjectedMaterial);
+            }
+
+            if (m_AbsoluteMaterial != null) {
+                UnityEngine.Object.Destroy(m_AbsoluteMaterial);
+            }
+
+            foreach (var material in m_CustomMeshMaterial) {
+                if (material != null) {
+                    UnityEngine.Object.Destroy(material);
+                }
+            }
+
+            if (m_ArgsBuffer != null) {
+                m_ArgsBuffer.Release();
+            }
+
+            if (m_ProjectedBuffer != null) {
+                m_ProjectedBuffer.Release();
+            }
+
+            if (m_AbsoluteBuffer != null) {
+                m_AbsoluteBuffer.Release();
+            }
+
+            foreach (var computeBuffer in m_CustomMeshBuffer) {
+                if (computeBuffer != null) {
+                    computeBuffer.Release();
+                }
+            }
+
+            if (m_ProjectedData.IsCreated) {
+                m_ProjectedData.Dispose();
+            }
+
+            if (m_AbsoluteData.IsCreated) {
+                m_AbsoluteData.Dispose();
+            }
+
+            if (m_CustomMeshJobData.IsCreated) {
+                m_CustomMeshJobData.Dispose();
+            }
+
+            foreach (var nativeList in m_CustomMeshData) {
+                if (nativeList.IsCreated) {
+                    nativeList.Dispose();
+                }
+            }
+
+            if (m_BoundsData.IsCreated) {
+                m_BoundsData.Dispose();
+            }
+
             base.OnDestroy();
         }
 
@@ -148,8 +211,8 @@
                 m_AbsoluteData.Clear();
             }
 
-            foreach (var customMeshdData in m_CustomMeshJobData) {
-                m_CustomMeshData[customMeshdData.m_CustomMeshType].Add(in customMeshdData);
+            foreach (var CustomMeshData in m_CustomMeshJobData) {
+                m_CustomMeshData[CustomMeshData.m_CustomMeshType].Add(in CustomMeshData);
             }
 
             m_CustomMeshJobData.Clear();
@@ -238,16 +301,18 @@
 
                     for (var j = 0; j < 3; j++) {
                         if (m_CustomMeshInstanceCount[j] != 0) {
-                            GetCustomMeshMesh(ref m_customMeshes[j], (OverlayRenderSystem.CustomMeshType)j);
+                            GetCustomMeshMesh(ref m_CustomMeshes[j], (CustomMeshType)j);
                             GetSolidObjectMaterial(ref m_CustomMeshMaterial[j]);
                             array[j] = m_ArgsArray.Count;
-                            m_ArgsArray.Add(m_customMeshes[j].GetIndexCount(0));
+                            m_ArgsArray.Add(m_CustomMeshes[j].GetIndexCount(0));
                             m_ArgsArray.Add((uint)m_CustomMeshInstanceCount[j]);
-                            m_ArgsArray.Add(m_customMeshes[j].GetIndexStart(0));
-                            m_ArgsArray.Add(m_customMeshes[j].GetBaseVertex(0));
+                            m_ArgsArray.Add(m_CustomMeshes[j].GetIndexStart(0));
+                            m_ArgsArray.Add(m_CustomMeshes[j].GetBaseVertex(0));
                             m_ArgsArray.Add(0U);
                         }
                     }
+
+                    m_ArgsBuffer.SetData(m_ArgsArray, 0, 0, m_ArgsArray.Count);
 
                     foreach (var camera in cameras) {
                         if (camera.cameraType == CameraType.Game || camera.cameraType == CameraType.SceneView) {
@@ -281,7 +346,7 @@
 
                             for (var k = 0; k < 3; k++) {
                                 if (m_CustomMeshInstanceCount[k] != 0) {
-                                    Graphics.DrawMeshInstancedIndirect(m_customMeshes[k],
+                                    Graphics.DrawMeshInstancedIndirect(m_CustomMeshes[k],
                                                                        0,
                                                                        m_CustomMeshMaterial[k],
                                                                        bounds,
@@ -296,8 +361,6 @@
                             }
                         }
                     }
-
-                    m_ArgsBuffer.SetData(m_ArgsArray, 0, 0, m_ArgsArray.Count);
                 }
             }
         }
@@ -318,13 +381,13 @@
             }
 
             if (!m_CustomMeshJobData.IsCreated) {
-                m_CustomMeshJobData = new NativeList<CustomMeshdData>(Allocator.Persistent);
+                m_CustomMeshJobData = new NativeList<CustomMeshData>(Allocator.Persistent);
             }
 
             for (var i = 0; i < 3; i++) {
                 if (!m_CustomMeshData[i].IsCreated) {
                     m_CustomMeshData[i] =
-                        new NativeList<CustomMeshdData>(Allocator.Persistent);
+                        new NativeList<CustomMeshData>(Allocator.Persistent);
                 }
             }
 
@@ -345,13 +408,13 @@
             m_BufferWriters = JobHandle.CombineDependencies(m_BufferWriters, handle);
         }
 
-        private void GetCustomMeshMesh(ref Mesh mesh, OverlayRenderSystem.CustomMeshType meshType) {
+        private void GetCustomMeshMesh(ref Mesh mesh, CustomMeshType meshType) {
             if (mesh != null) {
                 return;
             }
 
             switch (meshType) {
-                case OverlayRenderSystem.CustomMeshType.Cylinder:
+                case CustomMeshType.Cylinder:
                 {
                     var num = 64;
                     mesh = new Mesh();
@@ -379,10 +442,10 @@
                     mesh.RecalculateNormals();
                     return;
                 }
-                case OverlayRenderSystem.CustomMeshType.Arrow:
+                case CustomMeshType.Arrow:
                     GetArrowMesh(ref mesh);
                     return;
-                case OverlayRenderSystem.CustomMeshType.Plane:
+                case CustomMeshType.Plane:
                 {
                     mesh = new Mesh();
                     var array  = new Vector3[4];
@@ -435,7 +498,7 @@
             mesh.RecalculateNormals();
         }
 
-        private void GetMesh(ref Mesh mesh, bool box, bool cameraFacing = true) {
+        private void GetMesh(ref Mesh mesh, bool box, bool forceUpward = true) {
             if (mesh == null) {
                 mesh      = new Mesh();
                 mesh.name = "Overlay";
@@ -499,7 +562,7 @@
             }
 
             if (buffer == null) {
-                buffer      = new ComputeBuffer(math.max(64, count), sizeof(OverlayRenderSystem.CurveData));
+                buffer      = new ComputeBuffer(math.max(64, count), sizeof(CurveData));
                 buffer.name = "Overlay curve buffer";
             }
         }
@@ -512,7 +575,7 @@
             }
 
             if (buffer == null) {
-                buffer      = new ComputeBuffer(math.max(64, count), sizeof(OverlayRenderSystem.CustomMeshdData));
+                buffer      = new ComputeBuffer(math.max(64, count), sizeof(CustomMeshData));
                 buffer.name = "Overlay cylinder buffer";
             }
         }
@@ -542,7 +605,7 @@
             public float m_DepthFadeStyle;
         }
 
-        public struct CustomMeshdData {
+        public struct CustomMeshData {
             public Matrix4x4 m_Matrix;
 
             public Matrix4x4 m_InverseMatrix;
@@ -564,7 +627,7 @@
         public struct Buffer {
             public Buffer(NativeList<CurveData>       projectedCurves,
                           NativeList<CurveData>       absoluteCurves,
-                          NativeList<CustomMeshdData> custMeshesData,
+                          NativeList<CustomMeshData> custMeshesData,
                           NativeValue<BoundsData>     bounds,
                           float                       positionY,
                           float                       scaleY) {
@@ -593,13 +656,13 @@
 
             public void DrawCustomMesh(Color          fillColor, float3     position, float height, float width,
                                        CustomMeshType meshType,  Quaternion rot) {
-                CustomMeshdData customMeshdData;
-                customMeshdData.m_Size           = new float2(height, width);
-                customMeshdData.m_FillColor      = fillColor.linear;
-                customMeshdData.m_Matrix         = Matrix4x4.TRS(position, rot, new float3(width, height, width));
-                customMeshdData.m_InverseMatrix  = customMeshdData.m_Matrix.inverse;
-                customMeshdData.m_CustomMeshType = (int)meshType;
-                m_CustomMeshes.Add(in customMeshdData);
+                CustomMeshData CustomMeshData;
+                CustomMeshData.m_Size           = new float2(height, width);
+                CustomMeshData.m_FillColor      = fillColor.linear;
+                CustomMeshData.m_Matrix         = Matrix4x4.TRS(position, rot, new float3(width, height, width));
+                CustomMeshData.m_InverseMatrix  = CustomMeshData.m_Matrix.inverse;
+                CustomMeshData.m_CustomMeshType = (int)meshType;
+                m_CustomMeshes.Add(in CustomMeshData);
             }
 
             private void DrawCircleImpl(Color      outlineColor, Color  fillColor, float  outlineWidth,
@@ -634,7 +697,7 @@
                 m_Bounds.value      =  value;
             }
 
-            public void DrawLine(Color color, Line3.Segment line, float width, bool cameraFacing = false) {
+            public void DrawLine(Color color, Line3.Segment line, float width, bool forceUpward = false) {
                 var num = MathUtils.Length(line.xz);
                 DrawCurveImpl(color,
                               color,
@@ -646,7 +709,7 @@
                               0f,
                               default,
                               num,
-                              cameraFacing);
+                              forceUpward);
             }
 
             public void DrawLine(Color      outlineColor, Color         fillColor, float outlineWidth,
@@ -723,13 +786,14 @@
                               MathUtils.Length(line.xz));
             }
 
-            public void DrawCurve(Color color, Bezier4x3 curve, float width) {
+            public void DrawCurve(Color color, Bezier4x3 curve, float width, bool forceUpward = false) {
                 var num = MathUtils.Length(curve.xz);
-                DrawCurveImpl(color, color, 0f, 0, curve, width, num + width * 2f, 0f, default, num);
+                DrawCurveImpl(color, color, 0f, 0, curve, width, num + width * 2f, 0f, default, num, forceUpward);
             }
 
             public void DrawCurve(Color      outlineColor, Color     fillColor, float outlineWidth,
-                                  StyleFlags styleFlags,   Bezier4x3 curve,     float width) {
+                                  StyleFlags styleFlags,   Bezier4x3 curve,     float width,
+                                  bool       forceUpward = false) {
                 var num = MathUtils.Length(curve.xz);
                 DrawCurveImpl(outlineColor,
                               fillColor,
@@ -740,17 +804,19 @@
                               num + width * 2f,
                               0f,
                               default,
-                              num);
+                              num,
+                              forceUpward);
             }
 
-            public void DrawCurve(Color color, Bezier4x3 curve, float width, float2 roundness) {
+            public void DrawCurve(Color color, Bezier4x3 curve, float width, float2 roundness,
+                                  bool  forceUpward = false) {
                 var num = MathUtils.Length(curve.xz);
-                DrawCurveImpl(color, color, 0f, 0, curve, width, num + width * 2f, 0f, roundness, num);
+                DrawCurveImpl(color, color, 0f, 0, curve, width, num + width * 2f, 0f, roundness, num, forceUpward);
             }
 
             public void DrawCurve(Color      outlineColor, Color     fillColor, float outlineWidth,
                                   StyleFlags styleFlags,   Bezier4x3 curve,     float width,
-                                  float2     roundness) {
+                                  float2     roundness,    bool      forceUpward = false) {
                 var num = MathUtils.Length(curve.xz);
                 DrawCurveImpl(outlineColor,
                               fillColor,
@@ -761,10 +827,12 @@
                               num + width * 2f,
                               0f,
                               roundness,
-                              num);
+                              num,
+                              forceUpward);
             }
 
-            public void DrawDashedCurve(Color color, Bezier4x3 curve, float width, float dashLength, float gapLength) {
+            public void DrawDashedCurve(Color color,     Bezier4x3 curve, float width, float dashLength,
+                                        float gapLength, bool      forceUpward = false) {
                 DrawCurveImpl(color,
                               color,
                               0f,
@@ -774,12 +842,13 @@
                               dashLength,
                               gapLength,
                               default,
-                              MathUtils.Length(curve.xz));
+                              MathUtils.Length(curve.xz),
+                              forceUpward);
             }
 
             public void DrawDashedCurve(Color      outlineColor, Color     fillColor, float outlineWidth,
                                         StyleFlags styleFlags,   Bezier4x3 curve,     float width,
-                                        float      dashLength,   float     gapLength) {
+                                        float      dashLength,   float     gapLength, bool  forceUpward = false) {
                 DrawCurveImpl(outlineColor,
                               fillColor,
                               outlineWidth,
@@ -789,13 +858,14 @@
                               dashLength,
                               gapLength,
                               default,
-                              MathUtils.Length(curve.xz));
+                              MathUtils.Length(curve.xz),
+                              forceUpward);
             }
 
             private void DrawCurveImpl(Color      outlineColor, Color     fillColor, float  outlineWidth,
                                        StyleFlags styleFlags,   Bezier4x3 curve,     float  width,
                                        float      dashLength,   float     gapLength, float2 roundness, float length,
-                                       bool       cameraFacing = false) {
+                                       bool       forceUpward = false) {
                 if (length < 0.01f) {
                     return;
                 }
@@ -816,7 +886,7 @@
                     curveData.m_InverseMatrix = curveData.m_Matrix.inverse;
                     m_ProjectedCurves.Add(in curveData);
                 } else {
-                    curveData.m_Matrix        = FitQuad(curve, width, out bounds, cameraFacing);
+                    curveData.m_Matrix        = FitQuad(curve, width, out bounds, forceUpward);
                     curveData.m_InverseMatrix = curveData.m_Matrix.inverse;
                     m_AbsoluteCurves.Add(in curveData);
                 }
@@ -880,45 +950,68 @@
                 return Matrix4x4.TRS(@float, quat, float2);
             }
 
-            private Matrix4x4 FitQuad(Bezier4x3 curve, float extend, out Bounds3 bounds, bool cameraFacing = false) {
+            private Matrix4x4 FitQuad(Bezier4x3 curve, float extend, out Bounds3 bounds, bool forceUpward = false) {
                 bounds        = MathUtils.Bounds(curve);
                 bounds.min.xz = bounds.min.xz - extend;
                 bounds.max.xz = bounds.max.xz + extend;
-                var    @float = MathUtils.Center(bounds);
-                var    quat   = quaternion.identity;
-                float3 float2 = 0f;
-                float2.xz = MathUtils.Extents(bounds.xz);
-                float2.y  = 1f;
-                var float3 = curve.d - curve.a;
-                var num    = math.length(float3);
-                if (num > 0.1f) {
-                    float3 /= num;
-                    var float4 = math.cross(float3, curve.b - curve.a);
-                    var float5 = math.cross(float3, curve.d - curve.c);
-                    float4 = math.select(float4, -float4, float4.y < 0f);
-                    float5 = math.select(float5, -float5, float5.y < 0f);
-                    var float6 = float4 + float5;
-                    var num2   = math.length(float6);
-                    float6 = math.lerp(new float3(0f, 1f, 0f), float6, math.saturate(num2 / num * 10f));
-                    float6 = math.normalize(float6);
-                    var float7 = math.cross(float6, float3);
-                    if (MathUtils.TryNormalize(ref float7)) {
-                        var float8 = curve.b - curve.a;
-                        var float9 = curve.c - curve.a;
-                        var float10 = curve.d - curve.a;
-                        var float11 = new float2(math.dot(float8, float7), math.dot(float8, float3));
-                        var float12 = new float2(math.dot(float9, float7), math.dot(float9, float3));
-                        var float13 = new float2(math.dot(float10, float7), math.dot(float10, float3));
-                        var float14 = math.min(math.min(0f, float11), math.min(float12, float13));
-                        var float15 = math.max(math.max(0f, float11), math.max(float12, float13));
-                        var float16 = math.lerp(float14, float15, 0.5f);
-                        quat      = quaternion.LookRotation(float3, float6);
-                        @float    = curve.a + math.rotate(quat, new float3(float16.x, 0f, float16.y));
-                        float2.xz = (float15 - float14) * 0.5f + extend;
+                var    position = MathUtils.Center(bounds);
+                var    rotation = quaternion.identity;
+                float3 scale   = 0f;
+                scale.xz = MathUtils.Extents(bounds.xz);
+                scale.y  = 1f;
+                if (forceUpward) {
+                    var forward    = curve.d - curve.a;
+                    var forwardLen = math.length(forward);
+                    if (forwardLen > 0.1f) {
+                        forward /= forwardLen;
+                        var right = math.cross(new float3(0f, 1f, 0f), forward);
+                        if (MathUtils.TryNormalize(ref right)) {
+                            var relB      = curve.b - curve.a;
+                            var relC      = curve.c - curve.a;
+                            var relD      = curve.d - curve.a;
+                            var projB     = new float2(math.dot(relB, right), math.dot(relB, forward));
+                            var projC     = new float2(math.dot(relC, right), math.dot(relC, forward));
+                            var projD     = new float2(math.dot(relD, right), math.dot(relD, forward));
+                            var boundsMin = math.min(math.min(0f, projB), math.min(projC, projD));
+                            var boundsMax = math.max(math.max(0f, projB), math.max(projC, projD));
+                            var center    = math.lerp(boundsMin, boundsMax, 0.5f);
+                            rotation      = quaternion.LookRotation(forward, new float3(0f, 1f, 0f));
+                            position      = curve.a + math.rotate(rotation, new float3(center.x, 0f, center.y));
+                            scale.xz      = (boundsMax - boundsMin) * 0.5f + extend;
+                        }
+                    }
+                } else {
+                    var forward    = curve.d - curve.a;
+                    var forwardLen = math.length(forward);
+                    if (forwardLen > 0.1f) {
+                        forward /= forwardLen;
+                        var startCross = math.cross(forward, curve.b - curve.a);
+                        var endCross   = math.cross(forward, curve.d - curve.c);
+                        startCross = math.select(startCross, -startCross, startCross.y < 0f);
+                        endCross   = math.select(endCross,   -endCross,   endCross.y   < 0f);
+                        var combinedNormal = startCross + endCross;
+                        var normalLen      = math.length(combinedNormal);
+                        combinedNormal = math.lerp(new float3(0f, 1f, 0f), combinedNormal, math.saturate(normalLen / forwardLen * 10f));
+                        combinedNormal = math.normalize(combinedNormal);
+                        var right = math.cross(combinedNormal, forward);
+                        if (MathUtils.TryNormalize(ref right)) {
+                            var relB      = curve.b - curve.a;
+                            var relC      = curve.c - curve.a;
+                            var relD      = curve.d - curve.a;
+                            var projB     = new float2(math.dot(relB, right), math.dot(relB, forward));
+                            var projC     = new float2(math.dot(relC, right), math.dot(relC, forward));
+                            var projD     = new float2(math.dot(relD, right), math.dot(relD, forward));
+                            var boundsMin = math.min(math.min(0f, projB), math.min(projC, projD));
+                            var boundsMax = math.max(math.max(0f, projB), math.max(projC, projD));
+                            var center    = math.lerp(boundsMin, boundsMax, 0.5f);
+                            rotation      = quaternion.LookRotation(forward, combinedNormal);
+                            position      = curve.a + math.rotate(rotation, new float3(center.x, 0f, center.y));
+                            scale.xz      = (boundsMax - boundsMin) * 0.5f + extend;
+                        }
                     }
                 }
 
-                return Matrix4x4.TRS(@float, quat, float2);
+                return Matrix4x4.TRS(position, rotation, scale);
             }
 
             private static float4x4 BuildCurveMatrix(Bezier4x3 curve, float length) {
@@ -938,7 +1031,7 @@
 
             private NativeList<CurveData> m_AbsoluteCurves;
 
-            private NativeList<CustomMeshdData> m_CustomMeshes;
+            private NativeList<CustomMeshData> m_CustomMeshes;
 
             private NativeValue<BoundsData> m_Bounds;
 

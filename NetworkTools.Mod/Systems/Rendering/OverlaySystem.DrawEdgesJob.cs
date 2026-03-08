@@ -71,7 +71,7 @@
                     }
 
                     // Draw the curve bezier
-                    m_Buffer.DrawCurve(color, curve.m_Bezier, width);
+                    m_Buffer.DrawCurve(color, curve.m_Bezier, width, true);
 
                     // Draw all curves in the EdgeGeometry
                     //m_Buffer.DrawCurve(color, edgeGeometry.m_Start.m_Left, width);
