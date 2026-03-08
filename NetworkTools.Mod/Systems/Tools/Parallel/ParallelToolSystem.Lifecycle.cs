@@ -7,7 +7,10 @@ namespace NetworkTools.Systems.Tools.Parallel {
     using Game.Net;
     using Game.Prefabs;
     using Game.Tools;
+
     using NetworkTools.Components;
+    using NetworkTools.Components.Tools;
+
     using Unity.Entities;
 
     /// <summary>
@@ -16,9 +19,12 @@ namespace NetworkTools.Systems.Tools.Parallel {
     public partial class NT_ParallelToolSystem {
         /// <inheritdoc />
         public override bool TrySetPrefab(PrefabBase prefab) {
-            // Accept any NT_ToolPrefab with NT_ParallelRoad component
-            // For now, just accept any NT_ToolPrefab for demonstration
-            if (prefab is not NT_ToolPrefab) {
+            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_Parallel>(prefab)}");
+            var validRequest = prefab is NT_ToolPrefab &&
+                               m_PrefabSystem.HasComponent<NT_Parallel>(prefab);
+
+            if (!validRequest)
+            {
                 return false;
             }
 

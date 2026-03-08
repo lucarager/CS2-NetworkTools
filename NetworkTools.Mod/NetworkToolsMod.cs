@@ -33,6 +33,7 @@ namespace NetworkTools {
     using NetworkTools.Systems.Rendering;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
+    using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Utils;
 
@@ -152,6 +153,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_RemoveNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_NodeControlToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_ConnectToolSystem>(SystemUpdatePhase.ToolUpdate);
+            updateSystem.UpdateAt<NT_ParallelToolSystem>(SystemUpdatePhase.ToolUpdate);
             // UI
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_OverlaySystem>(SystemUpdatePhase.Rendering);
