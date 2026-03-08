@@ -3,23 +3,13 @@
     using UnityEngine;
 
     /// <summary>
-    ///     Enum defining all available render color keys for overlay rendering.
+    ///     Render dimensions for overlay rendering. Passed to jobs as a value type.
     /// </summary>
-    public enum RenderDimensionsKey : byte {
-
-    }
-
-    /// <summary>
-    ///     Struct containing all render colors for overlay rendering.
-    ///     Passed to jobs to provide centralized color configuration.
-    /// </summary>
-    public readonly struct RenderDimensions {
-
+    public struct RenderDimensions {
         /// <summary>
-        ///     Gets a color by its key.
+        ///     Standard values.
         /// </summary>
-        public float4 this[RenderDimensionsKey key] => key switch {
-
+        public static readonly RenderDimensions Default = new RenderDimensions {
         };
     }
 }

@@ -18,6 +18,7 @@
     /// <summary>
     ///     Overlay Rendering System.
     /// </summary>
+    /// todo Check AreaBorderRenderSystem
     public partial class NT_OverlaySystem : GameSystemBase {
         private EntityQuery               m_EdgeQuery;
         private EntityQuery               m_HandleQuery;
@@ -40,7 +41,7 @@
                                    .WithAll<Node>()
                                    .WithAny<NT_Highlighted, NT_Selected, NT_Eligible, NT_SelectedFirst,
                                        NT_SelectedLast>()
-                                   .WithNone<Deleted, Hidden>()
+                                   .WithNone<Deleted>()
                                    .Build();
 
             m_EdgeQuery = SystemAPI.QueryBuilder()
@@ -79,6 +80,7 @@
                 var drawNodesJob = new DrawNodesJob {
                     m_Buffer                           = m_OverlayRenderSystem.GetBuffer(out var nodeBufferJobHandle),
                     m_Colors                           = RenderColors.Default,
+                    m_Dimensions                       = RenderDimensions.Default,
                     m_EntityTypeHandle                 = SystemAPI.GetEntityTypeHandle(),
                     m_HighlightedComponentTypeHandle   = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
                     m_SelectedComponentTypeHandle      = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
@@ -105,6 +107,7 @@
                 var drawHandlesJob = new DrawHandlesJob {
                     m_Buffer = m_OverlayRenderSystem.GetBuffer(out var markersBufferJobHandle),
                     m_Colors = RenderColors.Default,
+                    m_Dimensions = RenderDimensions.Default,
                     m_EntityTypeHandle = SystemAPI.GetEntityTypeHandle(),
                     m_NTHandlePositionComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandlePosition>(),
                     m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
@@ -132,6 +135,7 @@
                 var drawEdgesJob = new DrawEdgesJob {
                     m_Buffer = m_OverlayRenderSystem.GetBuffer(out var edgeBufferJobHandle),
                     m_Colors = RenderColors.Default,
+                    m_Dimensions = RenderDimensions.Default,
                     m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
                     m_SelectedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
                     m_EdgeComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Edge>(),
@@ -154,6 +158,7 @@
                 var drawTempEdgesJob = new DrawTempEdgesJob {
                     m_Buffer                   = m_OverlayRenderSystem.GetBuffer(out var tempEdgeBufferJobHandle),
                     m_Colors                   = RenderColors.Default,
+                    m_Dimensions               = RenderDimensions.Default,
                     m_EdgeComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<Edge>(),
                     m_CurveComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Curve>(),
                     m_TempComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<Temp>(),
@@ -174,6 +179,7 @@
                 var drawTempNodesJob = new DrawTempNodesJob {
                     m_Buffer                  = m_OverlayRenderSystem.GetBuffer(out var tempNodeBufferJobHandle),
                     m_Colors                  = RenderColors.Default,
+                    m_Dimensions              = RenderDimensions.Default,
                     m_TempComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Temp>(),
                     m_NodeComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Node>()
                 };

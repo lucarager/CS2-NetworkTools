@@ -28,6 +28,7 @@
         protected struct DrawHandlesJob : IJobChunk {
             [ReadOnly] public required CustomOverlayRenderSystem.Buffer                m_Buffer;
             [ReadOnly] public required RenderColors                              m_Colors;
+            [ReadOnly] public required RenderDimensions m_Dimensions;
             [ReadOnly] public required ComponentTypeHandle<NT_HandlePosition>    m_NTHandlePositionComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleLink>        m_NTHandleLinkComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Handle>            m_NTHandleComponentTypeHandle;

@@ -87,12 +87,12 @@ namespace NetworkTools.Components.Handles {
         /// <summary>
         /// Radius for primary (prominent) handles.
         /// </summary>
-        public const float PrimaryRadius = 6f;
+        public const float PrimaryRadius = 2f;
 
         /// <summary>
         /// Radius for secondary (subdued) handles.
         /// </summary>
-        public const float SecondaryRadius = 3f;
+        public const float SecondaryRadius = 1f;
 
         /// <summary>
         /// Type flags defining the handle's purpose and behavior.

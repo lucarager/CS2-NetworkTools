@@ -3,153 +3,64 @@
     using UnityEngine;
 
     /// <summary>
-    ///     Enum defining all available render color keys for overlay rendering.
+    ///     Render colors for overlay rendering. Passed to jobs as a value type.
     /// </summary>
-    public enum RenderColorKey : byte {
+    public struct RenderColors {
         // Node colors
-        NodeSelectedFirstFill,
-        NodeSelectedFirstBorder,
-        NodeHighlightedFill,
-        NodeHighlightedBorder,
-        NodeEligibleFill,
-        NodeEligibleBorder,
+        public float4 NodeSelectedFirstFill;
+        public float4 NodeSelectedFirstBorder;
+        public float4 NodeHighlightedFill;
+        public float4 NodeHighlightedBorder;
+        public float4 NodeEligibleFill;
+        public float4 NodeEligibleBorder;
 
         // Edge colors
-        EdgeSelected,
-        EdgeHighlighted,
+        public float4 EdgeSelected;
+        public float4 EdgeHighlighted;
 
         // Handle colors - state-based
-        HandleSelected,
-        HandleHighlighted,
-        HandleOrigin,
+        public float4 HandleSelected;
+        public float4 HandleHighlighted;
+        public float4 HandleOrigin;
 
         // Handle colors - purpose-based
-        HandleSlopeControl,
-        HandleShapeControl,
-        HandleDefault,
+        public float4 HandleSlopeControl;
+        public float4 HandleShapeControl;
+        public float4 HandleDefault;
 
         // Temp entity colors
-        TempEdge,
-        TempNode
-    }
-
-    /// <summary>
-    ///     Struct containing all render colors for overlay rendering.
-    ///     Passed to jobs to provide centralized color configuration.
-    /// </summary>
-    public readonly struct RenderColors {
-        // Node colors
-        public readonly float4 NodeSelectedFirstFill;
-        public readonly float4 NodeSelectedFirstBorder;
-        public readonly float4 NodeHighlightedFill;
-        public readonly float4 NodeHighlightedBorder;
-        public readonly float4 NodeEligibleFill;
-        public readonly float4 NodeEligibleBorder;
-
-        // Edge colors
-        public readonly float4 EdgeSelected;
-        public readonly float4 EdgeHighlighted;
-
-        // Handle colors - state-based
-        public readonly float4 HandleSelected;
-        public readonly float4 HandleHighlighted;
-        public readonly float4 HandleOrigin;
-
-        // Handle colors - purpose-based
-        public readonly float4 HandleSlopeControl;
-        public readonly float4 HandleShapeControl;
-        public readonly float4 HandleDefault;
-
-        // Temp entity colors
-        public readonly float4 TempEdge;
-        public readonly float4 TempNode;
+        public float4 TempEdge;
+        public float4 TempNode;
 
         /// <summary>
-        ///     Gets a color by its key.
+        ///     Standard color values.
         /// </summary>
-        public float4 this[RenderColorKey key] => key switch {
-            RenderColorKey.NodeSelectedFirstFill   => NodeSelectedFirstFill,
-            RenderColorKey.NodeSelectedFirstBorder => NodeSelectedFirstBorder,
-            RenderColorKey.NodeHighlightedFill     => NodeHighlightedFill,
-            RenderColorKey.NodeHighlightedBorder   => NodeHighlightedBorder,
-            RenderColorKey.NodeEligibleFill        => NodeEligibleFill,
-            RenderColorKey.NodeEligibleBorder      => NodeEligibleBorder,
-            RenderColorKey.EdgeSelected            => EdgeSelected,
-            RenderColorKey.EdgeHighlighted         => EdgeHighlighted,
-            RenderColorKey.HandleSelected          => HandleSelected,
-            RenderColorKey.HandleHighlighted       => HandleHighlighted,
-            RenderColorKey.HandleOrigin            => HandleOrigin,
-            RenderColorKey.HandleSlopeControl      => HandleSlopeControl,
-            RenderColorKey.HandleShapeControl      => HandleShapeControl,
-            RenderColorKey.HandleDefault           => HandleDefault,
-            RenderColorKey.TempEdge                => TempEdge,
-            RenderColorKey.TempNode                => TempNode,
-            _                                      => HandleDefault
+        public static readonly RenderColors Default = new RenderColors {
+            // Node colors
+            NodeSelectedFirstFill   = (Vector4)new Color(1f, 1f, 1f, 0.5f),
+            NodeSelectedFirstBorder = (Vector4)new Color(1f, 1f, 1f, 1f),
+            NodeHighlightedFill     = (Vector4)new Color(1f, 1f, 1f, 0.5f),
+            NodeHighlightedBorder   = (Vector4)new Color(1f, 1f, 1f, 1f),
+            NodeEligibleFill        = (Vector4)new Color(1f, 1f, 1f, 0.2f),
+            NodeEligibleBorder      = (Vector4)new Color(1f, 1f, 1f, 0.6f),
+
+            // Edge colors
+            EdgeSelected    = (Vector4)new Color(0.58f, 0.27f, 1f, 1f),
+            EdgeHighlighted = (Vector4)new Color(0.58f, 0.27f, 1f, 1f),
+
+            // Handle colors - state-based
+            HandleSelected    = (Vector4)new Color(0.5f, 0.2f, 0.8f, 1f),
+            HandleHighlighted = (Vector4)new Color(0.6f, 0.37f, 0.9f, 1f),
+            HandleOrigin      = (Vector4)new Color(1f, 1f, 1f, 1f),
+
+            // Handle colors - purpose-based
+            HandleSlopeControl = (Vector4)new Color(0.5f, 0.7f, 1f, 1f),
+            HandleShapeControl = (Vector4)new Color(0.5f, 0.7f, 1f, 1f),
+            HandleDefault      = (Vector4)new Color(0.4f, 0.6f, 1f, 1f),
+
+            // Temp entity colors
+            TempEdge = (Vector4)new Color(1f, 1f, 1f, 1f),
+            TempNode = (Vector4)new Color(1f, 1f, 1f, 1f),
         };
-
-        /// <summary>
-        ///     Creates a default RenderColors instance with standard color values.
-        /// </summary>
-        public static RenderColors Default => new(
-                                                  // Node colors
-                                                  (Vector4)new Color(1f, 1f, 1f, 0.5f),
-                                                  (Vector4)new Color(1f, 1f, 1f, 1f),
-                                                  (Vector4)new Color(1f, 1f, 1f, 0.5f),
-                                                  (Vector4)new Color(1f, 1f, 1f, 1f),
-                                                  (Vector4)new Color(1f, 1f, 1f, 0.2f),
-                                                  (Vector4)new Color(1f, 1f, 1f, 0.6f),
-
-                                                  // Edge colors
-                                                  (Vector4)new Color(0.58f, 0.27f, 1f, 1f),
-                                                  (Vector4)new Color(0.58f, 0.27f, 1f, 1f),
-
-                                                  // Handle colors - state-based
-                                                  (Vector4)new Color(0.5f, 0.2f, .8f, 1f),
-                                                  (Vector4)new Color(0.6f, 0.37f, .9f, 1f),
-                                                  (Vector4)new Color(1f,   1f,   1f,   1f),
-
-                                                  // Handle colors - purpose-based
-                                                  (Vector4)new Color(0.5f, 0.7f, 1f,   1f),
-                                                  (Vector4)new Color(0.5f, 0.7f, 1f, 1f),
-                                                  (Vector4)new Color(0.4f, 0.6f, 1f,   1f),
-
-                                                  // Temp entity colors
-                                                  (Vector4)new Color(1f, 1f, 1f, 1f),
-                                                  (Vector4)new Color(1f, 1f, 1f, 1f));
-
-        private RenderColors(
-            float4 nodeSelectedFirstFill,
-            float4 nodeSelectedFirstBorder,
-            float4 nodeHighlightedFill,
-            float4 nodeHighlightedBorder,
-            float4 nodeEligibleFill,
-            float4 nodeEligibleBorder,
-            float4 edgeSelected,
-            float4 edgeHighlighted,
-            float4 handleSelected,
-            float4 handleHighlighted,
-            float4 handleOrigin,
-            float4 handleSlopeControl,
-            float4 handleShapeControl,
-            float4 handleDefault,
-            float4 tempEdge,
-            float4 tempNode) {
-            NodeSelectedFirstFill   = nodeSelectedFirstFill;
-            NodeSelectedFirstBorder = nodeSelectedFirstBorder;
-            NodeHighlightedFill     = nodeHighlightedFill;
-            NodeHighlightedBorder   = nodeHighlightedBorder;
-            NodeEligibleFill        = nodeEligibleFill;
-            NodeEligibleBorder      = nodeEligibleBorder;
-            EdgeSelected            = edgeSelected;
-            EdgeHighlighted         = edgeHighlighted;
-            HandleSelected          = handleSelected;
-            HandleHighlighted       = handleHighlighted;
-            HandleOrigin            = handleOrigin;
-            HandleSlopeControl      = handleSlopeControl;
-            HandleShapeControl      = handleShapeControl;
-            HandleDefault           = handleDefault;
-            TempEdge                = tempEdge;
-            TempNode                = tempNode;
-        }
     }
 }

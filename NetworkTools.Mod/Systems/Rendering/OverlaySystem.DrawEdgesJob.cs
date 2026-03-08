@@ -20,6 +20,7 @@
         protected struct DrawEdgesJob : IJobChunk {
             [ReadOnly] public required CustomOverlayRenderSystem.Buffer m_Buffer;
             [ReadOnly] public required RenderColors m_Colors;
+            [ReadOnly] public required RenderDimensions m_Dimensions;
             [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Selected> m_SelectedComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Edge> m_EdgeComponentTypeHandle;

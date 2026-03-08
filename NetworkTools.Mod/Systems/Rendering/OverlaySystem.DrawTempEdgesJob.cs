@@ -23,6 +23,7 @@
         protected struct DrawTempEdgesJob : IJobChunk {
             [ReadOnly] public required CustomOverlayRenderSystem.Buffer m_Buffer;
             [ReadOnly] public required RenderColors m_Colors;
+            [ReadOnly] public required RenderDimensions m_Dimensions;
             [ReadOnly] public required ComponentTypeHandle<Temp> m_TempComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Edge> m_EdgeComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Curve> m_CurveComponentTypeHandle;
