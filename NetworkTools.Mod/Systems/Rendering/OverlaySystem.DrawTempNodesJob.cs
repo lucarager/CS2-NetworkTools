@@ -10,7 +10,7 @@ namespace NetworkTools.Systems {
     using Unity.Mathematics;
     using UnityEngine;
 
-    public partial class NT_OverlayRenderSystem {
+    public partial class NT_OverlaySystem {
         /// <summary>
         ///     Job to draw temp node overlays.
         /// </summary>
@@ -19,7 +19,7 @@ namespace NetworkTools.Systems {
         [BurstCompile]
 #endif
         protected struct DrawTempNodesJob : IJobChunk {
-            [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
+            [ReadOnly] public required CustomOverlayRenderSystem.Buffer m_Buffer;
             [ReadOnly] public required RenderColors m_Colors;
             [ReadOnly] public required ComponentTypeHandle<Temp> m_TempComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Node> m_NodeComponentTypeHandle;

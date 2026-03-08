@@ -9,7 +9,7 @@
     using Unity.Entities;
     using UnityEngine;
 
-    public partial class NT_OverlayRenderSystem {
+    public partial class NT_OverlaySystem {
         /// <summary>
         ///     Job to draw edge overlays.
         /// </summary>
@@ -18,7 +18,7 @@
         [BurstCompile]
 #endif
         protected struct DrawEdgesJob : IJobChunk {
-            [ReadOnly] public required OverlayRenderSystem.Buffer m_Buffer;
+            [ReadOnly] public required CustomOverlayRenderSystem.Buffer m_Buffer;
             [ReadOnly] public required RenderColors m_Colors;
             [ReadOnly] public required ComponentTypeHandle<NT_Highlighted> m_HighlightedComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Selected> m_SelectedComponentTypeHandle;
@@ -71,7 +71,7 @@
                     }
 
                     // Draw the curve bezier
-                    m_Buffer.DrawCurve(color, curve.m_Bezier, width);
+                    m_Buffer.DrawCurve(color, curve.m_Bezier, width, true);
 
                     // Draw all curves in the EdgeGeometry
                     //m_Buffer.DrawCurve(color, edgeGeometry.m_Start.m_Left, width);
