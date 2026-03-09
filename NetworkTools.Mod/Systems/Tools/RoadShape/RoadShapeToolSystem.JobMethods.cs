@@ -33,6 +33,7 @@
             var jobHandle = new ShapeTransformJob {
                 // Pre-computed path data
                 EdgeStates = m_EdgeStates,
+                NodeStates = m_NodeStates,
                 Context = m_ShapeTransformContext,
                 Config = ShapeTransformConfig,
 

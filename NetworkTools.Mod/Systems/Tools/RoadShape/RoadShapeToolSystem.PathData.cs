@@ -33,6 +33,13 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         private NativeList<EdgeState> m_EdgeStates;
 
         /// <summary>
+        /// Cached node states, populated by RefreshPathData().
+        /// Contains per-node positions tracked independently from edge bezier endpoints.
+        /// Length is always CurrentPathNodes.Length (edges + 1).
+        /// </summary>
+        private NativeList<NodeState> m_NodeStates;
+
+        /// <summary>
         /// Whether the cached path data is valid for use.
         /// Set false when selection changes, set true after RefreshPathData().
         /// </summary>
@@ -58,13 +65,21 @@ namespace NetworkTools.Systems.Tools.RoadShape {
 
             // Prepare output containers
             var contextRef = new NativeReference<ShapeTransformContext>(Allocator.TempJob);
-            
+
             // Resize edge states if needed
             if (m_EdgeStates.Capacity < m_CurrentPathEdges.Length) {
                 m_EdgeStates.SetCapacity(m_CurrentPathEdges.Length);
             }
             m_EdgeStates.Clear();
             m_EdgeStates.Resize(m_CurrentPathEdges.Length, NativeArrayOptions.ClearMemory);
+
+            // Resize node states (N+1 nodes for N edges)
+            var nodeCount = m_CurrentPathNodes.Length;
+            if (m_NodeStates.Capacity < nodeCount) {
+                m_NodeStates.SetCapacity(nodeCount);
+            }
+            m_NodeStates.Clear();
+            m_NodeStates.Resize(nodeCount, NativeArrayOptions.ClearMemory);
 
             // Run sync Burst job on main thread
             new GatherPathDataJob {
@@ -77,6 +92,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 UpgradedLookup = SystemAPI.GetComponentLookup<Upgraded>(true),
                 OutContext = contextRef,
                 OutEdgeStates = m_EdgeStates,
+                OutNodeStates = m_NodeStates,
             }.Run();
 
             // Copy result to cached field
@@ -199,6 +215,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
 
             public NativeReference<ShapeTransformContext> OutContext;
             public NativeList<EdgeState> OutEdgeStates;
+            public NativeList<NodeState> OutNodeStates;
 
             public void Execute() {
                 // 1. InitializeConfig context from path endpoints
@@ -207,17 +224,32 @@ namespace NetworkTools.Systems.Tools.RoadShape {
 
                 var ctx = ShapeTransformContext.Create(startPos, endPos);
 
-                // 2. Gather edge states
+                // 2. Gather node states (N+1 nodes for N edges)
+                var nodeCount = CurrentPathNodes.Length;
+                for (var i = 0; i < nodeCount; i++) {
+                    var nodeEntity = CurrentPathNodes[i];
+                    var nodePos = NodeLookup.TryGetComponent(nodeEntity, out var node)
+                        ? node.m_Position
+                        : float3.zero;
+
+                    OutNodeStates[i] = new NodeState {
+                        Entity = nodeEntity,
+                        PathIndex = i,
+                        Position = nodePos,
+                        OriginalPosition = nodePos
+                    };
+                }
+
+                // 3. Gather edge states
                 var edgeCount = CurrentPathEdges.Length;
                 var cumulativeDistance = 0f;
 
-                // First pass: gather edge data and calculate total length
+                // First pass: gather edge data and calculate total length (including node-to-bezier gaps)
                 for (var i = 0; i < edgeCount; i++) {
                     var edgeEntity = CurrentPathEdges[i];
                     var state = new EdgeState {
                         EdgeEntity = edgeEntity,
                         PathIndex = i,
-                        CumulativeDistance = cumulativeDistance
                     };
 
                     // Get edge component for direction and node references
@@ -236,17 +268,34 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                         state.Bezier = curve.m_Bezier;
                         state.Length = curve.m_Length;
                         state.CalculateControlPointRatios();
+
+                        // Store original bezier endpoints for node position delta calculations
+                        state.OriginalBezierA = curve.m_Bezier.a;
+                        state.OriginalBezierD = curve.m_Bezier.d;
                     }
 
-                    // Store original values for intersection delta calculations
-                    var pathEndNode = CurrentPathNodes[i + 1];
-                    if (NodeLookup.TryGetComponent(pathEndNode, out var pathEndNodeInfo)) {
-                        state.OriginalEndHeight = pathEndNodeInfo.m_Position.y;
-                        state.OriginalEndXZ = new float2(pathEndNodeInfo.m_Position.x, pathEndNodeInfo.m_Position.z);
+                    // Account for gap from previous edge's path-end to node[i]
+                    if (i > 0) {
+                        var prevEdge = OutEdgeStates[i - 1];
+                        var prevPathEnd = prevEdge.IsForward ? prevEdge.Bezier.d : prevEdge.Bezier.a;
+                        cumulativeDistance += math.distance(prevPathEnd, OutNodeStates[i].OriginalPosition);
                     }
+
+                    // Account for gap from node[i] to this edge's path-start
+                    var pathStartBezier = state.IsForward ? state.Bezier.a : state.Bezier.d;
+                    cumulativeDistance += math.distance(OutNodeStates[i].OriginalPosition, pathStartBezier);
+
+                    state.CumulativeDistance = cumulativeDistance;
 
                     OutEdgeStates[i] = state;
                     cumulativeDistance += state.Length;
+                }
+
+                // Add trailing gap from last edge's path-end to end node
+                if (edgeCount > 0) {
+                    var lastEdge = OutEdgeStates[edgeCount - 1];
+                    var lastPathEnd = lastEdge.IsForward ? lastEdge.Bezier.d : lastEdge.Bezier.a;
+                    cumulativeDistance += math.distance(lastPathEnd, OutNodeStates[edgeCount].OriginalPosition);
                 }
 
                 // Update context with total length

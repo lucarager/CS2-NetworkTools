@@ -11,6 +11,7 @@
         public static void Execute<T>(
             ref T transform,
             ref NativeArray<EdgeState> edges,
+            ref NativeArray<NodeState> nodes,
             in ShapeTransformContext ctx,
             in ShapeTransformConfig config)
             where T : struct, IPathTransformation {
@@ -29,33 +30,57 @@
             // 3. PostProcess (cleanup)
             transform.PostProcess(ref edges, in ctx, in config);
 
-            // 4. Normalize shared node positions
-            NormalizeNodePositions(ref edges);
+            // 4. Compute node positions from edge transformation deltas
+            ComputeNodePositions(ref nodes, in edges);
         }
 
         /// <summary>
-        /// Ensures that adjacent edges sharing a node use bit-identical endpoint positions.
-        /// Transforms process edges independently, so floating-point differences can arise
-        /// at shared nodes. This pass picks one position per node (first writer wins)
-        /// and snaps all edge endpoints (a/d) to match.
+        /// Computes new node positions by applying the transformation delta from
+        /// edge bezier endpoints to the original node positions.
+        /// Nodes are path-ordered: node[i] connects to edge[i-1]'s path-end and edge[i]'s path-start.
+        /// For interior nodes with two adjacent edges, the delta is averaged.
         /// </summary>
-        private static void NormalizeNodePositions(ref NativeArray<EdgeState> edges) {
-            var nodePositions = new NativeHashMap<Entity, float3>(edges.Length * 2, Allocator.Temp);
+        private static void ComputeNodePositions(ref NativeArray<NodeState> nodes, in NativeArray<EdgeState> edges) {
+            for (var i = 0; i < nodes.Length; i++) {
+                // First and last nodes are the user's selected path endpoints — they stay fixed
+                if (i == 0 || i == nodes.Length - 1) {
+                    continue;
+                }
 
-            for (var i = 0; i < edges.Length; i++) {
-                var state = edges[i];
-                nodePositions.TryAdd(state.StartNode, state.Bezier.a);
-                nodePositions.TryAdd(state.EndNode, state.Bezier.d);
+                var node = nodes[i];
+                var delta = float3.zero;
+                var contributors = 0;
+
+                // Check previous edge (this node is its path-end)
+                if (i > 0) {
+                    var prevEdge = edges[i - 1];
+                    // Path-end of previous edge: forward = bezier.d, reversed = bezier.a
+                    if (prevEdge.IsForward) {
+                        delta += prevEdge.Bezier.d - prevEdge.OriginalBezierD;
+                    } else {
+                        delta += prevEdge.Bezier.a - prevEdge.OriginalBezierA;
+                    }
+                    contributors++;
+                }
+
+                // Check next edge (this node is its path-start)
+                if (i < edges.Length) {
+                    var nextEdge = edges[i];
+                    // Path-start of next edge: forward = bezier.a, reversed = bezier.d
+                    if (nextEdge.IsForward) {
+                        delta += nextEdge.Bezier.a - nextEdge.OriginalBezierA;
+                    } else {
+                        delta += nextEdge.Bezier.d - nextEdge.OriginalBezierD;
+                    }
+                    contributors++;
+                }
+
+                if (contributors > 0) {
+                    node.Position = node.OriginalPosition + delta / contributors;
+                }
+
+                nodes[i] = node;
             }
-
-            for (var i = 0; i < edges.Length; i++) {
-                var state    = edges[i];
-                state.Bezier.a = nodePositions[state.StartNode];
-                state.Bezier.d = nodePositions[state.EndNode];
-                edges[i] = state;
-            }
-
-            nodePositions.Dispose();
         }
     }
 }

@@ -48,12 +48,13 @@
 
             // Cached path data for handles and jobs
             m_EdgeStates = new NativeList<EdgeState>(32, Allocator.Persistent);
+            m_NodeStates = new NativeList<NodeState>(33, Allocator.Persistent);
             m_PathDataValid = false;
 
             // Override default query to exclude some networks
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
                 .WithAll<Node>()
-                .WithAny<Road, LocalConnect>()
+                .WithAny<Road, TrainTrack, TramTrack, SubwayTrack, LocalConnect>()
                 .WithNone<NT_Eligible>()
                 .Build();
         }
@@ -65,6 +66,10 @@
             // Dispose cached path data
             if (m_EdgeStates.IsCreated) {
                 m_EdgeStates.Dispose();
+            }
+
+            if (m_NodeStates.IsCreated) {
+                m_NodeStates.Dispose();
             }
 
             base.OnDestroy();
@@ -85,7 +90,7 @@
             base.OnStopRunning();
 
             // Clear selection state
-            ClearSelectionState();
+            ClearSelectionState(false);
 
             // Invalidate cached path data
             InvalidatePathData();

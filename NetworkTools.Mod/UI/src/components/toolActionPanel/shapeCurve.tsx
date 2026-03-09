@@ -24,11 +24,11 @@ const CURVE_MODES: { label: string; id: ShapeTransformTemplate; icon: string }[]
         id: ShapeTransformTemplate.CurveStraighten,
         icon: "coui://nt/Modes/CurveStraighten.svg",
     },
-    {
-        label: "Smooth Curve",
-        id: ShapeTransformTemplate.CurveSmooth,
-        icon: "coui://nt/Modes/CurveSmooth.svg",
-    },
+    // {
+    //     label: "Smooth Curve",
+    //     id: ShapeTransformTemplate.CurveSmooth,
+    //     icon: "coui://nt/Modes/CurveSmooth.svg",
+    // },
 ];
 
 export const ShapeCurveControls: React.FC = () => {

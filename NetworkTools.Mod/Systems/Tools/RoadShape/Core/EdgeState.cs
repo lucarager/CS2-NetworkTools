@@ -95,19 +95,19 @@
         public float EndControlPointAbsoluteRatio;
 
 
-        // === Original values (immutable - for intersection delta calculations) ===
+        // === Original values (immutable - for node position delta calculations) ===
 
         /// <summary>
-        /// Original height (Y) at the path-end of this edge.
-        /// Used to calculate height delta for intersection adjustments.
+        /// Original bezier start point (a) before transformation.
+        /// Used to compute the delta applied to node positions after transforms.
         /// </summary>
-        public float OriginalEndHeight;
+        public float3 OriginalBezierA;
 
         /// <summary>
-        /// Original XZ position at the path-end of this edge.
-        /// Used to calculate XZ delta for intersection adjustments.
+        /// Original bezier end point (d) before transformation.
+        /// Used to compute the delta applied to node positions after transforms.
         /// </summary>
-        public float2 OriginalEndXZ;
+        public float3 OriginalBezierD;
 
         /// <summary>
         /// Recalculates the control point ratios based on the current bezier geometry.
