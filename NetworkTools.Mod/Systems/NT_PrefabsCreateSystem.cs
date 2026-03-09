@@ -130,7 +130,7 @@ namespace NetworkTools.Systems {
             CreateToolPrefab("slide_node", "Slide Node", "move.svg", "node", new NT_SlideNode(), false);
             CreateToolPrefab("supernode", "Create Supernode", "super.svg", "node", new NT_SuperNode(), false);
             CreateToolPrefab("shape_slope", "Slope Tools", "slope.svg", "shape", new NT_ShapeSlope(), true);
-            CreateToolPrefab("shape_curve", "Shape Tools", "curve.svg", "shape", new NT_ShapeCurve(), false);
+            CreateToolPrefab("shape_curve", "Shape Tools", "curve.svg", "shape", new NT_ShapeCurve(), true);
             CreateToolPrefab("connect", "Connection Tools", "connect.svg", "generative", new NT_Connect(), false);
             CreateToolPrefab("parallel", "Advanced Parallel Tool", "parallel.svg", "generative", new NT_Parallel(), false);
             CreateToolPrefab("grid", "Advanced Grid Tool", "grid.svg", "generative", new NT_Grid(), false);
