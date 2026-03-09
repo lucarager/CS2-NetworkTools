@@ -19,14 +19,17 @@
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.1.2" />
+	<ModVersion Value="1.1.3" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.5.*" />
 	<!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
 	<RequiredDLC Value="" />
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-- Adds paths as valid targets for slope editing.
+- New: Curve Tools have been re-enabled. For now, only includes the "straighten" transformation.
+- Improved: Slope tool now correctly accounts for intersections and various edge cases, such as nodes and road curves not having the same position.
+- Fixed: Slope tool now allows sloping more networks, such as trains, trams, metros, and paths.
+- Improved: New renderer should reduce tilted lines in overlay. Also Updated various visuals, colors, UI, and overlays.
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
 	<ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
