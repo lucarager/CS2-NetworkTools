@@ -1,0 +1,3 @@
+files:
+  - source: /NetworkTools.Mod/L10n/lang/en-US.json
+    translation: /NetworkTools.Mod/L10n/lang/%locale%.json

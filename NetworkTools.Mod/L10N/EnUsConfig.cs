@@ -3,11 +3,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.Settings {
+namespace NetworkTools.L10N {
     #region Using Statements
 
     using System.Collections.Generic;
+
     using Colossal;
+
+    using NetworkTools;
+    using NetworkTools.Settings;
 
     #endregion
 

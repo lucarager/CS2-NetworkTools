@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <IsPackable>false</IsPackable>
-    <Configurations>Debug;Release;Test</Configurations>
+    <Configurations>Debug;Release;Test;I18N</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

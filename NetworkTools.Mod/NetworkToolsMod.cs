@@ -28,7 +28,7 @@ namespace NetworkTools {
     using Game.SceneFlow;
 
     using HarmonyLib;
-
+    using NetworkTools.L10N;
     using NetworkTools.Systems;
     using NetworkTools.Systems.Rendering;
     using NetworkTools.Systems.Tools;
