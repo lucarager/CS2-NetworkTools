@@ -45,10 +45,6 @@
                     return;
                 }
 
-                if (Config.Template == ShapeTransformTemplate.Preserve) {
-                    return;
-                }
-
                 // 1. Copy cached data to mutable arrays for transform pipeline
                 var edges = new NativeArray<EdgeState>(EdgeStates.Length, Allocator.Temp);
                 for (var i = 0; i < EdgeStates.Length; i++) {

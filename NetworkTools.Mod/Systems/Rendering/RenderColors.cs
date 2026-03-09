@@ -18,15 +18,19 @@
         public float4 EdgeSelected;
         public float4 EdgeHighlighted;
 
-        // Handle colors - state-based
-        public float4 HandleSelected;
-        public float4 HandleHighlighted;
-        public float4 HandleOrigin;
-
-        // Handle colors - purpose-based
-        public float4 HandleSlopeControl;
-        public float4 HandleShapeControl;
-        public float4 HandleDefault;
+        // Handle colors 
+        public float4 HandleFillRest;
+        public float4 HandleFillHover;
+        public float4 HandleFillSelected;
+        public float4 HandleOutlineRest;
+        public float4 HandleOutlineHover;
+        public float4 HandleOutlineSelected;
+        public float4 HandleLineRest;
+        public float4 HandleLineHover;
+        public float4 HandleLineSelected;
+        public float4 HandleSecondaryLineRest;
+        public float4 HandleSecondaryLineHover;
+        public float4 HandleSecondaryLineSelected;
 
         // Temp entity colors
         public float4 TempEdge;
@@ -35,7 +39,7 @@
         /// <summary>
         ///     Standard color values.
         /// </summary>
-        public static readonly RenderColors Default = new RenderColors {
+        public static readonly RenderColors Default = new() {
             // Node colors
             NodeSelectedFirstFill   = (Vector4)new Color(1f, 1f, 1f, 0.5f),
             NodeSelectedFirstBorder = (Vector4)new Color(1f, 1f, 1f, 1f),
@@ -48,19 +52,23 @@
             EdgeSelected    = (Vector4)new Color(0.58f, 0.27f, 1f, 1f),
             EdgeHighlighted = (Vector4)new Color(0.58f, 0.27f, 1f, 1f),
 
-            // Handle colors - state-based
-            HandleSelected    = (Vector4)new Color(0.5f, 0.2f, 0.8f, 1f),
-            HandleHighlighted = (Vector4)new Color(0.6f, 0.37f, 0.9f, 1f),
-            HandleOrigin      = (Vector4)new Color(1f, 1f, 1f, 1f),
-
-            // Handle colors - purpose-based
-            HandleSlopeControl = (Vector4)new Color(0.5f, 0.7f, 1f, 1f),
-            HandleShapeControl = (Vector4)new Color(0.5f, 0.7f, 1f, 1f),
-            HandleDefault      = (Vector4)new Color(0.4f, 0.6f, 1f, 1f),
+            // Handle colors
+            HandleFillRest              = (Vector4)new Color(1f,    1f,    1f,    1f),
+            HandleFillHover             = (Vector4)new Color(1f,    1f,    1f,    1f),
+            HandleFillSelected          = (Vector4)new Color(1f,    1f,    1f,    1f),
+            HandleOutlineRest           = (Vector4)new Color(0.68f, 0.35f, 1f,    1f),
+            HandleOutlineHover          = (Vector4)new Color(0.85f, 0.55f, 1f,    1f),
+            HandleOutlineSelected       = (Vector4)new Color(0.85f, 0.55f, 1f,    1f),
+            HandleLineRest              = (Vector4)new Color(0.68f, 0.35f, 1f,    1f),
+            HandleLineHover             = (Vector4)new Color(0.85f, 0.55f, 1f,    1f),
+            HandleLineSelected          = (Vector4)new Color(0.85f, 0.55f, 1f,    1f),
+            HandleSecondaryLineRest     = (Vector4)new Color(0.85f, 0.85f, 0.85f, 0.5f),
+            HandleSecondaryLineHover    = (Vector4)new Color(0.85f, 0.85f, 0.85f, 1f),
+            HandleSecondaryLineSelected = (Vector4)new Color(0.85f, 0.85f, 0.85f, 1f),
 
             // Temp entity colors
             TempEdge = (Vector4)new Color(1f, 1f, 1f, 1f),
-            TempNode = (Vector4)new Color(1f, 1f, 1f, 1f),
+            TempNode = (Vector4)new Color(1f, 1f, 1f, 1f)
         };
     }
 }

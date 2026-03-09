@@ -125,7 +125,7 @@
                         var parentEntity = parentArray[i].Parent;
                         if (parentEntity != Entity.Null && m_HandlePositionLookup.HasComponent(parentEntity)) {
                             var parentPos = m_HandlePositionLookup[parentEntity].Position;
-                            var lineColor = (Color)(Vector4)m_Colors.HandleDefault;
+                            var lineColor = (Vector4)m_Colors.HandleSecondaryLineRest;
                             m_Buffer.DrawDashedLine(lineColor, new Line3.Segment(position.Position, parentPos), 0.3f, 2f, 2f);
                         }
                     }
@@ -139,10 +139,8 @@
                                                   bool                       isHighlighted, bool      isSelected,
                                                   RenderColors               colors,
                                                   CustomOverlayRenderSystem.Buffer buffer) {
-                var color    = GetHandleColor(handle, isHighlighted, isSelected, colors);
-                var diameter = handle.Radius * 2f;
-
-                buffer.DrawCircle(color, color, 0.5f, 0, new float2(0, 1), position.Position, diameter);
+                GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
+                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Radius * 2f);
             }
 
             /// <summary>
@@ -152,18 +150,15 @@
                                                            NT_Handle handle, bool isHighlighted, bool isSelected,
                                                            RenderColors colors,
                                                            CustomOverlayRenderSystem.Buffer buffer) {
-                var color       = GetHandleColor(handle, isHighlighted, isSelected, colors);
-                var originColor = (Color)(Vector4)colors.HandleOrigin;
-                var diameter    = handle.Radius * 2f;
-
                 // Draw origin dot (small circle at the start of valid range)
-                buffer.DrawCircle(originColor, originColor, 0.3f, 0, new float2(0, 1), constraints.Origin, 1f);
+                buffer.DrawCircle((Vector4)colors.HandleFillRest, (Vector4)colors.HandleOutlineRest, 0.3f, 0, new float2(0, 1), constraints.Origin, 1f);
 
                 // Draw solid line from origin to handle position
-                buffer.DrawDashedLine(originColor, new Line3.Segment(constraints.Origin, position.Position), 0.5f, 2f, 2f);
+                buffer.DrawDashedLine((Vector4)colors.HandleLineRest, new Line3.Segment(constraints.Origin, position.Position), 0.5f, 2f, 2f);
 
                 // Draw the handle itself (larger circle at current position)
-                buffer.DrawCircle(color, originColor, 0.5f, 0, new float2(0, 1), position.Position, diameter);
+                GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
+                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Radius * 2f);
             }
 
             /// <summary>
@@ -174,15 +169,13 @@
                                                         bool isSelected,
                                                         RenderColors colors,
                                                         CustomOverlayRenderSystem.Buffer buffer) {
-                var color = GetHandleColor(handle, isHighlighted, isSelected, colors);
-                var diameter = handle.Radius * 2f;
-
-                buffer.DrawCircle(color, color, 0.5f, 0, new float2(0, 1), position.Position, diameter);
+                GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
+                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Radius * 2f);
 
                 // If this is a control point, also draw a line to the main point
                 if (isControlPoint) {
                     var otherPoint = link.Key == 1 ? curve.m_Bezier.a : curve.m_Bezier.d;
-                    buffer.DrawDashedLine(color, new Line3.Segment(position.Position, otherPoint), 0.5f, 2f, 2f);
+                    buffer.DrawDashedLine((Vector4)colors.HandleLineRest, new Line3.Segment(position.Position, otherPoint), 0.5f, 2f, 2f);
                 }
             }
 
@@ -193,14 +186,14 @@
                                                  bool                       isHighlighted, bool      isSelected,
                                                  RenderColors               colors,
                                                  CustomOverlayRenderSystem.Buffer buffer) {
-                var color = GetHandleColor(handle, isHighlighted, isSelected, colors);
-                var width = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1.5f : 1f;
+                //GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
+                //var width = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1.5f : 1f;
 
-                buffer.DrawLine(color, new Line3.Segment(line.PointA, line.PointB), width);
+                //buffer.DrawLine(color, new Line3.Segment(line.PointA, line.PointB), width);
 
-                // Draw small circles at endpoints
-                buffer.DrawCircle(color, color, 0.3f, 0, new float2(0, 1), line.PointA, 1.5f);
-                buffer.DrawCircle(color, color, 0.3f, 0, new float2(0, 1), line.PointB, 1.5f);
+                //// Draw small circles at endpoints
+                //buffer.DrawCircle(color, color, 0.3f, 0, new float2(0, 1), line.PointA, 1.5f);
+                //buffer.DrawCircle(color, color, 0.3f, 0, new float2(0, 1), line.PointB, 1.5f);
             }
 
             /// <summary>
@@ -210,38 +203,30 @@
                                                    bool                       isHighlighted, bool      isSelected,
                                                    RenderColors               colors,
                                                    CustomOverlayRenderSystem.Buffer buffer) {
-                var color       = GetHandleColor(handle, isHighlighted, isSelected, colors);
-                var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
+                //GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
+                //var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
 
-                // Draw the circle outline
-                buffer.DrawCircle(default, color, borderWidth, 0, new float2(0, 1), circle.Center, circle.Radius * 2f);
+                //// Draw the circle outline
+                //buffer.DrawCircle(default, color, borderWidth, 0, new float2(0, 1), circle.Center, circle.Radius * 2f);
 
-                // Draw a small center point
-                buffer.DrawCircle(color, color, 0.3f, 0, new float2(0, 1), circle.Center, 1f);
+                //// Draw a small center point
+                //buffer.DrawCircle(color, color, 0.3f, 0, new float2(0, 1), circle.Center, 1f);
             }
 
             /// <summary>
             ///     Gets the appropriate color for a handle based on its state.
             /// </summary>
-            private static Color GetHandleColor(NT_Handle handle, bool isHighlighted, bool isSelected, RenderColors colors) {
+            private static void GetHandleColors(bool isHighlighted, bool isSelected, RenderColors colors, out Vector4 fillColor, out Vector4 outlineColor) {
                 if (isSelected) {
-                    return (Color)(Vector4)colors.HandleSelected;
+                    fillColor = colors.HandleFillSelected;
+                    outlineColor = colors.HandleOutlineSelected;
+                } else if (isHighlighted) {
+                    fillColor = colors.HandleFillHover;
+                    outlineColor = colors.HandleOutlineHover;
+                } else {
+                    fillColor = colors.HandleFillRest;
+                    outlineColor = colors.HandleOutlineRest;
                 }
-
-                if (isHighlighted) {
-                    return (Color)(Vector4)colors.HandleHighlighted;
-                }
-
-                // Default colors based on handle purpose
-                if (handle.HasAnyFlag(HandleTypeFlags.SlopeControl)) {
-                    return (Color)(Vector4)colors.HandleSlopeControl;
-                }
-
-                if (handle.HasAnyFlag(HandleTypeFlags.ShapeControl)) {
-                    return (Color)(Vector4)colors.HandleShapeControl;
-                }
-
-                return (Color)(Vector4)colors.HandleDefault;
             }
         }
     }

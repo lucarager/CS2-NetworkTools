@@ -18,7 +18,6 @@
     /// <summary>
     ///     Overlay Rendering System.
     /// </summary>
-    /// todo Check AreaBorderRenderSystem
     public partial class NT_OverlaySystem : GameSystemBase {
         private EntityQuery               m_EdgeQuery;
         private EntityQuery               m_HandleQuery;
