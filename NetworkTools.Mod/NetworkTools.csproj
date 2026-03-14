@@ -137,7 +137,6 @@
 	  <Folder Include="L10N\lang\" />
 	  <Folder Include="Systems\Tools\Grid\" />
 	  <Folder Include="Systems\Tools\SuperNode\" />
-	  <Folder Include="Systems\Tools\SlideNode\" />
 	</ItemGroup>
 
 	<!--Build UI-->
