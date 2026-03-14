@@ -6,34 +6,35 @@ import { useValue } from "cs2/api";
 import { ShapeSlopeControls } from "./shapeSlope";
 import { ShapeCurveControls } from "./shapeCurve";
 import { ConnectControls } from "./connect";
+import { useLocalization } from "cs2/l10n";
 
 // Registry of tool components mapped by tool ID
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
-    shape_slope: ShapeSlopeControls,
-    shape_curve: ShapeCurveControls,
-    connect: ConnectControls,
+    ShapeSlope: ShapeSlopeControls,
+    ShapeCurve: ShapeCurveControls,
+    Connect: ConnectControls,
 };
 
 export const ToolActionPanel = () => {
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
     const toolUIDataBinding = useValue(GAME_BINDINGS.UI_DATA.binding);
     const activeTool = toolUIDataBinding.find((t) => t.PrefabId === selectedBinding);
-
-    console.log("Active Tool ID:", activeTool);
+    const { translate } = useLocalization();
 
     if (!activeTool) {
         return <div className={styles.wrapper}></div>;
     }
-
-    console.log("Rendering ToolActionPanel for tool:", selectedBinding);
 
     const ToolComponent = TOOL_COMPONENTS[activeTool.Id];
 
     return (
         <div className={styles.wrapper}>
             <div className={[panels.nt_panel, styles.panel].join(" ")} key={selectedBinding}>
-                <div className={styles.row}>
-                    <span className={styles.toolTitle}>{selectedBinding}</span>
+                <div className={styles.col}>
+                    <span className={styles.toolTitle}>{translate(activeTool.DisplayName)}</span>
+                    <span className={styles.toolDescription}>
+                        {translate(activeTool.Description)}
+                    </span>
                 </div>
                 {ToolComponent && <ToolComponent toolId={selectedBinding} />}
             </div>

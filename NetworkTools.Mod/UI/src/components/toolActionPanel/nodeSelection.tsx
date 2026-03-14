@@ -11,10 +11,7 @@ export const NodeSelection: React.FC<NodeSelectionProps> = ({ selectedEntities }
     return (
         <>
             <div className={styles.divider}></div>
-            <div className={styles.col}>
-                {selectedEntities.length == 0 && (
-                    <span className={styles.helper}>No nodes selected.</span>
-                )}
+            <div className={styles.col} style={{ minHeight: "80rem" }}>
                 {selectedEntities.length > 0 && (
                     <div>
                         {selectedEntities.map((selection, index) => (

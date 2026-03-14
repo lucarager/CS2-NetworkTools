@@ -4,6 +4,7 @@ import { Button, Tooltip } from "cs2/ui";
 import { useValue } from "cs2/api";
 import { GAME_BINDINGS, GAME_TRIGGERS, ToolUIData } from "gameBindings";
 import panels from "../shared/panels.module.scss";
+import { useLocalization } from "cs2/l10n";
 
 const CATEGORY_ORDER = ["node", "shape", "generative"];
 type ToolListItem =
@@ -19,6 +20,7 @@ export const ToolSelectPanel = () => {
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
     const columnRef = useRef<HTMLDivElement>(null);
     const [activeBarOffset, setActiveBarOffset] = useState(0);
+    const { translate } = useLocalization();
 
     const items = useMemo(() => {
         const groups: { category: string; tools: ToolUIData[] }[] = [];
@@ -78,7 +80,7 @@ export const ToolSelectPanel = () => {
                     item.type === "tool" ? (
                         <div key={item.key} data-prefab-id={item.tool.PrefabId}>
                             <Tooltip
-                                tooltip={`${item.tool.DisplayName}${item.tool.Active ? "" : ` (Coming soon!)`}`}
+                                tooltip={translate(item.tool.DisplayName)}
                                 delayTime={0}
                                 direction="right">
                                 <Button

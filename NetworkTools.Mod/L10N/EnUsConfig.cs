@@ -63,26 +63,69 @@ namespace NetworkTools.L10N {
                 // Hint Tooltips - Common
                 { "Common.ACTION[NetworkTools.HintTooltip.Common.Exit]", "Exit Tool" },
 
-                // Hint Tooltips - AddNode
+                // # Tool Strings
+                // ## AddNode
+                // ### AddNode - Metadata
+                { "NetworkTools.Tools.AddNode.Name", "Add Node" },
+                { "NetworkTools.Tools.AddNode.Description", "Allows adding a node to a segment, dividing the segment into two." },
+                // ### AddNode - Hint Tooltips
                 { "Common.ACTION[NetworkTools.HintTooltip.AddNode.Hover]", "Hover over a network segment" },
                 { "Common.ACTION[NetworkTools.HintTooltip.AddNode.Apply]", "Add node" },
                 { "Common.ACTION[NetworkTools.HintTooltip.AddNode.Cancel]", "Cancel" },
 
-                // Hint Tooltips - RemoveNode
+                // ## RemoveNode
+                // ### RemoveNode - Metadata
+                { "NetworkTools.Tools.RemoveNode.Name", "Remove Node" },
+                { "NetworkTools.Tools.RemoveNode.Description", "Allows removing a node from a network." },
+                // ### RemoveNode - Hint Tooltips
                 { "Common.ACTION[NetworkTools.HintTooltip.RemoveNode.Select]", "Select a node to remove" },
                 { "Common.ACTION[NetworkTools.HintTooltip.RemoveNode.Apply]", "Remove node" },
                 { "Common.ACTION[NetworkTools.HintTooltip.RemoveNode.Cancel]", "Cancel" },
 
-                // Hint Tooltips - ShapeSlope
+                // ## ShapeSlope
+                // ### ShapeSlope - Metadata
+                { "NetworkTools.Tools.ShapeSlope.Name", "Slope Tools" },
+                { "NetworkTools.Tools.ShapeSlope.Description", "Allows editing the slope of a contiguous path." },
+                // ### ShapeSlope - Hint Tooltips
                 { "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.SelectStart]", "Select a starting node" },
                 { "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.SelectSecond]", "Select a second node" },
                 { "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.RemoveLast]", "Remove last node" },
                 { "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.ExtendPath]", "Select a new end node to extend the path" },
 
-                // Hint Tooltips - NodeControl
-                { "Common.ACTION[NetworkTools.HintTooltip.NodeControl.Select]", "Select a node to control" },
-                { "Common.ACTION[NetworkTools.HintTooltip.NodeControl.Adjust]", "Adjust node" },
-                { "Common.ACTION[NetworkTools.HintTooltip.NodeControl.Cancel]", "Cancel" },
+                // ## ShapeCurve
+                // ### ShapeCurve - Metadata
+                { "NetworkTools.Tools.ShapeCurve.Name", "Curve Tools" },
+                { "NetworkTools.Tools.ShapeCurve.Description", "Allows editing the curve of a contiguous path." },
+                // ### ShapeCurve - Hint Tooltips
+                { "Common.ACTION[NetworkTools.HintTooltip.ShapeCurve.SelectStart]", "Select a starting node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.ShapeCurve.SelectSecond]", "Select a second node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.ShapeCurve.RemoveLast]", "Remove last node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.ShapeCurve.ExtendPath]", "Select a new end node to extend the path" },
+                
+                // ## SlideNode
+                // ### SlideNode - Metadata
+                { "NetworkTools.Tools.SlideNode.Name", "Slide Node (Coming Soon!)" },
+                { "NetworkTools.Tools.SlideNode.Description", "" },
+
+                // ## SuperNode
+                // ### SuperNode - Metadata
+                { "NetworkTools.Tools.SuperNode.Name", "Super Node (Coming Soon!)" },
+                { "NetworkTools.Tools.SuperNode.Description", "" },
+
+                // ## Connect
+                // ### Connect - Metadata
+                { "NetworkTools.Tools.Connect.Name", "Connect Tools (Coming Soon!)" },
+                { "NetworkTools.Tools.Connect.Description", "" },
+
+                // ## Parallel
+                // ### Parallel - Metadata
+                { "NetworkTools.Tools.Parallel.Name", "Advanced Parallel (Coming Soon!)" },
+                { "NetworkTools.Tools.Parallel.Description", "" },
+
+                // ## Grid
+                // ### Grid - Metadata
+                { "NetworkTools.Tools.Grid.Name", "Advanced Grid  (Coming Soon!)" },
+                { "NetworkTools.Tools.Grid.Description", "" },
             };
         }
 
