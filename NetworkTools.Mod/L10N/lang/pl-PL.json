@@ -1,0 +1,19 @@
+{
+  "Options.SECTION[NetworkTools.NetworkTools.NetworkToolsMod]": "NetworkTools",
+  "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.KeybindingsGroupStr]": "Sterowanie",
+  "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.AboutGroupStr]": "O modyfikacji",
+  "Common.ACTION[NetworkTools.HintTooltip.Common.Exit]": "Wróć",
+  "Common.ACTION[NetworkTools.HintTooltip.AddNode.Hover]": "Wybierz segment, aby dodać węzeł",
+  "Common.ACTION[NetworkTools.HintTooltip.AddNode.Apply]": "Wstaw węzeł",
+  "Common.ACTION[NetworkTools.HintTooltip.AddNode.Cancel]": "Anuluj",
+  "Common.ACTION[NetworkTools.HintTooltip.RemoveNode.Select]": "Wybierz węzeł, aby go usunąć",
+  "Common.ACTION[NetworkTools.HintTooltip.RemoveNode.Apply]": "Usuń węzeł",
+  "Common.ACTION[NetworkTools.HintTooltip.RemoveNode.Cancel]": "Anuluj",
+  "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.SelectStart]": "Zaznacz węzeł źródłowy",
+  "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.SelectSecond]": "Zaznacz węzeł docelowy",
+  "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.RemoveLast]": "Odznacz ostatni węzeł",
+  "Common.ACTION[NetworkTools.HintTooltip.ShapeSlope.ExtendPath]": "Zaznacz nowy węzeł, aby dodać go do kolejki",
+  "Common.ACTION[NetworkTools.HintTooltip.NodeControl.Select]": "Wybierz węzeł, aby go ustawić",
+  "Common.ACTION[NetworkTools.HintTooltip.NodeControl.Adjust]": "Dostosuj węzeł",
+  "Common.ACTION[NetworkTools.HintTooltip.NodeControl.Cancel]": "Anuluj"
+}
