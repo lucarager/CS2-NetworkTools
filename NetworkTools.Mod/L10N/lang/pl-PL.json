@@ -25,7 +25,7 @@
   "Common.ACTION[NetworkTools.HintTooltip.ShapeCurve.SelectSecond]": "Zaznacz węzeł docelowy",
   "Common.ACTION[NetworkTools.HintTooltip.ShapeCurve.RemoveLast]": "Odznacz ostatni węzeł",
   "Common.ACTION[NetworkTools.HintTooltip.ShapeCurve.ExtendPath]": "Zaznacz nowy węzeł, aby dodać go do kolejki",
-  "NetworkTools.Tools.SlideNode.Name": "Tryb podziału węzła (Wkrótce)",
+  "NetworkTools.Tools.SlideNode.Name": "Tryb przesuwania węzła (Wkrótce)",
   "NetworkTools.Tools.SlideNode.Description": "",
   "NetworkTools.Tools.SuperNode.Name": "Tryb łączenia węzłów (Wkrótce)",
   "NetworkTools.Tools.SuperNode.Description": "",
