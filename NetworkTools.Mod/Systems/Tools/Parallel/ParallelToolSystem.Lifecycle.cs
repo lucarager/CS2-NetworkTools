@@ -45,12 +45,6 @@ namespace NetworkTools.Systems.Tools.Parallel {
 
             // Initialize selection state (base class NativeLists)
             InitializeSelectionState();
-
-            // Override default query to only select Road nodes
-            m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, Road>()
-                .WithNone<NT_Eligible>()
-                .Build();
         }
 
         /// <inheritdoc />

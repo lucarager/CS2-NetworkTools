@@ -143,7 +143,7 @@
             UpdatePhaseFromSelection();
 
             // Recalculate eligible nodes
-            MarkEligibleNodes();
+            UpdateEligibleNodesByState();
 
             return true;
         }
@@ -177,7 +177,7 @@
             UpdatePhaseFromSelection();
 
             // Recalculate eligible nodes
-            MarkEligibleNodes();
+            UpdateEligibleNodesByState();
 
             // Re-initialize config
             InitializeConfig();
@@ -188,7 +188,7 @@
         /// <summary>
         ///     Recalculates which nodes are eligible for selection based on current state
         /// </summary>
-        private void MarkEligibleNodes() {
+        private void UpdateEligibleNodesByState() {
             if (CurrentSelectionState is SelectionState.NoSelection or SelectionState.StartNodeSelected) {
                 // Clear all selected nodes
                 foreach (var node in m_SelectedNodes) {
@@ -323,7 +323,7 @@
             // Use base class method to clear selection state
             ClearSelectionState();
 
-            // Mark eligible nodes
+            // Mark eligible nodes based on target flags
             MarkEligibleNodes();
         }
 

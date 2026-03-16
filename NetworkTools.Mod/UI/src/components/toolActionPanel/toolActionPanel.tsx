@@ -7,6 +7,8 @@ import { ShapeSlopeControls } from "./shapeSlope";
 import { ShapeCurveControls } from "./shapeCurve";
 import { ConnectControls } from "./connect";
 import { useLocalization } from "cs2/l10n";
+import { SnapSelection } from "./snapSelection";
+import { TargetSelection } from "./targetSelection";
 
 // Registry of tool components mapped by tool ID
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
@@ -35,6 +37,10 @@ export const ToolActionPanel = () => {
                     <span className={styles.toolDescription}>
                         {translate(activeTool.Description)}
                     </span>
+                </div>
+                <div className={styles.col}>
+                    <SnapSelection />
+                    <TargetSelection />
                 </div>
                 {ToolComponent && <ToolComponent toolId={selectedBinding} />}
             </div>

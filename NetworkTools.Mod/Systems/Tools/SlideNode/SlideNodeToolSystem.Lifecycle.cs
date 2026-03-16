@@ -38,6 +38,7 @@ namespace NetworkTools.Systems.Tools {
             RenderEligibleNodes         = true;
             DisableVanillaValidation    = true;
             DisableVanillaNodeReduction = true;
+            UseCustomEligibilityFilter  = true;
         }
 
         protected override void OnStartRunning() {
@@ -50,32 +51,14 @@ namespace NetworkTools.Systems.Tools {
             MarkEligibleNodes();
         }
 
-        /// <summary>
-        /// Marks nodes as eligible for sliding if they have exactly 2 connected edges.
-        /// These are intermediate nodes whose position can be slid along the parent curve.
-        /// </summary>
-        private void MarkEligibleNodes() {
-            var nodeQuery = SystemAPI.QueryBuilder()
-                                     .WithAll<Node>()
-                                     .WithNone<NT_Eligible>()
-                                     .Build();
-
-            var nodeEntities = nodeQuery.ToEntityArray(Allocator.Temp);
-
-            foreach (var nodeEntity in nodeEntities) {
-                if (!EntityManager.HasBuffer<ConnectedEdge>(nodeEntity)) {
-                    continue;
-                }
-
-                var connectedEdges = EntityManager.GetBuffer<ConnectedEdge>(nodeEntity);
-
-                // Only nodes with exactly 2 connected edges are eligible for sliding
-                if (connectedEdges.Length == 2) {
-                    EntityManager.AddComponent<Components.NT_Eligible>(nodeEntity);
-                }
+        /// <inheritdoc/>
+        protected override bool FilterEligibleEntity(Entity entity) {
+            if (!EntityManager.HasBuffer<ConnectedEdge>(entity)) {
+                return false;
             }
 
-            nodeEntities.Dispose();
+            // Only nodes with exactly 2 connected edges are eligible for sliding
+            return EntityManager.GetBuffer<ConnectedEdge>(entity).Length == 2;
         }
 
         protected override void OnStopRunning() {

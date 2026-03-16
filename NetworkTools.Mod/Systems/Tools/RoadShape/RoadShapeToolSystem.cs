@@ -11,6 +11,9 @@
         /// <inheritdoc />
         public override string toolID => "RoadShapeTool";
 
+        /// <inheritdoc />
+        public override TargetOption AvailableTargets => TargetOption.Road | TargetOption.Path | TargetOption.Rail;
+
         /// <summary>
         ///     Caches the last hit position for tool-specific use.
         /// </summary>

@@ -113,13 +113,6 @@
 
             // Data
             m_SelectedNodes = new NativeList<Entity>(32, Allocator.Persistent);
-
-            // Override default query to exclude some networks
-            m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
-                                                   .WithAll<Node>()
-                                                   .WithAny<Road, LocalConnect>()
-                                                   .WithNone<NT_Eligible>()
-                                                   .Build();
         }
 
         protected override void OnDestroy() {

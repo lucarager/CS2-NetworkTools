@@ -152,7 +152,6 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_RemoveNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_SlideNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
-            updateSystem.UpdateAt<NT_NodeControlToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_ConnectToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_ParallelToolSystem>(SystemUpdatePhase.ToolUpdate);
             // UI

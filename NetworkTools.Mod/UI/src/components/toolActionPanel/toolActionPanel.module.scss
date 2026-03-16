@@ -87,7 +87,7 @@
     .controlRowInner {
         display: flex;
         flex-direction: row;
-        align-items: flex-start;
+        align-items: center;
     }
 }
 
@@ -100,6 +100,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     flex: 1;
+    justify-content: flex-end;
 
     & > button {
         margin-bottom: 2rem;
@@ -113,6 +114,7 @@
     align-items: center;
     justify-content: center;
     flex: 1;
+    padding: 8rem 0;
 
     & > * {
         margin: 0 4rem;
@@ -147,6 +149,10 @@
     &:hover {
         background-color: rgba(0, 0, 0, 0.7);
     }
+}
+
+.toolButton {
+
 }
 
 .icon {
@@ -185,7 +191,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     width: 120rem;
-    margin-top: 11rem;
     margin-right: 8rem;
 }
 

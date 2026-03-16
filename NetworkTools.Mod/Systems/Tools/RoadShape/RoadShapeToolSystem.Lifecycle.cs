@@ -50,13 +50,6 @@
             m_EdgeStates = new NativeList<EdgeState>(32, Allocator.Persistent);
             m_NodeStates = new NativeList<NodeState>(33, Allocator.Persistent);
             m_PathDataValid = false;
-
-            // Override default query to exclude some networks
-            m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node>()
-                .WithAny<Road, TrainTrack, TramTrack, SubwayTrack, LocalConnect>()
-                .WithNone<NT_Eligible>()
-                .Build();
         }
 
         protected override void OnDestroy() {

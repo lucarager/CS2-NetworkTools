@@ -20,7 +20,6 @@ namespace NetworkTools.Systems {
         RemoveNode,
         ShapeSlope,
         ShapeCurve,
-        NodeControl
     }
 
     /// <summary>
@@ -42,7 +41,6 @@ namespace NetworkTools.Systems {
     /// </summary>
     public partial class NT_HintTooltipSystem : TooltipSystemBase {
         private NT_AddNodeToolSystem m_NtAddNodeToolSystem;
-        private NT_NodeControlToolSystem m_NtNodeControlToolSystem;
         private NT_RoadShapeToolSystem m_NtRoadShapeToolSystem;
         private NT_RemoveNodeToolSystem m_NtRemoveNodeToolSystem;
         protected PrefabSystem m_PrefabSystem;
@@ -60,7 +58,6 @@ namespace NetworkTools.Systems {
             m_NtAddNodeToolSystem       = World.GetOrCreateSystemManaged<NT_AddNodeToolSystem>();
             m_NtRemoveNodeToolSystem    = World.GetOrCreateSystemManaged<NT_RemoveNodeToolSystem>();
             m_NtRoadShapeToolSystem = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
-            m_NtNodeControlToolSystem   = World.GetOrCreateSystemManaged<NT_NodeControlToolSystem>();
 
             InitializeTooltipConfig();
         }
@@ -115,16 +112,6 @@ namespace NetworkTools.Systems {
                     new("NetworkTools.HintTooltip.ShapeSlope.ExtendPath", m_ApplyAction),
                     new("NetworkTools.HintTooltip.ShapeSlope.RemoveLast", m_SecondaryApplyAction)
                 },
-
-                // NodeControl Tool
-                [(NT_ToolType.NodeControl, OperationPhase.Idle)] = new List<TooltipEntry> {
-                    new("NetworkTools.HintTooltip.NodeControl.Select", m_ApplyAction),
-                    new("NetworkTools.HintTooltip.Common.Exit", m_SecondaryApplyAction),
-                },
-                [(NT_ToolType.NodeControl, OperationPhase.Ready)] = new List<TooltipEntry> {
-                    new("NetworkTools.HintTooltip.NodeControl.Adjust", m_ApplyAction),
-                    new("NetworkTools.HintTooltip.NodeControl.Cancel", m_SecondaryApplyAction)
-                }
             };
         }
 
@@ -156,9 +143,6 @@ namespace NetworkTools.Systems {
             }
             if (m_PrefabSystem.HasComponent<NT_ShapeSlope>(prefab)) {
                 return (NT_ToolType.ShapeSlope, m_NtRoadShapeToolSystem);
-            }
-            if (m_PrefabSystem.HasComponent<NT_NodeControl>(prefab)) {
-                return (NT_ToolType.NodeControl, m_NtNodeControlToolSystem);
             }
             return (NT_ToolType.None, null);
         }

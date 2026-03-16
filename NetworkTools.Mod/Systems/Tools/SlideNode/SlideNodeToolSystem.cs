@@ -16,6 +16,7 @@ namespace NetworkTools.Systems.Tools {
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+    using NetworkTools.Components;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -192,7 +193,7 @@ namespace NetworkTools.Systems.Tools {
 
         private void HandleHover(ControlPoint controlPoint) {
             Phase = OperationPhase.Ready;
-            SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity, Components.NT_Highlighted.DefaultNode);
+            SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity, NT_Highlighted.DefaultNode);
         }
 
         protected override bool GetRaycastResult(out ControlPoint controlPoint) {
@@ -239,7 +240,7 @@ namespace NetworkTools.Systems.Tools {
             }
 
             // Check eligibility
-            if (EntityManager.HasComponent<Components.NT_Eligible>(candidateEntity)) {
+            if (EntityManager.HasComponent<NT_Eligible>(candidateEntity)) {
                 controlPoint = new ControlPoint(candidateEntity, hit);
             }
 

@@ -1,6 +1,7 @@
 ﻿namespace NetworkTools.Systems {
     #region Using Statements
 
+    using Colossal.Entities;
     using Colossal.UI.Binding;
     using Game.Input;
     using Game.Net;
@@ -31,11 +32,17 @@
             Edge    = 2
         }
 
+        private ValueBindingHelper<int>                  m_AvailableSnapsBinding;
+        private ValueBindingHelper<int>                  m_AvailableTargetsBinding;
         private ValueBindingHelper<int>                  m_ConnectModeBinding;
+        private int                                      m_LastAvailableSnaps;
+        private int                                      m_LastAvailableTargets;
         private int                                      m_LastConnectMode;
         private Entity                                   m_LastNetPrefabEntity;
         private int                                      m_LastSelectedNodesHash;
         private string                                   m_LastSelectedPrefab;
+        private int                                      m_LastSelectedSnaps;
+        private int                                      m_LastSelectedTargets;
         private int                                      m_LastToolPrefabCount;
         private PrefixedLogger                           m_Log;
         private NameSystem                               m_NameSystem;
@@ -46,6 +53,8 @@
         private ValueBindingHelper<NetPrefabData>        m_SelectedNetPrefabBinding;
         private ValueBindingHelper<ToolSelectionData[]>  m_SelectedEntitiesBinding;
         private ValueBindingHelper<string>               m_SelectedPrefabBinding;
+        private ValueBindingHelper<int>                  m_SelectedSnapsBinding;
+        private ValueBindingHelper<int>                  m_SelectedTargetsBinding;
         private ValueBindingHelper<ShapeTransformConfig> m_ShapeConfigBinding;
         private ProxyAction                              m_ToggleToolPanelAction;
 
@@ -76,7 +85,11 @@
                                                  HandleUpdateShapeConfig,
                                                  new ValueWriter<ShapeTransformConfig>(),
                                                  new ValueReader<ShapeTransformConfig>());
-            m_ConnectModeBinding = CreateBinding("CONNECT_MODE", (int)ConnectMode.None, HandleUpdateConnectMode);
+            m_ConnectModeBinding   = CreateBinding("CONNECT_MODE", (int)ConnectMode.None, HandleUpdateConnectMode);
+            m_AvailableSnapsBinding   = CreateBinding("AVAILABLE_SNAPS",   (int)SnapOption.None);
+            m_SelectedSnapsBinding    = CreateBinding("SELECTED_SNAPS",    (int)SnapOption.None, HandleUpdateSelectedSnaps);
+            m_AvailableTargetsBinding = CreateBinding("AVAILABLE_TARGETS", (int)TargetOption.All);
+            m_SelectedTargetsBinding  = CreateBinding("SELECTED_TARGETS",  (int)TargetOption.All, HandleUpdateSelectedTargets);
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
             CreateTrigger("APPLY_TRANSFORM", HandleApplyTransform);
@@ -135,7 +148,7 @@
                     var entity     = selectedNodes[i];
                     var entityType = DetermineEntityType(entity);
                     var entityName = entityType == SelectedEntityType.Node
-                                         ? $"Node {i + 1}"
+                                         ? GetComputedNodeName(entity, i)
                                          : m_NameSystem.GetRenderedLabelName(entity);
                     selectedEntitiesData[i] = new ToolSelectionData(entity, entityType, entityName);
                 }
@@ -165,11 +178,58 @@
                                                        : NetPrefabData.Empty;
             }
 
+            // Update snap/target bindings from the active tool
+            var activeTool = m_ToolSystem.activeTool as NT_BaseToolSystem;
+
+            var currentAvailableSnaps = activeTool != null ? (int)activeTool.AvailableSnaps : (int)SnapOption.None;
+            if (currentAvailableSnaps != m_LastAvailableSnaps) {
+                m_LastAvailableSnaps          = currentAvailableSnaps;
+                m_AvailableSnapsBinding.Value = currentAvailableSnaps;
+            }
+
+            var currentSelectedSnaps = activeTool != null ? (int)activeTool.SelectedSnaps : (int)SnapOption.None;
+            if (currentSelectedSnaps != m_LastSelectedSnaps) {
+                m_LastSelectedSnaps          = currentSelectedSnaps;
+                m_SelectedSnapsBinding.Value = currentSelectedSnaps;
+            }
+
+            var currentAvailableTargets = activeTool != null ? (int)activeTool.AvailableTargets : (int)TargetOption.All;
+            if (currentAvailableTargets != m_LastAvailableTargets) {
+                m_LastAvailableTargets          = currentAvailableTargets;
+                m_AvailableTargetsBinding.Value = currentAvailableTargets;
+            }
+
+            var currentSelectedTargets = activeTool != null ? (int)activeTool.SelectedTargets : (int)TargetOption.All;
+            if (currentSelectedTargets != m_LastSelectedTargets) {
+                m_LastSelectedTargets          = currentSelectedTargets;
+                m_SelectedTargetsBinding.Value = currentSelectedTargets;
+            }
+
             if (m_ToggleToolPanelAction.WasPerformedThisFrame()) {
                 m_PanelOpenBinding.Value = true;
             }
 
             base.OnUpdate();
+        }
+
+        private string GetComputedNodeName(Entity nodeEntity, int fallbackIndex) {
+            if (TryGetNodeName(nodeEntity, out var streetName)) {
+                return $"Node on {streetName}";
+            }
+            return $"Node {fallbackIndex + 1}";
+        }
+
+        private bool TryGetNodeName(Entity nodeEntity, out string name) {
+
+            if (EntityManager.TryGetBuffer<ConnectedEdge>(nodeEntity, true, out var connectedEdges)) {
+                // For now, get the first connected edge's name as the node name.
+                // todo handle intersections.
+                name = m_NameSystem.GetRenderedLabelName(connectedEdges[0].m_Edge);
+                return true;
+            }
+
+            name = "Node";
+            return false;
         }
 
         private SelectedEntityType DetermineEntityType(Entity entity) {
@@ -259,6 +319,19 @@
 
         private void HandleApplyTransform() {
             m_NtRoadShapeToolSystem.RequestApply();
+        }
+
+        private void HandleUpdateSelectedSnaps(int value) {
+            if (m_ToolSystem.activeTool is NT_BaseToolSystem activeTool) {
+                activeTool.SelectedSnaps = (SnapOption)value;
+            }
+        }
+
+        private void HandleUpdateSelectedTargets(int value) {
+            if (m_ToolSystem.activeTool is NT_BaseToolSystem activeTool) {
+                activeTool.SelectedTargets = (TargetOption)value;
+                activeTool.RefreshEligibility();
+            }
         }
 
         /// <summary>

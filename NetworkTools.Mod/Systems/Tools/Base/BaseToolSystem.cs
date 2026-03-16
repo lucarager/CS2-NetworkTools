@@ -63,6 +63,28 @@ namespace NetworkTools.Systems.Tools {
         protected const float MaxDistanceToSelect = 16f;
 
         /// <summary>
+        ///     Snap options this tool makes available to the player.
+        ///     Override in derived tools to expose specific snap options.
+        /// </summary>
+        public virtual SnapOption AvailableSnaps => SnapOption.None;
+
+        /// <summary>
+        ///     Currently active snap options selected by the player.
+        /// </summary>
+        public SnapOption SelectedSnaps { get; set; } = SnapOption.None;
+
+        /// <summary>
+        ///     Target options this tool makes available to the player.
+        ///     Override in derived tools to expose specific target options.
+        /// </summary>
+        public virtual TargetOption AvailableTargets => TargetOption.All;
+
+        /// <summary>
+        ///     Currently active target options selected by the player.
+        /// </summary>
+        public TargetOption SelectedTargets { get; set; } = TargetOption.All;
+
+        /// <summary>
         ///     Tool requests disabling vanilla NodeReductionSystem during lifecycle
         /// </summary>
         public bool DisableVanillaNodeReduction = false;
@@ -117,6 +139,20 @@ namespace NetworkTools.Systems.Tools {
         protected EntityQuery         m_NodesWithSelectedQuery;
         protected EntityQuery         m_AllNtComponentsQuery;
         protected OverlayRenderSystem m_OverlayRenderSystem;
+
+        /// <summary>
+        ///     Per-target-flag queries for adding NT_Eligible to matching nodes.
+        /// </summary>
+        private EntityQuery m_TargetRoadNodesQuery;
+        private EntityQuery m_TargetPathNodesQuery;
+        private EntityQuery m_TargetRailNodesQuery;
+        private EntityQuery m_TargetWaterwayNodesQuery;
+
+        /// <summary>
+        ///     Whether this tool uses custom per-entity eligibility filtering.
+        ///     When true, MarkEligibleNodes will call FilterEligibleEntity for each candidate.
+        /// </summary>
+        protected bool UseCustomEligibilityFilter = false;
 
         /// <summary>
         ///     Selected Prefab, set by derived tools
@@ -250,6 +286,25 @@ namespace NetworkTools.Systems.Tools {
             m_EdgesWithSelectedQuery = SystemAPI.QueryBuilder()
                 .WithAll<Edge, NT_Selected>()
                 .Build();
+
+            // Per-target-flag queries for MarkEligibleNodes
+            m_TargetRoadNodesQuery = SystemAPI.QueryBuilder()
+                .WithAll<Node, Road>()
+                .WithNone<NT_Eligible>()
+                .Build();
+            m_TargetPathNodesQuery = SystemAPI.QueryBuilder()
+                .WithAll<Node, LocalConnect>()
+                .WithNone<NT_Eligible>()
+                .Build();
+            m_TargetRailNodesQuery = SystemAPI.QueryBuilder()
+                .WithAll<Node>()
+                .WithAny<TrainTrack, TramTrack, SubwayTrack>()
+                .WithNone<NT_Eligible>()
+                .Build();
+            m_TargetWaterwayNodesQuery = SystemAPI.QueryBuilder()
+                .WithAll<Node, Waterway>()
+                .WithNone<NT_Eligible>()
+                .Build();
         }
 
         protected override void OnDestroy() {
@@ -292,6 +347,10 @@ namespace NetworkTools.Systems.Tools {
             if (DisableVanillaNodeReduction) {
                 m_NodeReductionSystem.Enabled = false;
             }
+
+            // Reset snap/target selections to defaults
+            SelectedSnaps   = AvailableSnaps;
+            SelectedTargets = AvailableTargets;
 
             // Reset tracking
             if (m_LastHoveredEntity.IsCreated) {
@@ -408,6 +467,99 @@ namespace NetworkTools.Systems.Tools {
             // Add BatchesUpdated BEFORE removing components, because the query won't match after removal
             EntityManager.AddComponent<BatchesUpdated>(m_EntitiesWithHighlightedQuery);
             EntityManager.RemoveComponent(m_EntitiesWithHighlightedQuery, HighlightedComponentTypeSet);
+        }
+
+        /// <summary>
+        ///     Adds NT_Eligible component to nodes matching the current target flags.
+        ///     When <see cref="UseCustomEligibilityFilter"/> is true, also applies
+        ///     <see cref="FilterEligibleEntity"/> per entity.
+        /// </summary>
+        protected void MarkEligibleNodes() {
+            var targets = SelectedTargets & AvailableTargets;
+
+            if (!UseCustomEligibilityFilter) {
+                AddEligibleByTargets(targets);
+            } else {
+                AddEligibleByTargetsFiltered(targets);
+            }
+        }
+
+        /// <summary>
+        ///     Removes all current eligibility and re-applies based on current target flags.
+        ///     Called by the UI when the player toggles target options.
+        ///     Invokes <see cref="OnEligibilityReset"/> between stripping and re-marking
+        ///     so derived tools can clean up phase-specific state.
+        /// </summary>
+        public void RefreshEligibility() {
+            EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
+            OnEligibilityReset();
+            MarkEligibleNodes();
+        }
+
+        /// <summary>
+        ///     Called during <see cref="RefreshEligibility"/> after eligibility is stripped
+        ///     but before it is re-applied. Override to reset tool-specific state
+        ///     (selections, handles, phase) when the player changes target options.
+        /// </summary>
+        protected virtual void OnEligibilityReset() { }
+
+        /// <summary>
+        ///     Per-entity eligibility filter called when <see cref="UseCustomEligibilityFilter"/> is true.
+        ///     Override in derived tools to apply tool-specific criteria.
+        /// </summary>
+        /// <param name="entity">Candidate node entity that already matches target flags.</param>
+        /// <returns>True if the entity should be marked eligible.</returns>
+        protected virtual bool FilterEligibleEntity(Entity entity) => true;
+
+        /// <summary>
+        ///     Fast path: batch-adds NT_Eligible via static queries without per-entity filtering.
+        /// </summary>
+        private void AddEligibleByTargets(TargetOption targets) {
+            if ((targets & TargetOption.All) == TargetOption.All) {
+                EntityManager.AddComponent<NT_Eligible>(m_NodesWithoutEligibleQuery);
+                return;
+            }
+
+            if ((targets & TargetOption.Road) != 0)
+                EntityManager.AddComponent<NT_Eligible>(m_TargetRoadNodesQuery);
+            if ((targets & TargetOption.Path) != 0)
+                EntityManager.AddComponent<NT_Eligible>(m_TargetPathNodesQuery);
+            if ((targets & TargetOption.Rail) != 0)
+                EntityManager.AddComponent<NT_Eligible>(m_TargetRailNodesQuery);
+            if ((targets & TargetOption.Waterway) != 0)
+                EntityManager.AddComponent<NT_Eligible>(m_TargetWaterwayNodesQuery);
+        }
+
+        /// <summary>
+        ///     Slow path: iterates candidate entities and applies <see cref="FilterEligibleEntity"/> per entity.
+        /// </summary>
+        private void AddEligibleByTargetsFiltered(TargetOption targets) {
+            if ((targets & TargetOption.All) == TargetOption.All) {
+                FilterAndAddEligible(m_NodesWithoutEligibleQuery);
+                return;
+            }
+
+            if ((targets & TargetOption.Road) != 0)
+                FilterAndAddEligible(m_TargetRoadNodesQuery);
+            if ((targets & TargetOption.Path) != 0)
+                FilterAndAddEligible(m_TargetPathNodesQuery);
+            if ((targets & TargetOption.Rail) != 0)
+                FilterAndAddEligible(m_TargetRailNodesQuery);
+            if ((targets & TargetOption.Waterway) != 0)
+                FilterAndAddEligible(m_TargetWaterwayNodesQuery);
+        }
+
+        /// <summary>
+        ///     Iterates entities from a query and adds NT_Eligible to those passing the custom filter.
+        /// </summary>
+        private void FilterAndAddEligible(EntityQuery query) {
+            var entities = query.ToEntityArray(Allocator.Temp);
+            foreach (var entity in entities) {
+                if (FilterEligibleEntity(entity)) {
+                    EntityManager.AddComponent<NT_Eligible>(entity);
+                }
+            }
+            entities.Dispose();
         }
     }
 }

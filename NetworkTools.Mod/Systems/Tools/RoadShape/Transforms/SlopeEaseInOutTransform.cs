@@ -115,10 +115,10 @@
 
             // Calculate path length in XZ for distance calculations
             var pathLengthXZ = math.distance(pathStartPos.xz, pathEndPos.xz);
-            var halfPathLength = pathLengthXZ * 0.5f;
+            var halfPathLength = ctx.TotalLength * 0.5f;
 
             // Elevate handles above the path for visibility
-            var elevation = new float3(0, 3, 0);
+            var elevation = new float3(0, 1f, 0);
 
             // Position handles along their respective edge directions (not the straight start-to-end line)
             // The constraint axis uses the edge direction, so the position must match

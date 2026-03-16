@@ -11,7 +11,7 @@ namespace NetworkTools.Systems.Tools {
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
-
+    using NetworkTools.Components;
     using NetworkTools.Components.Tools;
 
     using Unity.Collections;
@@ -39,8 +39,9 @@ namespace NetworkTools.Systems.Tools {
             m_Log.Prefix = nameof(NT_RemoveNodeToolSystem);
 
             // Configuration
-            RenderEligibleNodes                = true;
-            DisableVanillaValidation = true;
+            RenderEligibleNodes        = true;
+            DisableVanillaValidation   = true;
+            UseCustomEligibilityFilter = true;
         }
 
         protected override void OnStartRunning() {
@@ -48,36 +49,17 @@ namespace NetworkTools.Systems.Tools {
 
             Phase = OperationPhase.Idle;
 
-            // Add NT_Eligible only to nodes with exactly 2 connected edges (non-intersection, non-endpoint)
             MarkEligibleNodes();
         }
 
-        /// <summary>
-        /// Marks nodes as eligible for removal if they have exactly 2 connected edges.
-        /// These are intermediate nodes that can be removed by merging their two edges.
-        /// </summary>
-        private void MarkEligibleNodes() {
-            var nodeQuery = SystemAPI.QueryBuilder()
-                                     .WithAll<Node>()
-                                     .WithNone<Components.NT_Eligible>()
-                                     .Build();
-
-            var nodeEntities = nodeQuery.ToEntityArray(Allocator.Temp);
-
-            foreach (var nodeEntity in nodeEntities) {
-                if (!EntityManager.HasBuffer<ConnectedEdge>(nodeEntity)) {
-                    continue;
-                }
-
-                var connectedEdges = EntityManager.GetBuffer<ConnectedEdge>(nodeEntity);
-                
-                // Only nodes with exactly 2 connected edges are eligible for removal
-                if (connectedEdges.Length == 2) {
-                    EntityManager.AddComponent<Components.NT_Eligible>(nodeEntity);
-                }
+        /// <inheritdoc/>
+        protected override bool FilterEligibleEntity(Entity entity) {
+            if (!EntityManager.HasBuffer<ConnectedEdge>(entity)) {
+                return false;
             }
 
-            nodeEntities.Dispose();
+            // Only nodes with exactly 2 connected edges are eligible for removal
+            return EntityManager.GetBuffer<ConnectedEdge>(entity).Length == 2;
         }
 
         protected override void OnStopRunning() {

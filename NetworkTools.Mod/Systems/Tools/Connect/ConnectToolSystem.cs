@@ -14,6 +14,9 @@
         /// <inheritdoc />
         public override string toolID => "ConnectTool";
 
+        /// <inheritdoc />
+        public override TargetOption AvailableTargets => TargetOption.Road | TargetOption.Path;
+
         /// <summary>
         ///     Caches the last hit position for tool-specific use.
         /// </summary>

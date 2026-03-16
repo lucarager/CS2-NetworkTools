@@ -283,9 +283,9 @@ namespace NetworkTools.Systems.Tools {
             m_CurrentPathNodes.Clear();
             m_CurrentPathEdges.Clear();
 
-            // Add NT_Eligible to ALL nodes 
+            // Add NT_Eligible to matching nodes based on target flags
             if (resetEligibleNodes) {
-                EntityManager.AddComponent<NT_Eligible>(m_NodesWithoutEligibleQuery);
+                MarkEligibleNodes();
             }
         }
 
@@ -304,6 +304,14 @@ namespace NetworkTools.Systems.Tools {
 
             // Reset state
             ResetToNoSelection(resetEligibleNodes);
+        }
+
+        /// <inheritdoc/>
+        protected override void OnEligibilityReset() {
+            Phase = OperationPhase.Idle;
+            DestroyAllHandles();
+            ClearSelectionState(resetEligibleNodes: false);
+            OnSelectionCleared();
         }
 
         #endregion

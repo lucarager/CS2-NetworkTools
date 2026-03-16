@@ -60,6 +60,25 @@ export enum ConnectMode {
     Loop = 3,
 }
 
+// Snap options (bitflags)
+export enum SnapOption {
+    None = 0,
+    ZoneGrid = 1 << 0,
+    MidPoint = 1 << 1,
+    All = ZoneGrid | MidPoint,
+}
+
+// Target options (bitflags)
+export enum TargetOption {
+    None = 0,
+    Road = 1 << 0,
+    Path = 1 << 1,
+    Rail = 1 << 2,
+    Waterway = 1 << 3,
+    Underground = 1 << 4,
+    All = Road | Path | Rail | Waterway | Underground,
+}
+
 export type NetPrefabData = {
     Entity: Entity;
     Thumbnail: string;
@@ -83,6 +102,10 @@ export const GAME_BINDINGS = {
         "SELECTED_NET_PREFAB",
         EMPTY_NET_PREFAB_DATA,
     ),
+    AVAILABLE_SNAPS: new TwoWayBinding<number>("AVAILABLE_SNAPS", SnapOption.None),
+    SELECTED_SNAPS: new TwoWayBinding<number>("SELECTED_SNAPS", SnapOption.None),
+    AVAILABLE_TARGETS: new TwoWayBinding<number>("AVAILABLE_TARGETS", TargetOption.All),
+    SELECTED_TARGETS: new TwoWayBinding<number>("SELECTED_TARGETS", TargetOption.All),
 };
 
 export const GAME_TRIGGERS = {
