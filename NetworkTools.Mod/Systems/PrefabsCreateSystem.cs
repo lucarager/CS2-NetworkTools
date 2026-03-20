@@ -126,7 +126,7 @@
             CreateToolPrefab("ShapeSlope", "slope.svg", "shape", new NT_ShapeSlope(), true);
             CreateToolPrefab("ShapeCurve", "curve.svg", "shape", new NT_ShapeCurve(), true);
             CreateToolPrefab("Connect",  "connect.svg", "generative", new NT_Connect(), false);
-            CreateToolPrefab("Parallel "parallel.svg", "generative", new NT_Parallel(), false);
+            CreateToolPrefab("Parallel", "parallel.svg", "generative", new NT_Parallel(), false);
             CreateToolPrefab("Grid", "grid.svg", "generative", new NT_Grid(), false);
 #endif
 
