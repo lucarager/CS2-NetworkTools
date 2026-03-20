@@ -9,18 +9,8 @@
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
-
-    using NetworkTools.Components;
-    using NetworkTools.Components;
-    using NetworkTools.Settings;
-    using NetworkTools.Systems.Tools.RoadShape;
-
-    using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
-    using Unity.Mathematics;
-
-    using static NetworkTools.Systems.Tools.RoadShape.NT_RoadShapeToolSystem;
 
     public partial class NT_ConnectToolSystem {
         private JobHandle ScheduleDefinitionsJob(JobHandle inputDeps, ToolOutputMode outputMode) {
