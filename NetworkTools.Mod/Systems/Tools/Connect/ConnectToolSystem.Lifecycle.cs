@@ -104,7 +104,7 @@
         protected override void OnCreate() {
             base.OnCreate();
 
-            m_Log.Prefix = nameof(NT_RoadShapeToolSystem);
+            m_Log.Prefix = nameof(NT_ConnectToolSystem);
 
             // Configuration
             RenderEligibleNodes      = true;
