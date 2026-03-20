@@ -29,4 +29,16 @@ namespace NetworkTools.Systems.Tools {
         Waterway    = 1 << 3,
         All         = Road | Path | Rail | Waterway
     }
+
+    /// <summary>
+    ///     View options controlling additional rendering / visualization.
+    /// </summary>
+    [Flags]
+    public enum ViewOption {
+        None              = 0,
+        Underground       = 1 << 0,
+        ZoneGrid          = 1 << 1,
+        InvisibleNetworks = 1 << 2,
+        All               = Underground | ZoneGrid | InvisibleNetworks
+    }
 }

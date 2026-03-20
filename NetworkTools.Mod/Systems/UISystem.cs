@@ -34,15 +34,18 @@
 
         private ValueBindingHelper<int>                  m_AvailableSnapsBinding;
         private ValueBindingHelper<int>                  m_AvailableTargetsBinding;
+        private ValueBindingHelper<int>                  m_AvailableViewsBinding;
         private ValueBindingHelper<int>                  m_ConnectModeBinding;
         private int                                      m_LastAvailableSnaps;
         private int                                      m_LastAvailableTargets;
+        private int                                      m_LastAvailableViews;
         private int                                      m_LastConnectMode;
         private Entity                                   m_LastNetPrefabEntity;
         private int                                      m_LastSelectedNodesHash;
         private string                                   m_LastSelectedPrefab;
         private int                                      m_LastSelectedSnaps;
         private int                                      m_LastSelectedTargets;
+        private int                                      m_LastSelectedViews;
         private int                                      m_LastToolPrefabCount;
         private PrefixedLogger                           m_Log;
         private NameSystem                               m_NameSystem;
@@ -55,6 +58,7 @@
         private ValueBindingHelper<string>               m_SelectedPrefabBinding;
         private ValueBindingHelper<int>                  m_SelectedSnapsBinding;
         private ValueBindingHelper<int>                  m_SelectedTargetsBinding;
+        private ValueBindingHelper<int>                  m_SelectedViewsBinding;
         private ValueBindingHelper<ShapeTransformConfig> m_ShapeConfigBinding;
         private ProxyAction                              m_ToggleToolPanelAction;
 
@@ -90,6 +94,8 @@
             m_SelectedSnapsBinding    = CreateBinding("SELECTED_SNAPS",    (int)SnapOption.None, HandleUpdateSelectedSnaps);
             m_AvailableTargetsBinding = CreateBinding("AVAILABLE_TARGETS", (int)TargetOption.All);
             m_SelectedTargetsBinding  = CreateBinding("SELECTED_TARGETS",  (int)TargetOption.All, HandleUpdateSelectedTargets);
+            m_AvailableViewsBinding   = CreateBinding("AVAILABLE_VIEWS",   (int)ViewOption.All);
+            m_SelectedViewsBinding    = CreateBinding("SELECTED_VIEWS",    (int)ViewOption.None, HandleUpdateSelectedViews);
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
             CreateTrigger("APPLY_TRANSFORM", HandleApplyTransform);
@@ -203,6 +209,18 @@
             if (currentSelectedTargets != m_LastSelectedTargets) {
                 m_LastSelectedTargets          = currentSelectedTargets;
                 m_SelectedTargetsBinding.Value = currentSelectedTargets;
+            }
+
+            var currentAvailableViews = activeTool != null ? (int)activeTool.AvailableViews : (int)ViewOption.All;
+            if (currentAvailableViews != m_LastAvailableViews) {
+                m_LastAvailableViews          = currentAvailableViews;
+                m_AvailableViewsBinding.Value = currentAvailableViews;
+            }
+
+            var currentSelectedViews = activeTool != null ? (int)activeTool.SelectedViews : (int)ViewOption.None;
+            if (currentSelectedViews != m_LastSelectedViews) {
+                m_LastSelectedViews          = currentSelectedViews;
+                m_SelectedViewsBinding.Value = currentSelectedViews;
             }
 
             if (m_ToggleToolPanelAction.WasPerformedThisFrame()) {
@@ -331,6 +349,13 @@
             if (m_ToolSystem.activeTool is NT_BaseToolSystem activeTool) {
                 activeTool.SelectedTargets = (TargetOption)value;
                 activeTool.RefreshEligibility();
+            }
+        }
+
+        private void HandleUpdateSelectedViews(int value) {
+            if (m_ToolSystem.activeTool is NT_BaseToolSystem activeTool) {
+                activeTool.SelectedViews = (ViewOption)value;
+                activeTool.RefreshViews();
             }
         }
 

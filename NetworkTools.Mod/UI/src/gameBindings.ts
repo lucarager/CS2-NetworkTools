@@ -79,6 +79,15 @@ export enum TargetOption {
     All = Road | Path | Rail | Waterway | Underground,
 }
 
+// View options (bitflags)
+export enum ViewOption {
+    None = 0,
+    Underground = 1 << 0,
+    ZoneGrid = 1 << 1,
+    InvisibleNetworks = 1 << 2,
+    All = Underground | ZoneGrid | InvisibleNetworks,
+}
+
 export type NetPrefabData = {
     Entity: Entity;
     Thumbnail: string;
@@ -106,6 +115,8 @@ export const GAME_BINDINGS = {
     SELECTED_SNAPS: new TwoWayBinding<number>("SELECTED_SNAPS", SnapOption.None),
     AVAILABLE_TARGETS: new TwoWayBinding<number>("AVAILABLE_TARGETS", TargetOption.All),
     SELECTED_TARGETS: new TwoWayBinding<number>("SELECTED_TARGETS", TargetOption.All),
+    AVAILABLE_VIEWS: new TwoWayBinding<number>("AVAILABLE_VIEWS", ViewOption.All),
+    SELECTED_VIEWS: new TwoWayBinding<number>("SELECTED_VIEWS", ViewOption.None),
 };
 
 export const GAME_TRIGGERS = {

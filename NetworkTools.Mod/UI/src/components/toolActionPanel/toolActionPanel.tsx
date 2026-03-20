@@ -9,6 +9,7 @@ import { ConnectControls } from "./connect";
 import { useLocalization } from "cs2/l10n";
 import { SnapSelection } from "./snapSelection";
 import { TargetSelection } from "./targetSelection";
+import { ViewSelection } from "./viewSelection";
 
 // Registry of tool components mapped by tool ID
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
@@ -39,8 +40,9 @@ export const ToolActionPanel = () => {
                     </span>
                 </div>
                 <div className={styles.col}>
-                    <SnapSelection />
+                    <ViewSelection />
                     <TargetSelection />
+                    <SnapSelection />
                 </div>
                 {ToolComponent && <ToolComponent toolId={selectedBinding} />}
             </div>

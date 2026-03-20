@@ -85,6 +85,17 @@ namespace NetworkTools.Systems.Tools {
         public TargetOption SelectedTargets { get; set; } = TargetOption.All;
 
         /// <summary>
+        ///     View options this tool makes available to the player.
+        ///     Override in derived tools to expose specific view options.
+        /// </summary>
+        public virtual ViewOption AvailableViews => ViewOption.All;
+
+        /// <summary>
+        ///     Currently active view options selected by the player.
+        /// </summary>
+        public ViewOption SelectedViews { get; set; } = ViewOption.None;
+
+        /// <summary>
         ///     Tool requests disabling vanilla NodeReductionSystem during lifecycle
         /// </summary>
         public bool DisableVanillaNodeReduction = false;
@@ -112,6 +123,11 @@ namespace NetworkTools.Systems.Tools {
         ///     Tool System
         /// </summary>
         protected ToolSystem m_ToolSystem;
+
+        /// <summary>
+        ///     Tool System
+        /// </summary>
+        protected RenderingSystem m_RenderingSystem;
 
         /// <summary>
         ///     Common entity queries for node management
@@ -228,6 +244,7 @@ namespace NetworkTools.Systems.Tools {
             m_NodeReductionSystem = World.GetOrCreateSystemManaged<NodeReductionSystem>();
             m_Barrier             = World.GetOrCreateSystemManaged<ToolOutputBarrier>();
             m_ToolSystem = World.GetOrCreateSystemManaged<ToolSystem>();
+            m_RenderingSystem = World.GetOrCreateSystemManaged<RenderingSystem>();
 
             // Move this tool to the front of the tool stack so it takes priority over vanilla tools
             m_ToolSystem.tools.Remove(this);
@@ -348,9 +365,10 @@ namespace NetworkTools.Systems.Tools {
                 m_NodeReductionSystem.Enabled = false;
             }
 
-            // Reset snap/target selections to defaults
+            // Reset snap/target/view selections to defaults
             SelectedSnaps   = AvailableSnaps;
             SelectedTargets = AvailableTargets;
+            SelectedViews   = AvailableViews;
 
             // Reset tracking
             if (m_LastHoveredEntity.IsCreated) {
@@ -494,6 +512,15 @@ namespace NetworkTools.Systems.Tools {
             EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
             OnEligibilityReset();
             MarkEligibleNodes();
+        }
+
+        /// <summary>
+        ///     Refreshes views
+        /// </summary>
+        public void RefreshViews() {
+            base.requireUnderground = (SelectedViews & ViewOption.Underground) != 0;
+            base.requireZones = (SelectedViews & ViewOption.ZoneGrid) != 0;
+            m_RenderingSystem.markersVisible = (SelectedViews & ViewOption.InvisibleNetworks) != 0;
         }
 
         /// <summary>
