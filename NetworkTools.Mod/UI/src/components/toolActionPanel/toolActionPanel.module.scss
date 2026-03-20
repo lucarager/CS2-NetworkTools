@@ -20,7 +20,7 @@
 .row {
     display: flex;
     flex-direction: row;
-    padding: 8rem 14rem;
+    padding: 8rem 12rem;
     align-items: center;
     justify-content: space-between;
     flex: 2;
@@ -29,7 +29,7 @@
 .col {
     display: flex;
     flex-direction: column;
-    padding: 10rem 16rem;
+    padding: 10rem 12rem;
     flex: 2;
 }
 
@@ -104,7 +104,7 @@
 
     & > button {
         margin-bottom: 2rem;
-        margin-right: 4rem;
+        margin-left: 4rem;
     }
 }
 

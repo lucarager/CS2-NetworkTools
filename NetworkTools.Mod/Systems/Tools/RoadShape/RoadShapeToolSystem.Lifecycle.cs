@@ -29,7 +29,18 @@
                 return false;
             }
 
+            // Detect variant switch (slope ↔ curve) and reset config/handles
+            var wasSlopePrefab = m_Prefab != null && m_PrefabSystem.HasComponent<NT_ShapeSlope>(m_Prefab);
+            var wasCurvePrefab = m_Prefab != null && m_PrefabSystem.HasComponent<NT_ShapeCurve>(m_Prefab);
+
             m_Prefab = prefab;
+
+            if (hasShapeSlope && !wasSlopePrefab) {
+                SetTransformationConfig(ShapeTransformConfig.SlopeLinear());
+            } else if (hasShapeCurve && !wasCurvePrefab) {
+                SetTransformationConfig(ShapeTransformConfig.CurveStraighten());
+            }
+
             return true;
         }
 

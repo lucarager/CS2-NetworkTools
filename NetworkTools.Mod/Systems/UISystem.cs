@@ -325,6 +325,11 @@
                                                          id),
                                             out var prefab)) {
                 m_ToolSystem.ActivatePrefabTool(prefab);
+
+                // Sync shape config binding when the road shape tool resets its config
+                if (m_ToolSystem.activeTool == m_NtRoadShapeToolSystem) {
+                    m_ShapeConfigBinding.Value = m_NtRoadShapeToolSystem.ShapeTransformConfig;
+                }
             }
         }
 

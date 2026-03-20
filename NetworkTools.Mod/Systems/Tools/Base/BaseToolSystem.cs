@@ -317,7 +317,7 @@ namespace NetworkTools.Systems.Tools {
                 .Build();
             m_TargetInvisiblePathNodesQuery = SystemAPI.QueryBuilder()
                 .WithAll<Node, LocalConnect>()
-                .WithNone<Marker>()
+                .WithAll<Marker>()
                 .WithNone<NT_Eligible>()
                 .Build();
             m_TargetRailNodesQuery = SystemAPI.QueryBuilder()
@@ -375,7 +375,7 @@ namespace NetworkTools.Systems.Tools {
             // Reset snap/target/view selections to defaults
             SelectedSnaps   = AvailableSnaps;
             SelectedTargets = AvailableTargets;
-            SelectedViews   = AvailableViews;
+            SelectedViews   = ViewOption.None;
 
             // Reset tracking
             if (m_LastHoveredEntity.IsCreated) {

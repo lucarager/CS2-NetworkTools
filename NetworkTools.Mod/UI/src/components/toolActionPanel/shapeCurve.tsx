@@ -53,6 +53,7 @@ export const ShapeCurveControls: React.FC = () => {
             {/* Transform Controls - Show when 2+ nodes selected */}
             {selectedEntitiesBinding.length >= 2 && (
                 <>
+                    <div className={styles.divider}></div>
                     <div className={styles.col}>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
