@@ -163,6 +163,7 @@ namespace NetworkTools.Systems.Tools {
         private EntityQuery m_TargetPathNodesQuery;
         private EntityQuery m_TargetRailNodesQuery;
         private EntityQuery m_TargetWaterwayNodesQuery;
+        private EntityQuery m_TargetInvisiblePathNodesQuery;
 
         /// <summary>
         ///     Whether this tool uses custom per-entity eligibility filtering.
@@ -311,6 +312,12 @@ namespace NetworkTools.Systems.Tools {
                 .Build();
             m_TargetPathNodesQuery = SystemAPI.QueryBuilder()
                 .WithAll<Node, LocalConnect>()
+                .WithNone<Marker>()
+                .WithNone<NT_Eligible>()
+                .Build();
+            m_TargetInvisiblePathNodesQuery = SystemAPI.QueryBuilder()
+                .WithAll<Node, LocalConnect>()
+                .WithNone<Marker>()
                 .WithNone<NT_Eligible>()
                 .Build();
             m_TargetRailNodesQuery = SystemAPI.QueryBuilder()
@@ -555,6 +562,8 @@ namespace NetworkTools.Systems.Tools {
                 EntityManager.AddComponent<NT_Eligible>(m_TargetRailNodesQuery);
             if ((targets & TargetOption.Waterway) != 0)
                 EntityManager.AddComponent<NT_Eligible>(m_TargetWaterwayNodesQuery);
+            if ((targets & TargetOption.InvisiblePath) != 0)
+                EntityManager.AddComponent<NT_Eligible>(m_TargetInvisiblePathNodesQuery);
         }
 
         /// <summary>
@@ -574,6 +583,8 @@ namespace NetworkTools.Systems.Tools {
                 FilterAndAddEligible(m_TargetRailNodesQuery);
             if ((targets & TargetOption.Waterway) != 0)
                 FilterAndAddEligible(m_TargetWaterwayNodesQuery);
+            if ((targets & TargetOption.InvisiblePath) != 0)
+                FilterAndAddEligible(m_TargetInvisiblePathNodesQuery);
         }
 
         /// <summary>

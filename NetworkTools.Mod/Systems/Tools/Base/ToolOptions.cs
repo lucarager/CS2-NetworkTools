@@ -27,7 +27,8 @@ namespace NetworkTools.Systems.Tools {
         Path        = 1 << 1,
         Rail        = 1 << 2,
         Waterway    = 1 << 3,
-        All         = Road | Path | Rail | Waterway
+        InvisiblePath = 1 << 4,
+        All         = Road | Path | Rail | Waterway | InvisiblePath
     }
 
     /// <summary>

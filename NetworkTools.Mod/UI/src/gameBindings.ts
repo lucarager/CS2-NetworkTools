@@ -75,8 +75,8 @@ export enum TargetOption {
     Path = 1 << 1,
     Rail = 1 << 2,
     Waterway = 1 << 3,
-    Underground = 1 << 4,
-    All = Road | Path | Rail | Waterway | Underground,
+    InvisiblePath = 1 << 4,
+    All = Road | Path | Rail | Waterway | InvisiblePath,
 }
 
 // View options (bitflags)

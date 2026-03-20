@@ -27,6 +27,11 @@ const TARGET_FLAGS: { flag: TargetOption; label: string; icon: string }[] = [
         label: "Waterway",
         icon: "coui://nt/Target/Waterway.svg",
     },
+    {
+        flag: TargetOption.InvisiblePath,
+        label: "InvisiblePath",
+        icon: "coui://nt/Target/InvisiblePath.svg",
+    },
 ];
 
 export const TargetSelection: React.FC = () => {
