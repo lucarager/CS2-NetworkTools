@@ -56,6 +56,7 @@
                 var nodesArray = chunk.GetNativeArray(ref m_NodeComponentTypeHandle);
                 var nodeGeometriesArray = chunk.GetNativeArray(ref m_NodeGeometryComponentTypeHandle);
                 var connectedEdgesArray = chunk.GetBufferAccessor(ref m_ConnectedEdgeComponentTypeHandle);
+                var ntSelectedArray = chunk.GetNativeArray(ref m_SelectedComponentTypeHandle);
 
                 for (var i = 0; i < entitiesArray.Length; i++) {
                     var entity = entitiesArray[i];
@@ -67,6 +68,10 @@
                     var isEligible = chunk.Has(ref m_EligibleComponentTypeHandle);
                     var isSelectedFirst = chunk.Has(ref m_SelectedFirstComponentTypeHandle);
                     var isSelectedLast = chunk.Has(ref m_SelectedLastComponentTypeHandle);
+
+                    // Get specific render mode
+                    var ntSelected = isSelected ? ntSelectedArray[i] : default;
+                    var renderMode = ntSelected.NodeMode;
 
                     // Determine visual style based on node state
                     Color fillColor;
@@ -115,9 +120,11 @@
                         diameter    = nodeDiameter;
                         borderWidth = nodeBorderWidth;
                     }
-                    else if (isSelected) {
-                        // Intermediate path nodes - don't render
-                        continue;
+                    else if (isSelected && (renderMode & NodeRenderMode.RenderSelected) != NodeRenderMode.None) {
+                        fillColor = (Color)(Vector4)m_Colors.NodeSelectedFirstFill;
+                        borderColor = (Color)(Vector4)m_Colors.NodeSelectedFirstBorder;
+                        diameter = nodeDiameter;
+                        borderWidth = nodeBorderWidth;
                     }
                     else if (isHighlighted) {
                         // Hovered eligible node or path nodes

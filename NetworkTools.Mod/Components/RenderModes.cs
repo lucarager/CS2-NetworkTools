@@ -17,7 +17,7 @@ namespace NetworkTools.Components {
     public enum NodeRenderMode : byte {
         None           = 0,
         RenderAsCircle = 1 << 0, // Renderer should draw a circle on this node
-        RenderOutlines = 1 << 1, // Renderer should draw the geometry outline on this node
+        RenderSelected = 1 << 2, // Renderer should draw this node when selected
     }
 
     /// <summary>

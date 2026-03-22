@@ -28,6 +28,7 @@ namespace NetworkTools {
     using Game.SceneFlow;
 
     using HarmonyLib;
+    using NetworkTools.Components.Tools;
     using NetworkTools.L10N;
     using NetworkTools.Systems;
     using NetworkTools.Systems.Rendering;
@@ -35,6 +36,7 @@ namespace NetworkTools {
     using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
+    using NetworkTools.Systems.UI;
     using NetworkTools.Utils;
 
     using Newtonsoft.Json;
@@ -151,6 +153,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_RoadShapeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_RemoveNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
+            updateSystem.UpdateAt<NT_SuperNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_SlideNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_ConnectToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_ParallelToolSystem>(SystemUpdatePhase.ToolUpdate);

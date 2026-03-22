@@ -43,8 +43,8 @@
             // Node colors
             NodeSelectedFirstFill   = (Vector4)new Color(1f, 1f, 1f, 0.5f),
             NodeSelectedFirstBorder = (Vector4)new Color(1f, 1f, 1f, 1f),
-            NodeHighlightedFill     = (Vector4)new Color(1f, 1f, 1f, 0.5f),
-            NodeHighlightedBorder   = (Vector4)new Color(1f, 1f, 1f, 1f),
+            NodeHighlightedFill     = (Vector4)new Color(0.58f, 0.27f, 1f, 0.5f),
+            NodeHighlightedBorder   = (Vector4)new Color(0.58f, 0.27f, 1f, 1f),
             NodeEligibleFill        = (Vector4)new Color(1f, 1f, 1f, 0.2f),
             NodeEligibleBorder      = (Vector4)new Color(1f, 1f, 1f, 0.6f),
 
