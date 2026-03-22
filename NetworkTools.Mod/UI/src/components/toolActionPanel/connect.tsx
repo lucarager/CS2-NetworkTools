@@ -103,7 +103,7 @@ export const ConnectControls: React.FC = () => {
                                 selectedEntitiesBinding.length < 2 ||
                                 activeConnectMode === ConnectMode.None
                             }
-                            onSelect={() => GAME_TRIGGERS.APPLY_TRANSFORM()}>
+                            onSelect={() => GAME_TRIGGERS.REQUEST_APPLY()}>
                             Apply Curve
                         </Button>
                     )}

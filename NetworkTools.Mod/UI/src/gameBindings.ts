@@ -123,7 +123,7 @@ export const GAME_TRIGGERS = {
     SELECT_TOOL: (tool: string) => {
         trigger(mod.id, "TRIGGER:SELECT_TOOL", tool);
     },
-    APPLY_TRANSFORM: () => {
-        trigger(mod.id, "TRIGGER:APPLY_TRANSFORM");
+    REQUEST_APPLY: () => {
+        trigger(mod.id, "TRIGGER:REQUEST_APPLY");
     },
 };

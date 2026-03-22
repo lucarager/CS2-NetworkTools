@@ -7,7 +7,7 @@
     ///     Tool system for reshaping road segments.
     ///     Allows selecting a contiguous path of road nodes and applying transformations.
     /// </summary>
-    public partial class NT_RoadShapeToolSystem : NT_PathSelectionToolSystem {
+    public partial class NT_RoadShapeToolSystem : NT_PathSelectionToolSystem, IManualApplyProvider {
         /// <inheritdoc />
         public override string toolID => "RoadShapeTool";
         
