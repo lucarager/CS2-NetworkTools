@@ -166,10 +166,27 @@ namespace NetworkTools.Systems.Tools {
         private EntityQuery m_TargetInvisiblePathNodesQuery;
 
         /// <summary>
+        ///     Per-target-flag queries for adding NT_Eligible to matching edges.
+        /// </summary>
+        private EntityQuery m_EdgesWithEligibleQuery;
+        private EntityQuery m_EdgesWithoutEligibleQuery;
+        private EntityQuery m_TargetRoadEdgesQuery;
+        private EntityQuery m_TargetPathEdgesQuery;
+        private EntityQuery m_TargetRailEdgesQuery;
+        private EntityQuery m_TargetWaterwayEdgesQuery;
+        private EntityQuery m_TargetInvisiblePathEdgesQuery;
+
+        /// <summary>
         ///     Whether this tool uses custom per-entity eligibility filtering.
         ///     When true, MarkEligibleNodes will call FilterEligibleEntity for each candidate.
         /// </summary>
         protected bool UseCustomEligibilityFilter = false;
+
+        /// <summary>
+        ///     Which entity type this tool marks as eligible (Node or Edge).
+        ///     Set to <see cref="EligibilityTarget.Edge"/> for tools that operate on edges.
+        /// </summary>
+        protected EligibilityTarget EligibilityTarget = EligibilityTarget.Node;
 
         /// <summary>
         ///     Selected Prefab, set by derived tools
@@ -329,6 +346,38 @@ namespace NetworkTools.Systems.Tools {
                 .WithAll<Node, Waterway>()
                 .WithNone<NT_Eligible>()
                 .Build();
+
+            // Per-target-flag queries for MarkEligibleEdges
+            m_EdgesWithEligibleQuery = SystemAPI.QueryBuilder()
+                .WithAll<Edge, NT_Eligible>()
+                .Build();
+            m_EdgesWithoutEligibleQuery = SystemAPI.QueryBuilder()
+                .WithAll<Edge>()
+                .WithNone<NT_Eligible>()
+                .Build();
+            m_TargetRoadEdgesQuery = SystemAPI.QueryBuilder()
+                .WithAll<Edge, Road>()
+                .WithNone<NT_Eligible>()
+                .Build();
+            m_TargetPathEdgesQuery = SystemAPI.QueryBuilder()
+                .WithAll<Edge, LocalConnect>()
+                .WithNone<Marker>()
+                .WithNone<NT_Eligible>()
+                .Build();
+            m_TargetInvisiblePathEdgesQuery = SystemAPI.QueryBuilder()
+                .WithAll<Edge, LocalConnect>()
+                .WithAll<Marker>()
+                .WithNone<NT_Eligible>()
+                .Build();
+            m_TargetRailEdgesQuery = SystemAPI.QueryBuilder()
+                .WithAll<Edge>()
+                .WithAny<TrainTrack, TramTrack, SubwayTrack>()
+                .WithNone<NT_Eligible>()
+                .Build();
+            m_TargetWaterwayEdgesQuery = SystemAPI.QueryBuilder()
+                .WithAll<Edge, Waterway>()
+                .WithNone<NT_Eligible>()
+                .Build();
         }
 
         protected override void OnDestroy() {
@@ -416,7 +465,7 @@ namespace NetworkTools.Systems.Tools {
         ///     Override to add tool-specific cleanup, but call base implementation.
         /// </summary>
         protected virtual void CleanupHighlights() {
-            EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
+            EntityManager.RemoveComponent<NT_Eligible>(m_AllNtComponentsQuery);
 
             // Add BatchesUpdated BEFORE removing components, because the query won't match after removal
             EntityManager.AddComponent<BatchesUpdated>(m_EntitiesWithHighlightedQuery);
@@ -495,11 +544,12 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Adds NT_Eligible component to nodes matching the current target flags.
+        ///     Adds NT_Eligible component to entities matching the current target flags.
+        ///     Marks nodes or edges depending on <see cref="EligibilityTarget"/>.
         ///     When <see cref="UseCustomEligibilityFilter"/> is true, also applies
         ///     <see cref="FilterEligibleEntity"/> per entity.
         /// </summary>
-        protected void MarkEligibleNodes() {
+        protected void MarkEligibleEntities() {
             var targets = SelectedTargets & AvailableTargets;
 
             if (!UseCustomEligibilityFilter) {
@@ -516,9 +566,9 @@ namespace NetworkTools.Systems.Tools {
         ///     so derived tools can clean up phase-specific state.
         /// </summary>
         public void RefreshEligibility() {
-            EntityManager.RemoveComponent<NT_Eligible>(m_NodesWithEligibleQuery);
+            EntityManager.RemoveComponent<NT_Eligible>(m_AllNtComponentsQuery);
             OnEligibilityReset();
-            MarkEligibleNodes();
+            MarkEligibleEntities();
         }
 
         /// <summary>
@@ -549,6 +599,17 @@ namespace NetworkTools.Systems.Tools {
         ///     Fast path: batch-adds NT_Eligible via static queries without per-entity filtering.
         /// </summary>
         private void AddEligibleByTargets(TargetOption targets) {
+            if (EligibilityTarget == EligibilityTarget.Edge) {
+                AddEligibleEdgesByTargets(targets);
+            } else {
+                AddEligibleNodesByTargets(targets);
+            }
+        }
+
+        /// <summary>
+        ///     Fast path: batch-adds NT_Eligible to nodes via static queries.
+        /// </summary>
+        private void AddEligibleNodesByTargets(TargetOption targets) {
             if ((targets & TargetOption.All) == TargetOption.All) {
                 EntityManager.AddComponent<NT_Eligible>(m_NodesWithoutEligibleQuery);
                 return;
@@ -567,9 +628,41 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
+        ///     Fast path: batch-adds NT_Eligible to edges via static queries.
+        /// </summary>
+        private void AddEligibleEdgesByTargets(TargetOption targets) {
+            if ((targets & TargetOption.All) == TargetOption.All) {
+                EntityManager.AddComponent<NT_Eligible>(m_EdgesWithoutEligibleQuery);
+                return;
+            }
+
+            if ((targets & TargetOption.Road) != 0)
+                EntityManager.AddComponent<NT_Eligible>(m_TargetRoadEdgesQuery);
+            if ((targets & TargetOption.Path) != 0)
+                EntityManager.AddComponent<NT_Eligible>(m_TargetPathEdgesQuery);
+            if ((targets & TargetOption.Rail) != 0)
+                EntityManager.AddComponent<NT_Eligible>(m_TargetRailEdgesQuery);
+            if ((targets & TargetOption.Waterway) != 0)
+                EntityManager.AddComponent<NT_Eligible>(m_TargetWaterwayEdgesQuery);
+            if ((targets & TargetOption.InvisiblePath) != 0)
+                EntityManager.AddComponent<NT_Eligible>(m_TargetInvisiblePathEdgesQuery);
+        }
+
+        /// <summary>
         ///     Slow path: iterates candidate entities and applies <see cref="FilterEligibleEntity"/> per entity.
         /// </summary>
         private void AddEligibleByTargetsFiltered(TargetOption targets) {
+            if (EligibilityTarget == EligibilityTarget.Edge) {
+                AddEligibleEdgesByTargetsFiltered(targets);
+            } else {
+                AddEligibleNodesByTargetsFiltered(targets);
+            }
+        }
+
+        /// <summary>
+        ///     Slow path: iterates candidate nodes and applies <see cref="FilterEligibleEntity"/> per entity.
+        /// </summary>
+        private void AddEligibleNodesByTargetsFiltered(TargetOption targets) {
             if ((targets & TargetOption.All) == TargetOption.All) {
                 FilterAndAddEligible(m_NodesWithoutEligibleQuery);
                 return;
@@ -585,6 +678,27 @@ namespace NetworkTools.Systems.Tools {
                 FilterAndAddEligible(m_TargetWaterwayNodesQuery);
             if ((targets & TargetOption.InvisiblePath) != 0)
                 FilterAndAddEligible(m_TargetInvisiblePathNodesQuery);
+        }
+
+        /// <summary>
+        ///     Slow path: iterates candidate edges and applies <see cref="FilterEligibleEntity"/> per entity.
+        /// </summary>
+        private void AddEligibleEdgesByTargetsFiltered(TargetOption targets) {
+            if ((targets & TargetOption.All) == TargetOption.All) {
+                FilterAndAddEligible(m_EdgesWithoutEligibleQuery);
+                return;
+            }
+
+            if ((targets & TargetOption.Road) != 0)
+                FilterAndAddEligible(m_TargetRoadEdgesQuery);
+            if ((targets & TargetOption.Path) != 0)
+                FilterAndAddEligible(m_TargetPathEdgesQuery);
+            if ((targets & TargetOption.Rail) != 0)
+                FilterAndAddEligible(m_TargetRailEdgesQuery);
+            if ((targets & TargetOption.Waterway) != 0)
+                FilterAndAddEligible(m_TargetWaterwayEdgesQuery);
+            if ((targets & TargetOption.InvisiblePath) != 0)
+                FilterAndAddEligible(m_TargetInvisiblePathEdgesQuery);
         }
 
         /// <summary>

@@ -32,6 +32,16 @@ namespace NetworkTools.Systems.Tools {
     }
 
     /// <summary>
+    ///     Determines which network entity type a tool marks as eligible.
+    /// </summary>
+    public enum EligibilityTarget {
+        /// <summary>Mark nodes as eligible (default for most tools).</summary>
+        Node,
+        /// <summary>Mark edges as eligible (e.g. AddNode).</summary>
+        Edge
+    }
+
+    /// <summary>
     ///     View options controlling additional rendering / visualization.
     /// </summary>
     [Flags]

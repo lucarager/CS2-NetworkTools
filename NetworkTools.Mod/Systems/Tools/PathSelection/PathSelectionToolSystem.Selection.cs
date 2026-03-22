@@ -285,7 +285,7 @@ namespace NetworkTools.Systems.Tools {
 
             // Add NT_Eligible to matching nodes based on target flags
             if (resetEligibleNodes) {
-                MarkEligibleNodes();
+                MarkEligibleEntities();
             }
         }
 

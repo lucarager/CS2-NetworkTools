@@ -324,7 +324,7 @@
             ClearSelectionState();
 
             // Mark eligible nodes based on target flags
-            MarkEligibleNodes();
+            MarkEligibleEntities();
         }
 
         /// <summary>

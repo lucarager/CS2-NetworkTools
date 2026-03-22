@@ -37,6 +37,7 @@ namespace NetworkTools.Systems.Tools {
             m_Log.Prefix = nameof(NT_AddNodeToolSystem);
 
             // Configuration
+            EligibilityTarget           = EligibilityTarget.Edge;
             RenderTempEdges             = true;
             RenderTempNodes             = true;
             RenderEligibleNodes         = true;

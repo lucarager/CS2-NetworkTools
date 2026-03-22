@@ -49,7 +49,7 @@ namespace NetworkTools.Systems.Tools {
 
             Phase = OperationPhase.Idle;
 
-            MarkEligibleNodes();
+            MarkEligibleEntities();
         }
 
         /// <inheritdoc/>

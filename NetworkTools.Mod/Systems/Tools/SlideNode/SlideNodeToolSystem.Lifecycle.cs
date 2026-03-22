@@ -48,7 +48,7 @@ namespace NetworkTools.Systems.Tools {
             m_IsDragging = false;
             m_DragNodeEntity = Entity.Null;
 
-            MarkEligibleNodes();
+            MarkEligibleEntities();
         }
 
         /// <inheritdoc/>
