@@ -42,16 +42,21 @@ $barHeight: $iconSize + $iconPadding * 2;
     }
 }
 
-.activeBar {
+.toolItem {
+    position: relative;
+}
+
+.activeIndicator {
     position: absolute;
     top: 0;
-    left: 0;
+    left: -4rem;
     width: 4rem;
-    height: $barHeight;
+    height: 100%;
     background: $color-nt-3;
-    border-top-right-radius: 20rem;
-    border-bottom-right-radius: 20rem;
-    transition: transform 0.2s ease-out;
+    border-top-right-radius: 4rem;
+    border-bottom-right-radius: 4rem;
+    transition: opacity 0.2s ease-out;
+    pointer-events: none;
 }
 
 .column .actionButton {

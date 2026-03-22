@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "./toolActionPanel.module.scss";
+import styles from "../toolActionPanel.module.scss";
 import { SnapOption } from "gameBindings";
 import { useSnap } from "hooks/useSnap";
 import { VC, VF, VT } from "components/vanilla/Components";

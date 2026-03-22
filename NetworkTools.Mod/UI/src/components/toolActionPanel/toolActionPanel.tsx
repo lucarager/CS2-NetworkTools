@@ -3,19 +3,21 @@ import styles from "./toolActionPanel.module.scss";
 import panels from "../shared/panels.module.scss";
 import { GAME_BINDINGS } from "gameBindings";
 import { useValue } from "cs2/api";
-import { ShapeSlopeControls } from "./shapeSlope";
-import { ShapeCurveControls } from "./shapeCurve";
-import { ConnectControls } from "./connect";
+import { ShapeSlopeControls } from "./tools/shapeSlope";
+import { ShapeCurveControls } from "./tools/shapeCurve";
+import { ConnectControls } from "./tools/connect";
 import { useLocalization } from "cs2/l10n";
-import { SnapSelection } from "./snapSelection";
-import { TargetSelection } from "./targetSelection";
-import { ViewSelection } from "./viewSelection";
+import { SnapSelection } from "./shared/snapSelection";
+import { TargetSelection } from "./shared/targetSelection";
+import { ViewSelection } from "./shared/viewSelection";
+import { SuperNodeControls } from "./tools/superNode";
 
 // Registry of tool components mapped by tool ID
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
     ShapeSlope: ShapeSlopeControls,
     ShapeCurve: ShapeCurveControls,
     Connect: ConnectControls,
+    SuperNode: SuperNodeControls,
 };
 
 export const ToolActionPanel = () => {

@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "./toolActionPanel.module.scss";
+import styles from "../toolActionPanel.module.scss";
 import { TargetOption } from "gameBindings";
 import { useTargets } from "hooks/useTargets";
 import { VC, VF, VT } from "components/vanilla/Components";

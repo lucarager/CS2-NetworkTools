@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "./toolActionPanel.module.scss";
+import styles from "../toolActionPanel.module.scss";
 import {
     GAME_BINDINGS,
     GAME_TRIGGERS,
@@ -9,7 +9,7 @@ import {
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
 import { VC } from "components/vanilla/Components";
-import { NodeSelection } from "./nodeSelection";
+import { NodeSelection } from "../shared/nodeSelection";
 import { c } from "utils/classes";
 
 // Curve modes (XZ plane transformations)

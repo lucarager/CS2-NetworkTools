@@ -1,9 +1,9 @@
 import React from "react";
-import styles from "./toolActionPanel.module.scss";
+import styles from "../toolActionPanel.module.scss";
 import { ConnectMode, GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
-import { NodeSelection } from "./nodeSelection";
+import { NodeSelection } from "../shared/nodeSelection";
 import { c } from "utils/classes";
 
 const CONNECT_MODES: { label: string; id: ConnectMode; icon: string }[] = [

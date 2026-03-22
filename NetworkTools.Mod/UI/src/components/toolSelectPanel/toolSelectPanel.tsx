@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo } from "react";
 import styles from "./toolSelectPanel.module.scss";
 import { Button, Tooltip } from "cs2/ui";
 import { useValue } from "cs2/api";
@@ -18,8 +18,6 @@ export const ToolSelectPanel = () => {
         [toolUIDataBinding],
     );
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
-    const columnRef = useRef<HTMLDivElement>(null);
-    const [activeBarOffset, setActiveBarOffset] = useState(0);
     const { translate } = useLocalization();
 
     const items = useMemo(() => {
@@ -50,35 +48,16 @@ export const ToolSelectPanel = () => {
         return flatItems;
     }, [tools]);
 
-    const hasActiveTool = useMemo(
-        () => items.some((item) => item.type === "tool" && item.tool.PrefabId === selectedBinding),
-        [items, selectedBinding],
-    );
-
-    useLayoutEffect(() => {
-        const column = columnRef.current;
-        if (!column) {
-            return;
-        }
-
-        const activeToolElement = column.querySelector<HTMLElement>(
-            `[data-prefab-id="${selectedBinding}"]`,
-        );
-
-        if (!activeToolElement) {
-            setActiveBarOffset(0);
-            return;
-        }
-
-        setActiveBarOffset(activeToolElement.offsetTop);
-    }, [items, selectedBinding]);
-
     return (
         <div className={[styles.wrapper, panels.nt_panel].join(" ")}>
-            <div className={styles.column} ref={columnRef}>
+            <div className={styles.column}>
                 {items.map((item) =>
                     item.type === "tool" ? (
-                        <div key={item.key} data-prefab-id={item.tool.PrefabId}>
+                        <div key={item.key} className={styles.toolItem}>
+                            <div
+                                className={styles.activeIndicator}
+                                style={{ opacity: item.tool.PrefabId === selectedBinding ? 1 : 0 }}
+                            />
                             <Tooltip
                                 tooltip={translate(item.tool.DisplayName)}
                                 delayTime={0}
@@ -105,12 +84,6 @@ export const ToolSelectPanel = () => {
                         <div key={item.key} className={styles.categoryDivider} />
                     ),
                 )}
-                <div
-                    className={styles.activeBar}
-                    style={{
-                        transform: `translateY(${activeBarOffset}rem)`,
-                        opacity: hasActiveTool ? 1 : 0,
-                    }}></div>
             </div>
         </div>
     );
