@@ -6,6 +6,7 @@
 namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
+    using System.Collections.Generic;
     using System.ComponentModel;
 
     using Game.Common;
@@ -246,6 +247,21 @@ namespace NetworkTools.Systems.Tools {
         public bool RenderTempNodes = false;
 
         public override string toolID => "NT_BaseToolSystem";
+
+        /// <summary>
+        ///     Returns hint tooltip entries for the current operation phase.
+        ///     Override in derived tools to provide tool-specific tooltips.
+        /// </summary>
+        /// <param name="phase">The current operation phase.</param>
+        /// <param name="applyAction">The primary apply action (left click).</param>
+        /// <param name="secondaryApplyAction">The secondary apply action (right click).</param>
+        /// <returns>A list of tooltip entries for the given phase, or empty if none.</returns>
+        public virtual IReadOnlyList<HintTooltipEntry> GetHintTooltips(
+            OperationPhase phase,
+            ProxyAction    applyAction,
+            ProxyAction    secondaryApplyAction) {
+            return System.Array.Empty<HintTooltipEntry>();
+        }
 
         protected override void OnCreate() {
             base.OnCreate();

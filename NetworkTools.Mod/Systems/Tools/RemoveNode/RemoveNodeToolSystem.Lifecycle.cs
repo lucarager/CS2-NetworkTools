@@ -6,6 +6,9 @@
 namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
+    using System.Collections.Generic;
+
+    using Game.Input;
     using Game.Net;
     using Game.Prefabs;
     using Game.Rendering;
@@ -21,6 +24,23 @@ namespace NetworkTools.Systems.Tools {
     #endregion
 
     public partial class NT_RemoveNodeToolSystem {
+        /// <inheritdoc />
+        public override IReadOnlyList<HintTooltipEntry> GetHintTooltips(
+            OperationPhase phase,
+            ProxyAction    applyAction,
+            ProxyAction    secondaryApplyAction) {
+            return phase switch {
+                OperationPhase.Idle => new HintTooltipEntry[] {
+                    new("NetworkTools.HintTooltip.RemoveNode.Select"),
+                    new("NetworkTools.HintTooltip.Common.Exit", secondaryApplyAction)
+                },
+                OperationPhase.Ready => new HintTooltipEntry[] {
+                    new("NetworkTools.HintTooltip.RemoveNode.Apply", applyAction),
+                    new("NetworkTools.HintTooltip.Common.Exit", secondaryApplyAction)
+                },
+                _ => System.Array.Empty<HintTooltipEntry>()
+            };
+        }
         public override bool TrySetPrefab(PrefabBase prefab) {
             m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_RemoveNode>(prefab)}");
             var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_RemoveNode>(prefab);

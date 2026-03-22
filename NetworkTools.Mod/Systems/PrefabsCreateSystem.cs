@@ -108,31 +108,30 @@
                 prefabBaseDict[key] = prefabBase;
             }
 
-#if IS_DEBUG
-            CreateToolPrefab("AddNode",    "add.svg",      "node",       new NT_AddNode(),    true);
-            CreateToolPrefab("RemoveNode", "remove.svg",   "node",       new NT_RemoveNode(), true);
-            CreateToolPrefab("SlideNode",  "move.svg",     "node",       new NT_SlideNode(),  true);
-            CreateToolPrefab("SuperNode",  "super.svg",    "node",       new NT_SuperNode(),  true);
-            CreateToolPrefab("ShapeSlope", "slope.svg",    "shape",      new NT_ShapeSlope(), true);
-            CreateToolPrefab("ShapeCurve", "curve.svg",    "shape",      new NT_ShapeCurve(), true);
-            CreateToolPrefab("Connect",    "connect.svg",  "generative", new NT_Connect(),    true);
-            CreateToolPrefab("Parallel",   "parallel.svg", "generative", new NT_Parallel(),   true);
-            CreateToolPrefab("Grid",       "grid.svg",     "generative", new NT_Grid(),       true);
-#else
-            CreateToolPrefab("AddNode", "add.svg", "node", new NT_AddNode(), true);
-            CreateToolPrefab("RemoveNode",  "remove.svg", "node", new NT_RemoveNode(), true);
-            CreateToolPrefab("SlideNode",  "move.svg", "node", new NT_SlideNode(), false);
-            CreateToolPrefab("SuperNode",  "super.svg", "node", new NT_SuperNode(), false);
-            CreateToolPrefab("ShapeSlope", "slope.svg", "shape", new NT_ShapeSlope(), true);
-            CreateToolPrefab("ShapeCurve", "curve.svg", "shape", new NT_ShapeCurve(), true);
-            CreateToolPrefab("Connect",  "connect.svg", "generative", new NT_Connect(), false);
-            CreateToolPrefab("Parallel", "parallel.svg", "generative", new NT_Parallel(), false);
-            CreateToolPrefab("Grid", "grid.svg", "generative", new NT_Grid(), false);
-#endif
+            CreateToolPrefab("AddNode",    "add.svg",      "node",       new NT_AddNode(),    IsToolActive(true));
+            CreateToolPrefab("RemoveNode", "remove.svg",   "node",       new NT_RemoveNode(), IsToolActive(true));
+            CreateToolPrefab("SlideNode",  "move.svg",     "node",       new NT_SlideNode(),  IsToolActive(false));
+            CreateToolPrefab("SuperNode",  "super.svg",    "node",       new NT_SuperNode(),  IsToolActive(false));
+            CreateToolPrefab("ShapeSlope", "slope.svg",    "shape",      new NT_ShapeSlope(), IsToolActive(true));
+            CreateToolPrefab("ShapeCurve", "curve.svg",    "shape",      new NT_ShapeCurve(), IsToolActive(true));
+            CreateToolPrefab("Connect",    "connect.svg",  "generative", new NT_Connect(),    IsToolActive(false));
+            CreateToolPrefab("Parallel",   "parallel.svg", "generative", new NT_Parallel(),   IsToolActive(false));
+            CreateToolPrefab("Grid",       "grid.svg",     "generative", new NT_Grid(),       IsToolActive(false));
 
             CreateHandlePrefab((MarkerObjectPrefab)prefabBaseDict["marker"]);
 
             m_Log.Debug($"{logMethodPrefix} Completed.");
+        }
+
+        /// <summary>
+        ///     Returns true in debug builds (all tools active), or the release flag otherwise.
+        /// </summary>
+        private static bool IsToolActive(bool releaseActive) {
+#if IS_DEBUG
+            return true;
+#else
+            return releaseActive;
+#endif
         }
 
         private bool CreateHandlePrefab(MarkerObjectPrefab pedestrianPrefab) {

@@ -1,5 +1,8 @@
 ﻿namespace NetworkTools.Systems.Tools.RoadShape {
+    using System.Collections.Generic;
+
     using Game.Common;
+    using Game.Input;
     using Game.Notifications;
     using Game.Net;
     using Game.Prefabs;
@@ -8,6 +11,7 @@
     using NetworkTools.Components.Handles;
     using NetworkTools.Components;
     using NetworkTools.Components.Tools;
+    using NetworkTools.Systems.Tools;
 
     using Unity.Entities;
     using Unity.Mathematics;
@@ -15,6 +19,27 @@
     using Unity.Collections;
 
     public partial class NT_RoadShapeToolSystem {
+        /// <inheritdoc />
+        public override IReadOnlyList<HintTooltipEntry> GetHintTooltips(
+            OperationPhase phase,
+            ProxyAction    applyAction,
+            ProxyAction    secondaryApplyAction) {
+            return phase switch {
+                OperationPhase.Idle => new HintTooltipEntry[] {
+                    new("NetworkTools.HintTooltip.ShapeSlope.SelectStart", applyAction),
+                    new("NetworkTools.HintTooltip.Common.Exit", secondaryApplyAction)
+                },
+                OperationPhase.Configuring => new HintTooltipEntry[] {
+                    new("NetworkTools.HintTooltip.ShapeSlope.SelectSecond", applyAction),
+                    new("NetworkTools.HintTooltip.ShapeSlope.RemoveLast", secondaryApplyAction)
+                },
+                OperationPhase.Ready => new HintTooltipEntry[] {
+                    new("NetworkTools.HintTooltip.ShapeSlope.ExtendPath", applyAction),
+                    new("NetworkTools.HintTooltip.ShapeSlope.RemoveLast", secondaryApplyAction)
+                },
+                _ => System.Array.Empty<HintTooltipEntry>()
+            };
+        }
         public override bool TrySetPrefab(PrefabBase prefab) {
             var hasShapeSlope = m_PrefabSystem.HasComponent<NT_ShapeSlope>(prefab);
             var hasShapeCurve = m_PrefabSystem.HasComponent<NT_ShapeCurve>(prefab);

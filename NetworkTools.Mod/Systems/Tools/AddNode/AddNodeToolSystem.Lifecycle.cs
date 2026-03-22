@@ -5,6 +5,9 @@
 // </copyright>
 
 namespace NetworkTools.Systems.Tools {
+    using System.Collections.Generic;
+
+    using Game.Input;
     using Game.Net;
     using Game.Prefabs;
     using Game.Rendering;
@@ -18,6 +21,23 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Entities;
 
     public partial class NT_AddNodeToolSystem {
+        /// <inheritdoc />
+        public override IReadOnlyList<HintTooltipEntry> GetHintTooltips(
+            OperationPhase phase,
+            ProxyAction    applyAction,
+            ProxyAction    secondaryApplyAction) {
+            return phase switch {
+                OperationPhase.Idle => new HintTooltipEntry[] {
+                    new("NetworkTools.HintTooltip.AddNode.Hover"),
+                    new("NetworkTools.HintTooltip.Common.Exit", secondaryApplyAction)
+                },
+                OperationPhase.Configuring => new HintTooltipEntry[] {
+                    new("NetworkTools.HintTooltip.AddNode.Apply", applyAction),
+                    new("NetworkTools.HintTooltip.Common.Exit", secondaryApplyAction)
+                },
+                _ => System.Array.Empty<HintTooltipEntry>()
+            };
+        }
         public override bool TrySetPrefab(PrefabBase prefab) {
             m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_AddNode>(prefab)}");
             var validRequest = prefab is NT_ToolPrefab &&
