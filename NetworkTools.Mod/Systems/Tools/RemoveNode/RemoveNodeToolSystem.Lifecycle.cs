@@ -25,22 +25,6 @@ namespace NetworkTools.Systems.Tools {
 
     public partial class NT_RemoveNodeToolSystem {
         /// <inheritdoc />
-        public override IReadOnlyList<HintTooltipEntry> GetHintTooltips(
-            OperationPhase phase,
-            ProxyAction    applyAction,
-            ProxyAction    secondaryApplyAction) {
-            return phase switch {
-                OperationPhase.Idle => new HintTooltipEntry[] {
-                    new("NetworkTools.HintTooltip.RemoveNode.Select"),
-                    new("NetworkTools.HintTooltip.Common.Exit", secondaryApplyAction)
-                },
-                OperationPhase.Ready => new HintTooltipEntry[] {
-                    new("NetworkTools.HintTooltip.RemoveNode.Apply", applyAction),
-                    new("NetworkTools.HintTooltip.Common.Exit", secondaryApplyAction)
-                },
-                _ => System.Array.Empty<HintTooltipEntry>()
-            };
-        }
         public override bool TrySetPrefab(PrefabBase prefab) {
             m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_RemoveNodeTool>(prefab)}");
             var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_RemoveNodeTool>(prefab);
