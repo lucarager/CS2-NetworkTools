@@ -1,15 +1,11 @@
-﻿// <copyright file="NT_NodeSelectionToolSystem.cs" company="Luca Rager">
-// Copyright (c) Luca Rager. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-// </copyright>
-
-namespace NetworkTools.Systems.Tools {
+﻿namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
     using Game.Tools;
+    using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
 
@@ -19,8 +15,17 @@ namespace NetworkTools.Systems.Tools {
         private JobHandle UpdateDefinitions(JobHandle inputDeps, ToolOutputMode outputMode) {
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
-            var createDefinitionJobHandle = new CreateDefinitionJob
-            {
+            // Build a hash set from the selected nodes for O(1) membership checks
+            var selectedNodeCount = m_SelectedNodes.Length;
+            var selectedNodeSet   = new NativeHashSet<Entity>(selectedNodeCount, Allocator.TempJob);
+            for (var i = 0; i < selectedNodeCount; i++) {
+                selectedNodeSet.Add(m_SelectedNodes[i]);
+            }
+
+            // Estimate total edge count for the processed-edge dedup set
+            var processedEdges = new NativeHashSet<Entity>(selectedNodeCount * 4, Allocator.TempJob);
+
+            var createDefinitionJobHandle = new CreateDefinitionJob {
                 HoveredNode            = m_LastHoveredEntity,
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
@@ -29,15 +34,20 @@ namespace NetworkTools.Systems.Tools {
                 PrefabRefLookup        = SystemAPI.GetComponentLookup<PrefabRef>(true),
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
                 ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
-                TerrainHeight          = m_TerrainSystem.GetHeightData(false),
-                SelectedNodeEntities = m_SelectedNodes,
-                ECB = m_Barrier.CreateCommandBuffer(),
+                TerrainHeight          = m_TerrainSystem.GetHeightData(),
+                SelectedNodeEntities   = m_SelectedNodes,
+                SelectedNodeSet        = selectedNodeSet,
+                ProcessedEdges         = processedEdges,
+                ECB                    = m_Barrier.CreateCommandBuffer(),
                 RenderBuffer           = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle),
-                OutputMode = outputMode,
-            }.Schedule(JobHandle.CombineDependencies(
-                           inputDeps,
-                           renderBufferJobHandle
-                       ));
+                OutputMode             = outputMode
+            }.Schedule(JobHandle.CombineDependencies(inputDeps,
+                                                     renderBufferJobHandle));
+
+            // Dispose temp allocations after the job completes
+            selectedNodeSet.Dispose(createDefinitionJobHandle);
+            processedEdges.Dispose(createDefinitionJobHandle);
+
             m_TerrainSystem.AddCPUHeightReader(createDefinitionJobHandle);
             m_Barrier.AddJobHandleForProducer(createDefinitionJobHandle);
 
@@ -47,8 +57,7 @@ namespace NetworkTools.Systems.Tools {
         private JobHandle Update(JobHandle inputDeps) {
             // Check if we can reuse existing temp entities
             // This will be true if the selected nodes and operation config didn't change
-            if (!m_UpdateNeeded)
-            {
+            if (!m_UpdateNeeded) {
                 applyMode = ApplyMode.None;
                 return inputDeps;
             }
