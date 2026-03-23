@@ -55,7 +55,7 @@
   "NetworkTools.Tools.SlideNode.Name": "滑移节点（即将到来！）",
   "NetworkTools.Tools.SlideNode.Description": "允许沿现有边滑动节点。",
   "NetworkTools.Tools.SuperNode.Name": "超级节点",
-  "NetworkTools.Tools.SuperNode.Description": "允许将多个不相连的节点合并成一个大型交叉路口。",
+  "NetworkTools.Tools.SuperNode.Description": "允许将多个节点合并成一个大型交叉路口。",
   "NetworkTools.Tools.Connect.Name": "连接工具（即将到来！）",
   "NetworkTools.Tools.Connect.Description": "允许以多种方式在两个节点之间创建新连接。",
   "NetworkTools.Tools.Parallel.Name": "高级并行（即将到来！）",
