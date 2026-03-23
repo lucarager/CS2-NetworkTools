@@ -50,7 +50,7 @@
         }
 
         [SettingsUISection(KeybindingsGroupStr)]
-        [SettingsUIKeyboardBinding(BindingKeyboard.T, ToggleToolPanelStr, ctrl: true)]
+        [SettingsUIKeyboardBinding(BindingKeyboard.T, ToggleToolPanelStr, shift: true)]
         public ProxyBinding ToggleToolPanel { get; set; }
 
 

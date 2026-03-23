@@ -71,17 +71,13 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private JobHandle Apply(JobHandle inputDeps) {
-            // Guard
-            if (m_LastHoveredEntity.Value == Entity.Null) {
-                return inputDeps;
-            }
-
             applyMode = ApplyMode.Apply;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Apply);
 
-            // Clear state to completely blank
-            Phase = OperationPhase.Idle;
+            inputDeps.Complete();
+
+            ResetToIdle();
 
             return inputDeps;
         }

@@ -8,6 +8,7 @@
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+    using NetworkTools.Components;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -44,7 +45,8 @@
                 var nodePosition = firstNode.m_Position;
 
                 // Process temp entities
-                foreach (var nodeEntity in SelectedNodeEntities) {
+                for (var i = 0; i < SelectedNodeEntities.Length; i++) {
+                    var nodeEntity = SelectedNodeEntities[i];
                     var node           = NodeLookup[nodeEntity];
                     var connectedEdges = ConnectedEdgeLookup[nodeEntity];
 
@@ -53,44 +55,93 @@
                         var edgeEntity = connectedEdge.m_Edge;
                         var edge       = EdgeLookup[edgeEntity];
                         var curve      = CurveLookup[edgeEntity];
+                        var isStartNode = edge.m_Start == nodeEntity;
+
+                        // Mark any edge that connects two of our selected nodes as deleted
+                        if (SelectedNodeEntities.Contains(isStartNode ? edge.m_End : edge.m_Start)) {
+                            ProcessEdgeDeletionDef(edgeEntity, edge);
+                            continue;
+                        }
 
                         // Recreate the edge with the same nodes and positions except for the moved node
                         var startNodeEntity = edge.m_Start;
-                        var startNode       = NodeLookup[edge.m_Start];
-                        var startNodePos    = edge.m_Start == nodeEntity ? nodePosition : startNode.m_Position;
-                        var endNodeEntity   = edge.m_End;
-                        var endNode         = NodeLookup[edge.m_End];
-                        var endNodePos      = edge.m_End == nodeEntity ? nodePosition : endNode.m_Position;
+                        var startNode = NodeLookup[edge.m_Start];
+                        var startNodePos = startNode.m_Position;
+                        var startNodeRot = startNode.m_Rotation;
+                        var endNodeEntity = edge.m_End;
+                        var endNode = NodeLookup[edge.m_End];
+                        var endNodePos = endNode.m_Position;
+                        var endNodeRot = endNode.m_Rotation;
 
+                        // Set nodes in such a way that:
+                        // - The first node (where the supernode will be) is kept
+                        // - Every other node that is being shifted will be re-created (Entity.Null)
+                        // - Nodes being shifted get the position of the supernode, while nodes that aren't being shifted keep their position
+                        if (isStartNode) {
+                            startNodeEntity = Entity.Null;
+                            startNodePos = nodePosition;
+                        } else {
+                            endNodeEntity = Entity.Null;
+                            endNodePos = nodePosition;
+                        }
 
                         OutputPreviewEdge(edgeEntity,
                                           startNodeEntity,
                                           endNodeEntity,
                                           startNodePos,
                                           endNodePos,
+                                          startNodeRot,
+                                          endNodeRot,
                                           PrefabRefLookup[edgeEntity].m_Prefab,
                                           curve.m_Bezier,
                                           curve.m_Length);
+                    }
 
-                        // Mark any edge that connects two of our selected nodes as deleted
-                        // todo
+                    // When applying, mark all nodes that will be shifted for post-processing
+                    if (OutputMode == ToolOutputMode.Apply) {
+                        ECB.AddComponent(nodeEntity, new NT_PostProcess());
                     }
                 }
             }
 
-            private float3 CalculateNodePosition() {
-                var totalPosition = float3.zero;
+            /// <summary>
+            ///     Processes the edge definition for deletion.
+            /// </summary>
+            private void ProcessEdgeDeletionDef(Entity edgeEntity, Edge edge) {
+                var definitionEntity = ECB.CreateEntity();
+                var creationDefinition = new CreationDefinition {
+                    m_Original = edgeEntity,
+                    m_Flags = CreationFlags.Delete | CreationFlags.Hidden
+                };
 
-                foreach (var nodeEntity in SelectedNodeEntities) {
-                    var node = NodeLookup[nodeEntity];
-                    totalPosition += node.m_Position;
-                }
+                var curve = CurveLookup[edgeEntity];
+                var netCourse = new NetCourse {
+                    m_Curve = curve.m_Bezier,
+                    m_Length = MathUtils.Length(curve.m_Bezier),
+                    m_FixedIndex = -1,
+                    m_StartPosition = new CoursePos {
+                        m_Entity = edge.m_Start,
+                        m_Position = curve.m_Bezier.a,
+                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.StartTangent(curve.m_Bezier)),
+                        m_CourseDelta = 0f
+                    },
+                    m_EndPosition = new CoursePos {
+                        m_Entity = edge.m_End,
+                        m_Position = curve.m_Bezier.d,
+                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.EndTangent(curve.m_Bezier)),
+                        m_CourseDelta = 1f
+                    }
+                };
 
-                return totalPosition / SelectedNodeEntities.Length;
+
+                ECB.AddComponent(definitionEntity, creationDefinition);
+                ECB.AddComponent(definitionEntity, netCourse);
+                ECB.AddComponent<Updated>(definitionEntity);
             }
 
             private void OutputPreviewEdge(Entity roadEntity,        Entity    startNodeEntity, Entity endNodeEntity,
                                            float3 startNodePosition, float3    endNodePosition,
+                                           quaternion startNodeRotation, quaternion endNodeRotation,
                                            Entity prefabEntity,      Bezier4x3 existingBezier, float existingLength
             ) {
                 var definitionEntity = ECB.CreateEntity();
@@ -118,7 +169,7 @@
                     m_StartPosition = new CoursePos {
                         m_Entity        = startNodeEntity,
                         m_Position      = startNodePosition,
-                        m_Rotation      = NetUtils.GetNodeRotation(MathUtils.StartTangent(existingBezier)),
+                        m_Rotation      = startNodeRotation,
                         m_CourseDelta   = 0,
                         m_Elevation     = startElevation,
                         m_Flags         = startNodeFlags,
@@ -128,7 +179,7 @@
                     m_EndPosition = new CoursePos {
                         m_Entity        = endNodeEntity,
                         m_Position      = endNodePosition,
-                        m_Rotation      = NetUtils.GetNodeRotation(MathUtils.EndTangent(existingBezier)),
+                        m_Rotation      = endNodeRotation,
                         m_CourseDelta   = 1,
                         m_Elevation     = endElevation,
                         m_Flags         = endNodeFlags,

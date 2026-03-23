@@ -61,15 +61,15 @@ namespace NetworkTools.L10N {
                 { m_Setting.GetOptionGroupLocaleID(NT_Settings.AboutGroupStr), "About" },
 
                 // About
-                //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Version)), "Version" },
-                //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.InformationalVersion)), "Informational Version" },
-                //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Credits)), string.Empty },
-                //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Github)), "GitHub" }, {
-                //    m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Github)),
-                //    "Opens a browser window to https://github.com/lucarager/CS2-NetworkTools"
-                //},
-                //{ m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Discord)), "Discord" },
-                //{ m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Discord)), "Opens link to join the CS:2 Modding Discord" },
+                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Version)), "Version" },
+                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.InformationalVersion)), "Informational Version" },
+                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Credits)), string.Empty },
+                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Github)), "GitHub" }, {
+                    m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Github)),
+                    "Opens a browser window to https://github.com/lucarager/CS2-NetworkTools"
+                },
+                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Discord)), "Discord" },
+                { m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.Discord)), "Opens link to join the CS:2 Modding Discord" },
 
                 // Hint Tooltips - Common
                 { "Common.ACTION[NetworkTools.HintTooltip.Common.Exit]", "Exit Tool" },
@@ -116,27 +116,27 @@ namespace NetworkTools.L10N {
                 // ## SlideNode
                 // ### SlideNode - Metadata
                 { "NetworkTools.Tools.SlideNode.Name", "Slide Node (Coming Soon!)" },
-                { "NetworkTools.Tools.SlideNode.Description", "" },
+                { "NetworkTools.Tools.SlideNode.Description", "Allows sliding nodes along existing edges." },
 
                 // ## SuperNode
                 // ### SuperNode - Metadata
-                { "NetworkTools.Tools.SuperNode.Name", "Super Node (Coming Soon!)" },
-                { "NetworkTools.Tools.SuperNode.Description", "" },
+                { "NetworkTools.Tools.SuperNode.Name", "Super Node" },
+                { "NetworkTools.Tools.SuperNode.Description", "Allows combining multiple nodes into one large intersection." },
 
                 // ## Connect
                 // ### Connect - Metadata
                 { "NetworkTools.Tools.Connect.Name", "Connect Tools (Coming Soon!)" },
-                { "NetworkTools.Tools.Connect.Description", "" },
+                { "NetworkTools.Tools.Connect.Description", "Allows creating a new connection between two nodes in a number of ways." },
 
                 // ## Parallel
                 // ### Parallel - Metadata
                 { "NetworkTools.Tools.Parallel.Name", "Advanced Parallel (Coming Soon!)" },
-                { "NetworkTools.Tools.Parallel.Description", "" },
+                { "NetworkTools.Tools.Parallel.Description", "Allows creating perfect parallel networks from a source network." },
 
                 // ## Grid
                 // ### Grid - Metadata
                 { "NetworkTools.Tools.Grid.Name", "Advanced Grid  (Coming Soon!)" },
-                { "NetworkTools.Tools.Grid.Description", "" },
+                { "NetworkTools.Tools.Grid.Description", "Allows creating perfect road grids with a number of configurable options." },
             };
         }
 

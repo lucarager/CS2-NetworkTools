@@ -121,9 +121,9 @@
                         borderWidth = nodeBorderWidth;
                     }
                     else if (isSelected && (renderMode & NodeRenderMode.RenderSelected) != NodeRenderMode.None) {
-                        fillColor = (Color)(Vector4)m_Colors.NodeSelectedFirstFill;
+                        fillColor = (Color)(Vector4)m_Colors.NodeSelectedFirstBorder;
                         borderColor = (Color)(Vector4)m_Colors.NodeSelectedFirstBorder;
-                        diameter = nodeDiameter;
+                        diameter = nodeDiameter / 2;
                         borderWidth = nodeBorderWidth;
                     }
                     else if (isHighlighted) {

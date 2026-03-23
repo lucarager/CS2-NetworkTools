@@ -157,6 +157,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_SlideNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_ConnectToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_ParallelToolSystem>(SystemUpdatePhase.ToolUpdate);
+            updateSystem.UpdateAt<NT_PostProcessingSystem>(SystemUpdatePhase.Modification4); // Search system updates on Mod5, run before then
             // UI
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_OverlaySystem>(SystemUpdatePhase.Rendering);
