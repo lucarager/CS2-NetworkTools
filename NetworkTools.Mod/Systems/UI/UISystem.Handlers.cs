@@ -13,6 +13,7 @@ namespace NetworkTools.Systems.UI {
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools.Connect;
+    using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Utils;
@@ -78,6 +79,11 @@ namespace NetworkTools.Systems.UI {
                 if (m_ToolSystem.activeTool == m_NtRoadShapeToolSystem) {
                     m_ShapeConfigBinding.Value = m_NtRoadShapeToolSystem.ShapeTransformConfig;
                 }
+
+                // Sync grid config binding when the grid tool is activated
+                if (m_ToolSystem.activeTool == m_NtGridToolSystem) {
+                    m_GridConfigBinding.Value = m_NtGridToolSystem.CurrentConfig;
+                }
             }
         }
 
@@ -86,6 +92,12 @@ namespace NetworkTools.Systems.UI {
             var connectMode = (ConnectMode)mode;
             m_NtConnectToolSystem.SetMode(connectMode);
             m_ConnectModeBinding.Value        = mode;
+        }
+
+        private void HandleUpdateGridConfig(GridConfig configData) {
+            m_Log.Debug("HandleUpdateGridConfig");
+            m_GridConfigBinding.Value = configData;
+            m_NtGridToolSystem.UpdateConfig(configData);
         }
 
         private void HandleRequestApply() {

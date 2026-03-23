@@ -149,6 +149,7 @@ namespace NetworkTools {
             // ## Activate Systems
             // Core systems
             updateSystem.UpdateAt<NT_PrefabsCreateSystem>(SystemUpdatePhase.PrefabUpdate);
+            updateSystem.UpdateAt<NT_PostProcessingSystem>(SystemUpdatePhase.Modification4); // Search system updates on Mod5, run before then
             // Tools
             updateSystem.UpdateAt<NT_RoadShapeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
@@ -157,13 +158,13 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_SlideNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_ConnectToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_ParallelToolSystem>(SystemUpdatePhase.ToolUpdate);
-            updateSystem.UpdateAt<NT_PostProcessingSystem>(SystemUpdatePhase.Modification4); // Search system updates on Mod5, run before then
+            updateSystem.UpdateAt<NT_GridToolSystem>(SystemUpdatePhase.ToolUpdate);
             // UI
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
-            updateSystem.UpdateAt<NT_OverlaySystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<NT_UITooltipSystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_HintTooltipSystem>(SystemUpdatePhase.UITooltip);
             // Rendering
+            updateSystem.UpdateAt<NT_OverlaySystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<CustomOverlayRenderSystem>(SystemUpdatePhase.Rendering);
 
             // Harmony

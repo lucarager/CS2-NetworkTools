@@ -8,6 +8,7 @@
     using NetworkTools.Settings;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
+    using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Utils;
     using Unity.Entities;
@@ -43,6 +44,7 @@
         private PrefixedLogger                           m_Log;
         private NameSystem                               m_NameSystem;
         private NT_ConnectToolSystem                     m_NtConnectToolSystem;
+        private NT_GridToolSystem                        m_NtGridToolSystem;
         private NT_RoadShapeToolSystem                   m_NtRoadShapeToolSystem;
         private ValueBindingHelper<bool>                 m_PanelOpenBinding;
         private PrefabSystem                             m_PrefabSystem;
@@ -52,6 +54,7 @@
         private ValueBindingHelper<int>                  m_SelectedSnapsBinding;
         private ValueBindingHelper<int>                  m_SelectedTargetsBinding;
         private ValueBindingHelper<int>                  m_SelectedViewsBinding;
+        private ValueBindingHelper<GridConfig>            m_GridConfigBinding;
         private ValueBindingHelper<ShapeTransformConfig> m_ShapeConfigBinding;
         private ProxyAction                              m_ToggleToolPanelAction;
         private ProxyAction                              m_OpenTool1Action;
@@ -78,6 +81,7 @@
             m_PrefabSystem          = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_ToolSystem            = World.GetOrCreateSystemManaged<ToolSystem>();
             m_NtConnectToolSystem   = World.GetOrCreateSystemManaged<NT_ConnectToolSystem>();
+            m_NtGridToolSystem      = World.GetOrCreateSystemManaged<NT_GridToolSystem>();
             m_NtRoadShapeToolSystem = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
             m_NameSystem            = World.GetOrCreateSystemManaged<NameSystem>();
 
@@ -91,6 +95,9 @@
                                                  HandleUpdateShapeConfig,
                                                  new ValueWriter<ShapeTransformConfig>(),
                                                  new ValueReader<ShapeTransformConfig>());
+            m_GridConfigBinding = CreateBinding("GRID_CONFIG",
+                                                 new GridConfig(),
+                                                 HandleUpdateGridConfig);
             m_ConnectModeBinding   = CreateBinding("CONNECT_MODE", (int)ConnectMode.None, HandleUpdateConnectMode);
             m_AvailableSnapsBinding   = CreateBinding("AVAILABLE_SNAPS",   (int)SnapOption.None);
             m_SelectedSnapsBinding    = CreateBinding("SELECTED_SNAPS",    (int)SnapOption.None, HandleUpdateSelectedSnaps);

@@ -135,7 +135,6 @@
 
 	<ItemGroup>
 	  <Folder Include="L10N\lang\" />
-	  <Folder Include="Systems\Tools\Grid\" />
 	</ItemGroup>
 
 	<!--Build UI-->
