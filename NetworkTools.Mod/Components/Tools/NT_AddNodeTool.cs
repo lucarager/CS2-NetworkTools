@@ -10,5 +10,5 @@ namespace NetworkTools.Components.Tools {
 
     #endregion
 
-    public struct NT_AddNode : IComponentData { }
+    public struct NT_AddNodeTool : IComponentData { }
 }

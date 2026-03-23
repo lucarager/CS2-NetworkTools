@@ -22,8 +22,8 @@ namespace NetworkTools.Systems.Tools {
 
     public partial class NT_SuperNodeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_SuperNode>(prefab)}");
-            var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_SuperNode>(prefab);
+            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_SuperNodeTool>(prefab)}");
+            var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_SuperNodeTool>(prefab);
 
             if (!validRequest) {
                 return false;
@@ -57,10 +57,8 @@ namespace NetworkTools.Systems.Tools {
         protected override void OnStartRunning() {
             base.OnStartRunning();
 
-            Phase = OperationPhase.Idle;
-
             // Ensure clean state
-            m_SelectedNodes.Clear();
+            ResetToIdle();
 
             MarkEligibleEntities();
         }
@@ -75,10 +73,17 @@ namespace NetworkTools.Systems.Tools {
             m_Log.Debug("OnStopRunning: Cleaning up state components");
 
             // Clear state
+            ResetToIdle();
+
+            base.OnStopRunning();
+        }
+
+        private void ResetToIdle() {
+            // Clear state
             EntityManager.RemoveComponent<NT_Selected>(m_AllNtComponentsQuery);
             m_SelectedNodes.Clear();
 
-            base.OnStopRunning();
+            UpdatePhase();
         }
     }
 }

@@ -89,6 +89,8 @@ namespace NetworkTools.Systems.UI {
         }
 
         private void HandleRequestApply() {
+            m_Log.Debug($"HandleRequestApply() -- validRequest={m_ToolSystem.activeTool is IManualApplyProvider}");
+
             if (m_ToolSystem.activeTool is IManualApplyProvider activeTool) {
                 activeTool.RequestApply();
             }

@@ -10,5 +10,5 @@ namespace NetworkTools.Components.Tools {
 
     #endregion
 
-    public struct NT_Connect : IComponentData { }
+    public struct NT_GridTool : IComponentData { }
 }

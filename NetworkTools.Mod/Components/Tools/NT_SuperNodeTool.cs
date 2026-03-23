@@ -10,5 +10,5 @@ namespace NetworkTools.Components.Tools {
 
     #endregion
 
-    public struct NT_SlideNode : IComponentData { }
+    public struct NT_SuperNodeTool : IComponentData { }
 }

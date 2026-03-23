@@ -15,9 +15,9 @@ namespace NetworkTools.Systems.Tools {
 
     public partial class NT_SlideNodeToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_SlideNode>(prefab)}");
+            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_SlideNodeTool>(prefab)}");
             var validRequest = prefab is NT_ToolPrefab &&
-                               m_PrefabSystem.HasComponent<NT_SlideNode>(prefab);
+                               m_PrefabSystem.HasComponent<NT_SlideNodeTool>(prefab);
 
             if (!validRequest) {
                 return false;

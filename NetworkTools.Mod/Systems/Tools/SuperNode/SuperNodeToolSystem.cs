@@ -105,6 +105,8 @@ namespace NetworkTools.Systems.Tools {
         ///     Requests the tool to apply the current transformation.
         /// </summary>
         public void RequestApply() {
+            m_Log.Debug($"RequestApply() -- Selected Nodes: {m_SelectedNodes.Length}");
+
             if (m_SelectedNodes.Length < 2)
             {
                 return;

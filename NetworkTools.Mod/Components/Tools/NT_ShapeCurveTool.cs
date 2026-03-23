@@ -14,5 +14,5 @@ namespace NetworkTools.Components.Tools {
     ///     Component marker for the Shape Curve tool prefab.
     ///     Used by RoadShapeToolSystem to identify curve-specific tool selection.
     /// </summary>
-    public struct NT_ShapeCurve : IComponentData { }
+    public struct NT_ShapeCurveTool : IComponentData { }
 }

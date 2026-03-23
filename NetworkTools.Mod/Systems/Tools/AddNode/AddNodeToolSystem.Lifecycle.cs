@@ -39,9 +39,9 @@ namespace NetworkTools.Systems.Tools {
             };
         }
         public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_AddNode>(prefab)}");
+            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_AddNodeTool>(prefab)}");
             var validRequest = prefab is NT_ToolPrefab &&
-                               m_PrefabSystem.HasComponent<NT_AddNode>(prefab);
+                               m_PrefabSystem.HasComponent<NT_AddNodeTool>(prefab);
 
             if (!validRequest) {
                 return false;

@@ -17,7 +17,7 @@
     /// </summary>
     public partial class NT_ConnectToolSystem {
         public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_Connect>(prefab)}");
+            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_ConnectTool>(prefab)}");
 
             // If we're setting a NetPrefab, we cache it as the desired prefab for later.
             if (prefab is NetPrefab netPrefab) {
@@ -35,7 +35,7 @@
 
             // For non-NetPrefab prefabs, we only accept if it's a NT_ToolPrefab with an NT_Connect component, which indicates it's a valid configuration for this tool.
             var validRequest = prefab is NT_ToolPrefab &&
-                               m_PrefabSystem.HasComponent<NT_Connect>(prefab);
+                               m_PrefabSystem.HasComponent<NT_ConnectTool>(prefab);
 
             if (!validRequest) {
                 return false;

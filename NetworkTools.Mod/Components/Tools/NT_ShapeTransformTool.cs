@@ -1,4 +1,4 @@
-// <copyright file="NT_NodeControl.cs" company="Luca Rager">
+﻿// <copyright file="NT_Select.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -10,8 +10,5 @@ namespace NetworkTools.Components.Tools {
 
     #endregion
 
-    /// <summary>
-    /// Component marker for the Node Control tool prefab.
-    /// </summary>
-    public struct NT_NodeControl : IComponentData { }
+    public struct NT_ShapeTransformTool : IComponentData { }
 }

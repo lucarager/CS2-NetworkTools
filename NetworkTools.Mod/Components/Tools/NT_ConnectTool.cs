@@ -10,5 +10,5 @@ namespace NetworkTools.Components.Tools {
 
     #endregion
 
-    public struct NT_Parallel : IComponentData { }
+    public struct NT_ConnectTool : IComponentData { }
 }

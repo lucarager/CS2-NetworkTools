@@ -41,8 +41,8 @@
             };
         }
         public override bool TrySetPrefab(PrefabBase prefab) {
-            var hasShapeSlope = m_PrefabSystem.HasComponent<NT_ShapeSlope>(prefab);
-            var hasShapeCurve = m_PrefabSystem.HasComponent<NT_ShapeCurve>(prefab);
+            var hasShapeSlope = m_PrefabSystem.HasComponent<NT_ShapeSlopeTool>(prefab);
+            var hasShapeCurve = m_PrefabSystem.HasComponent<NT_ShapeCurveTool>(prefab);
             m_Log.Debug(
                 $"TrySetPrefab {prefab is NT_ToolPrefab} hasShapeSlope={hasShapeSlope} hasShapeCurve={hasShapeCurve}");
             var validRequest =
@@ -55,8 +55,8 @@
             }
 
             // Detect variant switch (slope ↔ curve) and reset config/handles
-            var wasSlopePrefab = m_Prefab != null && m_PrefabSystem.HasComponent<NT_ShapeSlope>(m_Prefab);
-            var wasCurvePrefab = m_Prefab != null && m_PrefabSystem.HasComponent<NT_ShapeCurve>(m_Prefab);
+            var wasSlopePrefab = m_Prefab != null && m_PrefabSystem.HasComponent<NT_ShapeSlopeTool>(m_Prefab);
+            var wasCurvePrefab = m_Prefab != null && m_PrefabSystem.HasComponent<NT_ShapeCurveTool>(m_Prefab);
 
             m_Prefab = prefab;
 
