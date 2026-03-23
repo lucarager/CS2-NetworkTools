@@ -122,6 +122,10 @@ namespace NetworkTools.L10N {
                 // ### SuperNode - Metadata
                 { "NetworkTools.Tools.SuperNode.Name", "Super Node" },
                 { "NetworkTools.Tools.SuperNode.Description", "Allows combining multiple nodes into one large intersection." },
+                // ### SuperNode - Hint Tooltips
+                { "Common.ACTION[NetworkTools.HintTooltip.SuperNode.SelectStart]", "Select a node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.SuperNode.SelectSecond]", "Add another node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.SuperNode.RemoveLast]", "Remove last node" },
 
                 // ## Connect
                 // ### Connect - Metadata
