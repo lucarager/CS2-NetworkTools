@@ -111,7 +111,7 @@
             CreateToolPrefab("AddNode",    "add.svg",      "node",       new NT_AddNodeTool(),    IsToolActive(true));
             CreateToolPrefab("RemoveNode", "remove.svg",   "node",       new NT_RemoveNodeTool(), IsToolActive(true));
             CreateToolPrefab("SlideNode",  "move.svg",     "node",       new NT_SlideNodeTool(),  IsToolActive(false));
-            CreateToolPrefab("SuperNode",  "super.svg",    "node",       new NT_SuperNodeTool(),  IsToolActive(false));
+            CreateToolPrefab("SuperNode",  "super.svg",    "node",       new NT_SuperNodeTool(),  IsToolActive(true));
             CreateToolPrefab("ShapeSlope", "slope.svg",    "shape",      new NT_ShapeSlopeTool(), IsToolActive(true));
             CreateToolPrefab("ShapeCurve", "curve.svg",    "shape",      new NT_ShapeCurveTool(), IsToolActive(true));
             CreateToolPrefab("Connect",    "connect.svg",  "generative", new NT_ConnectTool(),    IsToolActive(false));

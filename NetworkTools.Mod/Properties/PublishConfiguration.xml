@@ -19,17 +19,18 @@
 	<!--Link to the forum post where the mod can be discussed-->
 	<ForumLink Value="" />
 	<!--Version of the mod-->
-	<ModVersion Value="1.1.4" />
+	<ModVersion Value="1.1.5" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.5.*" />
 	<!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
 	<RequiredDLC Value="" />
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
 	<ChangeLog>
-		- New: Controls for targeting certain nodes, enabling view layers such as underground / invisible paths, and snapping have been added
-		- Started work on converting all hard-coded strings to translatable ones.
-		- Fixed: Switching between shape and curve controls would not reset handles / modes correctly
-		- Internal refactoring and improvements
+		- New: Supernode tool
+		- New: Shortcuts to open specific tools (Shift+1-9) after opening the panel (Shift+T)
+		- Fixed: Selecting Targets while using the AddNode tool would highlight nodes
+		- Improved: Various UI fixes and improvements
+		- Consolidate and Refactor some internal metadata and systems
 	</ChangeLog>
 	<!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
 	<ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
