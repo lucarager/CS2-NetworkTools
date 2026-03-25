@@ -13,6 +13,17 @@ namespace NetworkTools.Systems.Tools.Parallel {
     }
 
     /// <summary>
+    ///     Determines whether the vertical offset goes up or down.
+    /// </summary>
+    public enum VerticalSide {
+        /// <summary>Offset upward.</summary>
+        Up = 0,
+
+        /// <summary>Offset downward.</summary>
+        Down = 1
+    }
+
+    /// <summary>
     ///     Holds configuration for parallel road generation: offset distance and side.
     /// </summary>
     public struct ParallelConfig : IJsonWritable, IJsonReadable {
@@ -30,6 +41,11 @@ namespace NetworkTools.Systems.Tools.Parallel {
         ///     Which side of the original path to place the parallel copy.
         /// </summary>
         public ParallelSide Side;
+
+        /// <summary>
+        ///     Whether the vertical offset goes up or down.
+        /// </summary>
+        public VerticalSide VerticalDirection;
 
         /// <summary>
         ///     Default offset distance in world units.
@@ -52,10 +68,17 @@ namespace NetworkTools.Systems.Tools.Parallel {
         /// </summary>
         public float SignedHorizontalOffset => Side == ParallelSide.Right ? HorizontalOffset : -HorizontalOffset;
 
+        /// <summary>
+        ///     Returns the signed vertical offset based on the selected direction.
+        ///     Positive = up, Negative = down.
+        /// </summary>
+        public float SignedVerticalOffset => VerticalDirection == VerticalSide.Up ? VerticalOffset : -VerticalOffset;
+
         public static ParallelConfig Default => new ParallelConfig {
             HorizontalOffset = DefaultDistance,
             VerticalOffset = DefaultDistance,
-            Side = ParallelSide.Right
+            Side = ParallelSide.Right,
+            VerticalDirection = VerticalSide.Up
         };
 
         /// <inheritdoc />
@@ -71,6 +94,9 @@ namespace NetworkTools.Systems.Tools.Parallel {
 
             writer.PropertyName("side");
             writer.Write((int)Side);
+
+            writer.PropertyName("verticalDirection");
+            writer.Write((int)VerticalDirection);
 
             writer.TypeEnd();
         }
@@ -90,6 +116,10 @@ namespace NetworkTools.Systems.Tools.Parallel {
             reader.ReadProperty("side");
             reader.Read(out int side);
             Side = (ParallelSide)side;
+
+            reader.ReadProperty("verticalDirection");
+            reader.Read(out int verticalDirection);
+            VerticalDirection = (VerticalSide)verticalDirection;
 
             reader.ReadMapEnd();
         }

@@ -65,15 +65,22 @@ export enum ParallelSide {
     Right = 1,
 }
 
+export enum VerticalSide {
+    Up = 0,
+    Down = 1,
+}
+
 export type ParallelConfigData = {
     horizontalOffset: number;
     verticalOffset: number;
     side: ParallelSide;
+    verticalDirection: VerticalSide;
 };
 export const DEFAULT_PARALLEL_CONFIG: ParallelConfigData = {
     horizontalOffset: 20,
     verticalOffset: 0,
     side: ParallelSide.Right,
+    verticalDirection: VerticalSide.Up,
 };
 
 // Snap options (bitflags)

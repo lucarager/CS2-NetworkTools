@@ -1,6 +1,12 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
-import { GAME_BINDINGS, GAME_TRIGGERS, ParallelConfigData, ParallelSide } from "gameBindings";
+import {
+    GAME_BINDINGS,
+    GAME_TRIGGERS,
+    ParallelConfigData,
+    ParallelSide,
+    VerticalSide,
+} from "gameBindings";
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
 import { NodeSelection } from "../shared/nodeSelection";
@@ -17,6 +23,19 @@ const SIDE_OPTIONS: { label: string; id: ParallelSide; icon: string }[] = [
         label: "Right",
         id: ParallelSide.Right,
         icon: "coui://nt/Side/Right.svg",
+    },
+];
+
+const VERTICAL_SIDE_OPTIONS: { label: string; id: VerticalSide; icon: string }[] = [
+    {
+        label: "Up",
+        id: VerticalSide.Up,
+        icon: "coui://nt/Side/Up.svg",
+    },
+    {
+        label: "Down",
+        id: VerticalSide.Down,
+        icon: "coui://nt/Side/Down.svg",
     },
 ];
 
@@ -100,6 +119,37 @@ export const ParallelControls: React.FC = () => {
                                         handleConfigChange("horizontalOffset", e);
                                     }}
                                 />
+                            </div>
+                        </div>
+                        <div className={styles.controlRow}>
+                            <div className={styles.controlRowInner}>
+                                <span className={styles.paramLabel}>Vertical Direction</span>
+                                <div className={styles.buttonRow}>
+                                    {VERTICAL_SIDE_OPTIONS.map((option) => (
+                                        <Tooltip
+                                            key={option.id}
+                                            tooltip={option.label}
+                                            delayTime={0}>
+                                            <Button
+                                                key={option.id}
+                                                variant="primary"
+                                                className={c(
+                                                    styles.iconButton,
+                                                    parallelConfig.verticalDirection === option.id
+                                                        ? styles.iconButton__active
+                                                        : null,
+                                                )}
+                                                onSelect={() =>
+                                                    handleConfigChange(
+                                                        "verticalDirection",
+                                                        option.id,
+                                                    )
+                                                }>
+                                                <img src={option.icon} className={styles.icon} />
+                                            </Button>
+                                        </Tooltip>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                         <div className={styles.controlRow}>

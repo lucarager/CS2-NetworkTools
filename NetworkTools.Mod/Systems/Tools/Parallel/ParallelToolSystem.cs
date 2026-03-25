@@ -23,9 +23,6 @@ namespace NetworkTools.Systems.Tools.Parallel {
         /// <inheritdoc />
         public override string toolID => "ParallelTool";
 
-        /// <inheritdoc />
-        public override TargetOption AvailableTargets => TargetOption.Road;
-
         /// <summary>
         ///     Tracks whether an update/re-render is needed on the next frame.
         /// </summary>

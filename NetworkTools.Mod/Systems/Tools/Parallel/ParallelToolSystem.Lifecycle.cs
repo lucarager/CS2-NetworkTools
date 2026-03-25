@@ -87,7 +87,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
             base.OnStopRunning();
 
             // Clear selection state
-            ClearSelectionState();
+            ClearSelectionState(false);
         }
     }
 }
