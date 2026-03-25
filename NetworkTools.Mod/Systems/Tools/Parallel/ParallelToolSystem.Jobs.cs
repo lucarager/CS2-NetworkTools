@@ -31,7 +31,7 @@
             public required EntityCommandBuffer ECB;
 
             public void Execute() {
-                var signedDistance  = Config.SignedHorizontalOffset;
+                var signedDistance  = Config.HorizontalOffset;
                 var verticalOffset = Config.VerticalOffset;
                 var verticalShift  = new float3(0f, verticalOffset, 0f);
 

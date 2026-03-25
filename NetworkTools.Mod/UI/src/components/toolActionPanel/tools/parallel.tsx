@@ -1,24 +1,10 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
-import { GAME_BINDINGS, GAME_TRIGGERS, ParallelConfigData, ParallelSide } from "gameBindings";
+import { GAME_BINDINGS, GAME_TRIGGERS, ParallelConfigData } from "gameBindings";
 import { useValue } from "cs2/api";
-import { Button, Tooltip } from "cs2/ui";
+import { Button } from "cs2/ui";
 import { NodeSelection } from "../shared/nodeSelection";
 import { VC } from "components/vanilla/Components";
-import { c } from "utils/classes";
-
-const SIDE_OPTIONS: { label: string; id: ParallelSide; icon: string }[] = [
-    {
-        label: "Left",
-        id: ParallelSide.Left,
-        icon: "coui://nt/Side/Left.svg",
-    },
-    {
-        label: "Right",
-        id: ParallelSide.Right,
-        icon: "coui://nt/Side/Right.svg",
-    },
-];
 
 export const ParallelControls: React.FC = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
@@ -60,39 +46,11 @@ export const ParallelControls: React.FC = () => {
                             </div>
                         </div>
                         <div className={styles.controlRow}>
-                            <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>Side</span>
-                                <div className={styles.buttonRow}>
-                                    {SIDE_OPTIONS.map((option) => (
-                                        <Tooltip
-                                            key={option.id}
-                                            tooltip={option.label}
-                                            delayTime={0}>
-                                            <Button
-                                                key={option.id}
-                                                variant="primary"
-                                                className={c(
-                                                    styles.iconButton,
-                                                    parallelConfig.side === option.id
-                                                        ? styles.iconButton__active
-                                                        : null,
-                                                )}
-                                                onSelect={() =>
-                                                    handleConfigChange("side", option.id)
-                                                }>
-                                                <img src={option.icon} className={styles.icon} />
-                                            </Button>
-                                        </Tooltip>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                        <div className={styles.controlRow}>
                             <div className={styles.sliderField}>
                                 <VC.FloatSliderField
                                     value={parallelConfig.horizontalOffset}
                                     label={"Horizontal Offset"}
-                                    min={0}
+                                    min={-80}
                                     max={80}
                                     fractionDigits={1}
                                     onChange={(e: number) => {
@@ -107,7 +65,7 @@ export const ParallelControls: React.FC = () => {
                                 <VC.FloatSliderField
                                     value={parallelConfig.verticalOffset}
                                     label={"Vertical Offset"}
-                                    min={0}
+                                    min={-80}
                                     max={80}
                                     fractionDigits={1}
                                     onChange={(e: number) => {

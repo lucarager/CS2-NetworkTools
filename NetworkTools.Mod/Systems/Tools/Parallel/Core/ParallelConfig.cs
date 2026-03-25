@@ -2,34 +2,22 @@ namespace NetworkTools.Systems.Tools.Parallel {
     using Colossal.UI.Binding;
 
     /// <summary>
-    ///     Determines which side of the original path the parallel copy is placed on.
-    /// </summary>
-    public enum ParallelSide {
-        /// <summary>Offset to the left of the path direction.</summary>
-        Left = 0,
-
-        /// <summary>Offset to the right of the path direction.</summary>
-        Right = 1
-    }
-
-    /// <summary>
-    ///     Holds configuration for parallel road generation: offset distance and side.
+    ///     Holds configuration for parallel road generation with signed offsets.
+    ///     Horizontal: negative = right, positive = left.
+    ///     Vertical: negative = down, positive = up.
     /// </summary>
     public struct ParallelConfig : IJsonWritable, IJsonReadable {
         /// <summary>
-        ///     Perpendicular offset distance in world units.
+        ///     Signed perpendicular offset distance in world units.
+        ///     Negative = right of travel direction, Positive = left.
         /// </summary>
         public float HorizontalOffset;
 
         /// <summary>
-        ///     Vertical offset distance in world units.
+        ///     Signed vertical offset distance in world units.
+        ///     Negative = down, Positive = up.
         /// </summary>
         public float VerticalOffset;
-
-        /// <summary>
-        ///     Which side of the original path to place the parallel copy.
-        /// </summary>
-        public ParallelSide Side;
 
         /// <summary>
         ///     Default offset distance in world units.
@@ -37,25 +25,18 @@ namespace NetworkTools.Systems.Tools.Parallel {
         public const float DefaultDistance = 20f;
 
         /// <summary>
-        ///     Minimum offset distance in world units.
+        ///     Minimum offset distance in world units (negative bound).
         /// </summary>
-        public const float MinDistance = 0f;
+        public const float MinDistance = -80f;
 
         /// <summary>
-        ///     Maximum offset distance in world units.
+        ///     Maximum offset distance in world units (positive bound).
         /// </summary>
         public const float MaxDistance = 80f;
 
-        /// <summary>
-        ///     Returns the signed offset based on the selected side.
-        ///     Positive = right, Negative = left (following standard road conventions).
-        /// </summary>
-        public float SignedHorizontalOffset => Side == ParallelSide.Right ? HorizontalOffset : -HorizontalOffset;
-
         public static ParallelConfig Default => new ParallelConfig {
             HorizontalOffset = DefaultDistance,
-            VerticalOffset = DefaultDistance,
-            Side = ParallelSide.Right
+            VerticalOffset = 0f
         };
 
         /// <inheritdoc />
@@ -65,12 +46,8 @@ namespace NetworkTools.Systems.Tools.Parallel {
             writer.PropertyName("horizontalOffset");
             writer.Write(HorizontalOffset);
 
-
             writer.PropertyName("verticalOffset");
             writer.Write(VerticalOffset);
-
-            writer.PropertyName("side");
-            writer.Write((int)Side);
 
             writer.TypeEnd();
         }
@@ -86,10 +63,6 @@ namespace NetworkTools.Systems.Tools.Parallel {
             reader.ReadProperty("verticalOffset");
             reader.Read(out float verticalOffset);
             VerticalOffset = verticalOffset;
-
-            reader.ReadProperty("side");
-            reader.Read(out int side);
-            Side = (ParallelSide)side;
 
             reader.ReadMapEnd();
         }
