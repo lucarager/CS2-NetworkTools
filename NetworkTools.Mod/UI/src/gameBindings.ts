@@ -60,6 +60,22 @@ export enum ConnectMode {
     Loop = 3,
 }
 
+export enum ParallelSide {
+    Left = 0,
+    Right = 1,
+}
+
+export type ParallelConfigData = {
+    horizontalOffset: number;
+    verticalOffset: number;
+    side: ParallelSide;
+};
+export const DEFAULT_PARALLEL_CONFIG: ParallelConfigData = {
+    horizontalOffset: 20,
+    verticalOffset: 0,
+    side: ParallelSide.Right,
+};
+
 // Snap options (bitflags)
 export enum SnapOption {
     None = 0,
@@ -106,6 +122,10 @@ export const GAME_BINDINGS = {
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
     PANEL_OPEN: new TwoWayBinding<boolean>("PANEL_OPEN", false),
     SHAPE_CONFIG: new TwoWayBinding<ShapeConfigData>("SHAPE_CONFIG", DEFAULT_SHAPE_CONFIG),
+    PARALLEL_CONFIG: new TwoWayBinding<ParallelConfigData>(
+        "PARALLEL_CONFIG",
+        DEFAULT_PARALLEL_CONFIG,
+    ),
     CONNECT_MODE: new TwoWayBinding<number>("CONNECT_MODE", ConnectMode.None),
     SELECTED_NET_PREFAB: new TwoWayBinding<NetPrefabData>(
         "SELECTED_NET_PREFAB",

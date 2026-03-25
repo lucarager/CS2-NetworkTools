@@ -11,6 +11,7 @@ import { SnapSelection } from "./shared/snapSelection";
 import { TargetSelection } from "./shared/targetSelection";
 import { ViewSelection } from "./shared/viewSelection";
 import { SuperNodeControls } from "./tools/superNode";
+import { ParallelControls } from "./tools/parallel";
 
 // Registry of tool components mapped by tool ID
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
@@ -18,6 +19,7 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
     ShapeCurve: ShapeCurveControls,
     Connect: ConnectControls,
     SuperNode: SuperNodeControls,
+    Parallel: ParallelControls,
 };
 
 export const ToolActionPanel = () => {

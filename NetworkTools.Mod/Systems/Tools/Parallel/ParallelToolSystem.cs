@@ -4,7 +4,11 @@
 // </copyright>
 
 namespace NetworkTools.Systems.Tools.Parallel {
+    using Game.Prefabs;
+
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Parallel;
+
     using Unity.Entities;
 
     /// <summary>
@@ -15,7 +19,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
     ///     This tool demonstrates the NT_PathSelectionToolSystem base class.
     ///     Selection, phase management, and path preview are all inherited.
     /// </remarks>
-    public partial class NT_ParallelToolSystem : NT_PathSelectionToolSystem {
+    public partial class NT_ParallelToolSystem : NT_PathSelectionToolSystem, IManualApplyProvider, INetPrefabSelectionProvider {
         /// <inheritdoc />
         public override string toolID => "ParallelTool";
 
@@ -26,6 +30,41 @@ namespace NetworkTools.Systems.Tools.Parallel {
         ///     Tracks whether an update/re-render is needed on the next frame.
         /// </summary>
         private bool m_UpdateNeeded;
+
+        /// <summary>
+        ///     Selected net prefab for parallel road segments.
+        /// </summary>
+        protected NetPrefab m_SelectedNetPrefab;
+
+        /// <summary>
+        ///     Selected net prefab entity.
+        /// </summary>
+        protected Entity m_SelectedNetPrefabEntity;
+
+        /// <inheritdoc />
+        public NetPrefab SelectedNetPrefab => m_SelectedNetPrefab;
+
+        /// <inheritdoc />
+        public Entity SelectedNetPrefabEntity => m_SelectedNetPrefabEntity;
+
+        /// <summary>
+        ///     Current parallel configuration (distance and side).
+        /// </summary>
+        internal ParallelConfig CurrentConfig = new ParallelConfig {
+            HorizontalOffset = ParallelConfig.DefaultDistance,
+            Side     = ParallelSide.Right
+        };
+
+        /// <summary>
+        ///     Updates the parallel configuration from the UI.
+        /// </summary>
+        /// <param name="config">The updated config from the UI.</param>
+        public void UpdateConfig(ParallelConfig config) {
+            CurrentConfig.HorizontalOffset = config.HorizontalOffset;
+            CurrentConfig.VerticalOffset = config.VerticalOffset;
+            CurrentConfig.Side     = config.Side;
+            m_UpdateNeeded         = true;
+        }
 
         #region Template Method Implementations
 

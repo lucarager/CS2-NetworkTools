@@ -14,9 +14,24 @@ namespace NetworkTools.Systems.UI {
     using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Utils;
+    using Colossal.UI.Binding;
+    using Game.Input;
+    using Game.Prefabs;
+    using Game.Tools;
+    using Game.UI;
+    using NetworkTools.Extensions;
+    using NetworkTools.Settings;
+    using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Connect;
+    using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Parallel;
+    using NetworkTools.Systems.Tools.RoadShape;
+    using NetworkTools.Utils;
+    using Unity.Entities;
 
     using Newtonsoft.Json.Linq;
 
@@ -84,6 +99,11 @@ namespace NetworkTools.Systems.UI {
                 if (m_ToolSystem.activeTool == m_NtGridToolSystem) {
                     m_GridConfigBinding.Value = m_NtGridToolSystem.CurrentConfig;
                 }
+
+                // Sync parallel config binding when the parallel tool is activated
+                if (m_ToolSystem.activeTool == m_NtParallelToolSystem) {
+                    m_ParallelConfigBinding.Value = m_NtParallelToolSystem.CurrentConfig;
+                }
             }
         }
 
@@ -98,6 +118,12 @@ namespace NetworkTools.Systems.UI {
             m_Log.Debug("HandleUpdateGridConfig");
             m_GridConfigBinding.Value = configData;
             m_NtGridToolSystem.UpdateConfig(configData);
+        }
+
+        private void HandleUpdateParallelConfig(ParallelConfig configData) {
+            m_Log.Debug("HandleUpdateParallelConfig");
+            m_ParallelConfigBinding.Value = configData;
+            m_NtParallelToolSystem.UpdateConfig(configData);
         }
 
         private void HandleRequestApply() {

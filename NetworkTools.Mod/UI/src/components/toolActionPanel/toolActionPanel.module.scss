@@ -76,11 +76,27 @@
 
 .sliderField {
     width: 100%;
-    padding: 2rem 8rem;
 
-    input {
-        display: none;
+    // Override some vanilla styles
+    & > * {
+        padding: 0;
     }
+
+    [class^="label"] {
+        font-size: var(--fontSizeS);
+        line-height: 1.25em;
+        overflow-x: hidden;
+        overflow-y: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 120rem;
+        color: white;
+        margin-right: 8rem;
+    }
+
+    // input {
+    //     display: none;
+    // }
 }
 
 .controlRow {

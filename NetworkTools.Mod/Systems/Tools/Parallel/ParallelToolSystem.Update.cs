@@ -75,37 +75,20 @@ namespace NetworkTools.Systems.Tools.Parallel {
         }
 
         /// <summary>
-        ///     Handles temp entity generation based on current phase.
+        ///     Runs various jobs depending on whether we need to Update, Apply, or Cancel temp entities.
         /// </summary>
+        /// <param name="inputDeps">Input job dependencies.</param>
+        /// <returns>Output job handle.</returns>
         private JobHandle HandleTempEntities(JobHandle inputDeps) {
-            // For this proof-of-concept, just log phase transitions
-            // A full implementation would generate preview entities here
-
-            if (!m_UpdateNeeded) {
-                return inputDeps;
-            }
-
-            m_UpdateNeeded = false;
-
-            switch (Phase) {
-                case OperationPhase.Ready:
-                    m_Log.Debug($"ParallelTool: Ready phase");
-                    m_Log.Debug($"  Path has {PathNodeCount} nodes and {PathEdgeCount} edges");
-                    break;
-
-                case OperationPhase.Applying:
-                    m_Log.Debug("ParallelTool: Applying - would create actual parallel road entities");
-                    // After apply, transition back to Ready or Idle
-                    Phase = OperationPhase.Ready;
-                    break;
-
-                case OperationPhase.Idle:
-                case OperationPhase.Configuring:
-                    // Nothing to preview yet
-                    break;
-            }
-
-            return inputDeps;
+            return Phase switch {
+                // Preview temp entities
+                OperationPhase.Ready => Update(inputDeps),
+                // Apply real entities
+                OperationPhase.Applying => Apply(inputDeps),
+                // Clear otherwise
+                OperationPhase.Idle or OperationPhase.Configuring => Clear(inputDeps),
+                _ => Clear(inputDeps)
+            };
         }
 
         /// <summary>

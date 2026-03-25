@@ -9,6 +9,7 @@
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Utils;
     using Unity.Entities;
@@ -45,7 +46,9 @@
         private NameSystem                               m_NameSystem;
         private NT_ConnectToolSystem                     m_NtConnectToolSystem;
         private NT_GridToolSystem                        m_NtGridToolSystem;
+        private NT_ParallelToolSystem                    m_NtParallelToolSystem;
         private NT_RoadShapeToolSystem                   m_NtRoadShapeToolSystem;
+        private ValueBindingHelper<ParallelConfig>       m_ParallelConfigBinding;
         private ValueBindingHelper<bool>                 m_PanelOpenBinding;
         private PrefabSystem                             m_PrefabSystem;
         private ValueBindingHelper<NetPrefabData>        m_SelectedNetPrefabBinding;
@@ -82,6 +85,7 @@
             m_ToolSystem            = World.GetOrCreateSystemManaged<ToolSystem>();
             m_NtConnectToolSystem   = World.GetOrCreateSystemManaged<NT_ConnectToolSystem>();
             m_NtGridToolSystem      = World.GetOrCreateSystemManaged<NT_GridToolSystem>();
+            m_NtParallelToolSystem  = World.GetOrCreateSystemManaged<NT_ParallelToolSystem>();
             m_NtRoadShapeToolSystem = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
             m_NameSystem            = World.GetOrCreateSystemManaged<NameSystem>();
 
@@ -97,7 +101,14 @@
                                                  new ValueReader<ShapeTransformConfig>());
             m_GridConfigBinding = CreateBinding("GRID_CONFIG",
                                                  new GridConfig(),
-                                                 HandleUpdateGridConfig);
+                                                 HandleUpdateGridConfig,
+                                                 new ValueWriter<GridConfig>(),
+                                                 new ValueReader<GridConfig>());
+            m_ParallelConfigBinding = CreateBinding("PARALLEL_CONFIG",
+                                                    ParallelConfig.Default,
+                                                    HandleUpdateParallelConfig,
+                                                 new ValueWriter<ParallelConfig>(),
+                                                 new ValueReader<ParallelConfig>());
             m_ConnectModeBinding   = CreateBinding("CONNECT_MODE", (int)ConnectMode.None, HandleUpdateConnectMode);
             m_AvailableSnapsBinding   = CreateBinding("AVAILABLE_SNAPS",   (int)SnapOption.None);
             m_SelectedSnapsBinding    = CreateBinding("SELECTED_SNAPS",    (int)SnapOption.None, HandleUpdateSelectedSnaps);
