@@ -60,13 +60,20 @@ export enum ConnectMode {
     Loop = 3,
 }
 
+export enum ParallelSide {
+    Left = 0,
+    Right = 1,
+}
+
 export type ParallelConfigData = {
     horizontalOffset: number;
     verticalOffset: number;
+    side: ParallelSide;
 };
 export const DEFAULT_PARALLEL_CONFIG: ParallelConfigData = {
     horizontalOffset: 20,
     verticalOffset: 0,
+    side: ParallelSide.Right,
 };
 
 // Snap options (bitflags)

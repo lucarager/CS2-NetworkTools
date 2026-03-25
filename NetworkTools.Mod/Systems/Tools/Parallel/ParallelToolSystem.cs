@@ -48,11 +48,11 @@ namespace NetworkTools.Systems.Tools.Parallel {
         public Entity SelectedNetPrefabEntity => m_SelectedNetPrefabEntity;
 
         /// <summary>
-        ///     Current parallel configuration (signed offsets).
+        ///     Current parallel configuration (distance and side).
         /// </summary>
         internal ParallelConfig CurrentConfig = new ParallelConfig {
             HorizontalOffset = ParallelConfig.DefaultDistance,
-            VerticalOffset   = 0f
+            Side     = ParallelSide.Right
         };
 
         /// <summary>
@@ -61,8 +61,9 @@ namespace NetworkTools.Systems.Tools.Parallel {
         /// <param name="config">The updated config from the UI.</param>
         public void UpdateConfig(ParallelConfig config) {
             CurrentConfig.HorizontalOffset = config.HorizontalOffset;
-            CurrentConfig.VerticalOffset   = config.VerticalOffset;
-            m_UpdateNeeded                 = true;
+            CurrentConfig.VerticalOffset = config.VerticalOffset;
+            CurrentConfig.Side     = config.Side;
+            m_UpdateNeeded         = true;
         }
 
         #region Template Method Implementations
