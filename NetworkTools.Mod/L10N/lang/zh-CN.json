@@ -16,9 +16,9 @@
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool6]": "打开 Network Tools 具体功能的快捷方式，请在打开 NT 面板后使用它",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool7]": "打开连接工具",
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool7]": "打开 Network Tools 具体功能的快捷方式，请在打开 NT 面板后使用它",
-  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool8]": "Open Parallel Tools",
+  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool8]": "打开平行工具",
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool8]": "打开 Network Tools 具体功能的快捷方式，请在打开 NT 面板后使用它",
-  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "Open Grid Tools",
+  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "打开网格工具",
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "打开 Network Tools 具体功能的快捷方式，请在打开 NT 面板后使用它",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.KeybindingsGroupStr]": "快捷键",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.AboutGroupStr]": "关于",
@@ -61,8 +61,8 @@
   "Common.ACTION[NetworkTools.HintTooltip.SuperNode.RemoveLast]": "取消选择最后一个节点",
   "NetworkTools.Tools.Connect.Name": "连接工具（即将到来！）",
   "NetworkTools.Tools.Connect.Description": "允许以多种方式在两个节点之间创建新连接。",
-  "NetworkTools.Tools.Parallel.Name": "Parallel Tool",
-  "NetworkTools.Tools.Parallel.Description": "允许在现有的网络上创建完美的并行网络。",
-  "NetworkTools.Tools.Grid.Name": "Grid Tool (Coming Soon!)",
+  "NetworkTools.Tools.Parallel.Name": "平行工具",
+  "NetworkTools.Tools.Parallel.Description": "允许在现有的网络上创建完美的平行网络。",
+  "NetworkTools.Tools.Grid.Name": "网格工具（即将到来！）",
   "NetworkTools.Tools.Grid.Description": "允许创建完美的道路网格，并提供多种可配置选项。"
 }
