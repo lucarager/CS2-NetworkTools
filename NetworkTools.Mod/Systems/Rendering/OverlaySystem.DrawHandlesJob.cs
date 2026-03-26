@@ -93,7 +93,7 @@
                         RenderLineHandle(line, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.Circle) && hasCircleComponent) {
                         var circle = circleArray[i];
-                        RenderCircleHandle(circle, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
+                        RenderCircleHandle(position, circle, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.ParameterRange) && hasConstraintsComponent) {
                         // Parameter handle with range indicator (origin dot + line to handle)
                         var constraints = constraintsArray[i];
@@ -199,18 +199,19 @@
             /// <summary>
             ///     Renders a circle handle.
             /// </summary>
-            private static void RenderCircleHandle(NT_HandleCircle            circle,        NT_Handle handle,
+            private static void RenderCircleHandle(NT_HandlePosition          position,      NT_HandleCircle circle,
+                                                   NT_Handle                  handle,
                                                    bool                       isHighlighted, bool      isSelected,
                                                    RenderColors               colors,
                                                    CustomOverlayRenderSystem.Buffer buffer) {
-                //GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
-                //var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
+                GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
+                var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
 
-                //// Draw the circle outline
-                //buffer.DrawCircle(default, color, borderWidth, 0, new float2(0, 1), circle.Center, circle.Radius * 2f);
+                // Draw the circle outline
+                buffer.DrawCircle(default, outlineColor, borderWidth, 0, new float2(0, 1), position.Position, circle.Radius * 2f);
 
-                //// Draw a small center point
-                //buffer.DrawCircle(color, color, 0.3f, 0, new float2(0, 1), circle.Center, 1f);
+                // Draw a small center point
+                buffer.DrawCircle(fillColor, fillColor, 0.3f, 0, new float2(0, 1), position.Position, 1f);
             }
 
             /// <summary>

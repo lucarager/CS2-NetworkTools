@@ -34,6 +34,8 @@ namespace NetworkTools.Systems.Tools.Connect {
             {
                 case ConnectMode.SimpleCurve:
                     return new SimpleCurveGenerator().GetHandleDefinitions(CurrentMode, CurrentConfig);
+                case ConnectMode.Loop:
+                    return new LoopGenerator().GetHandleDefinitions(CurrentMode, CurrentConfig);
                 default:
                     return System.Array.Empty<TransformHandleDefinition>();
             }
@@ -95,6 +97,7 @@ namespace NetworkTools.Systems.Tools.Connect {
                 HandleKeys.CurveStartControlPointPosition => CurrentConfig.CurveStartControlPointPosition,
                 HandleKeys.CurveEndControlPointPosition   => CurrentConfig.CurveEndControlPointPosition,
                 HandleKeys.CurveEndPointPosition          => CurrentConfig.CurveEndPointPosition,
+                HandleKeys.LoopControlPointPosition       => CurrentConfig.LoopControlPointPosition,
                 _                                         => float3.zero
             };
         }

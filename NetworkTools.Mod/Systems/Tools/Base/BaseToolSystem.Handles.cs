@@ -335,6 +335,17 @@ namespace NetworkTools.Systems.Tools {
                     radius);
             }
 
+            if ((def.TypeFlags & HandleTypeFlags.Circle) != 0)
+            {
+                return CreateCircleHandle(
+                    Entity.Null,
+                    def.Key,
+                    def.Position,
+                    def.Value,
+                    default,
+                    def.TypeFlags);
+            }
+
             return CreatePositionHandle(
                 Entity.Null,
                 Entity.Null,

@@ -17,5 +17,9 @@
         public const int CurveStartControlPointPosition = 101;
         public const int CurveEndControlPointPosition = 102;
         public const int CurveEndPointPosition = 103;
+
+        // Loop handles (200-299)
+        public const int LoopControlPointPosition = 200;
+        public const int LoopRadius = 201;
     }
 }

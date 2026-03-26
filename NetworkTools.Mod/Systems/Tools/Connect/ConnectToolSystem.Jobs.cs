@@ -42,6 +42,9 @@
                     case ConnectMode.SimpleCurve:
                         new SimpleCurveGenerator().GenerateConnection(Mode, Config, ref curves);
                         break;
+                    case ConnectMode.Loop:
+                        new LoopGenerator().GenerateConnection(Mode, Config, ref curves);
+                        break;
                 }
 
                 // 3. Output

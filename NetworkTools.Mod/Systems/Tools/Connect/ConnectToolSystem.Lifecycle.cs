@@ -94,6 +94,9 @@
                 case ConnectMode.SimpleCurve:
                     new SimpleCurveGenerator().InitializeConfig(in CurrentMode, ref config);
                     break;
+                case ConnectMode.Loop:
+                    new LoopGenerator().InitializeConfig(in CurrentMode, ref config);
+                    break;
             }
 
             CurrentConfig = config;

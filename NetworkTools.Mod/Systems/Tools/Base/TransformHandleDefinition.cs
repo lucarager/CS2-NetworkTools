@@ -32,6 +32,12 @@
         public float Radius;
 
         /// <summary>
+        /// Normal vector for circle/radius handles defining the plane orientation.
+        /// Defaults to Y-up (0, 1, 0) when zero.
+        /// </summary>
+        public float3 Normal;
+
+        /// <summary>
         /// Key of the parent handle. When the parent is dragged, this handle moves with it.
         /// Set to <see cref="NoParent"/> (default) for root handles.
         /// </summary>

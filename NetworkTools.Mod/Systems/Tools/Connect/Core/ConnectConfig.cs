@@ -26,7 +26,7 @@
 
         // Loop
         public float3 LoopControlPointPosition;
-        public float Radius;
+        public float LoopRadius;
 
         public ConnectConfig(float3 startPosition, float3 endPosition, float3 startDirection, float3 endDirection) {
             StartPosition = startPosition;
@@ -38,7 +38,7 @@
             CurveEndControlPointPosition = default;
             CurveEndPointPosition = default;
             LoopControlPointPosition = default;
-            Radius = default;
+            LoopRadius = default;
         }
 
         /// <inheritdoc/>
