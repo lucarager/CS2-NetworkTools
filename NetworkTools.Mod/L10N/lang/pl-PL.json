@@ -16,9 +16,9 @@
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool6]": "Skrót klawiszowy do aktywowania **trybu porządkowania w linii**.\nDziała on tylko po **aktywowaniu narzędzia**.",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool7]": "Tryb tworzenia połączeń",
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool7]": "Skrót klawiszowy do aktywowania **trybu tworzenia połączeń**.\nDziała on tylko po **aktywowaniu narzędzia**.",
-  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool8]": "Tryb zaawansowanego tworzenia równoległego",
+  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool8]": "Open Parallel Tools",
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool8]": "Skrót klawiszowy do aktywowania **trybu zaawansowanego tworzenia równoległego**.\nDziała on tylko po **aktywowaniu narzędzia**.",
-  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "Tryb zaawansowanego tworzenia siatki",
+  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "Open Grid Tools",
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "Skrót klawiszowy do aktywowania **trybu zaawansowanego tworzenia siatki**.\nDziała on tylko po **aktywowaniu narzędzia**.",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.KeybindingsGroupStr]": "Sterowanie",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.AboutGroupStr]": "O modyfikacji",
@@ -61,8 +61,8 @@
   "Common.ACTION[NetworkTools.HintTooltip.SuperNode.RemoveLast]": "Odznacz ostatni węzeł",
   "NetworkTools.Tools.Connect.Name": "Tryb tworzenia połączeń (Wkrótce)",
   "NetworkTools.Tools.Connect.Description": "Umożliwia tworzenie połączeń między dwoma węzłami.",
-  "NetworkTools.Tools.Parallel.Name": "Tryb zaawansowanego tworzenia równoległego (Wkrótce)",
+  "NetworkTools.Tools.Parallel.Name": "Parallel Tool",
   "NetworkTools.Tools.Parallel.Description": "Umożliwia tworzenie idealnych równoległych sieci względem oryginalnej sieci.",
-  "NetworkTools.Tools.Grid.Name": "Tryb zaawansowanego tworzenia siatki (Wkrótce)",
+  "NetworkTools.Tools.Grid.Name": "Grid Tool (Coming Soon!)",
   "NetworkTools.Tools.Grid.Description": "Umożliwia tworzenie idealnych siatek dróg."
 }
