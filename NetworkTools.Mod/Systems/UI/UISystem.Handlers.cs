@@ -41,11 +41,15 @@ namespace NetworkTools.Systems.UI {
         private void HandlePanelOpen(bool value) {
             m_Log.Debug($"HandlePanelOpen(value: {value})");
             m_PanelOpenBinding.Value = value;
+
+            // Close active tool when panel is closed
+            if (!value && m_ToolSystem.activeTool is NT_BaseToolSystem activeTool) {
+                activeTool.RequestDisable();
+            }
         }
 
         private void HandleUpdateShapeConfig(ShapeTransformConfig configData) {
             m_Log.Debug($"HandleUpdateShapeConfig(template: {configData.Template})");
-
 
             var currentConfig = m_NtRoadShapeToolSystem.ShapeTransformConfig;
             if (currentConfig.Template == configData.Template) {
