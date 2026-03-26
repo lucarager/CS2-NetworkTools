@@ -208,7 +208,7 @@
                 var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
 
                 // Draw the circle outline
-                buffer.DrawCircle(default, outlineColor, borderWidth, 0, new float2(0, 1), position.Position, circle.Radius * 2f);
+                buffer.DrawCircle(outlineColor, new Color(255, 255, 255, 0), borderWidth, 0, new float2(0, 1), position.Position, circle.Radius * 2f);
 
                 // Draw a small center point
                 buffer.DrawCircle(fillColor, fillColor, 0.3f, 0, new float2(0, 1), position.Position, 1f);

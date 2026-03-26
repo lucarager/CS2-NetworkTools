@@ -73,13 +73,13 @@ export enum VerticalSide {
 export type ParallelConfigData = {
     horizontalOffset: number;
     verticalOffset: number;
-    side: ParallelSide;
+    horizontalDirection: ParallelSide;
     verticalDirection: VerticalSide;
 };
 export const DEFAULT_PARALLEL_CONFIG: ParallelConfigData = {
     horizontalOffset: 20,
     verticalOffset: 0,
-    side: ParallelSide.Right,
+    horizontalDirection: ParallelSide.Right,
     verticalDirection: VerticalSide.Up,
 };
 

@@ -92,12 +92,15 @@ export const ParallelControls: React.FC = () => {
                                                 variant="primary"
                                                 className={c(
                                                     styles.iconButton,
-                                                    parallelConfig.side === option.id
+                                                    parallelConfig.horizontalDirection === option.id
                                                         ? styles.iconButton__active
                                                         : null,
                                                 )}
                                                 onSelect={() =>
-                                                    handleConfigChange("side", option.id)
+                                                    handleConfigChange(
+                                                        "horizontalDirection",
+                                                        option.id,
+                                                    )
                                                 }>
                                                 <img src={option.icon} className={styles.icon} />
                                             </Button>

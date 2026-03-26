@@ -40,7 +40,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
         /// <summary>
         ///     Which side of the original path to place the parallel copy.
         /// </summary>
-        public ParallelSide Side;
+        public ParallelSide HorizontalDirection;
 
         /// <summary>
         ///     Whether the vertical offset goes up or down.
@@ -66,7 +66,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
         ///     Returns the signed offset based on the selected side.
         ///     Positive = right, Negative = left (following standard road conventions).
         /// </summary>
-        public float SignedHorizontalOffset => Side == ParallelSide.Right ? HorizontalOffset : -HorizontalOffset;
+        public float SignedHorizontalOffset => HorizontalDirection == ParallelSide.Right ? HorizontalOffset : -HorizontalOffset;
 
         /// <summary>
         ///     Returns the signed vertical offset based on the selected direction.
@@ -77,7 +77,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
         public static ParallelConfig Default => new ParallelConfig {
             HorizontalOffset = DefaultDistance,
             VerticalOffset = DefaultDistance,
-            Side = ParallelSide.Right,
+            HorizontalDirection = ParallelSide.Right,
             VerticalDirection = VerticalSide.Up
         };
 
@@ -92,8 +92,8 @@ namespace NetworkTools.Systems.Tools.Parallel {
             writer.PropertyName("verticalOffset");
             writer.Write(VerticalOffset);
 
-            writer.PropertyName("side");
-            writer.Write((int)Side);
+            writer.PropertyName("horizontalDirection");
+            writer.Write((int)HorizontalDirection);
 
             writer.PropertyName("verticalDirection");
             writer.Write((int)VerticalDirection);
@@ -113,9 +113,9 @@ namespace NetworkTools.Systems.Tools.Parallel {
             reader.Read(out float verticalOffset);
             VerticalOffset = verticalOffset;
 
-            reader.ReadProperty("side");
-            reader.Read(out int side);
-            Side = (ParallelSide)side;
+            reader.ReadProperty("horizontalDirection");
+            reader.Read(out int horizontalDirection);
+            HorizontalDirection = (ParallelSide)horizontalDirection;
 
             reader.ReadProperty("verticalDirection");
             reader.Read(out int verticalDirection);

@@ -80,9 +80,11 @@
         }
 
         private JobHandle Apply(JobHandle inputDeps) {
-            applyMode = ApplyMode.Clear;
+            applyMode = ApplyMode.Apply;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             var jobHandle = SchedulePathTransformJob(inputDeps, ToolOutputMode.Apply);
+
+            jobHandle.Complete();
 
             ResetToIdle();
 
