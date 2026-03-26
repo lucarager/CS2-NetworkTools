@@ -14,18 +14,8 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Entities;
 
     public partial class NT_SlideNodeToolSystem {
-        public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_SlideNodeTool>(prefab)}");
-            var validRequest = prefab is NT_ToolPrefab &&
-                               m_PrefabSystem.HasComponent<NT_SlideNodeTool>(prefab);
-
-            if (!validRequest) {
-                return false;
-            }
-
-            m_Prefab = prefab;
-            return true;
-        }
+        /// <inheritdoc />
+        public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_SlideNodeTool>(prefab); }
 
         protected override void OnCreate() {
             base.OnCreate();

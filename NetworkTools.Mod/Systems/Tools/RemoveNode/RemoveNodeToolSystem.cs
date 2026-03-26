@@ -25,7 +25,7 @@ namespace NetworkTools.Systems.Tools {
     /// <summary>
     /// # Remove Node System
     /// </summary>
-    public partial class NT_RemoveNodeToolSystem : NT_BaseToolSystem {
+    public partial class NT_RemoveNodeToolSystem : NT_BaseToolSystem, IToolPrefabProvider {
         private         bool   m_UpdateNeeded;
         public override string toolID => "RemoveNode Tool";
 

@@ -12,31 +12,17 @@ namespace NetworkTools.Systems.Tools {
     /// </summary>
     public partial class NT_GridToolSystem {
         /// <inheritdoc />
-        public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_GridTool>(prefab)}");
+        public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_GridTool>(prefab); }
 
-            // Cache a NetPrefab selection for later use
+        /// <inheritdoc />
+        public bool? TryCacheNetPrefab(PrefabBase prefab) {
             if (prefab is NetPrefab netPrefab) {
                 m_SelectedNetPrefab       = netPrefab;
                 m_SelectedNetPrefabEntity = m_PrefabSystem.GetEntity(netPrefab);
-
-                // If this tool is currently active, consume the prefab change
-                if (m_ToolSystem.activeTool is NT_GridToolSystem) {
-                    return true;
-                }
-
-                return false;
+                return m_ToolSystem.activeTool == this;
             }
 
-            var validRequest = prefab is NT_ToolPrefab &&
-                               m_PrefabSystem.HasComponent<NT_GridTool>(prefab);
-
-            if (!validRequest) {
-                return false;
-            }
-
-            m_Prefab = prefab;
-            return true;
+            return null;
         }
 
         /// <summary>

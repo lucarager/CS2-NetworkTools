@@ -29,7 +29,7 @@ namespace NetworkTools.Systems.Tools {
     /// curve formed by its two connected edges, preserving exact curve shape via
     /// de Casteljau subdivision.
     /// </summary>
-    public partial class NT_SlideNodeToolSystem : NT_BaseToolSystem {
+    public partial class NT_SlideNodeToolSystem : NT_BaseToolSystem, IToolPrefabProvider {
         private ControlPoint m_LastControlPoint;
         private bool         m_UpdateNeeded;
 

@@ -36,7 +36,7 @@ namespace NetworkTools.Systems.Tools {
     /// <summary>
     /// # Super Node System
     /// </summary>
-    public partial class NT_SuperNodeToolSystem : NT_BaseToolSystem, IManualApplyProvider, INodeSelectionProvider {
+    public partial class NT_SuperNodeToolSystem : NT_BaseToolSystem, IToolPrefabProvider, IManualApplyProvider, INodeSelectionProvider {
         private         bool   m_UpdateNeeded;
         public override string toolID => "SuperNode Tool";
         

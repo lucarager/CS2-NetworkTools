@@ -416,6 +416,36 @@ namespace NetworkTools.Systems.Tools {
             return m_Prefab;
         }
 
+        /// <summary>
+        ///     Default prefab activation logic driven by <see cref="IToolPrefabProvider"/>
+        ///     and <see cref="INetPrefabCachingProvider"/>.
+        ///     Tools with custom activation logic (e.g. multi-component checks) may override.
+        /// </summary>
+        public override bool TrySetPrefab(PrefabBase prefab) {
+            // Delegate to net prefab caching if this tool supports it
+            if (this is INetPrefabCachingProvider cachingProvider) {
+                var result = cachingProvider.TryCacheNetPrefab(prefab);
+                if (result.HasValue) {
+                    return result.Value;
+                }
+            }
+
+            // Standard tool activation via IToolPrefabProvider
+            if (this is IToolPrefabProvider toolProvider) {
+                m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {toolProvider.HasToolComponent(prefab)}");
+
+                var validRequest = prefab is NT_ToolPrefab && toolProvider.HasToolComponent(prefab);
+                if (!validRequest) {
+                    return false;
+                }
+
+                m_Prefab = prefab;
+                return true;
+            }
+
+            return false;
+        }
+
         public void RequestEnable() {
             m_ToolSystem.activeTool = this;
         }

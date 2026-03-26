@@ -19,7 +19,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
     ///     This tool demonstrates the NT_PathSelectionToolSystem base class.
     ///     Selection, phase management, and path preview are all inherited.
     /// </remarks>
-    public partial class NT_ParallelToolSystem : NT_PathSelectionToolSystem, IManualApplyProvider, INetPrefabSelectionProvider {
+    public partial class NT_ParallelToolSystem : NT_PathSelectionToolSystem, IToolPrefabProvider, INetPrefabCachingProvider, IManualApplyProvider, INetPrefabSelectionProvider {
         /// <inheritdoc />
         public override string toolID => "ParallelTool";
 
@@ -37,6 +37,16 @@ namespace NetworkTools.Systems.Tools.Parallel {
         ///     Selected net prefab entity.
         /// </summary>
         protected Entity m_SelectedNetPrefabEntity;
+
+        /// <summary>
+        ///     Selected net lane prefab for parallel road segments.
+        /// </summary>
+        protected NetLanePrefab m_SelectedNetLanePrefab;
+
+        /// <summary>
+        ///     Selected net lane prefab entity.
+        /// </summary>
+        protected Entity m_SelectedNetLanePrefabEntity;
 
         /// <inheritdoc />
         public NetPrefab SelectedNetPrefab => m_SelectedNetPrefab;

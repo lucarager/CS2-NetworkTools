@@ -6,6 +6,7 @@
     using NetworkTools.Components.Handles;
     using NetworkTools.Components.Tools;
     using NetworkTools.Systems.Tools.Base;
+    using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
 
     using Unity.Collections;
@@ -16,33 +17,31 @@
     ///     Tool system for
     /// </summary>
     public partial class NT_ConnectToolSystem {
-        public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_ConnectTool>(prefab)}");
+        /// <inheritdoc />
+        public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_ConnectTool>(prefab); }
 
-            // If we're setting a NetPrefab, we cache it as the desired prefab for later.
-            if (prefab is NetPrefab netPrefab) {
-                m_SelectedNetPrefab       = netPrefab;
-                m_SelectedNetPrefabEntity = m_PrefabSystem.GetEntity(netPrefab);
-
-                // If the currently active tool is this tool, we want to override the base game NetTool
-                if (m_ToolSystem.activeTool is NT_ConnectToolSystem) {
-                    return true;
+        /// <inheritdoc />
+        public bool? TryCacheNetPrefab(PrefabBase prefab) {
+            switch (prefab) {
+                case RoadPrefab or TrackPrefab or WaterwayPrefab or PathwayPrefab:
+                {
+                    m_SelectedNetPrefab           = (NetPrefab)prefab;
+                    m_SelectedNetPrefabEntity     = m_PrefabSystem.GetEntity(m_SelectedNetPrefab);
+                    m_SelectedNetLanePrefab       = null;
+                    m_SelectedNetLanePrefabEntity = Entity.Null;
+                    return m_ToolSystem.activeTool == this;
                 }
-
-                // Otherwise, we just cache the selected NetPrefab and wait for the user to select the ConnectTool to apply it.
-                return false;
+                case NetLanePrefab netLanePrefab:
+                {
+                    m_SelectedNetLanePrefab       = netLanePrefab;
+                    m_SelectedNetLanePrefabEntity = m_PrefabSystem.GetEntity(netLanePrefab);
+                    m_SelectedNetPrefab           = null;
+                    m_SelectedNetPrefabEntity     = Entity.Null;
+                    return m_ToolSystem.activeTool == this;
+                }
+                default:
+                    return null;
             }
-
-            // For non-NetPrefab prefabs, we only accept if it's a NT_ToolPrefab with an NT_Connect component, which indicates it's a valid configuration for this tool.
-            var validRequest = prefab is NT_ToolPrefab &&
-                               m_PrefabSystem.HasComponent<NT_ConnectTool>(prefab);
-
-            if (!validRequest) {
-                return false;
-            }
-
-            m_Prefab = prefab;
-            return true;
         }
 
         /// <summary>

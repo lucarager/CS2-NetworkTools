@@ -18,34 +18,30 @@ namespace NetworkTools.Systems.Tools.Parallel {
     /// </summary>
     public partial class NT_ParallelToolSystem {
         /// <inheritdoc />
-        public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_ParallelTool>(prefab)}");
+        public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_ParallelTool>(prefab); }
 
-            // Cache a NetPrefab selection for later use
-            if (prefab is NetPrefab netPrefab)
-            {
-                m_SelectedNetPrefab = netPrefab;
-                m_SelectedNetPrefabEntity = m_PrefabSystem.GetEntity(netPrefab);
-
-                // If this tool is currently active, consume the prefab change
-                if (m_ToolSystem.activeTool is NT_ParallelToolSystem)
+        /// <inheritdoc />
+        public bool? TryCacheNetPrefab(PrefabBase prefab) {
+            switch (prefab) {
+                case RoadPrefab or TrackPrefab or WaterwayPrefab or PathwayPrefab:
                 {
-                    return true;
+                    m_SelectedNetPrefab           = (NetPrefab)prefab;
+                    m_SelectedNetPrefabEntity     = m_PrefabSystem.GetEntity(m_SelectedNetPrefab);
+                    m_SelectedNetLanePrefab       = null;
+                    m_SelectedNetLanePrefabEntity = Entity.Null;
+                    return m_ToolSystem.activeTool == this;
                 }
-
-                return false;
+                case NetLanePrefab netLanePrefab:
+                {
+                    m_SelectedNetLanePrefab       = netLanePrefab;
+                    m_SelectedNetLanePrefabEntity = m_PrefabSystem.GetEntity(netLanePrefab);
+                    m_SelectedNetPrefab           = null;
+                    m_SelectedNetPrefabEntity     = Entity.Null;
+                    return m_ToolSystem.activeTool == this;
+                }
+                default:
+                    return null;
             }
-
-            var validRequest = prefab is NT_ToolPrefab &&
-                               m_PrefabSystem.HasComponent<NT_ParallelTool>(prefab);
-
-            if (!validRequest)
-            {
-                return false;
-            }
-
-            m_Prefab = prefab;
-            return true;
         }
 
         /// <inheritdoc />

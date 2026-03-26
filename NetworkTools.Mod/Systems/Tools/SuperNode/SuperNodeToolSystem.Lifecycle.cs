@@ -21,17 +21,8 @@ namespace NetworkTools.Systems.Tools {
     #endregion
 
     public partial class NT_SuperNodeToolSystem {
-        public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_SuperNodeTool>(prefab)}");
-            var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_SuperNodeTool>(prefab);
-
-            if (!validRequest) {
-                return false;
-            }
-
-            m_Prefab = prefab;
-            return true;
-        }
+        /// <inheritdoc />
+        public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_SuperNodeTool>(prefab); }
 
         protected override void OnCreate() {
             base.OnCreate();

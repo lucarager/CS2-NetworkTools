@@ -24,8 +24,8 @@
                 return inputDeps;
             }
 
-            if (m_SelectedNetPrefabEntity == Entity.Null) {
-                // Fall back to the prefab of the first edge's start node
+            // If both are null, we fall back to the prefab of the first edge's start node
+            if (m_SelectedNetPrefabEntity == Entity.Null && m_SelectedNetLanePrefabEntity == Entity.Null) {
                 var firstEdge  = EntityManager.GetComponentData<Edge>(m_CurrentPathEdges[0]);
                 var prefabRef  = EntityManager.GetComponentData<PrefabRef>(firstEdge.m_Start);
                 m_SelectedNetPrefab       = m_PrefabSystem.GetPrefab<NetPrefab>(prefabRef);
@@ -37,7 +37,8 @@
                 Config                 = CurrentConfig,
                 CurrentPathNodes       = m_CurrentPathNodes,
                 CurrentPathEdges       = m_CurrentPathEdges,
-                PrefabEntity           = m_SelectedNetPrefabEntity,
+                NetPrefabEntity        = m_SelectedNetPrefabEntity,
+                NetLanePrefabEntity    = m_SelectedNetLanePrefabEntity,
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
                 EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),

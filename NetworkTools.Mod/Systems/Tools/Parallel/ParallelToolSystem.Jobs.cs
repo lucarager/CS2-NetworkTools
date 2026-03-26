@@ -26,12 +26,13 @@
             [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
             [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Aggregated>       AggregatedLookup;
-            [ReadOnly] public required Entity                            PrefabEntity;
+            [ReadOnly] public required Entity                            NetPrefabEntity;
+            [ReadOnly] public required Entity                            NetLanePrefabEntity;
 
             public required EntityCommandBuffer ECB;
 
             public void Execute() {
-                var signedDistance  = Config.SignedHorizontalOffset;
+                var signedDistance = Config.SignedHorizontalOffset;
                 var verticalOffset = Config.SignedVerticalOffset;
                 var verticalShift  = new float3(0f, verticalOffset, 0f);
 
@@ -61,14 +62,14 @@
                     if (!cachedNodePositions.TryGetValue(edge.m_Start, out var offsetStartPos)) {
                         var startNodePos = NodeLookup[edge.m_Start].m_Position;
                         var startOffset  = GetPerpendicularOffset(existingBezier.a, existingBezier.b, signedDistance);
-                        offsetStartPos   = startNodePos + startOffset + verticalShift;
+                        offsetStartPos = startNodePos + startOffset + verticalShift;
                         cachedNodePositions.Add(edge.m_Start, offsetStartPos);
                     }
 
                     if (!cachedNodePositions.TryGetValue(edge.m_End, out var offsetEndPos)) {
                         var endNodePos = NodeLookup[edge.m_End].m_Position;
                         var endOffset  = GetPerpendicularOffset(existingBezier.c, existingBezier.d, signedDistance);
-                        offsetEndPos   = endNodePos + endOffset + verticalShift;
+                        offsetEndPos = endNodePos + endOffset + verticalShift;
                         cachedNodePositions.Add(edge.m_End, offsetEndPos);
                     }
 
@@ -76,7 +77,7 @@
                     var startTangent  = math.normalize(MathUtils.StartTangent(offsetBezier));
                     var endTangent    = math.normalize(MathUtils.EndTangent(offsetBezier));
                     var startRotation = quaternion.LookRotationSafe(startTangent, math.up());
-                    var endRotation   = quaternion.LookRotationSafe(endTangent, math.up());
+                    var endRotation   = quaternion.LookRotationSafe(endTangent,   math.up());
 
                     var offsetLength = MathUtils.Length(offsetBezier);
 
@@ -84,7 +85,6 @@
                                       offsetEndPos,
                                       startRotation,
                                       endRotation,
-                                      PrefabEntity,
                                       offsetBezier,
                                       offsetLength,
                                       verticalOffset);
@@ -103,12 +103,10 @@
                 var offsetC = GetPerpendicularOffset(bezier.c, bezier.d, signedDistance);
                 var offsetD = GetPerpendicularOffset(bezier.c, bezier.d, signedDistance);
 
-                return new Bezier4x3(
-                    bezier.a + offsetA,
-                    bezier.b + offsetB,
-                    bezier.c + offsetC,
-                    bezier.d + offsetD
-                );
+                return new Bezier4x3(bezier.a + offsetA,
+                                     bezier.b + offsetB,
+                                     bezier.c + offsetC,
+                                     bezier.d + offsetD);
             }
 
             /// <summary>
@@ -133,14 +131,17 @@
 
             private void OutputPreviewEdge(float3     startNodePosition, float3     endNodePosition,
                                            quaternion startNodeRotation, quaternion endNodeRotation,
-                                           Entity     prefabEntity,      Bezier4x3  existingBezier, float existingLength, float elevation
+                                           Bezier4x3  existingBezier,    float      existingLength, float elevation
             ) {
                 var definitionEntity = ECB.CreateEntity();
 
                 var creationDefinition = new CreationDefinition {
-                    m_Original = Entity.Null,
-                    m_Prefab   = prefabEntity
+                    m_Original  = Entity.Null,
+                    m_Prefab    = NetPrefabEntity,
+                    m_SubPrefab = NetLanePrefabEntity,
                 };
+
+                creationDefinition.m_Flags |= CreationFlags.SubElevation;
 
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);

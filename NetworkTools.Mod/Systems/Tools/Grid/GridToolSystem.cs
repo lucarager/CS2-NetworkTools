@@ -12,7 +12,7 @@ namespace NetworkTools.Systems.Tools {
     ///     Two control points define the grid origin and direction; configurable properties
     ///     (Angle, X Spacing, Y Spacing) are exposed via handles and the UI.
     /// </summary>
-    public partial class NT_GridToolSystem : NT_BaseToolSystem, IManualApplyProvider, INetPrefabSelectionProvider {
+    public partial class NT_GridToolSystem : NT_BaseToolSystem, IToolPrefabProvider, INetPrefabCachingProvider, IManualApplyProvider, INetPrefabSelectionProvider {
         /// <inheritdoc />
         public override string toolID => "GridTool";
 

@@ -10,7 +10,7 @@
     /// <summary>
     ///     Tool system for
     /// </summary>
-    public partial class NT_ConnectToolSystem : NT_BaseToolSystem, INodeSelectionProvider, INetPrefabSelectionProvider {
+    public partial class NT_ConnectToolSystem : NT_BaseToolSystem, IToolPrefabProvider, INetPrefabCachingProvider, INodeSelectionProvider, INetPrefabSelectionProvider {
         /// <inheritdoc />
         public override string toolID => "ConnectTool";
 
@@ -41,6 +41,16 @@
         ///     Selected net Prefab entity.
         /// </summary>
         protected Entity m_SelectedNetPrefabEntity;
+
+        /// <summary>
+        ///     Selected net lane prefab for parallel road segments.
+        /// </summary>
+        protected NetLanePrefab m_SelectedNetLanePrefab;
+
+        /// <summary>
+        ///     Selected net lane prefab entity.
+        /// </summary>
+        protected Entity m_SelectedNetLanePrefabEntity;
 
         /// <inheritdoc />
         public NetPrefab SelectedNetPrefab => m_SelectedNetPrefab;

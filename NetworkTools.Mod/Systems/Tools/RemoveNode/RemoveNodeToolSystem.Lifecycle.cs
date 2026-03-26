@@ -25,17 +25,7 @@ namespace NetworkTools.Systems.Tools {
 
     public partial class NT_RemoveNodeToolSystem {
         /// <inheritdoc />
-        public override bool TrySetPrefab(PrefabBase prefab) {
-            m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {m_PrefabSystem.HasComponent<NT_RemoveNodeTool>(prefab)}");
-            var validRequest = prefab is NT_ToolPrefab && m_PrefabSystem.HasComponent<NT_RemoveNodeTool>(prefab);
-
-            if (!validRequest) {
-                return false;
-            }
-
-            m_Prefab = prefab;
-            return true;
-        }
+        public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_RemoveNodeTool>(prefab); }
 
         protected override void OnCreate() {
             base.OnCreate();

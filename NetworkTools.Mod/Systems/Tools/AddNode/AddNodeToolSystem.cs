@@ -26,7 +26,7 @@ namespace NetworkTools.Systems.Tools {
     /// <summary>
     /// # Remove Node System
     /// </summary>
-    public partial class NT_AddNodeToolSystem : NT_BaseToolSystem {
+    public partial class NT_AddNodeToolSystem : NT_BaseToolSystem, IToolPrefabProvider {
         private ControlPoint m_LastControlPoint;
         private bool         m_UpdateNeeded;
 
