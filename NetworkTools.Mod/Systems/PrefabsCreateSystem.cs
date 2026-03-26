@@ -115,7 +115,7 @@
             CreateToolPrefab("ShapeSlope", "slope.svg",    "shape",      new NT_ShapeSlopeTool(), IsToolActive(true));
             CreateToolPrefab("ShapeCurve", "curve.svg",    "shape",      new NT_ShapeCurveTool(), IsToolActive(true));
             CreateToolPrefab("Connect",    "connect.svg",  "generative", new NT_ConnectTool(),    IsToolActive(false));
-            CreateToolPrefab("Parallel",   "parallel.svg", "generative", new NT_ParallelTool(),   IsToolActive(false));
+            CreateToolPrefab("Parallel",   "parallel.svg", "generative", new NT_ParallelTool(),   IsToolActive(true));
             CreateToolPrefab("Grid",       "grid.svg",     "generative", new NT_GridTool(),       IsToolActive(false));
 
             CreateHandlePrefab((MarkerObjectPrefab)prefabBaseDict["marker"]);

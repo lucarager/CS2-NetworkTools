@@ -49,9 +49,9 @@ namespace NetworkTools.L10N {
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool6Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool7Str), "Open Connect Tools" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool7Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
-                { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool8Str), "Open Advanced Parallel" },
+                { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool8Str), "Open Parallel Tool" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool8Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
-                { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool9Str), "Open Advanced Grid" },
+                { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool9Str), "Open Grid Tool" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool9Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
 
                 // Sections
@@ -134,12 +134,12 @@ namespace NetworkTools.L10N {
 
                 // ## Parallel
                 // ### Parallel - Metadata
-                { "NetworkTools.Tools.Parallel.Name", "Advanced Parallel (Coming Soon!)" },
+                { "NetworkTools.Tools.Parallel.Name", "Parallel Tool" },
                 { "NetworkTools.Tools.Parallel.Description", "Allows creating perfect parallel networks from a source network." },
 
                 // ## Grid
                 // ### Grid - Metadata
-                { "NetworkTools.Tools.Grid.Name", "Advanced Grid  (Coming Soon!)" },
+                { "NetworkTools.Tools.Grid.Name", "Grid Tool (Coming Soon!)" },
                 { "NetworkTools.Tools.Grid.Description", "Allows creating perfect road grids with a number of configurable options." },
             };
         }
