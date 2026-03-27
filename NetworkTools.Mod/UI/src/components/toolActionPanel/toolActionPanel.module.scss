@@ -1,8 +1,12 @@
 @use "../shared/animations.module.scss" as *;
+@use "../shared/variables.module.scss" as *;
 
 .wrapper {
     position: relative;
-    min-width: 350rem;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 4rem;
 }
 
 .panel {
@@ -20,7 +24,7 @@
 .row {
     display: flex;
     flex-direction: row;
-    padding: 8rem 12rem;
+    padding: $panel-padding-y $panel-padding-x;
     align-items: center;
     justify-content: space-between;
     flex: 2;
@@ -29,7 +33,7 @@
 .col {
     display: flex;
     flex-direction: column;
-    padding: 10rem 12rem;
+    padding: $panel-padding-y $panel-padding-x;
     flex: 2;
 }
 
@@ -83,15 +87,11 @@
     }
 
     [class^="label"] {
-        font-size: var(--fontSizeS);
-        line-height: 1.25em;
-        overflow-x: hidden;
-        overflow-y: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        width: 120rem;
         color: white;
-        margin-right: 8rem;
+        // Undo some vanilla styles
+        flex-shrink: 0;
+        flex-grow: 0;
+        flex-basis: auto;
     }
 
     // input {
@@ -200,7 +200,8 @@
     justify-content: space-between;
 }
 
-.paramLabel {
+.paramLabel,
+.sliderField [class^="label"] {
     font-size: var(--fontSizeS);
     line-height: 1.25em;
     overflow-x: hidden;
@@ -209,8 +210,54 @@
     white-space: nowrap;
     width: 120rem;
     margin-right: 8rem;
+    opacity: 0.75;
 }
 
 .textInput {
     width: 100rem;
+}
+
+.titleBlock {
+    display: flex;
+    flex-direction: column;
+    padding-right: 16rem;
+}
+
+.infoButton {
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    opacity: 0.6;
+    position: relative;
+    overflow: hidden;
+    color: white;
+
+    & > div {
+        width: 100%;
+        height: 100%;
+    }
+
+    &__active {
+        opacity: 1;
+    }
+}
+
+.tutorialPanel {
+    animation: slideInRight 0.16s ease-out forwards;
+    width: 280rem;
+    margin-left: 8rem;
+}
+
+.tutorialTitle {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 6rem;
+}
+
+.tutorialText {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: var(--fontSizeS);
+    line-height: 1.5em;
 }

@@ -8,9 +8,9 @@ import {
     VerticalSide,
 } from "gameBindings";
 import { useValue } from "cs2/api";
-import { Button, Tooltip } from "cs2/ui";
+import { Button } from "cs2/ui";
 import { NodeSelection } from "../shared/nodeSelection";
-import { VC } from "components/vanilla/Components";
+import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
 
 const SIDE_OPTIONS: { label: string; id: ParallelSide; icon: string }[] = [
@@ -57,7 +57,7 @@ export const ParallelControls: React.FC = () => {
 
     return (
         <>
-            <NodeSelection selectedEntities={selectedEntitiesBinding} />
+            {/* <NodeSelection selectedEntities={selectedEntitiesBinding} /> */}
 
             {/* Configuration Controls - Show when 2+ nodes selected */}
             {selectedEntitiesBinding.length >= 2 && (
@@ -83,28 +83,21 @@ export const ParallelControls: React.FC = () => {
                                 <span className={styles.paramLabel}>Side</span>
                                 <div className={styles.buttonRow}>
                                     {SIDE_OPTIONS.map((option) => (
-                                        <Tooltip
+                                        <VC.ToolButton
                                             key={option.id}
                                             tooltip={option.label}
-                                            delayTime={0}>
-                                            <Button
-                                                key={option.id}
-                                                variant="primary"
-                                                className={c(
-                                                    styles.iconButton,
-                                                    parallelConfig.horizontalDirection === option.id
-                                                        ? styles.iconButton__active
-                                                        : null,
-                                                )}
-                                                onSelect={() =>
-                                                    handleConfigChange(
-                                                        "horizontalDirection",
-                                                        option.id,
-                                                    )
-                                                }>
-                                                <img src={option.icon} className={styles.icon} />
-                                            </Button>
-                                        </Tooltip>
+                                            className={c(VT.toolButton.button, styles.toolButton)}
+                                            src={option.icon}
+                                            onSelect={() =>
+                                                handleConfigChange("horizontalDirection", option.id)
+                                            }
+                                            selected={
+                                                parallelConfig.horizontalDirection === option.id
+                                            }
+                                            multiSelect={false}
+                                            disabled={false}
+                                            focusKey={VF.FOCUS_DISABLED}
+                                        />
                                     ))}
                                 </div>
                             </div>
@@ -129,28 +122,21 @@ export const ParallelControls: React.FC = () => {
                                 <span className={styles.paramLabel}>Vertical Direction</span>
                                 <div className={styles.buttonRow}>
                                     {VERTICAL_SIDE_OPTIONS.map((option) => (
-                                        <Tooltip
+                                        <VC.ToolButton
                                             key={option.id}
                                             tooltip={option.label}
-                                            delayTime={0}>
-                                            <Button
-                                                key={option.id}
-                                                variant="primary"
-                                                className={c(
-                                                    styles.iconButton,
-                                                    parallelConfig.verticalDirection === option.id
-                                                        ? styles.iconButton__active
-                                                        : null,
-                                                )}
-                                                onSelect={() =>
-                                                    handleConfigChange(
-                                                        "verticalDirection",
-                                                        option.id,
-                                                    )
-                                                }>
-                                                <img src={option.icon} className={styles.icon} />
-                                            </Button>
-                                        </Tooltip>
+                                            className={c(VT.toolButton.button, styles.toolButton)}
+                                            src={option.icon}
+                                            onSelect={() =>
+                                                handleConfigChange("verticalDirection", option.id)
+                                            }
+                                            selected={
+                                                parallelConfig.verticalDirection === option.id
+                                            }
+                                            multiSelect={false}
+                                            disabled={false}
+                                            focusKey={VF.FOCUS_DISABLED}
+                                        />
                                     ))}
                                 </div>
                             </div>

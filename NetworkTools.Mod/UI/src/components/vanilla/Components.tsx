@@ -54,6 +54,10 @@ const modulePaths = [
         path: "game-ui/common/tooltip/tooltip-renderer/tooltip-renderer.tsx",
         components: ["TooltipRenderer", "BoundTooltipGroup", "tooltipComponents"],
     },
+    {
+        path: "game-ui/common/image/tinted-icon.tsx",
+        components: ["TintedIcon"],
+    }
 ];
 
 const themePaths = [
@@ -109,6 +113,10 @@ const themePaths = [
         path: "game-ui/editor/widgets/item/editor-item.module.scss",
         name: "textInput",
     },
+    {
+        path: "game-ui/common/image/tinted-icon.module.scss",
+        name: "tintedIcon",
+    }
 ];
 
 export const VC = {} as IVanillaComponents;

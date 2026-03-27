@@ -1,3 +1,5 @@
+@use "variables.module.scss" as *;
+
 .nt_panel {
     // background-color: var(--panelColorDark);
     background-color: rgba(24, 24, 37, 0.75);
@@ -7,4 +9,16 @@
     flex-direction: column;
     pointer-events: auto;
     color: white;
+    overflow: hidden;
+
+    &__header {
+        display: flex;
+        flex-direction: row;
+        padding: $panel-padding-y $panel-padding-x;
+        align-items: center;
+        justify-content: space-between;
+        flex: 2;
+        background-color: rgba(24, 24, 37, 0.75);
+        border-bottom: 1rem solid rgba(255, 255, 255, 0.05);
+    }
 }
