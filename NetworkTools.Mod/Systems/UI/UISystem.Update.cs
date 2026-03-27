@@ -72,11 +72,9 @@ namespace NetworkTools.Systems.UI {
             }
 
             // Update net prefab binding when the active tool's selection changes
-            var netPrefabProvider  = m_ToolSystem.activeTool as INetPrefabSelectionProvider;
-            var currentNetPrefabEntity = netPrefabProvider != null
-                                             ? netPrefabProvider.SelectedNetPrefabEntity
-                                             : Entity.Null;
-            if (currentNetPrefabEntity != m_LastNetPrefabEntity) {
+            var netPrefabProvider      = m_ToolSystem.activeTool as INetPrefabSelectionProvider;
+            var currentNetPrefabEntity = netPrefabProvider?.SelectedNetPrefabEntity ?? Entity.Null;
+            if (currentNetPrefabEntity != m_LastNetPrefabEntity && currentNetPrefabEntity != Entity.Null) {
                 m_LastNetPrefabEntity = currentNetPrefabEntity;
                 var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(currentNetPrefabEntity);
                 m_SelectedNetPrefabBinding.Value = prefab != null
