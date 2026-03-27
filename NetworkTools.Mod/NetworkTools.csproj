@@ -13,7 +13,7 @@
 		<DebugType>portable</DebugType>
 		<DebugSymbols>true</DebugSymbols>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
-		<Version>1.1.10</Version>
+		<Version>1.1.11</Version>
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<FileVersion>$(Version).0</FileVersion>
 	</PropertyGroup>
@@ -135,6 +135,7 @@
 
 	<ItemGroup>
 	  <Folder Include="L10N\lang\" />
+	  <Folder Include="Properties\Changelog\" />
 	</ItemGroup>
 
 	<!--Build UI-->
@@ -157,6 +158,29 @@
 		<PropertyGroup>
 			<ModPostProcessorArgs>"$(ModPostProcessorFullPath)" PostProcess "$(TargetPath)" -u "$(UnityModProjectFullPath)" @(ReferencePath->'-r "%(Identity)"', ' ') -p Windows -d -v</ModPostProcessorArgs>
 		</PropertyGroup>
+	</Target>
+
+	<!--Custom Build step to assemble the PublishConfiguration.xml-->
+	<Target Name="GeneratePublishConfiguration" AfterTargets="ModPublisherConfig">
+		<PropertyGroup>
+			<TargetConfigXml>$(ProjectDir)Properties\PublishConfiguration.xml</TargetConfigXml>
+			<ModVersion>$(Version)</ModVersion>
+			<LongDescFile>$(ProjectDir)Properties\LongDescription.md</LongDescFile>
+			<ChangelogFile>$(ProjectDir)Properties\Changelog\$(ModVersion).md</ChangelogFile>
+		</PropertyGroup>
+
+		<PropertyGroup>
+			<LongDescText Condition="Exists('$(LongDescFile)')">$([System.IO.File]::ReadAllText('$(LongDescFile)'))</LongDescText>
+			<ChangelogText Condition="Exists('$(ChangelogFile)')">$([System.IO.File]::ReadAllText('$(ChangelogFile)'))</ChangelogText>
+		</PropertyGroup>
+
+		<Copy SourceFiles="$(ProjectDir)Properties/PublishConfiguration.template.xml" DestinationFiles="$(TargetConfigXml)" />
+
+		<XmlPoke XmlInputPath="$(TargetConfigXml)" Query="/Publish/ModVersion/@Value" Value="$(ModVersion)" />
+		<XmlPoke XmlInputPath="$(TargetConfigXml)" Query="/Publish/LongDescription" Value="$(LongDescText)" />
+		<XmlPoke XmlInputPath="$(TargetConfigXml)" Query="/Publish/ChangeLog" Value="$(ChangelogText)" />
+
+		<Message Text="Updated $(TargetConfigXml) with Version $(ModVersion)" Importance="High" />
 	</Target>
 
 </Project>
