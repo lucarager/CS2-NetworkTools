@@ -1,6 +1,7 @@
 ﻿namespace NetworkTools.Systems.Tools.Connect {
     using Colossal.Entities;
 
+    using Game;
     using Game.Common;
     using Game.Net;
     using Game.Notifications;
@@ -9,6 +10,7 @@
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+
     using Unity.Entities;
     using Unity.Jobs;
 

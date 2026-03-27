@@ -48,8 +48,28 @@ namespace NetworkTools.Systems.Tools {
         /// <inheritdoc />
         public NetPrefab SelectedNetPrefab => m_SelectedNetPrefab;
 
+        /// <summary>
+        ///     Selected net lane prefab for parallel road segments.
+        /// </summary>
+        protected NetLanePrefab m_SelectedNetLanePrefab;
+
+        /// <summary>
+        ///     Selected net lane prefab entity.
+        /// </summary>
+        protected Entity m_SelectedNetLanePrefabEntity;
+
         /// <inheritdoc />
-        public Entity SelectedNetPrefabEntity => m_SelectedNetPrefabEntity;
+        public Entity SelectedNetPrefabEntity
+        {
+            get
+            {
+                if (m_SelectedNetLanePrefabEntity != Entity.Null)
+                {
+                    return m_SelectedNetLanePrefabEntity;
+                }
+                return m_SelectedNetPrefabEntity;
+            }
+        }
 
         /// <summary>
         ///     Current grid configuration.

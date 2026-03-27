@@ -56,7 +56,17 @@
         public NetPrefab SelectedNetPrefab => m_SelectedNetPrefab;
 
         /// <inheritdoc />
-        public Entity SelectedNetPrefabEntity => m_SelectedNetPrefabEntity;
+        public Entity SelectedNetPrefabEntity
+        {
+            get
+            {
+                if (m_SelectedNetLanePrefabEntity != Entity.Null)
+                {
+                    return m_SelectedNetLanePrefabEntity;
+                }
+                return m_SelectedNetPrefabEntity;
+            }
+        }
 
         /// <summary>
         ///     Gets the current selection state based on the number of selected nodes.

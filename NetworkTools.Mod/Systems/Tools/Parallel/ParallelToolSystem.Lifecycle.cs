@@ -23,7 +23,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
         /// <inheritdoc />
         public bool? TryCacheNetPrefab(PrefabBase prefab) {
             switch (prefab) {
-                case RoadPrefab or TrackPrefab or WaterwayPrefab or PathwayPrefab:
+                case RoadPrefab or TrackPrefab or WaterwayPrefab or PathwayPrefab: 
                 {
                     m_SelectedNetPrefab           = (NetPrefab)prefab;
                     m_SelectedNetPrefabEntity     = m_PrefabSystem.GetEntity(m_SelectedNetPrefab);
@@ -35,8 +35,9 @@ namespace NetworkTools.Systems.Tools.Parallel {
                 {
                     m_SelectedNetLanePrefab       = netLanePrefab;
                     m_SelectedNetLanePrefabEntity = m_PrefabSystem.GetEntity(netLanePrefab);
-                    m_SelectedNetPrefab           = null;
-                    m_SelectedNetPrefabEntity     = Entity.Null;
+                    var foundContainers = GetContainers(m_ContainerQuery, out var laneContainer, out _);
+                    m_SelectedNetPrefab       = null;
+                    m_SelectedNetPrefabEntity = laneContainer;
                     return m_ToolSystem.activeTool == this;
                 }
                 default:

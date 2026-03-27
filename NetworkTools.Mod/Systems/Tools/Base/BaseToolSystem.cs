@@ -139,6 +139,9 @@ namespace NetworkTools.Systems.Tools {
         protected EntityQuery m_EdgesWithSelectedQuery;
         protected EntityQuery m_EntitiesWithHighlightedQuery;
 
+        // Container query from vanilla
+        protected EntityQuery m_ContainerQuery;
+
         /// <summary>
         ///     Native collections for tracking entities
         /// </summary>
@@ -394,6 +397,9 @@ namespace NetworkTools.Systems.Tools {
                 .WithAll<Edge, Waterway>()
                 .WithNone<NT_Eligible>()
                 .Build();
+
+            // Vanilla container query
+            m_ContainerQuery = GetContainerQuery();
         }
 
         protected override void OnDestroy() {

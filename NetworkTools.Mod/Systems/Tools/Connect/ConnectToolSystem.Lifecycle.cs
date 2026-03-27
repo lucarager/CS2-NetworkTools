@@ -1,14 +1,7 @@
 ﻿namespace NetworkTools.Systems.Tools.Connect {
     using Game.Net;
     using Game.Prefabs;
-
-    using NetworkTools.Components;
-    using NetworkTools.Components.Handles;
     using NetworkTools.Components.Tools;
-    using NetworkTools.Systems.Tools.Base;
-    using NetworkTools.Systems.Tools.Parallel;
-    using NetworkTools.Systems.Tools.RoadShape;
-
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Mathematics;
@@ -17,9 +10,6 @@
     ///     Tool system for
     /// </summary>
     public partial class NT_ConnectToolSystem {
-        /// <inheritdoc />
-        public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_ConnectTool>(prefab); }
-
         /// <inheritdoc />
         public bool? TryCacheNetPrefab(PrefabBase prefab) {
             switch (prefab) {
@@ -35,13 +25,19 @@
                 {
                     m_SelectedNetLanePrefab       = netLanePrefab;
                     m_SelectedNetLanePrefabEntity = m_PrefabSystem.GetEntity(netLanePrefab);
-                    m_SelectedNetPrefab           = null;
-                    m_SelectedNetPrefabEntity     = Entity.Null;
+                    var foundContainers = GetContainers(m_ContainerQuery, out var laneContainer, out _);
+                    m_SelectedNetPrefab       = null;
+                    m_SelectedNetPrefabEntity = laneContainer;
                     return m_ToolSystem.activeTool == this;
                 }
                 default:
                     return null;
             }
+        }
+
+        /// <inheritdoc />
+        public bool HasToolComponent(PrefabBase prefab) {
+            return m_PrefabSystem.HasComponent<NT_ConnectTool>(prefab);
         }
 
         /// <summary>
@@ -118,7 +114,9 @@
         }
 
         protected override void OnDestroy() {
-            if (m_SelectedNodes.IsCreated) m_SelectedNodes.Dispose();
+            if (m_SelectedNodes.IsCreated) {
+                m_SelectedNodes.Dispose();
+            }
 
             base.OnDestroy();
         }

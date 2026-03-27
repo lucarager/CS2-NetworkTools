@@ -78,7 +78,7 @@ namespace NetworkTools.Systems.UI {
                                              : Entity.Null;
             if (currentNetPrefabEntity != m_LastNetPrefabEntity) {
                 m_LastNetPrefabEntity = currentNetPrefabEntity;
-                var prefab            = netPrefabProvider?.SelectedNetPrefab;
+                var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(currentNetPrefabEntity);
                 m_SelectedNetPrefabBinding.Value = prefab != null
                                                        ? new NetPrefabData(currentNetPrefabEntity,
                                                                            ImageSystem.GetThumbnail(prefab),
