@@ -21,9 +21,10 @@ end_of_line = native
 insert_final_newline = false
 
 # Microsoft .NET properties
+csharp_indent_braces = false
 csharp_new_line_before_else = false
 csharp_new_line_before_members_in_object_initializers = false
-csharp_new_line_before_open_brace = accessors,anonymous_methods,control_blocks,events,indexers,lambdas,properties
+csharp_new_line_before_open_brace = anonymous_methods,control_blocks,lambdas
 csharp_preferred_modifier_order = public, private, protected, internal, file, new, static, abstract, virtual, sealed, readonly, override, extern, unsafe, volatile, async, required:suggestion
 csharp_style_namespace_declarations = block_scoped:suggestion
 csharp_style_prefer_utf8_string_literals = true:suggestion
