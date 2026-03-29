@@ -3,7 +3,6 @@ import styles from "./wrapper.module.scss";
 import { ToolActionPanel } from "components/toolActionPanel/toolActionPanel";
 import { ToolSelectPanel } from "components/toolSelectPanel/toolSelectPanel";
 import { Button, Tooltip } from "cs2/ui";
-import iconSrc from "../../assets/logo.svg";
 import { useValue } from "cs2/api";
 import { GAME_BINDINGS } from "gameBindings";
 
@@ -16,7 +15,7 @@ export const Wrapper = () => {
                 <Button
                     variant="floating"
                     onSelect={() => GAME_BINDINGS.PANEL_OPEN.set(!panelOpenBinding)}
-                    src={iconSrc}
+                    src={"coui://nt/Logo.svg"}
                 />
             </Tooltip>
             <div className={styles.wrapper}>

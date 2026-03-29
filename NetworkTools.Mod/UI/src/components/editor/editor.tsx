@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { ToolActionPanel } from "components/toolActionPanel/toolActionPanel";
 import { ToolSelectPanel } from "components/toolSelectPanel/toolSelectPanel";
 import { Button, Tooltip } from "cs2/ui";
-import iconSrc from "../../assets/logo.svg";
 import styles from "./editor.module.scss";
 
 export const Editor = () => {
@@ -15,7 +14,7 @@ export const Editor = () => {
                     <Button
                         variant="floating"
                         onSelect={() => setIsEnabled(!enabled)}
-                        src={iconSrc}
+                        src={"coui://nt/Logo.svg"}
                     />
                 </Tooltip>
             </div>
