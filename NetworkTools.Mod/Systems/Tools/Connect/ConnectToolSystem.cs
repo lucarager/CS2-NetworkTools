@@ -33,42 +33,6 @@
         protected NativeList<Entity> m_SelectedNodes;
 
         /// <summary>
-        ///     Selected net Prefab.
-        /// </summary>
-        protected NetPrefab m_SelectedNetPrefab;
-
-        /// <summary>
-        ///     Selected net Prefab entity.
-        /// </summary>
-        protected Entity m_SelectedNetPrefabEntity;
-
-        /// <summary>
-        ///     Selected net lane prefab for parallel road segments.
-        /// </summary>
-        protected NetLanePrefab m_SelectedNetLanePrefab;
-
-        /// <summary>
-        ///     Selected net lane prefab entity.
-        /// </summary>
-        protected Entity m_SelectedNetLanePrefabEntity;
-
-        /// <inheritdoc />
-        public NetPrefab SelectedNetPrefab => m_SelectedNetPrefab;
-
-        /// <inheritdoc />
-        public Entity SelectedNetPrefabEntity
-        {
-            get
-            {
-                if (m_SelectedNetLanePrefabEntity != Entity.Null)
-                {
-                    return m_SelectedNetLanePrefabEntity;
-                }
-                return m_SelectedNetPrefabEntity;
-            }
-        }
-
-        /// <summary>
         ///     Gets the current selection state based on the number of selected nodes.
         /// </summary>
         public SelectionState CurrentSelectionState =>

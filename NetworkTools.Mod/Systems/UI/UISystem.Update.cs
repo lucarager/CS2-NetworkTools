@@ -4,19 +4,6 @@ namespace NetworkTools.Systems.UI {
     using NetworkTools.Systems.Tools;
     using Unity.Collections;
     using Unity.Entities;
-    using Colossal.UI.Binding;
-    using Game.Input;
-    using Game.Prefabs;
-    using Game.Tools;
-    using Game.UI;
-    using NetworkTools.Extensions;
-    using NetworkTools.Settings;
-    using NetworkTools.Systems.Tools;
-    using NetworkTools.Systems.Tools.Connect;
-    using NetworkTools.Systems.Tools;
-    using NetworkTools.Systems.Tools.RoadShape;
-    using NetworkTools.Utils;
-    using Unity.Entities;
 
     public partial class NT_UISystem {
         /// <inheritdoc />
@@ -25,7 +12,7 @@ namespace NetworkTools.Systems.UI {
             var entityCount = m_ToolPrefabQuery.CalculateEntityCount();
             if (entityCount != m_LastToolPrefabCount) {
                 m_LastToolPrefabCount = entityCount;
-                var entities       = m_ToolPrefabQuery.ToEntityArray(Allocator.Temp);
+                var entities        = m_ToolPrefabQuery.ToEntityArray(Allocator.Temp);
                 var toolPrefabArray = new NT_ToolPrefab[entities.Length];
                 for (var i = 0; i < entities.Length; i++) {
                     toolPrefabArray[i] = m_PrefabSystem.GetPrefab<NT_ToolPrefab>(entities[i]);
@@ -44,9 +31,9 @@ namespace NetworkTools.Systems.UI {
             }
 
             // Update selected entities binding when selection changes
-            var selectedNodes    = m_ToolSystem.activeTool is INodeSelectionProvider selectionProvider
-                                       ? selectionProvider.GetSelectedNodes()
-                                       : System.Array.Empty<Entity>();
+            var selectedNodes = m_ToolSystem.activeTool is INodeSelectionProvider selectionProvider
+                                    ? selectionProvider.GetSelectedNodes()
+                                    : System.Array.Empty<Entity>();
             var currentNodesHash = ComputeSelectionHash(selectedNodes);
             if (currentNodesHash != m_LastSelectedNodesHash) {
                 m_LastSelectedNodesHash = currentNodesHash;
@@ -72,16 +59,17 @@ namespace NetworkTools.Systems.UI {
             }
 
             // Update net prefab binding when the active tool's selection changes
-            var netPrefabProvider      = m_ToolSystem.activeTool as INetPrefabSelectionProvider;
-            var currentNetPrefabEntity = netPrefabProvider?.SelectedNetPrefabEntity ?? Entity.Null;
-            if (currentNetPrefabEntity != m_LastNetPrefabEntity && currentNetPrefabEntity != Entity.Null) {
-                m_LastNetPrefabEntity = currentNetPrefabEntity;
-                var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(currentNetPrefabEntity);
-                m_SelectedNetPrefabBinding.Value = prefab != null
-                                                       ? new NetPrefabData(currentNetPrefabEntity,
-                                                                           ImageSystem.GetThumbnail(prefab),
-                                                                           prefab.name)
-                                                       : NetPrefabData.Empty;
+            if (m_ToolSystem.activeTool is NT_BaseToolSystem prefabSelectionProvider and INetPrefabSelectionProvider) {
+                var currentNetPrefabEntity = prefabSelectionProvider.SelectedNetPrefabEntity;
+                if (currentNetPrefabEntity != m_LastNetPrefabEntity && currentNetPrefabEntity != Entity.Null) {
+                    m_LastNetPrefabEntity = currentNetPrefabEntity;
+                    var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(currentNetPrefabEntity);
+                    m_SelectedNetPrefabBinding.Value = prefab != null
+                                                           ? new NetPrefabData(currentNetPrefabEntity,
+                                                                               ImageSystem.GetThumbnail(prefab),
+                                                                               prefab.name)
+                                                           : NetPrefabData.Empty;
+                }
             }
 
             // Update snap/target bindings from the active tool
@@ -129,15 +117,41 @@ namespace NetworkTools.Systems.UI {
 
             // Tool shortcuts are only active when the panel is open
             if (m_PanelOpenBinding.Value) {
-                if (m_OpenTool1Action.WasPerformedThisFrame()) HandleSelectTool("AddNode");
-                if (m_OpenTool2Action.WasPerformedThisFrame()) HandleSelectTool("RemoveNode");
-                if (m_OpenTool3Action.WasPerformedThisFrame()) HandleSelectTool("SlideNode");
-                if (m_OpenTool4Action.WasPerformedThisFrame()) HandleSelectTool("SuperNode");
-                if (m_OpenTool5Action.WasPerformedThisFrame()) HandleSelectTool("ShapeSlope");
-                if (m_OpenTool6Action.WasPerformedThisFrame()) HandleSelectTool("ShapeCurve");
-                if (m_OpenTool7Action.WasPerformedThisFrame()) HandleSelectTool("Connect");
-                if (m_OpenTool8Action.WasPerformedThisFrame()) HandleSelectTool("Parallel");
-                if (m_OpenTool9Action.WasPerformedThisFrame()) HandleSelectTool("Grid");
+                if (m_OpenTool1Action.WasPerformedThisFrame()) {
+                    HandleSelectTool("AddNode");
+                }
+
+                if (m_OpenTool2Action.WasPerformedThisFrame()) {
+                    HandleSelectTool("RemoveNode");
+                }
+
+                if (m_OpenTool3Action.WasPerformedThisFrame()) {
+                    HandleSelectTool("SlideNode");
+                }
+
+                if (m_OpenTool4Action.WasPerformedThisFrame()) {
+                    HandleSelectTool("SuperNode");
+                }
+
+                if (m_OpenTool5Action.WasPerformedThisFrame()) {
+                    HandleSelectTool("ShapeSlope");
+                }
+
+                if (m_OpenTool6Action.WasPerformedThisFrame()) {
+                    HandleSelectTool("ShapeCurve");
+                }
+
+                if (m_OpenTool7Action.WasPerformedThisFrame()) {
+                    HandleSelectTool("Connect");
+                }
+
+                if (m_OpenTool8Action.WasPerformedThisFrame()) {
+                    HandleSelectTool("Parallel");
+                }
+
+                if (m_OpenTool9Action.WasPerformedThisFrame()) {
+                    HandleSelectTool("Grid");
+                }
             }
 
             base.OnUpdate();

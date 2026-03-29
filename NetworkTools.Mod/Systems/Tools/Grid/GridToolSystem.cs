@@ -36,42 +36,6 @@ namespace NetworkTools.Systems.Tools {
         protected NativeList<float3> m_ControlPoints;
 
         /// <summary>
-        ///     Selected net prefab for grid road segments.
-        /// </summary>
-        protected NetPrefab m_SelectedNetPrefab;
-
-        /// <summary>
-        ///     Selected net prefab entity.
-        /// </summary>
-        protected Entity m_SelectedNetPrefabEntity;
-
-        /// <inheritdoc />
-        public NetPrefab SelectedNetPrefab => m_SelectedNetPrefab;
-
-        /// <summary>
-        ///     Selected net lane prefab for parallel road segments.
-        /// </summary>
-        protected NetLanePrefab m_SelectedNetLanePrefab;
-
-        /// <summary>
-        ///     Selected net lane prefab entity.
-        /// </summary>
-        protected Entity m_SelectedNetLanePrefabEntity;
-
-        /// <inheritdoc />
-        public Entity SelectedNetPrefabEntity
-        {
-            get
-            {
-                if (m_SelectedNetLanePrefabEntity != Entity.Null)
-                {
-                    return m_SelectedNetLanePrefabEntity;
-                }
-                return m_SelectedNetPrefabEntity;
-            }
-        }
-
-        /// <summary>
         ///     Current grid configuration.
         /// </summary>
         internal GridConfig CurrentConfig = new GridConfig();

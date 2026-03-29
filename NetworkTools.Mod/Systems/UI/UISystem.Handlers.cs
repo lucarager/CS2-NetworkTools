@@ -1,41 +1,9 @@
 namespace NetworkTools.Systems.UI {
-    using Colossal.UI.Binding;
-
-    using Game.Input;
     using Game.Prefabs;
-    using Game.Prefabs;
-    using Game.Tools;
-    using Game.UI;
-
-    using NetworkTools.Extensions;
-    using NetworkTools.Settings;
-    using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
-    using NetworkTools.Systems.Tools.Connect;
-    using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
-    using NetworkTools.Systems.Tools.RoadShape;
-    using NetworkTools.Utils;
-    using Colossal.UI.Binding;
-    using Game.Input;
-    using Game.Prefabs;
-    using Game.Tools;
-    using Game.UI;
-    using NetworkTools.Extensions;
-    using NetworkTools.Settings;
-    using NetworkTools.Systems.Tools;
-    using NetworkTools.Systems.Tools.Connect;
-    using NetworkTools.Systems.Tools;
-    using NetworkTools.Systems.Tools.Parallel;
-    using NetworkTools.Systems.Tools.RoadShape;
-    using NetworkTools.Utils;
-    using Unity.Entities;
-
-    using Newtonsoft.Json.Linq;
-
-    using Unity.Entities;
 
     public partial class NT_UISystem {
         private void HandlePanelOpen(bool value) {
@@ -115,7 +83,7 @@ namespace NetworkTools.Systems.UI {
             m_Log.Debug($"HandleUpdateConnectMode(mode: {mode})");
             var connectMode = (ConnectMode)mode;
             m_NtConnectToolSystem.SetMode(connectMode);
-            m_ConnectModeBinding.Value        = mode;
+            m_ConnectModeBinding.Value = mode;
         }
 
         private void HandleUpdateGridConfig(GridConfig configData) {
@@ -139,22 +107,46 @@ namespace NetworkTools.Systems.UI {
         }
 
         private void HandleUpdateSelectedSnaps(int value) {
-            if (m_ToolSystem.activeTool is NT_BaseToolSystem activeTool) {
-                activeTool.SelectedSnaps = (SnapOption)value;
+            if (m_ToolSystem.activeTool is not NT_BaseToolSystem activeTool) {
+                return;
+            }
+
+            activeTool.SelectedSnaps = (SnapOption)value;
+
+            var settings = NetworkToolsMod.Instance?.Settings;
+            if (settings != null) {
+                settings.SavedSelectedSnaps = value;
+                settings.ApplyAndSave();
             }
         }
 
         private void HandleUpdateSelectedTargets(int value) {
-            if (m_ToolSystem.activeTool is NT_BaseToolSystem activeTool) {
-                activeTool.SelectedTargets = (TargetOption)value;
-                activeTool.RefreshEligibility();
+            if (m_ToolSystem.activeTool is not NT_BaseToolSystem activeTool) {
+                return;
+            }
+
+            activeTool.SelectedTargets = (TargetOption)value;
+            activeTool.RefreshEligibility();
+
+            var settings = NetworkToolsMod.Instance?.Settings;
+            if (settings != null) {
+                settings.SavedSelectedTargets = value;
+                settings.ApplyAndSave();
             }
         }
 
         private void HandleUpdateSelectedViews(int value) {
-            if (m_ToolSystem.activeTool is NT_BaseToolSystem activeTool) {
-                activeTool.SelectedViews = (ViewOption)value;
-                activeTool.RefreshViews();
+            if (m_ToolSystem.activeTool is not NT_BaseToolSystem activeTool) {
+                return;
+            }
+
+            activeTool.SelectedViews = (ViewOption)value;
+            activeTool.RefreshViews();
+
+            var settings = NetworkToolsMod.Instance?.Settings;
+            if (settings != null) {
+                settings.SavedSelectedViews = value;
+                settings.ApplyAndSave();
             }
         }
     }

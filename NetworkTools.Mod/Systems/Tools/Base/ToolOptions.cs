@@ -1,8 +1,3 @@
-// <copyright file="ToolOptions.cs" company="Luca Rager">
-// Copyright (c) Luca Rager. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-// </copyright>
-
 namespace NetworkTools.Systems.Tools {
     using System;
 
@@ -22,13 +17,14 @@ namespace NetworkTools.Systems.Tools {
     /// </summary>
     [Flags]
     public enum TargetOption {
-        None        = 0,
-        Road        = 1 << 0,
-        Path        = 1 << 1,
-        Rail        = 1 << 2,
-        Waterway    = 1 << 3,
+        None          = 0,
+        Road          = 1 << 0,
+        Path          = 1 << 1,
+        Rail          = 1 << 2,
+        Waterway      = 1 << 3,
         InvisiblePath = 1 << 4,
-        All         = Road | Path | Rail | Waterway | InvisiblePath
+        Default       = Road | Path | Rail | Waterway,
+        All           = Road | Path | Rail | Waterway | InvisiblePath
     }
 
     /// <summary>
@@ -37,6 +33,7 @@ namespace NetworkTools.Systems.Tools {
     public enum EligibilityTarget {
         /// <summary>Mark nodes as eligible (default for most tools).</summary>
         Node,
+
         /// <summary>Mark edges as eligible (e.g. AddNode).</summary>
         Edge
     }

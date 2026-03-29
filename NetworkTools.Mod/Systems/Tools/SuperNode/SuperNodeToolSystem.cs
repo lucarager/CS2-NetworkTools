@@ -1,23 +1,11 @@
-﻿// <copyright file="NT_CEToolSystem.cs" company="Luca Rager">
-// Copyright (c) Luca Rager. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-// </copyright>
-
-namespace NetworkTools.Systems.Tools {
+﻿namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using Game.Common;
-    using Game.Input;
     using Game.Net;
     using Game.Notifications;
-    using Game.Prefabs;
-    using Game.Rendering;
-    using Game.Simulation;
     using Game.Tools;
-
     using NetworkTools.Components;
-    using NetworkTools.Systems.Tools;
-
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -29,18 +17,32 @@ namespace NetworkTools.Systems.Tools {
     ///     Represents the current selection state of path-based tools.
     /// </summary>
     public enum SuperNodeSelectionState {
-        NoSelection = 0,
-        StartNodeSelected = 1,
+        NoSelection       = 0,
+        StartNodeSelected = 1
     }
 
     /// <summary>
-    /// # Super Node System
+    ///     # Super Node System
     /// </summary>
-    public partial class NT_SuperNodeToolSystem : NT_BaseToolSystem, IToolPrefabProvider, IManualApplyProvider, INodeSelectionProvider {
-        private         bool   m_UpdateNeeded;
-        public override string toolID => "SuperNode Tool";
-        
-        protected NativeList<Entity> m_SelectedNodes;
+    public partial class NT_SuperNodeToolSystem : NT_BaseToolSystem, IToolPrefabProvider, IManualApplyProvider,
+                                                  INodeSelectionProvider {
+        protected       NativeList<Entity> m_SelectedNodes;
+        private         bool               m_UpdateNeeded;
+        public override string             toolID => "SuperNode Tool";
+
+
+        /// <summary>
+        ///     Requests the tool to apply the current transformation.
+        /// </summary>
+        public void RequestApply() {
+            m_Log.Debug($"RequestApply() -- Selected Nodes: {m_SelectedNodes.Length}");
+
+            if (m_SelectedNodes.Length < 2) {
+                return;
+            }
+
+            Phase = OperationPhase.Applying;
+        }
 
         /// <summary>
         ///     Gets the array of user-selected node entities (path endpoints).
@@ -53,66 +55,46 @@ namespace NetworkTools.Systems.Tools {
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
 
-            var rightClickPressed = m_SecondaryApplyAction.WasPressedThisFrame();
-            var leftClickPressed = m_ApplyAction.WasPressedThisFrame();
-            var raycastHit = false;
-            var hoveredEntity = Entity.Null;
-            var hitPosition = float3.zero;
-            ControlPoint controlPoint = default;
+            var          rightClickPressed = m_SecondaryApplyAction.WasPressedThisFrame();
+            var          leftClickPressed  = m_ApplyAction.WasPressedThisFrame();
+            var          raycastHit        = false;
+            var          hoveredEntity     = Entity.Null;
+            var          hitPosition       = float3.zero;
+            ControlPoint controlPoint      = default;
 
             raycastHit = GetRaycastResult(out controlPoint);
-            if (raycastHit)
-            {
+            if (raycastHit) {
                 hoveredEntity = controlPoint.m_OriginalEntity;
-                hitPosition = controlPoint.m_HitPosition;
+                hitPosition   = controlPoint.m_HitPosition;
             }
 
             // Right-click: cancel/back (skips all raycast processing)
-            if (rightClickPressed)
-            {
+            if (rightClickPressed) {
                 HandleCancel();
                 m_UpdateNeeded = true;
             } // Raycast-based interactions
-            else if (raycastHit)
-            {
+            else if (raycastHit) {
                 // Update hover state first
                 var newEntityHovered = (hoveredEntity != m_LastHoveredEntity.Value);
-                if (newEntityHovered)
-                {
+                if (newEntityHovered) {
                     HandleHover(controlPoint);
                 }
+
                 m_LastHoveredEntity.Value = hoveredEntity;
 
                 // Left-click: add node 
-                if (leftClickPressed && hoveredEntity != Entity.Null)
-                {
+                if (leftClickPressed && hoveredEntity != Entity.Null) {
                     HandleAddNode(hoveredEntity);
                     m_UpdateNeeded = true;
                 }
             }
             // No raycast hit
-            else
-            {
+            else {
                 HandleNoHover();
             }
 
             // Handle temp entities
             return HandleTempEntities(inputDeps);
-        }
-
-
-        /// <summary>
-        ///     Requests the tool to apply the current transformation.
-        /// </summary>
-        public void RequestApply() {
-            m_Log.Debug($"RequestApply() -- Selected Nodes: {m_SelectedNodes.Length}");
-
-            if (m_SelectedNodes.Length < 2)
-            {
-                return;
-            }
-
-            Phase = OperationPhase.Applying;
         }
 
         private void UpdatePhase() {
@@ -139,8 +121,7 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private bool HandleAddNode(Entity entity) {
-            if (entity == Entity.Null || m_SelectedNodes.Contains(entity))
-            {
+            if (entity == Entity.Null || m_SelectedNodes.Contains(entity)) {
                 return false;
             }
 
@@ -148,7 +129,9 @@ namespace NetworkTools.Systems.Tools {
 
             // Add node to selection and mark with state-specific components
             m_SelectedNodes.Add(entity);
-            EntityManager.AddComponentData(entity, NT_Selected.ForNode(NodeRenderMode.RenderSelected | NodeRenderMode.RenderAsCircle));
+            EntityManager.AddComponentData(entity,
+                                           NT_Selected.ForNode(NodeRenderMode.RenderSelected |
+                                                               NodeRenderMode.RenderAsCircle));
 
             UpdatePhase();
 
@@ -173,8 +156,8 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        /// Runs various jobs depending on whether we need to Update, Apply, or Cancel temp entities.
-        /// For the remove node tool, we show preview when hovering over a valid node.
+        ///     Runs various jobs depending on whether we need to Update, Apply, or Cancel temp entities.
+        ///     For the remove node tool, we show preview when hovering over a valid node.
         /// </summary>
         /// <param name="inputDeps"></param>
         /// <param name="updateNeeded"></param>
@@ -187,7 +170,7 @@ namespace NetworkTools.Systems.Tools {
                 OperationPhase.Applying => Apply(inputDeps),
                 // Clear otherwise
                 OperationPhase.Idle or OperationPhase.Configuring => Clear(inputDeps),
-                _ => Clear(inputDeps)
+                _                                                 => Clear(inputDeps)
             };
         }
 
@@ -197,7 +180,9 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private void HandleHover(ControlPoint controlPoint) {
-            SwapHighlightedEntities(m_LastHoveredEntity.Value, controlPoint.m_OriginalEntity, NT_Highlighted.DefaultNode);
+            SwapHighlightedEntities(m_LastHoveredEntity.Value,
+                                    controlPoint.m_OriginalEntity,
+                                    NT_Highlighted.DefaultNode);
         }
 
         protected override bool GetRaycastResult(out ControlPoint controlPoint) {
@@ -211,27 +196,25 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private ControlPoint FilterRaycastResult(Entity entity, RaycastHit hit) {
-            var controlPoint = default(ControlPoint);
+            var controlPoint    = default(ControlPoint);
             var candidateEntity = Entity.Null;
 
             // If we hit an edge, find the closest node instead
             if (EntityManager.HasComponent<Edge>(entity)) {
                 // todo make job
                 // Find the closest node to the hit position
-                var edge = EntityManager.GetComponentData<Edge>(entity);
-                var startNode = EntityManager.GetComponentData<Node>(edge.m_Start);
+                var edge            = EntityManager.GetComponentData<Edge>(entity);
+                var startNode       = EntityManager.GetComponentData<Node>(edge.m_Start);
                 var distanceToStart = math.distance(hit.m_Position, startNode.m_Position);
-                var endNode = EntityManager.GetComponentData<Node>(edge.m_End);
-                var distanceToEnd = math.distance(hit.m_Position, endNode.m_Position);
+                var endNode         = EntityManager.GetComponentData<Node>(edge.m_End);
+                var distanceToEnd   = math.distance(hit.m_Position, endNode.m_Position);
 
                 if (distanceToStart < MaxDistanceToSelect && distanceToStart < distanceToEnd) {
                     candidateEntity = edge.m_Start;
-                }
-                else if (distanceToEnd < MaxDistanceToSelect && distanceToEnd < distanceToStart) {
+                } else if (distanceToEnd < MaxDistanceToSelect && distanceToEnd < distanceToStart) {
                     candidateEntity = edge.m_End;
                 }
-            }
-            else {
+            } else {
                 candidateEntity = entity;
             }
 
@@ -252,9 +235,9 @@ namespace NetworkTools.Systems.Tools {
             m_ToolRaycastSystem.netLayerMask    = Layer.All;
             m_ToolRaycastSystem.iconLayerMask   = IconLayerMask.None;
             m_ToolRaycastSystem.utilityTypeMask = UtilityTypes.None;
-            m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset |
+            m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers     | RaycastFlags.ElevateOffset |
                                                RaycastFlags.SubElements |
-                                               RaycastFlags.Cargo | RaycastFlags.Passenger;
+                                               RaycastFlags.Cargo       | RaycastFlags.Passenger;
         }
     }
 }

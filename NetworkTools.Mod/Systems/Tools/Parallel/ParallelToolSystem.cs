@@ -29,42 +29,6 @@ namespace NetworkTools.Systems.Tools.Parallel {
         private bool m_UpdateNeeded;
 
         /// <summary>
-        ///     Selected net prefab for parallel road segments.
-        /// </summary>
-        protected NetPrefab m_SelectedNetPrefab;
-
-        /// <summary>
-        ///     Selected net prefab entity.
-        /// </summary>
-        protected Entity m_SelectedNetPrefabEntity;
-
-        /// <summary>
-        ///     Selected net lane prefab for parallel road segments.
-        /// </summary>
-        protected NetLanePrefab m_SelectedNetLanePrefab;
-
-        /// <summary>
-        ///     Selected net lane prefab entity.
-        /// </summary>
-        protected Entity m_SelectedNetLanePrefabEntity;
-
-        /// <inheritdoc />
-        public NetPrefab SelectedNetPrefab => m_SelectedNetPrefab;
-
-        /// <inheritdoc />
-        public Entity SelectedNetPrefabEntity
-        {
-            get
-            {
-                if (m_SelectedNetLanePrefabEntity != Entity.Null)
-                {
-                    return m_SelectedNetLanePrefabEntity;
-                }
-                return m_SelectedNetPrefabEntity;
-            }
-        }
-
-        /// <summary>
         ///     Current parallel configuration (distance and side).
         /// </summary>
         internal ParallelConfig CurrentConfig = new ParallelConfig {

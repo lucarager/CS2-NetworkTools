@@ -1,14 +1,7 @@
-﻿// <copyright file="NT_BaseToolSystem.cs" company="Luca Rager">
-// Copyright (c) Luca Rager. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-// </copyright>
-
-namespace NetworkTools.Systems.Tools {
+﻿namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
     using System.Collections.Generic;
-    using System.ComponentModel;
-
     using Game.Common;
     using Game.Input;
     using Game.Net;
@@ -16,15 +9,11 @@ namespace NetworkTools.Systems.Tools {
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
-
     using NetworkTools.Components;
     using NetworkTools.Utils;
-
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
-
-    using static Colossal.IO.AssetDatabase.AtlasFrame;
 
     #endregion
 
@@ -33,10 +22,10 @@ namespace NetworkTools.Systems.Tools {
     ///     Represents the phase of the current transformation operation.
     /// </summary>
     public enum OperationPhase {
-        Idle = 0, // No operation configured
+        Idle        = 0, // No operation configured
         Configuring = 1, // Operation configured but insufficient selection
-        Ready = 2, // Operation configured with valid selection
-        Applying = 3 // Operation is being applied 
+        Ready       = 2, // Operation configured with valid selection
+        Applying    = 3 // Operation is being applied 
     }
 
     /// <summary>
@@ -63,38 +52,11 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         protected const float MaxDistanceToSelect = 16f;
 
-        /// <summary>
-        ///     Snap options this tool makes available to the player.
-        ///     Override in derived tools to expose specific snap options.
-        /// </summary>
-        public virtual SnapOption AvailableSnaps => SnapOption.None;
-
-        /// <summary>
-        ///     Currently active snap options selected by the player.
-        /// </summary>
-        public SnapOption SelectedSnaps { get; set; } = SnapOption.None;
-
-        /// <summary>
-        ///     Target options this tool makes available to the player.
-        ///     Override in derived tools to expose specific target options.
-        /// </summary>
-        public virtual TargetOption AvailableTargets => TargetOption.All;
-
-        /// <summary>
-        ///     Currently active target options selected by the player.
-        /// </summary>
-        public TargetOption SelectedTargets { get; set; } = TargetOption.All;
-
-        /// <summary>
-        ///     View options this tool makes available to the player.
-        ///     Override in derived tools to expose specific view options.
-        /// </summary>
-        public virtual ViewOption AvailableViews => ViewOption.All;
-
-        /// <summary>
-        ///     Currently active view options selected by the player.
-        /// </summary>
-        public ViewOption SelectedViews { get; set; } = ViewOption.None;
+        protected ComponentTypeSet AllNtComponentsTypeSet = new(typeof(NT_Eligible),
+                                                                typeof(NT_Highlighted),
+                                                                typeof(NT_Selected),
+                                                                typeof(NT_SelectedFirst),
+                                                                typeof(NT_SelectedLast));
 
         /// <summary>
         ///     Tool requests disabling vanilla NodeReductionSystem during lifecycle
@@ -106,9 +68,14 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         public bool DisableVanillaValidation = false;
 
-        protected ComponentTypeSet HighlightedComponentTypeSet = new (typeof(NT_Highlighted), typeof(Highlighted));
+        /// <summary>
+        ///     Which entity type this tool marks as eligible (Node or Edge).
+        ///     Set to <see cref="EligibilityTarget.Edge" /> for tools that operate on edges.
+        /// </summary>
+        protected EligibilityTarget EligibilityTarget = EligibilityTarget.Node;
 
-        protected ComponentTypeSet AllNtComponentsTypeSet = new (typeof(NT_Eligible), typeof(NT_Highlighted), typeof(NT_Selected), typeof(NT_SelectedFirst), typeof(NT_SelectedLast));
+        protected ComponentTypeSet HighlightedComponentTypeSet = new(typeof(NT_Highlighted), typeof(Highlighted));
+        protected EntityQuery      m_AllNtComponentsQuery;
 
         /// <summary>
         ///     Apply action (usually left click)
@@ -120,27 +87,23 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         protected ToolOutputBarrier m_Barrier;
 
-        /// <summary>
-        ///     Tool System
-        /// </summary>
-        protected ToolSystem m_ToolSystem;
-
-        /// <summary>
-        ///     Tool System
-        /// </summary>
-        protected RenderingSystem m_RenderingSystem;
+        // Container query from vanilla
+        protected EntityQuery m_ContainerQuery;
 
         /// <summary>
         ///     Common entity queries for node management
         /// </summary>
         protected EntityQuery m_DefinitionQuery;
 
+        /// <summary>
+        ///     Per-target-flag queries for adding NT_Eligible to matching edges.
+        /// </summary>
+        private EntityQuery m_EdgesWithEligibleQuery;
+
         protected EntityQuery m_EdgesWithHighlightedQuery;
+        private   EntityQuery m_EdgesWithoutEligibleQuery;
         protected EntityQuery m_EdgesWithSelectedQuery;
         protected EntityQuery m_EntitiesWithHighlightedQuery;
-
-        // Container query from vanilla
-        protected EntityQuery m_ContainerQuery;
 
         /// <summary>
         ///     Native collections for tracking entities
@@ -149,48 +112,20 @@ namespace NetworkTools.Systems.Tools {
 
         protected NativeReference<Entity> m_LastRaycastEntity;
 
-        internal  PrefixedLogger      m_Log;
+        internal PrefixedLogger m_Log;
+
+        /// <summary>
+        ///     Vanilla NodeReductionSystem
+        /// </summary>
+        protected NodeReductionSystem m_NodeReductionSystem;
+
         protected EntityQuery         m_NodesWithEligibleQuery;
         protected EntityQuery         m_NodesWithHighlightedQuery;
         protected EntityQuery         m_NodesWithoutEligibleQuery;
-        protected EntityQuery         m_UnselectedNodesWithoutEligibleQuery;
         protected EntityQuery         m_NodesWithSelectedFirstQuery;
         protected EntityQuery         m_NodesWithSelectedLastQuery;
         protected EntityQuery         m_NodesWithSelectedQuery;
-        protected EntityQuery         m_AllNtComponentsQuery;
         protected OverlayRenderSystem m_OverlayRenderSystem;
-
-        /// <summary>
-        ///     Per-target-flag queries for adding NT_Eligible to matching nodes.
-        /// </summary>
-        private EntityQuery m_TargetRoadNodesQuery;
-        private EntityQuery m_TargetPathNodesQuery;
-        private EntityQuery m_TargetRailNodesQuery;
-        private EntityQuery m_TargetWaterwayNodesQuery;
-        private EntityQuery m_TargetInvisiblePathNodesQuery;
-
-        /// <summary>
-        ///     Per-target-flag queries for adding NT_Eligible to matching edges.
-        /// </summary>
-        private EntityQuery m_EdgesWithEligibleQuery;
-        private EntityQuery m_EdgesWithoutEligibleQuery;
-        private EntityQuery m_TargetRoadEdgesQuery;
-        private EntityQuery m_TargetPathEdgesQuery;
-        private EntityQuery m_TargetRailEdgesQuery;
-        private EntityQuery m_TargetWaterwayEdgesQuery;
-        private EntityQuery m_TargetInvisiblePathEdgesQuery;
-
-        /// <summary>
-        ///     Whether this tool uses custom per-entity eligibility filtering.
-        ///     When true, MarkEligibleNodes will call FilterEligibleEntity for each candidate.
-        /// </summary>
-        protected bool UseCustomEligibilityFilter = false;
-
-        /// <summary>
-        ///     Which entity type this tool marks as eligible (Node or Edge).
-        ///     Set to <see cref="EligibilityTarget.Edge"/> for tools that operate on edges.
-        /// </summary>
-        protected EligibilityTarget EligibilityTarget = EligibilityTarget.Node;
 
         /// <summary>
         ///     Selected Prefab, set by derived tools
@@ -198,21 +133,64 @@ namespace NetworkTools.Systems.Tools {
         protected PrefabBase m_Prefab;
 
         /// <summary>
+        ///     Tool System
+        /// </summary>
+        protected RenderingSystem m_RenderingSystem;
+
+        /// <summary>
         ///     Secondary apply action (usually right click)
         /// </summary>
         internal IProxyAction m_SecondaryApplyAction;
 
+        /// <summary>
+        ///     Selected net lane prefab for parallel road segments.
+        /// </summary>
+        protected NetLanePrefab m_SelectedNetLanePrefab;
+
+        /// <summary>
+        ///     Selected net lane prefab entity.
+        /// </summary>
+        protected Entity m_SelectedNetLanePrefabEntity;
+
+        /// <summary>
+        ///     Selected net prefab for parallel road segments.
+        /// </summary>
+        protected NetPrefab m_SelectedNetPrefab;
+
+        /// <summary>
+        ///     Selected net prefab entity.
+        /// </summary>
+        protected Entity m_SelectedNetPrefabEntity;
+
+        private EntityQuery m_TargetInvisiblePathEdgesQuery;
+        private EntityQuery m_TargetInvisiblePathNodesQuery;
+        private EntityQuery m_TargetPathEdgesQuery;
+        private EntityQuery m_TargetPathNodesQuery;
+        private EntityQuery m_TargetRailEdgesQuery;
+        private EntityQuery m_TargetRailNodesQuery;
+        private EntityQuery m_TargetRoadEdgesQuery;
+
+        /// <summary>
+        ///     Per-target-flag queries for adding NT_Eligible to matching nodes.
+        /// </summary>
+        private EntityQuery m_TargetRoadNodesQuery;
+
+        private EntityQuery m_TargetWaterwayEdgesQuery;
+        private EntityQuery m_TargetWaterwayNodesQuery;
+
         protected TerrainSystem m_TerrainSystem;
+
+        /// <summary>
+        ///     Tool System
+        /// </summary>
+        protected ToolSystem m_ToolSystem;
+
+        protected EntityQuery m_UnselectedNodesWithoutEligibleQuery;
 
         /// <summary>
         ///     Vanilla ValidationSystem
         /// </summary>
         protected ValidationSystem m_ValidationSystem;
-
-        /// <summary>
-        ///     Vanilla NodeReductionSystem
-        /// </summary>
-        protected NodeReductionSystem m_NodeReductionSystem;
 
         /// <summary>
         ///     Phase
@@ -249,6 +227,71 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         public bool RenderTempNodes = false;
 
+        /// <summary>
+        ///     Whether this tool uses custom per-entity eligibility filtering.
+        ///     When true, MarkEligibleNodes will call FilterEligibleEntity for each candidate.
+        /// </summary>
+        protected bool UseCustomEligibilityFilter = false;
+
+        /// <summary>
+        ///     Snap options this tool makes available to the player.
+        ///     Override in derived tools to expose specific snap options.
+        /// </summary>
+        public virtual SnapOption AvailableSnaps => SnapOption.None;
+
+        /// <summary>
+        ///     Currently active snap options selected by the player.
+        /// </summary>
+        public SnapOption SelectedSnaps { get; set; } = SnapOption.None;
+
+        /// <summary>
+        ///     Target options this tool makes available to the player.
+        ///     Override in derived tools to expose specific target options.
+        /// </summary>
+        public virtual TargetOption AvailableTargets => TargetOption.All;
+
+        /// <summary>
+        ///     Currently active target options selected by the player.
+        /// </summary>
+        public TargetOption SelectedTargets { get; set; } = TargetOption.Default;
+
+        /// <summary>
+        ///     View options this tool makes available to the player.
+        ///     Override in derived tools to expose specific view options.
+        /// </summary>
+        public virtual ViewOption AvailableViews => ViewOption.All;
+
+        /// <summary>
+        ///     Currently active view options selected by the player.
+        /// </summary>
+        public ViewOption SelectedViews { get; set; } = ViewOption.None;
+
+        /// <summary>
+        ///     Gets the currently selected net prefab, or <c>null</c> if none is selected.
+        /// </summary>
+        public PrefabBase SelectedNetPrefab {
+            get {
+                if (m_SelectedNetLanePrefab != null) {
+                    return m_SelectedNetLanePrefab;
+                }
+
+                return m_SelectedNetPrefab;
+            }
+        }
+
+        /// <summary>
+        ///     Gets the ECS entity of the selected net prefab, or <see cref="Entity.Null" /> if none.
+        /// </summary>
+        public Entity SelectedNetPrefabEntity {
+            get {
+                if (m_SelectedNetLanePrefabEntity != Entity.Null) {
+                    return m_SelectedNetLanePrefabEntity;
+                }
+
+                return m_SelectedNetPrefabEntity;
+            }
+        }
+
         public override string toolID => "NT_BaseToolSystem";
 
         /// <summary>
@@ -280,14 +323,14 @@ namespace NetworkTools.Systems.Tools {
             m_ValidationSystem    = World.GetOrCreateSystemManaged<ValidationSystem>();
             m_NodeReductionSystem = World.GetOrCreateSystemManaged<NodeReductionSystem>();
             m_Barrier             = World.GetOrCreateSystemManaged<ToolOutputBarrier>();
-            m_ToolSystem = World.GetOrCreateSystemManaged<ToolSystem>();
-            m_RenderingSystem = World.GetOrCreateSystemManaged<RenderingSystem>();
+            m_ToolSystem          = World.GetOrCreateSystemManaged<ToolSystem>();
+            m_RenderingSystem     = World.GetOrCreateSystemManaged<RenderingSystem>();
 
             // Move this tool to the front of the tool stack so it takes priority over vanilla tools
             m_ToolSystem.tools.Remove(this);
             m_ToolSystem.tools.Insert(0, this);
 
-            m_TerrainSystem = World.GetOrCreateSystemManaged<TerrainSystem>();
+            m_TerrainSystem       = World.GetOrCreateSystemManaged<TerrainSystem>();
             m_OverlayRenderSystem = World.GetOrCreateSystemManaged<OverlayRenderSystem>();
 
             // Actions
@@ -304,99 +347,100 @@ namespace NetworkTools.Systems.Tools {
             // Queries
             m_DefinitionQuery = GetDefinitionQuery();
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                                   .WithAll<Node>()
+                                                   .WithNone<NT_Eligible>()
+                                                   .Build();
             m_UnselectedNodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node>()
-                .WithNone<NT_Eligible, NT_Selected>()
-                .Build();
+                                                             .WithAll<Node>()
+                                                             .WithNone<NT_Eligible, NT_Selected>()
+                                                             .Build();
             m_NodesWithEligibleQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, NT_Eligible>()
-                .Build();
+                                                .WithAll<Node, NT_Eligible>()
+                                                .Build();
             m_NodesWithHighlightedQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node>()
-                .WithAny<Highlighted, NT_Highlighted>()
-                .Build();
+                                                   .WithAll<Node>()
+                                                   .WithAny<Highlighted, NT_Highlighted>()
+                                                   .Build();
             m_EntitiesWithHighlightedQuery = SystemAPI.QueryBuilder()
-                .WithAny<Highlighted, NT_Highlighted>()
-                .Build();
+                                                      .WithAny<Highlighted, NT_Highlighted>()
+                                                      .Build();
             m_NodesWithSelectedQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, NT_Selected>()
-                .Build();
+                                                .WithAll<Node, NT_Selected>()
+                                                .Build();
             m_AllNtComponentsQuery = SystemAPI.QueryBuilder()
-                .WithAny<NT_Eligible, NT_Highlighted, NT_Selected, NT_SelectedFirst, NT_SelectedLast>()
-                .Build();
+                                              .WithAny<NT_Eligible, NT_Highlighted, NT_Selected, NT_SelectedFirst,
+                                                  NT_SelectedLast>()
+                                              .Build();
             m_NodesWithSelectedFirstQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, NT_SelectedFirst>()
-                .Build();
+                                                     .WithAll<Node, NT_SelectedFirst>()
+                                                     .Build();
             m_NodesWithSelectedLastQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, NT_SelectedLast>()
-                .Build();
+                                                    .WithAll<Node, NT_SelectedLast>()
+                                                    .Build();
             m_EdgesWithHighlightedQuery = SystemAPI.QueryBuilder()
-                .WithAll<Edge>()
-                .WithAny<Highlighted, NT_Highlighted>()
-                .Build();
+                                                   .WithAll<Edge>()
+                                                   .WithAny<Highlighted, NT_Highlighted>()
+                                                   .Build();
             m_EdgesWithSelectedQuery = SystemAPI.QueryBuilder()
-                .WithAll<Edge, NT_Selected>()
-                .Build();
+                                                .WithAll<Edge, NT_Selected>()
+                                                .Build();
 
             // Per-target-flag queries for MarkEligibleNodes
             m_TargetRoadNodesQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, Road>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                              .WithAll<Node, Road>()
+                                              .WithNone<NT_Eligible>()
+                                              .Build();
             m_TargetPathNodesQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, LocalConnect>()
-                .WithNone<Marker>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                              .WithAll<Node, LocalConnect>()
+                                              .WithNone<Marker>()
+                                              .WithNone<NT_Eligible>()
+                                              .Build();
             m_TargetInvisiblePathNodesQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, LocalConnect>()
-                .WithAll<Marker>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                                       .WithAll<Node, LocalConnect>()
+                                                       .WithAll<Marker>()
+                                                       .WithNone<NT_Eligible>()
+                                                       .Build();
             m_TargetRailNodesQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node>()
-                .WithAny<TrainTrack, TramTrack, SubwayTrack>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                              .WithAll<Node>()
+                                              .WithAny<TrainTrack, TramTrack, SubwayTrack>()
+                                              .WithNone<NT_Eligible>()
+                                              .Build();
             m_TargetWaterwayNodesQuery = SystemAPI.QueryBuilder()
-                .WithAll<Node, Waterway>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                                  .WithAll<Node, Waterway>()
+                                                  .WithNone<NT_Eligible>()
+                                                  .Build();
 
             // Per-target-flag queries for MarkEligibleEdges
             m_EdgesWithEligibleQuery = SystemAPI.QueryBuilder()
-                .WithAll<Edge, NT_Eligible>()
-                .Build();
+                                                .WithAll<Edge, NT_Eligible>()
+                                                .Build();
             m_EdgesWithoutEligibleQuery = SystemAPI.QueryBuilder()
-                .WithAll<Edge>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                                   .WithAll<Edge>()
+                                                   .WithNone<NT_Eligible>()
+                                                   .Build();
             m_TargetRoadEdgesQuery = SystemAPI.QueryBuilder()
-                .WithAll<Edge, Road>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                              .WithAll<Edge, Road>()
+                                              .WithNone<NT_Eligible>()
+                                              .Build();
             m_TargetPathEdgesQuery = SystemAPI.QueryBuilder()
-                .WithAll<Edge, LocalConnect>()
-                .WithNone<Marker>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                              .WithAll<Edge, LocalConnect>()
+                                              .WithNone<Marker>()
+                                              .WithNone<NT_Eligible>()
+                                              .Build();
             m_TargetInvisiblePathEdgesQuery = SystemAPI.QueryBuilder()
-                .WithAll<Edge, LocalConnect>()
-                .WithAll<Marker>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                                       .WithAll<Edge, LocalConnect>()
+                                                       .WithAll<Marker>()
+                                                       .WithNone<NT_Eligible>()
+                                                       .Build();
             m_TargetRailEdgesQuery = SystemAPI.QueryBuilder()
-                .WithAll<Edge>()
-                .WithAny<TrainTrack, TramTrack, SubwayTrack>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                              .WithAll<Edge>()
+                                              .WithAny<TrainTrack, TramTrack, SubwayTrack>()
+                                              .WithNone<NT_Eligible>()
+                                              .Build();
             m_TargetWaterwayEdgesQuery = SystemAPI.QueryBuilder()
-                .WithAll<Edge, Waterway>()
-                .WithNone<NT_Eligible>()
-                .Build();
+                                                  .WithAll<Edge, Waterway>()
+                                                  .WithNone<NT_Eligible>()
+                                                  .Build();
 
             // Vanilla container query
             m_ContainerQuery = GetContainerQuery();
@@ -423,14 +467,14 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Default prefab activation logic driven by <see cref="IToolPrefabProvider"/>
-        ///     and <see cref="INetPrefabCachingProvider"/>.
+        ///     Default prefab activation logic driven by <see cref="IToolPrefabProvider" />
+        ///     and <see cref="INetPrefabCachingProvider" />.
         ///     Tools with custom activation logic (e.g. multi-component checks) may override.
         /// </summary>
         public override bool TrySetPrefab(PrefabBase prefab) {
             // Delegate to net prefab caching if this tool supports it
-            if (this is INetPrefabCachingProvider cachingProvider) {
-                var result = cachingProvider.TryCacheNetPrefab(prefab);
+            if (this is INetPrefabCachingProvider) {
+                var result = TryCacheNetPrefab(prefab);
                 if (result.HasValue) {
                     return result.Value;
                 }
@@ -450,6 +494,39 @@ namespace NetworkTools.Systems.Tools {
             }
 
             return false;
+        }
+
+        /// <summary>
+        ///     Attempts to cache a net prefab selection.
+        /// </summary>
+        /// <param name="prefab">The prefab offered by the game.</param>
+        /// <returns>
+        ///     <c>true</c> to consume the prefab (tool is active and should reflect the change),
+        ///     <c>false</c> to reject (prefab was cached but tool is not active),
+        ///     or <c>null</c> to fall through to the standard tool-activation check.
+        /// </returns>
+        public bool? TryCacheNetPrefab(PrefabBase prefab) {
+            switch (prefab) {
+                case RoadPrefab or TrackPrefab or WaterwayPrefab or PathwayPrefab:
+                {
+                    m_SelectedNetPrefab           = (NetPrefab)prefab;
+                    m_SelectedNetPrefabEntity     = m_PrefabSystem.GetEntity(m_SelectedNetPrefab);
+                    m_SelectedNetLanePrefab       = null;
+                    m_SelectedNetLanePrefabEntity = Entity.Null;
+                    return m_ToolSystem.activeTool == this;
+                }
+                case NetLanePrefab netLanePrefab:
+                {
+                    m_SelectedNetLanePrefab       = netLanePrefab;
+                    m_SelectedNetLanePrefabEntity = m_PrefabSystem.GetEntity(netLanePrefab);
+                    var foundContainers = GetContainers(m_ContainerQuery, out var laneContainer, out _);
+                    m_SelectedNetPrefab       = null;
+                    m_SelectedNetPrefabEntity = laneContainer;
+                    return m_ToolSystem.activeTool == this;
+                }
+                default:
+                    return null;
+            }
         }
 
         public void RequestEnable() {
@@ -473,10 +550,11 @@ namespace NetworkTools.Systems.Tools {
                 m_NodeReductionSystem.Enabled = false;
             }
 
-            // Reset snap/target/view selections to defaults
-            SelectedSnaps   = AvailableSnaps;
-            SelectedTargets = AvailableTargets;
-            SelectedViews   = ViewOption.None;
+            // Restore persisted preferences, masked by what this tool supports
+            var settings    = NetworkToolsMod.Instance?.Settings;
+            SelectedSnaps   = settings != null ? (SnapOption)settings.SavedSelectedSnaps & AvailableSnaps : AvailableSnaps;
+            SelectedTargets = settings != null ? (TargetOption)settings.SavedSelectedTargets & AvailableTargets : AvailableTargets;
+            SelectedViews   = settings != null ? (ViewOption)settings.SavedSelectedViews & AvailableViews : ViewOption.None;
 
             // Reset tracking
             if (m_LastHoveredEntity.IsCreated) {
@@ -555,8 +633,7 @@ namespace NetworkTools.Systems.Tools {
             EntityManager.AddComponentData(entity, highlightData);
             EntityManager.AddComponent<Highlighted>(entity);
 
-            if (!EntityManager.HasComponent<BatchesUpdated>(entity))
-            {
+            if (!EntityManager.HasComponent<BatchesUpdated>(entity)) {
                 EntityManager.AddComponent<BatchesUpdated>(entity);
             }
         }
@@ -571,8 +648,7 @@ namespace NetworkTools.Systems.Tools {
 
             EntityManager.RemoveComponent(entity, HighlightedComponentTypeSet);
 
-            if (!EntityManager.HasComponent<BatchesUpdated>(entity))
-            {
+            if (!EntityManager.HasComponent<BatchesUpdated>(entity)) {
                 EntityManager.AddComponent<BatchesUpdated>(entity);
             }
         }
@@ -597,9 +673,9 @@ namespace NetworkTools.Systems.Tools {
 
         /// <summary>
         ///     Adds NT_Eligible component to entities matching the current target flags.
-        ///     Marks nodes or edges depending on <see cref="EligibilityTarget"/>.
-        ///     When <see cref="UseCustomEligibilityFilter"/> is true, also applies
-        ///     <see cref="FilterEligibleEntity"/> per entity.
+        ///     Marks nodes or edges depending on <see cref="EligibilityTarget" />.
+        ///     When <see cref="UseCustomEligibilityFilter" /> is true, also applies
+        ///     <see cref="FilterEligibleEntity" /> per entity.
         /// </summary>
         protected void MarkEligibleEntities() {
             var targets = SelectedTargets & AvailableTargets;
@@ -614,7 +690,7 @@ namespace NetworkTools.Systems.Tools {
         /// <summary>
         ///     Removes all current eligibility and re-applies based on current target flags.
         ///     Called by the UI when the player toggles target options.
-        ///     Invokes <see cref="OnEligibilityReset"/> between stripping and re-marking
+        ///     Invokes <see cref="OnEligibilityReset" /> between stripping and re-marking
         ///     so derived tools can clean up phase-specific state.
         /// </summary>
         public void RefreshEligibility() {
@@ -627,25 +703,28 @@ namespace NetworkTools.Systems.Tools {
         ///     Refreshes views
         /// </summary>
         public void RefreshViews() {
-            base.requireUnderground = (SelectedViews & ViewOption.Underground) != 0;
-            base.requireZones = (SelectedViews & ViewOption.ZoneGrid) != 0;
+            requireUnderground               = (SelectedViews & ViewOption.Underground)       != 0;
+            requireZones                     = (SelectedViews & ViewOption.ZoneGrid)          != 0;
             m_RenderingSystem.markersVisible = (SelectedViews & ViewOption.InvisibleNetworks) != 0;
         }
 
         /// <summary>
-        ///     Called during <see cref="RefreshEligibility"/> after eligibility is stripped
+        ///     Called during <see cref="RefreshEligibility" /> after eligibility is stripped
         ///     but before it is re-applied. Override to reset tool-specific state
         ///     (selections, handles, phase) when the player changes target options.
         /// </summary>
-        protected virtual void OnEligibilityReset() { }
+        protected virtual void OnEligibilityReset() {
+        }
 
         /// <summary>
-        ///     Per-entity eligibility filter called when <see cref="UseCustomEligibilityFilter"/> is true.
+        ///     Per-entity eligibility filter called when <see cref="UseCustomEligibilityFilter" /> is true.
         ///     Override in derived tools to apply tool-specific criteria.
         /// </summary>
         /// <param name="entity">Candidate node entity that already matches target flags.</param>
         /// <returns>True if the entity should be marked eligible.</returns>
-        protected virtual bool FilterEligibleEntity(Entity entity) => true;
+        protected virtual bool FilterEligibleEntity(Entity entity) {
+            return true;
+        }
 
         /// <summary>
         ///     Fast path: batch-adds NT_Eligible via static queries without per-entity filtering.
@@ -667,16 +746,25 @@ namespace NetworkTools.Systems.Tools {
                 return;
             }
 
-            if ((targets & TargetOption.Road) != 0)
+            if ((targets & TargetOption.Road) != 0) {
                 EntityManager.AddComponent<NT_Eligible>(m_TargetRoadNodesQuery);
-            if ((targets & TargetOption.Path) != 0)
+            }
+
+            if ((targets & TargetOption.Path) != 0) {
                 EntityManager.AddComponent<NT_Eligible>(m_TargetPathNodesQuery);
-            if ((targets & TargetOption.Rail) != 0)
+            }
+
+            if ((targets & TargetOption.Rail) != 0) {
                 EntityManager.AddComponent<NT_Eligible>(m_TargetRailNodesQuery);
-            if ((targets & TargetOption.Waterway) != 0)
+            }
+
+            if ((targets & TargetOption.Waterway) != 0) {
                 EntityManager.AddComponent<NT_Eligible>(m_TargetWaterwayNodesQuery);
-            if ((targets & TargetOption.InvisiblePath) != 0)
+            }
+
+            if ((targets & TargetOption.InvisiblePath) != 0) {
                 EntityManager.AddComponent<NT_Eligible>(m_TargetInvisiblePathNodesQuery);
+            }
         }
 
         /// <summary>
@@ -688,20 +776,29 @@ namespace NetworkTools.Systems.Tools {
                 return;
             }
 
-            if ((targets & TargetOption.Road) != 0)
+            if ((targets & TargetOption.Road) != 0) {
                 EntityManager.AddComponent<NT_Eligible>(m_TargetRoadEdgesQuery);
-            if ((targets & TargetOption.Path) != 0)
+            }
+
+            if ((targets & TargetOption.Path) != 0) {
                 EntityManager.AddComponent<NT_Eligible>(m_TargetPathEdgesQuery);
-            if ((targets & TargetOption.Rail) != 0)
+            }
+
+            if ((targets & TargetOption.Rail) != 0) {
                 EntityManager.AddComponent<NT_Eligible>(m_TargetRailEdgesQuery);
-            if ((targets & TargetOption.Waterway) != 0)
+            }
+
+            if ((targets & TargetOption.Waterway) != 0) {
                 EntityManager.AddComponent<NT_Eligible>(m_TargetWaterwayEdgesQuery);
-            if ((targets & TargetOption.InvisiblePath) != 0)
+            }
+
+            if ((targets & TargetOption.InvisiblePath) != 0) {
                 EntityManager.AddComponent<NT_Eligible>(m_TargetInvisiblePathEdgesQuery);
+            }
         }
 
         /// <summary>
-        ///     Slow path: iterates candidate entities and applies <see cref="FilterEligibleEntity"/> per entity.
+        ///     Slow path: iterates candidate entities and applies <see cref="FilterEligibleEntity" /> per entity.
         /// </summary>
         private void AddEligibleByTargetsFiltered(TargetOption targets) {
             if (EligibilityTarget == EligibilityTarget.Edge) {
@@ -712,7 +809,7 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Slow path: iterates candidate nodes and applies <see cref="FilterEligibleEntity"/> per entity.
+        ///     Slow path: iterates candidate nodes and applies <see cref="FilterEligibleEntity" /> per entity.
         /// </summary>
         private void AddEligibleNodesByTargetsFiltered(TargetOption targets) {
             if ((targets & TargetOption.All) == TargetOption.All) {
@@ -720,20 +817,29 @@ namespace NetworkTools.Systems.Tools {
                 return;
             }
 
-            if ((targets & TargetOption.Road) != 0)
+            if ((targets & TargetOption.Road) != 0) {
                 FilterAndAddEligible(m_TargetRoadNodesQuery);
-            if ((targets & TargetOption.Path) != 0)
+            }
+
+            if ((targets & TargetOption.Path) != 0) {
                 FilterAndAddEligible(m_TargetPathNodesQuery);
-            if ((targets & TargetOption.Rail) != 0)
+            }
+
+            if ((targets & TargetOption.Rail) != 0) {
                 FilterAndAddEligible(m_TargetRailNodesQuery);
-            if ((targets & TargetOption.Waterway) != 0)
+            }
+
+            if ((targets & TargetOption.Waterway) != 0) {
                 FilterAndAddEligible(m_TargetWaterwayNodesQuery);
-            if ((targets & TargetOption.InvisiblePath) != 0)
+            }
+
+            if ((targets & TargetOption.InvisiblePath) != 0) {
                 FilterAndAddEligible(m_TargetInvisiblePathNodesQuery);
+            }
         }
 
         /// <summary>
-        ///     Slow path: iterates candidate edges and applies <see cref="FilterEligibleEntity"/> per entity.
+        ///     Slow path: iterates candidate edges and applies <see cref="FilterEligibleEntity" /> per entity.
         /// </summary>
         private void AddEligibleEdgesByTargetsFiltered(TargetOption targets) {
             if ((targets & TargetOption.All) == TargetOption.All) {
@@ -741,16 +847,25 @@ namespace NetworkTools.Systems.Tools {
                 return;
             }
 
-            if ((targets & TargetOption.Road) != 0)
+            if ((targets & TargetOption.Road) != 0) {
                 FilterAndAddEligible(m_TargetRoadEdgesQuery);
-            if ((targets & TargetOption.Path) != 0)
+            }
+
+            if ((targets & TargetOption.Path) != 0) {
                 FilterAndAddEligible(m_TargetPathEdgesQuery);
-            if ((targets & TargetOption.Rail) != 0)
+            }
+
+            if ((targets & TargetOption.Rail) != 0) {
                 FilterAndAddEligible(m_TargetRailEdgesQuery);
-            if ((targets & TargetOption.Waterway) != 0)
+            }
+
+            if ((targets & TargetOption.Waterway) != 0) {
                 FilterAndAddEligible(m_TargetWaterwayEdgesQuery);
-            if ((targets & TargetOption.InvisiblePath) != 0)
+            }
+
+            if ((targets & TargetOption.InvisiblePath) != 0) {
                 FilterAndAddEligible(m_TargetInvisiblePathEdgesQuery);
+            }
         }
 
         /// <summary>
@@ -763,6 +878,7 @@ namespace NetworkTools.Systems.Tools {
                     EntityManager.AddComponent<NT_Eligible>(entity);
                 }
             }
+
             entities.Dispose();
         }
     }

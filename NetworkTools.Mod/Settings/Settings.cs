@@ -6,6 +6,7 @@
     using Game.Input;
     using Game.Modding;
     using Game.Settings;
+    using NetworkTools.Systems.Tools;
     using UnityEngine;
 
     #endregion
@@ -126,9 +127,30 @@
         [SettingsUISection(AboutGroupStr)] public string Version => NetworkToolsMod.Version;
 
         /// <summary>
+        ///     Persisted snap selection flags (hidden from UI).
+        /// </summary>
+        [SettingsUIHidden]
+        public int SavedSelectedSnaps { get; set; } = (int)SnapOption.All;
+
+        /// <summary>
+        ///     Persisted target selection flags (hidden from UI).
+        /// </summary>
+        [SettingsUIHidden]
+        public int SavedSelectedTargets { get; set; } = (int)TargetOption.All;
+
+        /// <summary>
+        ///     Persisted view selection flags (hidden from UI).
+        /// </summary>
+        [SettingsUIHidden]
+        public int SavedSelectedViews { get; set; } = (int)ViewOption.None;
+
+        /// <summary>
         ///     Restores mod settings to default.
         /// </summary>
         public override void SetDefaults() {
+            SavedSelectedSnaps   = (int)SnapOption.All;
+            SavedSelectedTargets = (int)TargetOption.All;
+            SavedSelectedViews   = (int)ViewOption.None;
         }
     }
 }

@@ -1,28 +1,21 @@
-﻿// <copyright file="NT_CEToolSystem.Lifecycle.cs" company="Luca Rager">
-// Copyright (c) Luca Rager. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
-// </copyright>
-
-namespace NetworkTools.Systems.Tools {
+﻿namespace NetworkTools.Systems.Tools {
     #region Using Statements
 
-    using Game.Net;
+    using Colossal.Entities;
+    using Game.Common;
     using Game.Prefabs;
-    using Game.Rendering;
-    using Game.Simulation;
-    using Game.Tools;
     using NetworkTools.Components;
     using NetworkTools.Components.Tools;
-
     using Unity.Collections;
     using Unity.Entities;
-    using Unity.Jobs;
 
     #endregion
 
     public partial class NT_SuperNodeToolSystem {
         /// <inheritdoc />
-        public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_SuperNodeTool>(prefab); }
+        public bool HasToolComponent(PrefabBase prefab) {
+            return m_PrefabSystem.HasComponent<NT_SuperNodeTool>(prefab);
+        }
 
         protected override void OnCreate() {
             base.OnCreate();
@@ -42,6 +35,7 @@ namespace NetworkTools.Systems.Tools {
             if (m_SelectedNodes.IsCreated) {
                 m_SelectedNodes.Dispose();
             }
+
             base.OnDestroy();
         }
 
@@ -54,10 +48,19 @@ namespace NetworkTools.Systems.Tools {
             MarkEligibleEntities();
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override bool FilterEligibleEntity(Entity entity) {
-            // todo
-            return true;
+            // Ensure that the node has the same owner as the others (if any are selected)
+            if (m_SelectedNodes.Length == 0) {
+                return true;
+            }
+
+            var aSelectedNode   = m_SelectedNodes[0];
+            var currentHasOwner = EntityManager.TryGetComponent<Owner>(aSelectedNode, out var existingOwner);
+            var newHasOwner     = EntityManager.TryGetComponent<Owner>(entity,        out var newOwner);
+
+            // Exclude different owner results, or different owners
+            return currentHasOwner == newHasOwner && existingOwner.m_Owner == newOwner.m_Owner;
         }
 
         protected override void OnStopRunning() {
