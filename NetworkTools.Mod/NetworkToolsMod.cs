@@ -36,6 +36,7 @@ namespace NetworkTools {
     using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
+    using NetworkTools.Systems.Tooltips;
     using NetworkTools.Systems.UI;
     using NetworkTools.Utils;
 
@@ -44,7 +45,7 @@ namespace NetworkTools {
     using Settings;
 
     using UnityEngine;
-
+    using NT_UITooltipSystem = NetworkTools.Systems.Tooltips.NT_UITooltipSystem;
     using StreamReader = System.IO.StreamReader;
 
     #endregion

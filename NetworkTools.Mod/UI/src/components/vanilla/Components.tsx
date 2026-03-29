@@ -57,6 +57,10 @@ const modulePaths = [
     {
         path: "game-ui/common/image/tinted-icon.tsx",
         components: ["TintedIcon"],
+    },
+    {
+        path: "game-ui/common/localization/localized-number.tsx",
+        components: ["LocalizedNumber"],
     }
 ];
 
@@ -116,6 +120,10 @@ const themePaths = [
     {
         path: "game-ui/common/image/tinted-icon.module.scss",
         name: "tintedIcon",
+    },
+    {
+        path: "game-ui/common/tooltip/tooltip-renderer/tooltip-renderer.module.scss",
+        name: "tooltipRenderer",
     }
 ];
 

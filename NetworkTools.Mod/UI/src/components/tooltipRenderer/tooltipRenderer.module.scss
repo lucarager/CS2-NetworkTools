@@ -27,3 +27,29 @@
     flex-direction: column;
     pointer-events: none;
 }
+
+.slopeTooltip {
+    display: flex;
+    flex-direction: row;
+
+    &__icon {
+        width: 16rem;
+        height: 16rem;
+        margin-right: 8rem;
+
+        & > img {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    &__value {
+        font-size: 14rem;
+        line-height: 16rem;
+        font-weight: 600;
+    }
+
+    &__arrow {
+        margin: 0 8rem;
+    }
+}

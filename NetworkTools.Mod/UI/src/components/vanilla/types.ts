@@ -2,6 +2,7 @@ import React, { PropsWithChildren } from "react";
 import { LocalizedString, UniqueFocusKey } from "cs2/bindings";
 import { HTMLAttributes } from "react";
 import { InfoRowProps, InfoSectionProps } from "cs2/ui";
+import { LocalizedNumberProps, LocComponent } from "cs2/l10n";
 
 export interface IVanillaComponents {
     Section: React.FC<VanillaSectionProps>;
@@ -23,6 +24,7 @@ export interface IVanillaComponents {
             displayName: any;
         };
     };
+    LocalizedNumber: LocComponent<LocalizedNumberProps>;
     [key: string]: React.FC<any> | any;
 }
 
