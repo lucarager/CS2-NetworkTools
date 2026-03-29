@@ -33,7 +33,8 @@ namespace NetworkTools.Systems.Tools.Parallel {
         /// </summary>
         internal ParallelConfig CurrentConfig = new ParallelConfig {
             HorizontalOffset = ParallelConfig.DefaultDistance,
-            HorizontalDirection     = ParallelSide.Right
+            HorizontalDirection     = ParallelSide.Right,
+            ReverseDirection        = false
         };
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
             CurrentConfig.VerticalOffset = config.VerticalOffset;
             CurrentConfig.HorizontalDirection = config.HorizontalDirection;
             CurrentConfig.VerticalDirection = config.VerticalDirection;
+            CurrentConfig.ReverseDirection = config.ReverseDirection;
             m_UpdateNeeded         = true;
         }
 

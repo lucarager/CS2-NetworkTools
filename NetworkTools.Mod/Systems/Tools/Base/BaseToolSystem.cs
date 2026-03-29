@@ -473,11 +473,8 @@
         /// </summary>
         public override bool TrySetPrefab(PrefabBase prefab) {
             // Delegate to net prefab caching if this tool supports it
-            if (this is INetPrefabCachingProvider) {
-                var result = TryCacheNetPrefab(prefab);
-                if (result.HasValue) {
-                    return result.Value;
-                }
+            if (this is INetPrefabCachingProvider && TryCacheNetPrefab(prefab)) {
+                return true;
             }
 
             // Standard tool activation via IToolPrefabProvider
@@ -503,9 +500,8 @@
         /// <returns>
         ///     <c>true</c> to consume the prefab (tool is active and should reflect the change),
         ///     <c>false</c> to reject (prefab was cached but tool is not active),
-        ///     or <c>null</c> to fall through to the standard tool-activation check.
         /// </returns>
-        public bool? TryCacheNetPrefab(PrefabBase prefab) {
+        public bool TryCacheNetPrefab(PrefabBase prefab) {
             switch (prefab) {
                 case RoadPrefab or TrackPrefab or WaterwayPrefab or PathwayPrefab:
                 {
@@ -524,9 +520,9 @@
                     m_SelectedNetPrefabEntity = laneContainer;
                     return m_ToolSystem.activeTool == this;
                 }
-                default:
-                    return null;
             }
+
+            return false;
         }
 
         public void RequestEnable() {

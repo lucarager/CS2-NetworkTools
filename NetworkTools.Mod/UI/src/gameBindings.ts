@@ -75,12 +75,14 @@ export type ParallelConfigData = {
     verticalOffset: number;
     horizontalDirection: ParallelSide;
     verticalDirection: VerticalSide;
+    reverseDirection: boolean;
 };
 export const DEFAULT_PARALLEL_CONFIG: ParallelConfigData = {
     horizontalOffset: 20,
     verticalOffset: 0,
     horizontalDirection: ParallelSide.Right,
     verticalDirection: VerticalSide.Up,
+    reverseDirection: false,
 };
 
 // Snap options (bitflags)

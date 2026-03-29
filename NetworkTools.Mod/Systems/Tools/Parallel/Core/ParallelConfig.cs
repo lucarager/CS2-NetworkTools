@@ -48,6 +48,11 @@ namespace NetworkTools.Systems.Tools.Parallel {
         public VerticalSide VerticalDirection;
 
         /// <summary>
+        ///     Whether to reverse the direction of the created network.
+        /// </summary>
+        public bool ReverseDirection;
+
+        /// <summary>
         ///     Default offset distance in world units.
         /// </summary>
         public const float DefaultDistance = 20f;
@@ -78,7 +83,8 @@ namespace NetworkTools.Systems.Tools.Parallel {
             HorizontalOffset = DefaultDistance,
             VerticalOffset = DefaultDistance,
             HorizontalDirection = ParallelSide.Right,
-            VerticalDirection = VerticalSide.Up
+            VerticalDirection = VerticalSide.Up,
+            ReverseDirection = false
         };
 
         /// <inheritdoc />
@@ -97,6 +103,9 @@ namespace NetworkTools.Systems.Tools.Parallel {
 
             writer.PropertyName("verticalDirection");
             writer.Write((int)VerticalDirection);
+
+            writer.PropertyName("reverseDirection");
+            writer.Write(ReverseDirection);
 
             writer.TypeEnd();
         }
@@ -120,6 +129,10 @@ namespace NetworkTools.Systems.Tools.Parallel {
             reader.ReadProperty("verticalDirection");
             reader.Read(out int verticalDirection);
             VerticalDirection = (VerticalSide)verticalDirection;
+
+            reader.ReadProperty("reverseDirection");
+            reader.Read(out bool reverseDirection);
+            ReverseDirection = reverseDirection;
 
             reader.ReadMapEnd();
         }

@@ -44,7 +44,7 @@ export const ParallelControls: React.FC = () => {
     const parallelConfig = useValue(GAME_BINDINGS.PARALLEL_CONFIG.binding);
     const selectedNetPrefab = useValue(GAME_BINDINGS.SELECTED_NET_PREFAB.binding);
 
-    const handleConfigChange = (param: keyof ParallelConfigData, value: number) => {
+    const handleConfigChange = (param: keyof ParallelConfigData, value: number | boolean) => {
         const newConfig: ParallelConfigData = {
             ...parallelConfig,
             [param]: value,
@@ -154,6 +154,37 @@ export const ParallelControls: React.FC = () => {
                                         handleConfigChange("verticalOffset", e);
                                     }}
                                 />
+                            </div>
+                        </div>
+                        <div className={styles.controlRow}>
+                            <div className={styles.controlRowInner}>
+                                <span className={styles.paramLabel}>Direction</span>
+                                <div className={styles.buttonRow}>
+                                    <VC.ToolButton
+                                        tooltip="Same"
+                                        className={c(VT.toolButton.button, styles.toolButton)}
+                                        src="coui://nt/Direction/Same.svg"
+                                        onSelect={() =>
+                                            handleConfigChange("reverseDirection", false)
+                                        }
+                                        selected={!parallelConfig.reverseDirection}
+                                        multiSelect={false}
+                                        disabled={false}
+                                        focusKey={VF.FOCUS_DISABLED}
+                                    />
+                                    <VC.ToolButton
+                                        tooltip="Reverse"
+                                        className={c(VT.toolButton.button, styles.toolButton)}
+                                        src="coui://nt/Direction/Opposite.svg"
+                                        onSelect={() =>
+                                            handleConfigChange("reverseDirection", true)
+                                        }
+                                        selected={parallelConfig.reverseDirection}
+                                        multiSelect={false}
+                                        disabled={false}
+                                        focusKey={VF.FOCUS_DISABLED}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -81,13 +81,30 @@
 
                     var offsetLength = MathUtils.Length(offsetBezier);
 
-                    OutputPreviewEdge(offsetStartPos,
-                                      offsetEndPos,
-                                      startRotation,
-                                      endRotation,
-                                      offsetBezier,
-                                      offsetLength,
-                                      verticalOffset);
+                    // Reverse direction if configured: swap start/end and reverse bezier
+                    if (Config.ReverseDirection) {
+                        var reversedBezier = new Bezier4x3(offsetBezier.d, offsetBezier.c, offsetBezier.b, offsetBezier.a);
+                        var reversedStartTangent  = math.normalize(MathUtils.StartTangent(reversedBezier));
+                        var reversedEndTangent    = math.normalize(MathUtils.EndTangent(reversedBezier));
+                        var reversedStartRotation = quaternion.LookRotationSafe(reversedStartTangent, math.up());
+                        var reversedEndRotation   = quaternion.LookRotationSafe(reversedEndTangent,   math.up());
+
+                        OutputPreviewEdge(offsetEndPos,
+                                          offsetStartPos,
+                                          reversedStartRotation,
+                                          reversedEndRotation,
+                                          reversedBezier,
+                                          offsetLength,
+                                          verticalOffset);
+                    } else {
+                        OutputPreviewEdge(offsetStartPos,
+                                          offsetEndPos,
+                                          startRotation,
+                                          endRotation,
+                                          offsetBezier,
+                                          offsetLength,
+                                          verticalOffset);
+                    }
                 }
 
                 cachedNodePositions.Dispose();
