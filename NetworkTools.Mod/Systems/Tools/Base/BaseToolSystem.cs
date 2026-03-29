@@ -582,6 +582,9 @@
                 m_NodeReductionSystem.Enabled = true;
             }
 
+            // Cleanup rendering state
+            m_RenderingSystem.markersVisible = false;
+
             // Cleanup handles
             CleanupHandles();
 
