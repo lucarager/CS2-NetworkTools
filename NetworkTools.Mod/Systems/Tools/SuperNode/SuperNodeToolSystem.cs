@@ -135,6 +135,8 @@
 
             UpdatePhase();
 
+            RefreshEligibility();
+
             return true;
         }
 
@@ -151,6 +153,8 @@
             m_SelectedNodes.RemoveAt(m_SelectedNodes.Length - 1);
 
             UpdatePhase();
+
+            RefreshEligibility();
 
             return true;
         }
