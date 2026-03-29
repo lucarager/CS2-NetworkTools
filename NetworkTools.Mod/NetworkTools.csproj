@@ -134,7 +134,22 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="L10N\lang\" />
+		<Folder Include="L10N\lang\" />
+		<Content Include="L10N\lang\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<EmbeddedResource Include="L10N\lang\de-DE.json" />
+		<EmbeddedResource Include="L10N\lang\en-US.json" />
+		<EmbeddedResource Include="L10N\lang\es-ES.json" />
+		<EmbeddedResource Include="L10N\lang\fr-FR.json" />
+		<EmbeddedResource Include="L10N\lang\it-IT.json" />
+		<EmbeddedResource Include="L10N\lang\ja-JP.json" />
+		<EmbeddedResource Include="L10N\lang\ko-KR.json" />
+		<EmbeddedResource Include="L10N\lang\pl-PL.json" />
+		<EmbeddedResource Include="L10N\lang\pt-PT.json" />
+		<EmbeddedResource Include="L10N\lang\ru-RU.json" />
+		<EmbeddedResource Include="L10N\lang\zh-HANS.json" />
+		<EmbeddedResource Include="L10N\lang\zh-HANT.json" />
 	</ItemGroup>
 
 	<!--Build UI-->
