@@ -13,7 +13,7 @@
 		<DebugType>portable</DebugType>
 		<DebugSymbols>true</DebugSymbols>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
-		<Version>1.1.11</Version>
+		<Version>1.1.12</Version>
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<FileVersion>$(Version).0</FileVersion>
 	</PropertyGroup>
@@ -135,7 +135,6 @@
 
 	<ItemGroup>
 	  <Folder Include="L10N\lang\" />
-	  <Folder Include="Properties\Changelog\" />
 	</ItemGroup>
 
 	<!--Build UI-->

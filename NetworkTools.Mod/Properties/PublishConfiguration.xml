@@ -17,13 +17,19 @@
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.1.11" />
+  <ModVersion Value="1.1.12" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog>UI Polish</ChangeLog>
+  <ChangeLog>- Parallel Tool: Added directionality option
+- Slope Tool: Introduced custom, unified slope tooltips instead of using two of the base game ones.
+- Supernode: Don't allow creating supernodes between networks of different owners. Fixes CTD when attempting to create a supernode that connects a road to a building's path, for example
+- All: Fixed invisible path rendering not disabling itself when exiting tools
+- All: Fixed asset glitches such as logo being overwritten
+- All: Target/View/Snap options will now remember their state when switching tools or reopening tools
+- All: Invisible paths are not targets by default now</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
