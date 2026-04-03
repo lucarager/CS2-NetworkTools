@@ -15,17 +15,12 @@ The mod uses the CS2 modding SDK with Unity ECS (Entity Component System) archit
 ## Code Style Guidelines
 
 ### Namespace & Using Statements
-- Use `#region Using Statements` to wrap using directives
 - Place namespace opening brace on same line as namespace declaration
 - Example:
 ```csharp
 namespace NetworkTools.Systems {
-    #region Using Statements
-
     using Game.Tools;
     using Unity.Entities;
-
-    #endregion
 
     public class MySystem { }
 }
@@ -74,8 +69,8 @@ private  ValidationSystem m_ValidationSystem;
 ## Project Structure
 ```
 NetworkTools/
-├── Components/          # ECS components (NT_*.cs)
-├── Extensions/          # Extension methods and utilities
+├── Components/         # ECS components (NT_*.cs)
+├── Extensions/         # Extension methods and utilities
 ├── Prefabs/            # Custom prefab definitions
 ├── Settings/           # Mod settings and localization
 ├── Systems/            # ECS systems
