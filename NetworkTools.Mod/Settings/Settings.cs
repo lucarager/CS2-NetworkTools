@@ -15,8 +15,8 @@
     ///     The mod's settings.
     /// </summary>
     [FileLocation(NetworkToolsMod.ModName)]
-    [SettingsUIGroupOrder(KeybindingsGroupStr, AboutGroupStr)]
-    [SettingsUIShowGroupName(KeybindingsGroupStr, AboutGroupStr)]
+    [SettingsUIGroupOrder(KeybindingsGroupStr, DebugGroupStr, AboutGroupStr)]
+    [SettingsUIShowGroupName(KeybindingsGroupStr, DebugGroupStr, AboutGroupStr)]
     [SettingsUIKeyboardAction(ToggleToolPanelStr, ActionType.Button, Usages.kToolUsage)]
     [SettingsUIKeyboardAction(OpenTool1Str, ActionType.Button, Usages.kToolUsage)]
     [SettingsUIKeyboardAction(OpenTool2Str, ActionType.Button, Usages.kToolUsage)]
@@ -31,6 +31,7 @@
         private const string CreditStr = "Made with <3 by Luca.";
         public const string KeybindingsGroupStr = "KeybindingsGroupStr";
         public const string AboutGroupStr = "AboutGroupStr";
+        public const string DebugGroupStr = "DebugGroupStr";
         public const string ToggleToolPanelStr = nameof(ToggleToolPanel);
         public const string OpenTool1Str = nameof(OpenTool1);
         public const string OpenTool2Str = nameof(OpenTool2);
@@ -127,6 +128,15 @@
         [SettingsUISection(AboutGroupStr)] public string Version => NetworkToolsMod.Version;
 
         /// <summary>
+        ///     Enables debug mode on the active tool system.
+        /// </summary>
+        [SettingsUISection(DebugGroupStr)]
+#if !IS_DEBUG
+        [SettingsUIHidden]
+#endif
+        public bool DebugMode { get; set; }
+
+        /// <summary>
         ///     Persisted snap selection flags (hidden from UI).
         /// </summary>
         [SettingsUIHidden]
@@ -148,6 +158,7 @@
         ///     Restores mod settings to default.
         /// </summary>
         public override void SetDefaults() {
+            DebugMode = false;
             SavedSelectedSnaps   = (int)SnapOption.All;
             SavedSelectedTargets = (int)TargetOption.All;
             SavedSelectedViews   = (int)ViewOption.None;

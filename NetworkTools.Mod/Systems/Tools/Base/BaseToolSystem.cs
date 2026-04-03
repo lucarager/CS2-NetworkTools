@@ -69,6 +69,11 @@
         public bool DisableVanillaValidation = false;
 
         /// <summary>
+        /// Global debug mode flag. 
+        /// </summary>
+        public bool DebugMode = false;
+
+        /// <summary>
         ///     Which entity type this tool marks as eligible (Node or Edge).
         ///     Set to <see cref="EligibilityTarget.Edge" /> for tools that operate on edges.
         /// </summary>
@@ -551,6 +556,7 @@
             SelectedSnaps   = settings != null ? (SnapOption)settings.SavedSelectedSnaps & AvailableSnaps : AvailableSnaps;
             SelectedTargets = settings != null ? (TargetOption)settings.SavedSelectedTargets & AvailableTargets : AvailableTargets;
             SelectedViews   = settings != null ? (ViewOption)settings.SavedSelectedViews & AvailableViews : ViewOption.None;
+            DebugMode       = settings?.DebugMode ?? false;
 
             // Reset tracking
             if (m_LastHoveredEntity.IsCreated) {
