@@ -32,48 +32,109 @@
             public required EntityCommandBuffer ECB;
 
             public void Execute() {
-                var signedDistance = Config.SignedHorizontalOffset;
+                var signedDistance  = Config.SignedHorizontalOffset;
                 var verticalOffset = Config.SignedVerticalOffset;
                 var verticalShift  = new float3(0f, verticalOffset, 0f);
+                var edgeCount      = CurrentPathEdges.Length;
 
-                // Cache offset node positions so shared nodes between adjacent edges
-                // have bit-identical values regardless of which edge computes them first
-                var cachedNodePositions = new NativeHashMap<Entity, float3>(CurrentPathNodes.Length, Allocator.Temp);
+                if (edgeCount == 0) {
+                    return;
+                }
 
-                for (var i = 0; i < CurrentPathEdges.Length; i++) {
+                // --- Phase 1: Collect path-ordered edge state ---
+                var edges = new NativeArray<ParallelEdgeState>(edgeCount, Allocator.Temp);
+
+                for (var i = 0; i < edgeCount; i++) {
                     var edgeEntity = CurrentPathEdges[i];
                     var edge       = EdgeLookup[edgeEntity];
 
                     if (!CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
+                        edges[i] = new ParallelEdgeState { IsValid = false };
                         continue;
                     }
 
-                    var existingBezier = curve.m_Bezier;
+                    var isForward = edge.m_Start == CurrentPathNodes[i];
+                    var bezier    = isForward ? curve.m_Bezier : MathUtils.Invert(curve.m_Bezier);
 
-                    // Offset bezier control points perpendicularly and vertically
-                    var offsetBezier = OffsetBezier(existingBezier, signedDistance);
-                    offsetBezier.a += verticalShift;
-                    offsetBezier.b += verticalShift;
-                    offsetBezier.c += verticalShift;
-                    offsetBezier.d += verticalShift;
+                    edges[i] = new ParallelEdgeState {
+                        EdgeEntity    = edgeEntity,
+                        PathStartNode = isForward ? edge.m_Start : edge.m_End,
+                        PathEndNode   = isForward ? edge.m_End   : edge.m_Start,
+                        IsForward     = isForward,
+                        IsValid       = true,
+                        Bezier        = bezier,
+                        Length        = MathUtils.Length(bezier)
+                    };
+                }
 
-                    // Offset node positions from the Node component (separate from bezier endpoints).
-                    // Cached per entity so that adjacent edges sharing a node get the same value.
-                    if (!cachedNodePositions.TryGetValue(edge.m_Start, out var offsetStartPos)) {
-                        var startNodePos = NodeLookup[edge.m_Start].m_Position;
-                        var startOffset  = GetPerpendicularOffset(existingBezier.a, existingBezier.b, signedDistance);
-                        offsetStartPos = startNodePos + startOffset + verticalShift;
-                        cachedNodePositions.Add(edge.m_Start, offsetStartPos);
+                // --- Phase 2: Compute offset node positions with miter at interior nodes ---
+                // Interior nodes sit at the intersection of both adjacent offset lines,
+                // preventing bezier overshoot / undershoot at sharp corners.
+                var cachedNodePositions = new NativeHashMap<Entity, float3>(CurrentPathNodes.Length, Allocator.Temp);
+
+                for (var i = 0; i < CurrentPathNodes.Length; i++) {
+                    var nodeEntity = CurrentPathNodes[i];
+                    if (cachedNodePositions.ContainsKey(nodeEntity)) {
+                        continue;
                     }
 
-                    if (!cachedNodePositions.TryGetValue(edge.m_End, out var offsetEndPos)) {
-                        var endNodePos = NodeLookup[edge.m_End].m_Position;
-                        var endOffset  = GetPerpendicularOffset(existingBezier.c, existingBezier.d, signedDistance);
-                        offsetEndPos = endNodePos + endOffset + verticalShift;
-                        cachedNodePositions.Add(edge.m_End, offsetEndPos);
+                    var nodePos = NodeLookup[nodeEntity].m_Position;
+                    var hasPrev = i > 0         && edges[i - 1].IsValid;
+                    var hasNext = i < edgeCount && edges[i].IsValid;
+
+                    float3 offset;
+
+                    if (hasPrev && hasNext) {
+                        // Interior node: miter from both adjacent edge tangents
+                        var prevBezier   = edges[i - 1].Bezier;
+                        var nextBezier   = edges[i].Bezier;
+                        var incomingPerp = GetPerpendicularOffset(prevBezier.c, prevBezier.d, 1f);
+                        var outgoingPerp = GetPerpendicularOffset(nextBezier.a, nextBezier.b, 1f);
+                        offset = ComputeMiterOffset(incomingPerp, outgoingPerp, signedDistance);
+                    } else if (hasPrev) {
+                        var prevBezier = edges[i - 1].Bezier;
+                        offset = GetPerpendicularOffset(prevBezier.c, prevBezier.d, signedDistance);
+                    } else if (hasNext) {
+                        var nextBezier = edges[i].Bezier;
+                        offset = GetPerpendicularOffset(nextBezier.a, nextBezier.b, signedDistance);
+                    } else {
+                        offset = float3.zero;
                     }
 
-                    // Rotations derived per-edge from the offset bezier tangents
+                    cachedNodePositions.Add(nodeEntity, nodePos + offset + verticalShift);
+                }
+
+                // --- Phase 3: Build offset beziers and output definitions ---
+                for (var i = 0; i < edgeCount; i++) {
+                    var state = edges[i];
+                    if (!state.IsValid) {
+                        continue;
+                    }
+
+                    var offsetStartPos = cachedNodePositions[state.PathStartNode];
+                    var offsetEndPos   = cachedNodePositions[state.PathEndNode];
+
+                    // Tangent handles are invariant under uniform perpendicular translation,
+                    // so (b − a) and (c − d) from the original bezier carry over directly.
+                    var handleB = state.Bezier.b - state.Bezier.a;
+                    var handleC = state.Bezier.c - state.Bezier.d;
+
+                    // Assemble with miter-corrected endpoints
+                    var offsetBezier = new Bezier4x3(offsetStartPos,
+                                                     offsetStartPos + handleB,
+                                                     offsetEndPos   + handleC,
+                                                     offsetEndPos);
+
+                    // Scale handles by the length ratio so curves preserve their roundness
+                    if (state.Length > 0.001f) {
+                        var newLength = MathUtils.Length(offsetBezier);
+                        var scale     = newLength / state.Length;
+                        offsetBezier = new Bezier4x3(offsetStartPos,
+                                                     offsetStartPos + handleB * scale,
+                                                     offsetEndPos   + handleC * scale,
+                                                     offsetEndPos);
+                    }
+
                     var startTangent  = math.normalize(MathUtils.StartTangent(offsetBezier));
                     var endTangent    = math.normalize(MathUtils.EndTangent(offsetBezier));
                     var startRotation = quaternion.LookRotationSafe(startTangent, math.up());
@@ -83,7 +144,7 @@
 
                     // Reverse direction if configured: swap start/end and reverse bezier
                     if (Config.ReverseDirection) {
-                        var reversedBezier = new Bezier4x3(offsetBezier.d, offsetBezier.c, offsetBezier.b, offsetBezier.a);
+                        var reversedBezier        = new Bezier4x3(offsetBezier.d, offsetBezier.c, offsetBezier.b, offsetBezier.a);
                         var reversedStartTangent  = math.normalize(MathUtils.StartTangent(reversedBezier));
                         var reversedEndTangent    = math.normalize(MathUtils.EndTangent(reversedBezier));
                         var reversedStartRotation = quaternion.LookRotationSafe(reversedStartTangent, math.up());
@@ -107,23 +168,35 @@
                     }
                 }
 
+                edges.Dispose();
                 cachedNodePositions.Dispose();
             }
 
             /// <summary>
-            ///     Offsets a bezier curve perpendicularly by the given signed distance.
-            ///     Positive = right of travel direction, Negative = left.
+            ///     Computes the miter offset for a node where two path edges meet.
+            ///     Places the node at the intersection of both perpendicular offset lines,
+            ///     clamped to ≈4× the offset distance to avoid extreme spikes at very sharp angles.
             /// </summary>
-            private static Bezier4x3 OffsetBezier(Bezier4x3 bezier, float signedDistance) {
-                var offsetA = GetPerpendicularOffset(bezier.a, bezier.b, signedDistance);
-                var offsetB = GetPerpendicularOffset(bezier.a, bezier.b, signedDistance);
-                var offsetC = GetPerpendicularOffset(bezier.c, bezier.d, signedDistance);
-                var offsetD = GetPerpendicularOffset(bezier.c, bezier.d, signedDistance);
+            /// <param name="unitPerpIncoming">Unit perpendicular of the incoming edge's end tangent.</param>
+            /// <param name="unitPerpOutgoing">Unit perpendicular of the outgoing edge's start tangent.</param>
+            /// <param name="signedDistance">Signed offset distance (positive = right of travel).</param>
+            private static float3 ComputeMiterOffset(float3 unitPerpIncoming, float3 unitPerpOutgoing, float signedDistance) {
+                var miterDir = unitPerpIncoming + unitPerpOutgoing;
+                var miterLen = math.length(miterDir);
 
-                return new Bezier4x3(bezier.a + offsetA,
-                                     bezier.b + offsetB,
-                                     bezier.c + offsetC,
-                                     bezier.d + offsetD);
+                // Near-zero sum means edges are roughly anti-parallel (≈180° turn)
+                if (miterLen < 0.001f) {
+                    return unitPerpIncoming * signedDistance;
+                }
+
+                miterDir /= miterLen;
+
+                // cos(halfAngle) determines how far along the miter direction we must
+                // travel to reach both offset lines. Clamped so the miter never exceeds
+                // ≈4× the offset distance (covers turns sharper than ≈150°).
+                var cosHalfAngle = math.max(math.dot(miterDir, unitPerpIncoming), 0.25f);
+
+                return miterDir * (signedDistance / cosHalfAngle);
             }
 
             /// <summary>
@@ -156,15 +229,14 @@
                     m_Original  = Entity.Null,
                     m_Prefab    = NetPrefabEntity,
                     m_SubPrefab = NetLanePrefabEntity,
+                    m_Flags     = CreationFlags.Construction
                 };
-
-                creationDefinition.m_Flags |= CreationFlags.SubElevation;
 
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
-                var startNodeFlags  = CoursePosFlags.IsRight;
-                var endNodeFlags    = CoursePosFlags.IsRight;
+                var startNodeFlags  = CoursePosFlags.IsLeft | CoursePosFlags.DisableMerge | CoursePosFlags.FreeHeight;
+                var endNodeFlags    = CoursePosFlags.IsLeft | CoursePosFlags.DisableMerge | CoursePosFlags.FreeHeight;
                 var startElevation  = new float2(elevation);
                 var endElevation    = new float2(elevation);
                 var courseElevation = new float2(elevation);

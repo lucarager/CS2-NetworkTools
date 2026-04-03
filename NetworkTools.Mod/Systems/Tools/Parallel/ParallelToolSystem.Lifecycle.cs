@@ -21,40 +21,16 @@ namespace NetworkTools.Systems.Tools.Parallel {
         public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_ParallelTool>(prefab); }
 
         /// <inheritdoc />
-        public bool? TryCacheNetPrefab(PrefabBase prefab) {
-            switch (prefab) {
-                case RoadPrefab or TrackPrefab or WaterwayPrefab or PathwayPrefab: 
-                {
-                    m_SelectedNetPrefab           = (NetPrefab)prefab;
-                    m_SelectedNetPrefabEntity     = m_PrefabSystem.GetEntity(m_SelectedNetPrefab);
-                    m_SelectedNetLanePrefab       = null;
-                    m_SelectedNetLanePrefabEntity = Entity.Null;
-                    return m_ToolSystem.activeTool == this;
-                }
-                case NetLanePrefab netLanePrefab:
-                {
-                    m_SelectedNetLanePrefab       = netLanePrefab;
-                    m_SelectedNetLanePrefabEntity = m_PrefabSystem.GetEntity(netLanePrefab);
-                    var foundContainers = GetContainers(m_ContainerQuery, out var laneContainer, out _);
-                    m_SelectedNetPrefab       = null;
-                    m_SelectedNetPrefabEntity = laneContainer;
-                    return m_ToolSystem.activeTool == this;
-                }
-                default:
-                    return null;
-            }
-        }
-
-        /// <inheritdoc />
         protected override void OnCreate() {
             base.OnCreate();
 
             m_Log.Prefix = nameof(NT_ParallelToolSystem);
 
             // Configuration
-            RenderEligibleNodes = true;
-            RenderHandles = true;
-            DisableVanillaValidation = true;
+            RenderEligibleNodes         = true;
+            RenderHandles               = true;
+            DisableVanillaValidation    = true;
+            DisableVanillaNodeReduction = true;
 
             // Initialize selection state (base class NativeLists)
             InitializeSelectionState();
