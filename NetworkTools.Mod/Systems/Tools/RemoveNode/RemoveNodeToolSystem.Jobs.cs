@@ -183,7 +183,7 @@
                 // CreationDefinition - use first edge's prefab
                 var creationDefinition = new CreationDefinition {
                     m_Original = edge1Entity,
-                    m_Flags    = CreationFlags.Parent | CreationFlags.Recreate
+                    m_Flags    = CreationFlags.Parent
                 };
 
                 if (PrefabRefLookup.TryGetComponent(edge1Entity, out var prefabRef)) {

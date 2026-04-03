@@ -6,9 +6,11 @@
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Colossal.Entities;
     using Colossal.Logging;
 
     using Game;
+    using Game.Buildings;
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
@@ -25,24 +27,50 @@
         ///     Logger instance
         /// </summary>
         private PrefixedLogger m_Log;
-        private EntityQuery m_NodesToProcessQuery;
+        private EntityQuery          m_EntitiesToProcessQuery;
+        private EntityArchetype      m_RoadConnectionEventArchetype;
+        private ModificationBarrier4 m_ModificationBarrier4;
 
         protected override void OnCreate() {
             base.OnCreate();
 
-            m_NodesToProcessQuery = SystemAPI.QueryBuilder().WithAll<NT_PostProcess, Node>().Build();
+            m_ModificationBarrier4 = World.GetOrCreateSystemManaged<ModificationBarrier4>();
 
-            RequireForUpdate(m_NodesToProcessQuery);
+            m_EntitiesToProcessQuery = SystemAPI.QueryBuilder().WithAll<NT_PostProcess>().Build();
+
+            m_RoadConnectionEventArchetype = base.EntityManager.CreateArchetype(new ComponentType[]
+{
+                ComponentType.ReadWrite<Event>(),
+                ComponentType.ReadWrite<RoadConnectionUpdated>()
+});
+
+            RequireForUpdate(m_EntitiesToProcessQuery);
         }
 
         /// <inheritdoc />
         protected override void OnUpdate() {
-            foreach (var nodeEntity in m_NodesToProcessQuery.ToEntityArray(Allocator.Temp)) {
-                var connectedEdges = EntityManager.GetBuffer<ConnectedEdge>(nodeEntity);
+            var ECB = m_ModificationBarrier4.CreateCommandBuffer();
 
-                if (connectedEdges.Length == 0) {
-                    EntityManager.AddComponent<Deleted>(nodeEntity);
+            foreach (var nodeEntity in m_EntitiesToProcessQuery.ToEntityArray(Allocator.Temp)) {
+                var postProcess = EntityManager.GetComponentData<NT_PostProcess>(nodeEntity);
+
+                switch (postProcess.Operation) {
+                    case NT_PostProcessOperation.DeleteNode:
+                        if (EntityManager.TryGetBuffer<ConnectedEdge>(nodeEntity, true, out var connectedEdges) && 
+                            connectedEdges.Length == 0) {
+                            ECB.AddComponent<Deleted>(nodeEntity);
+                        }
+
+                        break;
+
+                    case NT_PostProcessOperation.DeleteEdge:
+                        break;
+
+                    case NT_PostProcessOperation.UpdateEdge:
+                        break;
                 }
+
+                EntityManager.RemoveComponent<NT_PostProcess>(nodeEntity);
             }
         }
     }

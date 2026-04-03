@@ -118,7 +118,7 @@
 
                     // When applying, mark all nodes that will be shifted for post-processing
                     if (OutputMode == ToolOutputMode.Apply) {
-                        ECB.AddComponent(nodeEntity, new NT_PostProcess());
+                        ECB.AddComponent(nodeEntity, new NT_PostProcess { Operation = NT_PostProcessOperation.DeleteNode });
                     }
                 }
             }

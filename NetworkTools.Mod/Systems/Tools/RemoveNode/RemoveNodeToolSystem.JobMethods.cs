@@ -16,7 +16,7 @@ namespace NetworkTools.Systems.Tools {
     #endregion
 
     public partial class NT_RemoveNodeToolSystem {
-        private JobHandle UpdateDefinitions(JobHandle inputDeps, ToolOutputMode outputMode) {
+        private JobHandle ScheduleDefinitionsJob(JobHandle inputDeps, ToolOutputMode outputMode) {
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
             var createDefinitionJobHandle = new CreateDefinitionJob
@@ -58,7 +58,7 @@ namespace NetworkTools.Systems.Tools {
 
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
-            inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Preview);
+            inputDeps = ScheduleDefinitionsJob(inputDeps, ToolOutputMode.Preview);
 
             // Reset the flag after processing
             m_UpdateNeeded = false;
@@ -79,12 +79,14 @@ namespace NetworkTools.Systems.Tools {
             }
 
             applyMode = ApplyMode.Apply;
-            inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Apply);
+            var jobHandle = ScheduleDefinitionsJob(inputDeps, ToolOutputMode.Apply);
+
+            jobHandle.Complete();
 
             // Clear state to completely blank
             Phase = OperationPhase.Idle;
 
-            return inputDeps;
+            return jobHandle;
         }
     }
 }

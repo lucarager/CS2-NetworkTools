@@ -10,6 +10,19 @@ namespace NetworkTools.Components {
 
     #endregion
 
+    /// <summary>
+    ///     The kind of post-processing operation to perform.
+    /// </summary>
+    public enum NT_PostProcessOperation {
+        DeleteNode,
+        DeleteEdge,
+        UpdateEdge,
+    }
+
+    /// <summary>
+    ///     Marks an entity for post-processing after a tool action.
+    /// </summary>
     public struct NT_PostProcess : IComponentData {
+        public NT_PostProcessOperation Operation;
     }
 }

@@ -15,6 +15,8 @@
                 return inputDeps;
             }
 
+            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
+
             // If both are null, we fall back to the prefab of the first edge's start node
             if (m_SelectedNetPrefabEntity == Entity.Null && m_SelectedNetLanePrefabEntity == Entity.Null) {
                 var firstEdge = EntityManager.GetComponentData<Edge>(m_CurrentPathEdges[0]);
@@ -55,7 +57,6 @@
 
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             inputDeps = ScheduleDefinitionsJob(inputDeps, ToolOutputMode.Preview);
 
             // Reset the flag after processing
@@ -72,7 +73,6 @@
 
         private JobHandle Apply(JobHandle inputDeps) {
             applyMode = ApplyMode.Apply;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             var jobHandle = ScheduleDefinitionsJob(inputDeps, ToolOutputMode.Apply);
 
             jobHandle.Complete();
