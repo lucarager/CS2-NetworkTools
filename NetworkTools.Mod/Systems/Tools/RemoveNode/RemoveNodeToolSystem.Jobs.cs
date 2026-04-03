@@ -12,6 +12,7 @@
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
+    using UnityEngine;
 
     #endregion
 
@@ -34,6 +35,7 @@
             [ReadOnly] public required TerrainHeightData                 TerrainHeight;
             [ReadOnly] public required OverlayRenderSystem.Buffer        RenderBuffer;
             [ReadOnly] public required ToolOutputMode                    OutputMode;
+            [ReadOnly] public required bool                              DebugMode;
             public required            EntityCommandBuffer               ECB;
 
             public void Execute() {
@@ -85,6 +87,21 @@
                 ProcessNewCurveDef(nodeEntity, edge1, edge2, curve1, curve2, edge1Entity);
                 // Delete the redundant edge
                 ProcessEdgeDeletionDef(edge2Entity, edge2);
+
+                if (DebugMode) {
+                    // Debug: New Curve
+                    var newBezier = ComputeMergedBezier(nodeEntity, edge1, curve1, edge2, curve2);
+                    RenderBuffer.DrawCurve(Color.blue, newBezier, 1f);
+
+                    // Debug: Original curve that will be retained
+                    RenderBuffer.DrawCurve(Color.yellow, curve1.m_Bezier, 1f);
+
+                    // Debug: Original curve that will be removed
+                    RenderBuffer.DrawDashedCurve(Color.yellow, curve2.m_Bezier, 1f, 1f, 1f);
+
+                    // Debug: Node that will be removed
+                    RenderBuffer.DrawCircle(Color.red, NodeLookup[nodeEntity].m_Position, 2f);
+                }
             }
 
             private void OutputApply(Entity edge1Entity, Entity edge2Entity, Entity nodeEntity, Edge edge1,
@@ -92,9 +109,9 @@
                 // Create the new merged curve (as a new edge)
                 ProcessNewCurveDef(nodeEntity, edge1, edge2, curve1, curve2, edge1Entity);
                 // Delete the redundant edge
-                ProcessEdgeDeletionDef(edge2Entity, edge2);
+                //ProcessEdgeDeletionDef(edge2Entity, edge2);
                 // Delete the node
-                ECB.AddComponent(nodeEntity, new Deleted());
+                //ECB.AddComponent(nodeEntity, new Deleted());
             }
             
             /// <summary>
@@ -219,11 +236,31 @@
                                                   Curve  curve1,
                                                   Edge   edge2,
                                                   Curve  curve2) {
-                // Orient each curve so .a is at the neighbor end (pointing away from the removed node).
-                var b1 = edge1.m_Start == nodeEntity ? MathUtils.Invert(curve1.m_Bezier) : curve1.m_Bezier;
-                var b2 = edge2.m_End   == nodeEntity ? MathUtils.Invert(curve2.m_Bezier) : curve2.m_Bezier;
+                // Orient each curve so that b flows away from the node and a flows towards the node. 
+                var bezier1 = edge1.m_Start == nodeEntity ? MathUtils.Invert(curve1.m_Bezier) : curve1.m_Bezier;
+                var bezier2 = edge2.m_End   == nodeEntity ? MathUtils.Invert(curve2.m_Bezier) : curve2.m_Bezier;
 
-                return new Bezier4x3 { a = b1.a, b = b1.b, c = b2.c, d = b2.d };
+                // Tangent Directions
+                var tanStart = math.normalize((bezier1.b - bezier1.a));
+                var tanEnd = math.normalize((bezier2.c - bezier2.d));
+
+                // Calculate Heuristic Handle Length
+                var lengthA = math.distance(bezier1.a, bezier1.b);
+                var lengthB = math.distance(bezier2.c, bezier2.d);
+
+                // The new handles should generally be longer to account for the larger span
+                // Attempted heuristic is (original_handle_length + distance_between_curves / 2)
+                var totalDist = math.distance(bezier1.a, bezier2.d);
+                var q1Length = lengthA + (totalDist * 0.1f);
+                var q2Length = lengthB + (totalDist * 0.1f);
+
+                // New control points
+                var q0 = bezier1.a;
+                var q3 = bezier2.d;
+                var q1 = q0 + tanStart * q1Length;
+                var q2 = q3 + tanEnd * q2Length;
+
+                return new Bezier4x3 { a = q0, b = q1, c = q2, d = q3 };
             }
         }
     }

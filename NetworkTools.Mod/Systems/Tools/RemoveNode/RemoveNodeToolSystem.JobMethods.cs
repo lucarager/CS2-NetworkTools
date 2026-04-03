@@ -31,6 +31,7 @@ namespace NetworkTools.Systems.Tools {
                 ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 TerrainHeight          = m_TerrainSystem.GetHeightData(false),
                 ECB                    = m_Barrier.CreateCommandBuffer(),
+                DebugMode              = DebugMode,
                 RenderBuffer           = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle),
                 OutputMode = outputMode,
             }.Schedule(JobHandle.CombineDependencies(
@@ -49,7 +50,7 @@ namespace NetworkTools.Systems.Tools {
                 return inputDeps;
             }
 
-            if (!m_UpdateNeeded)
+            if (!m_UpdateNeeded && !DebugMode)
             {
                 applyMode = ApplyMode.None;
                 return inputDeps;
@@ -58,6 +59,10 @@ namespace NetworkTools.Systems.Tools {
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
             inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Preview);
+
+            // Reset the flag after processing
+            m_UpdateNeeded = false;
+
             return inputDeps;
         }
 
@@ -74,7 +79,6 @@ namespace NetworkTools.Systems.Tools {
             }
 
             applyMode = ApplyMode.Apply;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Apply);
 
             // Clear state to completely blank

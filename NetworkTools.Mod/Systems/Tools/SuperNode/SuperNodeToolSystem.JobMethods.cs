@@ -39,6 +39,7 @@
                 SelectedNodeSet        = selectedNodeSet,
                 ProcessedEdges         = processedEdges,
                 ECB                    = m_Barrier.CreateCommandBuffer(),
+                DebugMode              = DebugMode,
                 RenderBuffer           = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle),
                 OutputMode             = outputMode
             }.Schedule(JobHandle.CombineDependencies(inputDeps,
@@ -57,14 +58,13 @@
         private JobHandle Update(JobHandle inputDeps) {
             // Check if we can reuse existing temp entities
             // This will be true if the selected nodes and operation config didn't change
-            if (!m_UpdateNeeded) {
+            if (!m_UpdateNeeded && !DebugMode) {
                 applyMode = ApplyMode.None;
                 return inputDeps;
             }
 
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Preview);
 
             // Reset the flag after processing
@@ -81,7 +81,6 @@
 
         private JobHandle Apply(JobHandle inputDeps) {
             applyMode = ApplyMode.Apply;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Apply);
 
             inputDeps.Complete();

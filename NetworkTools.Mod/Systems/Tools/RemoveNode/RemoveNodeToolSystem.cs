@@ -32,8 +32,6 @@ namespace NetworkTools.Systems.Tools {
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
 
-            m_UpdateNeeded = false;
-
             // Right click => Cancel / Deselect
             if (m_SecondaryApplyAction.WasPressedThisFrame())
             {

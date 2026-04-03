@@ -115,7 +115,6 @@ namespace NetworkTools.Systems.Tools {
 
 
             applyMode = ApplyMode.Apply;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Apply);
 
             // Clear state to completely blank

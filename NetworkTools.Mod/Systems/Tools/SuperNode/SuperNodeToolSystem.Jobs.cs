@@ -14,6 +14,8 @@
     using Unity.Jobs;
     using Unity.Mathematics;
 
+    using UnityEngine;
+
     #endregion
 
     public partial class NT_SuperNodeToolSystem {
@@ -37,6 +39,7 @@
             [ReadOnly] public required ToolOutputMode                    OutputMode;
             [ReadOnly] public required NativeList<Entity>                SelectedNodeEntities;
             [ReadOnly] public required NativeHashSet<Entity>             SelectedNodeSet;
+            [ReadOnly] public required bool DebugMode;
             public required            NativeHashSet<Entity>             ProcessedEdges;
             public required            EntityCommandBuffer               ECB;
 
@@ -68,6 +71,14 @@
                         // Mark any edge that connects two of our selected nodes as deleted
                         if (SelectedNodeSet.Contains(isStartNode ? edge.m_End : edge.m_Start)) {
                             ProcessEdgeDeletionDef(edgeEntity, edge);
+
+                            if (DebugMode) {
+                                // Debug: Draw the deleted edge in red
+                                var curveOfDeletedEdge = CurveLookup[edgeEntity];
+                                RenderBuffer.DrawDashedCurve(Color.red, curveOfDeletedEdge.m_Bezier, 1f, 1f, 1f);
+
+                            }
+
                             continue;
                         }
 
