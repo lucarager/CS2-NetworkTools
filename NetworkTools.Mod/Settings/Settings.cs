@@ -27,6 +27,7 @@
     [SettingsUIKeyboardAction(OpenTool7Str, ActionType.Button, Usages.kToolUsage)]
     [SettingsUIKeyboardAction(OpenTool8Str, ActionType.Button, Usages.kToolUsage)]
     [SettingsUIKeyboardAction(OpenTool9Str, ActionType.Button, Usages.kToolUsage)]
+    [SettingsUIKeyboardAction(ApplyTransformationStr, ActionType.Button, Usages.kToolUsage)]
     public class NT_Settings : ModSetting {
         private const string CreditStr = "Made with <3 by Luca.";
         public const string KeybindingsGroupStr = "KeybindingsGroupStr";
@@ -42,6 +43,7 @@
         public const string OpenTool7Str = nameof(OpenTool7);
         public const string OpenTool8Str = nameof(OpenTool8);
         public const string OpenTool9Str = nameof(OpenTool9);
+        public const string ApplyTransformationStr = nameof(ApplyTransformation);
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="NT_Settings" /> class.
@@ -91,6 +93,10 @@
         [SettingsUISection(KeybindingsGroupStr)]
         [SettingsUIKeyboardBinding(BindingKeyboard.Digit9, OpenTool9Str, shift: true)]
         public ProxyBinding OpenTool9 { get; set; }
+
+        [SettingsUISection(KeybindingsGroupStr)]
+        [SettingsUIKeyboardBinding(BindingKeyboard.Enter, ApplyTransformationStr)]
+        public ProxyBinding ApplyTransformation { get; set; }
 
 
         [SettingsUISection(AboutGroupStr)]

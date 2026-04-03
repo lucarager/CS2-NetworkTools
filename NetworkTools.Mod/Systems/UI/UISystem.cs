@@ -69,6 +69,7 @@
         private ProxyAction                              m_OpenTool7Action;
         private ProxyAction                              m_OpenTool8Action;
         private ProxyAction                              m_OpenTool9Action;
+        private ProxyAction                              m_ApplyTransformationAction;
 
         private EntityQuery                          m_ToolPrefabQuery;
         private ToolSystem                            m_ToolSystem;
@@ -131,6 +132,7 @@
             m_OpenTool7Action       = NetworkToolsMod.Instance.Settings.GetAction(NT_Settings.OpenTool7Str);
             m_OpenTool8Action       = NetworkToolsMod.Instance.Settings.GetAction(NT_Settings.OpenTool8Str);
             m_OpenTool9Action       = NetworkToolsMod.Instance.Settings.GetAction(NT_Settings.OpenTool9Str);
+            m_ApplyTransformationAction = NetworkToolsMod.Instance.Settings.GetAction(NT_Settings.ApplyTransformationStr);
 
             m_ToolPrefabQuery = SystemAPI.QueryBuilder()
                                          .WithAll<Components.NT_ToolData>()
@@ -147,6 +149,7 @@
             m_OpenTool7Action.shouldBeEnabled       = true;
             m_OpenTool8Action.shouldBeEnabled       = true;
             m_OpenTool9Action.shouldBeEnabled       = true;
+            m_ApplyTransformationAction.shouldBeEnabled = true;
         }
 
         protected override void OnDestroy() {
@@ -161,6 +164,7 @@
             m_OpenTool7Action.shouldBeEnabled       = false;
             m_OpenTool8Action.shouldBeEnabled       = false;
             m_OpenTool9Action.shouldBeEnabled       = false;
+            m_ApplyTransformationAction.shouldBeEnabled = false;
             base.OnDestroy();
         }
 

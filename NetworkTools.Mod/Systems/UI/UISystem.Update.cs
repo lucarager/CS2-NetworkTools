@@ -152,6 +152,10 @@ namespace NetworkTools.Systems.UI {
                 if (m_OpenTool9Action.WasPerformedThisFrame()) {
                     HandleSelectTool("Grid");
                 }
+
+                if (m_ApplyTransformationAction.WasPerformedThisFrame()) {
+                    HandleRequestApply();
+                }
             }
 
             base.OnUpdate();
