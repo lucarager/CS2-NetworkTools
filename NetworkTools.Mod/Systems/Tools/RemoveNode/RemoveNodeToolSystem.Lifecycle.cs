@@ -33,9 +33,10 @@ namespace NetworkTools.Systems.Tools {
             m_Log.Prefix = nameof(NT_RemoveNodeToolSystem);
 
             // Configuration
-            RenderEligibleNodes        = true;
-            DisableVanillaValidation   = true;
-            UseCustomEligibilityFilter = true;
+            RenderEligibleNodes         = true;
+            DisableVanillaValidation    = true;
+            DisableVanillaNodeReduction = true;
+            UseCustomEligibilityFilter  = true;
         }
 
         protected override void OnStartRunning() {

@@ -30,6 +30,7 @@
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
                 EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),
+                UpgradedLookup         = SystemAPI.GetComponentLookup<Upgraded>(true),
                 TempLookup             = SystemAPI.GetComponentLookup<Temp>(true),
                 PrefabRefLookup        = SystemAPI.GetComponentLookup<PrefabRef>(true),
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),

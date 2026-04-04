@@ -25,6 +25,7 @@ namespace NetworkTools.Systems.Tools {
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
                 EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),
+                UpgradedLookup         = SystemAPI.GetComponentLookup<Upgraded>(true),
                 TempLookup             = SystemAPI.GetComponentLookup<Temp>(true),
                 PrefabRefLookup        = SystemAPI.GetComponentLookup<PrefabRef>(true),
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
@@ -33,7 +34,7 @@ namespace NetworkTools.Systems.Tools {
                 ECB                    = m_Barrier.CreateCommandBuffer(),
                 DebugMode              = DebugMode,
                 RenderBuffer           = m_OverlayRenderSystem.GetBuffer(out var renderBufferJobHandle),
-                OutputMode = outputMode,
+                OutputMode             = outputMode,
             }.Schedule(JobHandle.CombineDependencies(
                            inputDeps,
                            renderBufferJobHandle

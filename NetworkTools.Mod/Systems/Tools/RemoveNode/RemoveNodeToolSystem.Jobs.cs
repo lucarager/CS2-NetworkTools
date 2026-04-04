@@ -30,6 +30,7 @@
             [ReadOnly] public required ComponentLookup<Edge>             EdgeLookup;
             [ReadOnly] public required ComponentLookup<Temp>             TempLookup;
             [ReadOnly] public required ComponentLookup<PrefabRef>        PrefabRefLookup;
+            [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<PseudoRandomSeed> PseudoRandomSeedLookup;
             [ReadOnly] public required BufferLookup<ConnectedEdge>       ConnectedEdgeLookup;
             [ReadOnly] public required TerrainHeightData                 TerrainHeight;
@@ -86,6 +87,7 @@
                 // Create the new merged curve (as a new edge)
                 ProcessNewCurveDef(nodeEntity, edge1, edge2, curve1, curve2, edge1Entity);
                 // Delete the redundant edge
+                ProcessEdgeDeletionDef(edge1Entity, edge1);
                 ProcessEdgeDeletionDef(edge2Entity, edge2);
 
                 if (DebugMode) {
@@ -105,15 +107,16 @@
             }
 
             private void OutputApply(Entity edge1Entity, Entity edge2Entity, Entity nodeEntity, Edge edge1,
-                           Edge edge2, Curve curve1, Curve curve2) {
+                                     Edge   edge2,       Curve  curve1,      Curve  curve2) {
                 // Create the new merged curve (as a new edge)
                 ProcessNewCurveDef(nodeEntity, edge1, edge2, curve1, curve2, edge1Entity);
                 // Delete the redundant edge
-                //ProcessEdgeDeletionDef(edge2Entity, edge2);
+                ProcessEdgeDeletionDef(edge1Entity, edge1);
+                ProcessEdgeDeletionDef(edge2Entity, edge2);
                 // Delete the node
                 //ECB.AddComponent(nodeEntity, new Deleted());
             }
-            
+
             /// <summary>
             ///     Processes the edge definition for deletion.
             /// </summary>
@@ -182,9 +185,14 @@
 
                 // CreationDefinition - use first edge's prefab
                 var creationDefinition = new CreationDefinition {
-                    m_Original = edge1Entity,
-                    m_Flags    = CreationFlags.Parent
+                    //m_Original = edge1Entity,
+                    m_Prefab = PrefabRefLookup[edge1Entity].m_Prefab,
+                    m_Flags  = CreationFlags.Parent | CreationFlags.Recreate | CreationFlags.Upgrade
                 };
+
+                if (UpgradedLookup.TryGetComponent(edge1Entity, out var upgraded)) {
+                    ECB.AddComponent(definitionEntity, upgraded);
+                }
 
                 if (PrefabRefLookup.TryGetComponent(edge1Entity, out var prefabRef)) {
                     creationDefinition.m_Prefab = new PrefabRef(prefabRef.m_Prefab);
@@ -242,7 +250,7 @@
 
                 // Tangent Directions
                 var tanStart = math.normalize((bezier1.b - bezier1.a));
-                var tanEnd = math.normalize((bezier2.c - bezier2.d));
+                var tanEnd   = math.normalize((bezier2.c - bezier2.d));
 
                 // Calculate Heuristic Handle Length
                 var lengthA = math.distance(bezier1.a, bezier1.b);
@@ -251,14 +259,14 @@
                 // The new handles should generally be longer to account for the larger span
                 // Attempted heuristic is (original_handle_length + distance_between_curves / 2)
                 var totalDist = math.distance(bezier1.a, bezier2.d);
-                var q1Length = lengthA + (totalDist * 0.1f);
-                var q2Length = lengthB + (totalDist * 0.1f);
+                var q1Length  = lengthA + (totalDist * 0.1f);
+                var q2Length  = lengthB + (totalDist * 0.1f);
 
                 // New control points
                 var q0 = bezier1.a;
                 var q3 = bezier2.d;
                 var q1 = q0 + tanStart * q1Length;
-                var q2 = q3 + tanEnd * q2Length;
+                var q2 = q3 + tanEnd   * q2Length;
 
                 return new Bezier4x3 { a = q0, b = q1, c = q2, d = q3 };
             }

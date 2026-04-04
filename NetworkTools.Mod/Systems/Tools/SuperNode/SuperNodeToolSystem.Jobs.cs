@@ -2,19 +2,24 @@
     #region Using Statements
 
     using Colossal.Mathematics;
+
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+
     using NetworkTools.Components;
+
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
 
     using UnityEngine;
+
+    using static Colossal.IO.AssetDatabase.AtlasFrame;
 
     #endregion
 
@@ -27,7 +32,8 @@
         /// </summary>
         private struct CreateDefinitionJob : IJob {
             [ReadOnly] public required NativeReference<Entity>           HoveredNode;
-            [ReadOnly] public required ComponentLookup<Node>             NodeLookup;
+            [ReadOnly] public required ComponentLookup<Node> NodeLookup;
+            [ReadOnly] public required ComponentLookup<Upgraded> UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
             [ReadOnly] public required ComponentLookup<Edge>             EdgeLookup;
             [ReadOnly] public required ComponentLookup<Temp>             TempLookup;
@@ -104,6 +110,9 @@
                             endNodePos    = nodePosition;
                         }
 
+                        // Also delete this edge now
+                        ProcessEdgeDeletionDef(edgeEntity, edge);
+
                         OutputPreviewEdge(edgeEntity,
                                           startNodeEntity,
                                           endNodeEntity,
@@ -166,13 +175,17 @@
                 var definitionEntity = ECB.CreateEntity();
 
                 var creationDefinition = new CreationDefinition {
-                    m_Original = roadEntity,
+                    //m_Original = roadEntity,
                     m_Prefab   = prefabEntity,
-                    m_Flags    = CreationFlags.Recreate | CreationFlags.Parent
+                    m_Flags    = CreationFlags.Parent | CreationFlags.Recreate | CreationFlags.Upgrade
                 };
 
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
+
+                if (UpgradedLookup.TryGetComponent(roadEntity, out var upgraded)) {
+                    ECB.AddComponent<Upgraded>(definitionEntity, upgraded);
+                }
 
                 var startNodeFlags  = CoursePosFlags.IsRight;
                 var endNodeFlags    = CoursePosFlags.IsRight;
