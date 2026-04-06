@@ -1,6 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
+namespace NetworkTools.Systems.Tools {
     using Colossal.Entities;
     using Game.Common;
     using Game.Prefabs;
@@ -8,8 +6,6 @@
     using NetworkTools.Components.Tools;
     using Unity.Collections;
     using Unity.Entities;
-
-    #endregion
 
     public partial class NT_SuperNodeToolSystem {
         /// <inheritdoc />

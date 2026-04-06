@@ -1,12 +1,10 @@
-﻿// <copyright file="NT_NodeSelectionToolSystem.cs" company="Luca Rager">
+// <copyright file="NT_NodeSelectionToolSystem.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license
 // information.
 // </copyright>
 
 namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
@@ -15,8 +13,6 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
-
-    #endregion
 
     public partial class NT_AddNodeToolSystem {
         private JobHandle UpdateDefinitions(JobHandle inputDeps, ToolOutputMode outputMode) {

@@ -4,8 +4,6 @@
 // </copyright>
 
 namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
     using Colossal.Entities;
     using Colossal.Mathematics;
     using Game.Common;
@@ -21,8 +19,6 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
-
-    #endregion
 
     /// <summary>
     /// Slide Node Tool — allows dragging an intermediate node along the parent bezier

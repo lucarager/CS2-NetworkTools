@@ -9,7 +9,6 @@ import {
 } from "gameBindings";
 import { useValue } from "cs2/api";
 import { Button } from "cs2/ui";
-import { NodeSelection } from "../shared/nodeSelection";
 import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
 

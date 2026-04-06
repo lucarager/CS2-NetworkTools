@@ -51,20 +51,38 @@ namespace NetworkTools.Systems.Tools.Connect {
 
             m_Log.Debug($"OnHandleDragging: key={link.Key}, handlePos={handlePos}");
 
-            // Compute delta before updating config (need previous position)
-            var previousPos = GetConfigPosition(link.Key);
+            if (EntityManager.HasComponent<NT_HandleCircle>(handle)) {
+                HandleCircleDrag(handle, link.Key, handlePos);
+            } else {
+                HandlePositionDrag(handle, link.Key, handlePos);
+            }
+
+            m_UpdateNeeded = true;
+        }
+
+        /// <summary>
+        /// Handles dragging for position-based handles.
+        /// Computes delta, updates config, and propagates movement to child handles.
+        /// </summary>
+        private void HandlePositionDrag(Entity handle, int key, float3 handlePos) {
+            var previousPos = GetConfigPosition(key);
             var delta = handlePos - previousPos;
 
-            // Update config for the dragged handle
-            ApplyConfigPosition(link.Key, handlePos);
+            ApplyConfigPosition(key, handlePos);
 
-            // Propagate delta to child handles and update their configs
             if (math.lengthsq(delta) > 0f) {
                 PropagateToChildren(handle, delta);
                 ApplyChildConfigs(handle);
             }
+        }
 
-            m_UpdateNeeded = true;
+        /// <summary>
+        /// Handles dragging for circle handles.
+        /// Delegates to the base class for ECS updates and writes the computed radius to the config.
+        /// </summary>
+        private void HandleCircleDrag(Entity handle, int key, float3 dragPos) {
+            var center = CurrentConfig.LoopControlPointPosition;
+            CurrentConfig.LoopRadius = UpdateCircleHandleRadius(handle, center);
         }
 
         /// <summary>

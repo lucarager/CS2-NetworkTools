@@ -1,16 +1,12 @@
-﻿// <copyright file="NT_ToolPrefab.cs" company="Luca Rager">
+// <copyright file="NT_ToolPrefab.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
 namespace Game.Prefabs {
-    #region Using Statements
-
     using System.Collections.Generic;
     using Colossal.UI.Binding;
     using Unity.Entities;
-
-    #endregion
 
     public class NT_ToolPrefab : PrefabBase, IJsonWritable {
         public string Id;

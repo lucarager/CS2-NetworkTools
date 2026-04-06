@@ -4,11 +4,7 @@
 // </copyright>
 
 namespace NetworkTools.Components {
-    #region Using Statements
-
     using Unity.Entities;
-
-    #endregion
 
     /// <summary>
     /// Component marking the first node in a two-node selection.

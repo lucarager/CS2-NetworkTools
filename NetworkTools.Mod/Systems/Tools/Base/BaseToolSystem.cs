@@ -1,6 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
+namespace NetworkTools.Systems.Tools {
     using System.Collections.Generic;
     using Game.Common;
     using Game.Input;
@@ -14,8 +12,6 @@
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
-
-    #endregion
 
 
     /// <summary>

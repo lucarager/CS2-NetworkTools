@@ -1,6 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
+namespace NetworkTools.Systems.Tools {
     using Game.Common;
     using Game.Net;
     using Game.Notifications;
@@ -10,8 +8,6 @@
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
-
-    #endregion
 
     /// <summary>
     ///     Represents the current selection state of path-based tools.

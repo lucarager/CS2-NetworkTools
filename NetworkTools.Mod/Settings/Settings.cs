@@ -1,6 +1,4 @@
-﻿namespace NetworkTools.Settings {
-    #region Using Statements
-
+namespace NetworkTools.Settings {
     using System;
     using Colossal.IO.AssetDatabase;
     using Game.Input;
@@ -8,8 +6,6 @@
     using Game.Settings;
     using NetworkTools.Systems.Tools;
     using UnityEngine;
-
-    #endregion
 
     /// <summary>
     ///     The mod's settings.

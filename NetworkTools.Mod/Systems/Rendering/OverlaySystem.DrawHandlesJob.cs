@@ -1,6 +1,4 @@
-﻿namespace NetworkTools.Systems {
-    #region Using Statements
-
+namespace NetworkTools.Systems {
     using System.Diagnostics.CodeAnalysis;
     using Colossal.Mathematics;
     using Game.Net;
@@ -13,8 +11,6 @@
     using Unity.Entities;
     using Unity.Mathematics;
     using UnityEngine;
-
-    #endregion
 
     public partial class NT_OverlaySystem {
         /// <summary>

@@ -4,11 +4,7 @@
 // </copyright>
 
 namespace NetworkTools.Components.Tools {
-    #region Using Statements
-
     using Unity.Entities;
-
-    #endregion
 
     /// <summary>
     ///     Component marker for the Shape Slope tool prefab.

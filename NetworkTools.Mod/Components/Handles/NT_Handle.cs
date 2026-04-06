@@ -1,16 +1,12 @@
-﻿// <copyright file="NT_Handle.cs" company="Luca Rager">
+// <copyright file="NT_Handle.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
 namespace NetworkTools.Components.Handles {
-    #region Using Statements
-
     using System;
 
     using Unity.Entities;
-
-    #endregion
 
     /// <summary>
     /// Flags defining the type and purpose of a handle.

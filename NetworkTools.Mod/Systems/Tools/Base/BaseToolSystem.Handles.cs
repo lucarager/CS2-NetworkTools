@@ -1,6 +1,4 @@
 namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
     using System.Collections.Generic;
 
     using NetworkTools.Components;
@@ -12,8 +10,6 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Mathematics;
     using UnityEngine;
     using UnityEngine.InputSystem;
-
-    #endregion
 
     /// <summary>
     ///     Tracks the current handle input interaction state.
@@ -627,6 +623,33 @@ namespace NetworkTools.Systems.Tools {
                 circle.Center = newPos;
                 EntityManager.SetComponentData(handleEntity, circle);
             }
+        }
+
+        /// <summary>
+        ///     Updates a circle handle's radius based on the XZ distance from the drag position
+        ///     to the specified center, and resets the handle's position back to the center.
+        /// </summary>
+        /// <param name="handleEntity">The circle handle entity being dragged.</param>
+        /// <param name="center">The center point to measure radius from.</param>
+        /// <returns>The newly computed radius.</returns>
+        protected float UpdateCircleHandleRadius(Entity handleEntity, float3 center) {
+            var dragPos = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
+            var newRadius = math.distance(center.xz, dragPos.xz);
+
+            // Reset handle position back to center (UpdateHandleDragPosition moved it to drag point)
+            EntityManager.SetComponentData(handleEntity,
+                                           new NT_HandlePosition {
+                                               Position = center,
+                                               Rotation = quaternion.identity
+                                           });
+
+            // Update circle component: fix center and apply new radius
+            var circle = EntityManager.GetComponentData<NT_HandleCircle>(handleEntity);
+            circle.Center = center;
+            circle.Radius = newRadius;
+            EntityManager.SetComponentData(handleEntity, circle);
+
+            return newRadius;
         }
 
         /// <summary>

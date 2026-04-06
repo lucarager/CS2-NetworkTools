@@ -4,13 +4,9 @@
 // </copyright>
 
 namespace NetworkTools.Components.Handles {
-    #region Using Statements
-
     using System;
     using Unity.Entities;
     using Unity.Mathematics;
-
-    #endregion
 
     /// <summary>
     /// Flags defining movement constraints for handles.

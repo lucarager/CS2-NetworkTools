@@ -4,11 +4,7 @@
 // </copyright>
 
 namespace NetworkTools.Components {
-    #region Using Statements
-
     using System;
-
-    #endregion
 
     /// <summary>
     /// Render mode flags for highlighted/selected nodes.

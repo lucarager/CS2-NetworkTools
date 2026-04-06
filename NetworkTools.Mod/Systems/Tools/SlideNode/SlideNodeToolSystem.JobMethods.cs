@@ -4,8 +4,6 @@
 // </copyright>
 
 namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
     using Colossal.Mathematics;
     using Game.Common;
     using Game.Net;
@@ -15,8 +13,6 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
-
-    #endregion
 
     public partial class NT_SlideNodeToolSystem {
         private JobHandle UpdateDefinitions(JobHandle inputDeps, ToolOutputMode outputMode) {

@@ -4,12 +4,8 @@
 // </copyright>
 
 namespace NetworkTools.Components.Handles {
-    #region Using Statements
-
     using Unity.Entities;
     using Unity.Mathematics;
-
-    #endregion
 
     /// <summary>
     /// Data for a line handle representing two connected points.

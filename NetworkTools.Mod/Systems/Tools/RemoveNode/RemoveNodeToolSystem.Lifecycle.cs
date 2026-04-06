@@ -1,11 +1,9 @@
-﻿// <copyright file="NT_CEToolSystem.Lifecycle.cs" company="Luca Rager">
+// <copyright file="NT_CEToolSystem.Lifecycle.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
 namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
     using System.Collections.Generic;
 
     using Game.Input;
@@ -20,8 +18,6 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
-
-    #endregion
 
     public partial class NT_RemoveNodeToolSystem {
         /// <inheritdoc />

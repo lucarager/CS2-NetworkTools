@@ -1,6 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
+namespace NetworkTools.Systems.Tools {
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
@@ -8,8 +6,6 @@
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
-
-    #endregion
 
     public partial class NT_SuperNodeToolSystem {
         private JobHandle UpdateDefinitions(JobHandle inputDeps, ToolOutputMode outputMode) {

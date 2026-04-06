@@ -1,6 +1,4 @@
-﻿namespace NetworkTools.Systems {
-    #region Using Statements
-
+namespace NetworkTools.Systems {
     using System.Collections.Generic;
     using Colossal.Serialization.Entities;
     using Game;
@@ -9,8 +7,6 @@
     using NetworkTools.Utils;
     using Unity.Entities;
     using UnityEngine;
-
-    #endregion
 
     public partial class NT_PrefabsCreateSystem : GameSystemBase {
         /// <summary>

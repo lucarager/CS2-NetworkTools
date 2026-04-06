@@ -1,6 +1,4 @@
-﻿namespace NetworkTools.Systems {
-    #region Using Statements
-
+namespace NetworkTools.Systems {
     using Game;
     using Game.Common;
     using Game.Net;
@@ -12,8 +10,6 @@
     using NetworkTools.Utils;
     using Unity.Entities;
     using Unity.Jobs;
-
-    #endregion
 
     /// <summary>
     ///     Overlay Rendering System.

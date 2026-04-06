@@ -4,11 +4,7 @@
 // </copyright>
 
 namespace NetworkTools.Components {
-    #region Using Statements
-
     using Unity.Entities;
-
-    #endregion
 
     /// <summary>
     /// Component marking a node as eligible for selection based on current selection state.

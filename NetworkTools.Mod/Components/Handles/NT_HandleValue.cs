@@ -4,11 +4,7 @@
 // </copyright>
 
 namespace NetworkTools.Components.Handles {
-    #region Using Statements
-
     using Unity.Entities;
-
-    #endregion
 
     /// <summary>
     /// Scalar value data for parameter handles.
