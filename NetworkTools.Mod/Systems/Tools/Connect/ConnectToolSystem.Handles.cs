@@ -119,6 +119,9 @@ namespace NetworkTools.Systems.Tools.Connect {
                 case HandleKeys.CurveEndPointPosition:
                     CurrentConfig.CurveEndPointPosition = position;
                     break;
+                case HandleKeys.LoopControlPointPosition:
+                    CurrentConfig.LoopControlPointPosition = position;
+                    break;
             }
         }
     }
