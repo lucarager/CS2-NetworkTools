@@ -282,7 +282,7 @@ namespace NetworkTools {
                 Log.Debug("Reading localizations");
 
                 foreach (var localeID in GameManager.instance.localizationManager.GetSupportedLocales()) {
-                    var resourceName = $"{thisAssembly.GetName().Name}.lang.{localeID}.json";
+                    var resourceName = $"{thisAssembly.GetName().Name}.L10N.lang.{localeID}.json";
                     if (resourceNames.Contains(resourceName)) {
                         Log.Debug($"Found localization file {resourceName}");
                         try {
