@@ -1,11 +1,9 @@
-﻿// <copyright file="Mod.cs" company="Luca Rager">
+// <copyright file="Mod.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
 namespace NetworkTools {
-    #region Using Statements
-
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -47,8 +45,6 @@ namespace NetworkTools {
     using UnityEngine;
     using NT_UITooltipSystem = NetworkTools.Systems.Tooltips.NT_UITooltipSystem;
     using StreamReader = System.IO.StreamReader;
-
-    #endregion
 
     /// <summary>
     /// Mod entry point.
@@ -167,6 +163,8 @@ namespace NetworkTools {
             // Rendering
             updateSystem.UpdateAt<NT_OverlaySystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<CustomOverlayRenderSystem>(SystemUpdatePhase.Rendering);
+            // Debug Tools
+            updateSystem.UpdateBefore<NT_DebugSystem>(SystemUpdatePhase.Deserialize);
 
             // Harmony
             InitializeHarmonyPatches();
