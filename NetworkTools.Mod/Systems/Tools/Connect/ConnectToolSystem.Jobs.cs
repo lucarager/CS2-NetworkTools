@@ -72,6 +72,12 @@
             }
 
             private void OutputApply(NativeList<CurveDef> curves) {
+                // Output selected edges
+                for (var i = 0; i < curves.Length; i++)
+                {
+                    var curve = curves[i];
+                    OutputPreviewEdge(curve);
+                }
             }
 
             private void OutputPreviewEdge(CurveDef curve) {
