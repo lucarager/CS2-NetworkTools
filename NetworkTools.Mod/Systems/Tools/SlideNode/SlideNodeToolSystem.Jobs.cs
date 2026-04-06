@@ -49,7 +49,7 @@ namespace NetworkTools.Systems.Tools {
                 }
 
                 // Recover the parent bezier from the two child edges
-                var parentBezier = ComputeMergedBezier(NodeEntity, edge1, curve1, edge2, curve2);
+                var parentBezier = NT_EdgeUtils.ComputeSimpleMergedBezier(NodeEntity, edge1, curve1, edge2, curve2);
                 ParentBezier.Value = parentBezier;
 
                 // Calculate endpoint constraints based on neighbor connectivity
@@ -84,23 +84,6 @@ namespace NetworkTools.Systems.Tools {
 
                 SnappedCurvePosition.Value = clampedPosition;
                 SnappedHitPosition.Value = MathUtils.Position(parentBezier, clampedPosition);
-            }
-
-            /// <summary>
-            /// Recovers the parent bezier from two child edges meeting at a node.
-            /// Orients curves so .a points away from the shared node, then merges outer control points.
-            /// </summary>
-            private static Bezier4x3 ComputeMergedBezier(
-                Entity nodeEntity,
-                Edge edge1,
-                Curve curve1,
-                Edge edge2,
-                Curve curve2) {
-                // Orient each curve so .a is at the neighbor end (pointing away from the shared node)
-                var b1 = edge1.m_Start == nodeEntity ? MathUtils.Invert(curve1.m_Bezier) : curve1.m_Bezier;
-                var b2 = edge2.m_End == nodeEntity ? MathUtils.Invert(curve2.m_Bezier) : curve2.m_Bezier;
-
-                return new Bezier4x3 { a = b1.a, b = b1.b, c = b2.c, d = b2.d };
             }
         }
 

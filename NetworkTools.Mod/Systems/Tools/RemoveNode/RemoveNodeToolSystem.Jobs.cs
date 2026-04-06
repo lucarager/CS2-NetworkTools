@@ -1,6 +1,4 @@
 ﻿namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
     using Colossal.Mathematics;
     using Game.Common;
     using Game.Net;
@@ -8,13 +6,12 @@
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+    using NetworkTools.Systems.Tools.Utils;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
     using UnityEngine;
-
-    #endregion
 
     public partial class NT_RemoveNodeToolSystem {
 #if BURST
@@ -92,7 +89,7 @@
 
                 if (DebugMode) {
                     // Debug: New Curve
-                    var newBezier = ComputeMergedBezier(nodeEntity, edge1, curve1, edge2, curve2);
+                    var newBezier = NT_EdgeUtils.ComputeMergedBezier(nodeEntity, edge1, curve1, edge2, curve2);
                     RenderBuffer.DrawCurve(Color.blue, newBezier, 1f);
 
                     // Debug: Original curve that will be retained
@@ -174,7 +171,7 @@
 
                 // Compute the new bezier curve that connects neighbor1 to neighbor2
                 // by retaining the original control points from each edge
-                var newBezier = ComputeMergedBezier(nodeEntity,
+                var newBezier = NT_EdgeUtils.ComputeMergedBezier(nodeEntity,
                                                     edge1,
                                                     curve1,
                                                     edge2,
@@ -234,41 +231,6 @@
                 };
 
                 ECB.AddComponent(definitionEntity, netCourse);
-            }
-
-            /// <summary>
-            ///     Computes a merged bezier curve connecting two neighbor nodes.
-            /// </summary>
-            private Bezier4x3 ComputeMergedBezier(Entity nodeEntity,
-                                                  Edge   edge1,
-                                                  Curve  curve1,
-                                                  Edge   edge2,
-                                                  Curve  curve2) {
-                // Orient each curve so that b flows away from the node and a flows towards the node. 
-                var bezier1 = edge1.m_Start == nodeEntity ? MathUtils.Invert(curve1.m_Bezier) : curve1.m_Bezier;
-                var bezier2 = edge2.m_End   == nodeEntity ? MathUtils.Invert(curve2.m_Bezier) : curve2.m_Bezier;
-
-                // Tangent Directions
-                var tanStart = math.normalize((bezier1.b - bezier1.a));
-                var tanEnd   = math.normalize((bezier2.c - bezier2.d));
-
-                // Calculate Heuristic Handle Length
-                var lengthA = math.distance(bezier1.a, bezier1.b);
-                var lengthB = math.distance(bezier2.c, bezier2.d);
-
-                // The new handles should generally be longer to account for the larger span
-                // Attempted heuristic is (original_handle_length + distance_between_curves / 2)
-                var totalDist = math.distance(bezier1.a, bezier2.d);
-                var q1Length  = lengthA + (totalDist * 0.1f);
-                var q2Length  = lengthB + (totalDist * 0.1f);
-
-                // New control points
-                var q0 = bezier1.a;
-                var q3 = bezier2.d;
-                var q1 = q0 + tanStart * q1Length;
-                var q2 = q3 + tanEnd   * q2Length;
-
-                return new Bezier4x3 { a = q0, b = q1, c = q2, d = q3 };
             }
         }
     }

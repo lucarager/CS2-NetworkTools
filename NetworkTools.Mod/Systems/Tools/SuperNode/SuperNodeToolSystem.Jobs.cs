@@ -1,27 +1,17 @@
 ﻿namespace NetworkTools.Systems.Tools {
-    #region Using Statements
-
     using Colossal.Mathematics;
-
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
-
     using NetworkTools.Components;
-
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
-
     using UnityEngine;
-
-    using static Colossal.IO.AssetDatabase.AtlasFrame;
-
-    #endregion
 
     public partial class NT_SuperNodeToolSystem {
 #if BURST
@@ -32,8 +22,8 @@
         /// </summary>
         private struct CreateDefinitionJob : IJob {
             [ReadOnly] public required NativeReference<Entity>           HoveredNode;
-            [ReadOnly] public required ComponentLookup<Node> NodeLookup;
-            [ReadOnly] public required ComponentLookup<Upgraded> UpgradedLookup;
+            [ReadOnly] public required ComponentLookup<Node>             NodeLookup;
+            [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
             [ReadOnly] public required ComponentLookup<Edge>             EdgeLookup;
             [ReadOnly] public required ComponentLookup<Temp>             TempLookup;
@@ -45,7 +35,7 @@
             [ReadOnly] public required ToolOutputMode                    OutputMode;
             [ReadOnly] public required NativeList<Entity>                SelectedNodeEntities;
             [ReadOnly] public required NativeHashSet<Entity>             SelectedNodeSet;
-            [ReadOnly] public required bool DebugMode;
+            [ReadOnly] public required bool                              DebugMode;
             public required            NativeHashSet<Entity>             ProcessedEdges;
             public required            EntityCommandBuffer               ECB;
 
@@ -82,7 +72,6 @@
                                 // Debug: Draw the deleted edge in red
                                 var curveOfDeletedEdge = CurveLookup[edgeEntity];
                                 RenderBuffer.DrawDashedCurve(Color.red, curveOfDeletedEdge.m_Bezier, 1f, 1f, 1f);
-
                             }
 
                             continue;
@@ -127,7 +116,8 @@
 
                     // When applying, mark all nodes that will be shifted for post-processing
                     if (OutputMode == ToolOutputMode.Apply) {
-                        ECB.AddComponent(nodeEntity, new NT_PostProcess { Operation = NT_PostProcessOperation.DeleteNode });
+                        ECB.AddComponent(nodeEntity,
+                                         new NT_PostProcess { Operation = NT_PostProcessOperation.DeleteNode });
                     }
                 }
             }
@@ -176,15 +166,15 @@
 
                 var creationDefinition = new CreationDefinition {
                     //m_Original = roadEntity,
-                    m_Prefab   = prefabEntity,
-                    m_Flags    = CreationFlags.Parent | CreationFlags.Recreate | CreationFlags.Upgrade
+                    m_Prefab = prefabEntity,
+                    m_Flags  = CreationFlags.Parent | CreationFlags.Recreate | CreationFlags.Upgrade
                 };
 
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
                 if (UpgradedLookup.TryGetComponent(roadEntity, out var upgraded)) {
-                    ECB.AddComponent<Upgraded>(definitionEntity, upgraded);
+                    ECB.AddComponent(definitionEntity, upgraded);
                 }
 
                 var startNodeFlags  = CoursePosFlags.IsRight;
