@@ -24,7 +24,7 @@ namespace NetworkTools {
     using Game.Modding;
     using Game.Rendering;
     using Game.SceneFlow;
-
+    using Game.Serialization;
     using HarmonyLib;
     using NetworkTools.Components.Tools;
     using NetworkTools.L10N;
@@ -164,7 +164,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_OverlaySystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<CustomOverlayRenderSystem>(SystemUpdatePhase.Rendering);
             // Debug Tools
-            updateSystem.UpdateBefore<NT_DebugSystem>(SystemUpdatePhase.Deserialize);
+            //updateSystem.UpdateBefore<NT_DebugSystem, ElectricityGraphSystem>(SystemUpdatePhase.Deserialize);
 
             // Harmony
             InitializeHarmonyPatches();
