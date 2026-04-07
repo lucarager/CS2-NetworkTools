@@ -17,15 +17,16 @@
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.1.13" />
+  <ModVersion Value="1.1.14" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog>- Parallel Tool: Reworked the way networks are generated, which should fix certain directionality and curvature issues.
-- Remove Node Tool: Reworked the way the tool generates edges, which should fix utilities getting disconnected
-- SuperNode Tool: Reworked the way the tool generates edges, which should fix utilities getting disconnected</ChangeLog>
+  <ChangeLog>- Translations: Include translation files in the build process
+- Internal: Compute directionality smartly based on node status, will be used for connect tool
+- Internal: Fix dragging of circle handles
+- Internal: Code cleanup</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
