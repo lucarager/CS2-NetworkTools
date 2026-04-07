@@ -43,7 +43,7 @@ namespace NetworkTools.Systems.Tools.Connect {
 
         /// <summary>
         /// Called each frame while dragging a handle.
-        /// Updates the config position fields and propagates movement to child handles.
+        /// Dispatches to the appropriate handler based on handle type.
         /// </summary>
         protected override void OnHandleDragging(Entity handle) {
             var link = EntityManager.GetComponentData<NT_HandleLink>(handle);
@@ -52,7 +52,7 @@ namespace NetworkTools.Systems.Tools.Connect {
             m_Log.Debug($"OnHandleDragging: key={link.Key}, handlePos={handlePos}");
 
             if (EntityManager.HasComponent<NT_HandleCircle>(handle)) {
-                HandleCircleDrag(handle, link.Key, handlePos);
+                HandleCircleDrag(handle);
             } else {
                 HandlePositionDrag(handle, link.Key, handlePos);
             }
@@ -61,55 +61,16 @@ namespace NetworkTools.Systems.Tools.Connect {
         }
 
         /// <summary>
-        /// Handles dragging for position-based handles.
-        /// Computes delta, updates config, and propagates movement to child handles.
-        /// </summary>
-        private void HandlePositionDrag(Entity handle, int key, float3 handlePos) {
-            var previousPos = GetConfigPosition(key);
-            var delta = handlePos - previousPos;
-
-            ApplyConfigPosition(key, handlePos);
-
-            if (math.lengthsq(delta) > 0f) {
-                PropagateToChildren(handle, delta);
-                ApplyChildConfigs(handle);
-            }
-        }
-
-        /// <summary>
         /// Handles dragging for circle handles.
         /// Delegates to the base class for ECS updates and writes the computed radius to the config.
         /// </summary>
-        private void HandleCircleDrag(Entity handle, int key, float3 dragPos) {
+        private void HandleCircleDrag(Entity handle) {
             var center = CurrentConfig.LoopControlPointPosition;
             CurrentConfig.LoopRadius = UpdateCircleHandleRadius(handle, center);
         }
 
-        /// <summary>
-        /// Syncs config positions for all children of the given parent handle.
-        /// </summary>
-        private void ApplyChildConfigs(Entity parentHandle) {
-            for (var i = 0; i < m_Handles.Length; i++) {
-                var child = m_Handles[i];
-                if (!EntityManager.HasComponent<NT_HandleParent>(child)) {
-                    continue;
-                }
-
-                var parentComponent = EntityManager.GetComponentData<NT_HandleParent>(child);
-                if (parentComponent.Parent != parentHandle) {
-                    continue;
-                }
-
-                var childLink = EntityManager.GetComponentData<NT_HandleLink>(child);
-                var childPos = EntityManager.GetComponentData<NT_HandlePosition>(child).Position;
-                ApplyConfigPosition(childLink.Key, childPos);
-            }
-        }
-
-        /// <summary>
-        /// Gets the current config position for a handle key.
-        /// </summary>
-        private float3 GetConfigPosition(int key) {
+        /// <inheritdoc />
+        protected override float3 GetHandleConfigPosition(int key) {
             return key switch {
                 HandleKeys.CurveStartPointPosition        => CurrentConfig.CurveStartPointPosition,
                 HandleKeys.CurveStartControlPointPosition => CurrentConfig.CurveStartControlPointPosition,
@@ -120,10 +81,8 @@ namespace NetworkTools.Systems.Tools.Connect {
             };
         }
 
-        /// <summary>
-        /// Writes a position to the config field identified by the handle key.
-        /// </summary>
-        private void ApplyConfigPosition(int key, float3 position) {
+        /// <inheritdoc />
+        protected override void ApplyHandleConfigPosition(int key, float3 position) {
             switch (key) {
                 case HandleKeys.CurveStartPointPosition:
                     CurrentConfig.CurveStartPointPosition = position;

@@ -653,6 +653,50 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
+        ///     Handles dragging for position-based handles.
+        ///     Computes the delta from the previous config position, updates the config,
+        ///     propagates movement to child handles, and syncs their config positions.
+        /// </summary>
+        /// <param name="handle">The position handle entity being dragged.</param>
+        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
+        /// <param name="handlePos">The handle's current world position.</param>
+        protected void HandlePositionDrag(Entity handle, int key, float3 handlePos) {
+            var previousPos = GetHandleConfigPosition(key);
+            var delta = handlePos - previousPos;
+
+            ApplyHandleConfigPosition(key, handlePos);
+
+            if (math.lengthsq(delta) > 0f) {
+                PropagateToChildren(handle, delta);
+                SyncChildConfigPositions(handle);
+            }
+        }
+
+        /// <summary>
+        ///     Syncs config positions for all children of the given parent handle
+        ///     by reading each child's current position and writing it to the config
+        ///     via <see cref="ApplyHandleConfigPosition"/>.
+        /// </summary>
+        /// <param name="parentHandle">The parent handle whose children should be synced.</param>
+        protected void SyncChildConfigPositions(Entity parentHandle) {
+            for (var i = 0; i < m_Handles.Length; i++) {
+                var child = m_Handles[i];
+                if (!EntityManager.HasComponent<NT_HandleParent>(child)) {
+                    continue;
+                }
+
+                var parentComponent = EntityManager.GetComponentData<NT_HandleParent>(child);
+                if (parentComponent.Parent != parentHandle) {
+                    continue;
+                }
+
+                var childLink = EntityManager.GetComponentData<NT_HandleLink>(child);
+                var childPos  = EntityManager.GetComponentData<NT_HandlePosition>(child).Position;
+                ApplyHandleConfigPosition(childLink.Key, childPos);
+            }
+        }
+
+        /// <summary>
         ///     Applies movement constraints to compute a new position.
         /// </summary>
         private float3 ApplyConstrainedMovement(float3 currentPos, NT_HandleConstraints constraints) {
@@ -799,6 +843,26 @@ namespace NetworkTools.Systems.Tools {
         #endregion
 
         #region Virtual Hooks
+
+        /// <summary>
+        ///     Returns the current config position for a handle key.
+        ///     Override in derived tools to map handle keys to config fields.
+        /// </summary>
+        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
+        /// <returns>The position stored in the tool's config, or <see cref="float3.zero"/> if unmapped.</returns>
+        protected virtual float3 GetHandleConfigPosition(int key) {
+            return float3.zero;
+        }
+
+        /// <summary>
+        ///     Writes a position to the config field identified by the handle key.
+        ///     Override in derived tools to map handle keys to config fields.
+        /// </summary>
+        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
+        /// <param name="position">The new position value.</param>
+        protected virtual void ApplyHandleConfigPosition(int key, float3 position) {
+            // Override in derived tools
+        }
 
         /// <summary>
         ///     Called when a handle drag operation starts.
