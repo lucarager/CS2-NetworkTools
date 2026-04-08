@@ -169,6 +169,10 @@
                 var neighbor1 = edge1.m_Start == nodeEntity ? edge1.m_End : edge1.m_Start;
                 var neighbor2 = edge2.m_Start == nodeEntity ? edge2.m_End : edge2.m_Start;
 
+                // Since we're "copying" edge1, determine if it's forward or backward relative to the node being removed
+                // In the new curve, m_Start should remain in the same position, while m_End becomes the new node of the new bezier
+                var isForward = edge1.m_End == nodeEntity;
+
                 // Compute the new bezier curve that connects neighbor1 to neighbor2
                 // by retaining the original control points from each edge
                 var newBezier = NT_EdgeUtils.ComputeMergedBezier(nodeEntity,
@@ -203,15 +207,20 @@
                 ECB.AddComponent<Updated>(definitionEntity);
 
                 // Create NetCourse component
+                var startNode = isForward ? neighbor1 : neighbor2;
+                var endNode = isForward ? neighbor2 : neighbor1;
+                var bezier = isForward ? newBezier : MathUtils.Invert(newBezier);
+                var length = MathUtils.Length(bezier);
+
                 var netCourse = new NetCourse {
-                    m_Curve      = newBezier,
-                    m_Length     = MathUtils.Length(newBezier),
+                    m_Curve      = bezier,
+                    m_Length     = length,
                     m_FixedIndex = -1,
                     m_Elevation  = default,
                     m_StartPosition = new CoursePos {
-                        m_Entity        = neighbor1,
-                        m_Position      = newBezier.a,
-                        m_Rotation      = NetUtils.GetNodeRotation(MathUtils.StartTangent(newBezier)),
+                        m_Entity        = startNode,
+                        m_Position      = bezier.a,
+                        m_Rotation      = NetUtils.GetNodeRotation(MathUtils.StartTangent(bezier)),
                         m_CourseDelta   = 0,
                         m_Elevation     = default,
                         m_Flags         = CoursePosFlags.IsFirst,
@@ -219,9 +228,9 @@
                         m_SplitPosition = 0
                     },
                     m_EndPosition = new CoursePos {
-                        m_Entity        = neighbor2,
-                        m_Position      = newBezier.d,
-                        m_Rotation      = NetUtils.GetNodeRotation(MathUtils.EndTangent(newBezier)),
+                        m_Entity        = endNode,
+                        m_Position      = bezier.d,
+                        m_Rotation      = NetUtils.GetNodeRotation(MathUtils.EndTangent(bezier)),
                         m_CourseDelta   = 1,
                         m_Elevation     = default,
                         m_Flags         = CoursePosFlags.IsLast,
