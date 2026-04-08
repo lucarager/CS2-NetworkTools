@@ -21,6 +21,7 @@
             [ReadOnly] public required ToolOutputMode     OutputMode;
             [ReadOnly] public required NativeList<Entity> SelectedNodeEntities;
             [ReadOnly] public required Entity             PrefabEntity;
+            [ReadOnly] public required Entity NetLanePrefabEntity;
 
             [ReadOnly] public required ComponentLookup<Node>             NodeLookup;
             [ReadOnly] public required ComponentLookup<PrefabRef>        PrefabRefLookup;
@@ -86,14 +87,15 @@
                 var creationDefinition = new CreationDefinition {
                     m_Original = Entity.Null,
                     m_Prefab = PrefabEntity,
-                    m_Flags = CreationFlags.Recreate | CreationFlags.Parent
+                    m_SubPrefab = NetLanePrefabEntity,
+                    m_Flags = CreationFlags.Construction
                 };
 
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
-                var startNodeFlags = CoursePosFlags.IsRight;
-                var endNodeFlags = CoursePosFlags.IsRight;
+                var startNodeFlags = CoursePosFlags.IsRight | CoursePosFlags.FreeHeight;
+                var endNodeFlags = CoursePosFlags.IsRight | CoursePosFlags.FreeHeight;
                 var startElevation = float2.zero;
                 var endElevation = float2.zero;
                 var courseElevation = float2.zero;

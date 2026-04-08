@@ -22,7 +22,11 @@
                 return inputDeps;
             }
 
-            if (m_SelectedNetPrefabEntity == Entity.Null) {
+            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
+
+            // If both are null, we fall back to the prefab of the first edge's start node
+            if (m_SelectedNetPrefabEntity == Entity.Null && m_SelectedNetLanePrefabEntity == Entity.Null)
+            {
                 var prefabRef = EntityManager.GetComponentData<PrefabRef>(m_SelectedNodes[0]);
                 m_SelectedNetPrefab = m_PrefabSystem.GetPrefab<NetPrefab>(prefabRef);
                 m_SelectedNetPrefabEntity = prefabRef.m_Prefab;
@@ -33,6 +37,7 @@
                 Config = CurrentConfig,
                 SelectedNodeEntities = m_SelectedNodes,
                 PrefabEntity = m_SelectedNetPrefabEntity,
+                NetLanePrefabEntity = m_SelectedNetLanePrefabEntity,
                 OutputMode = outputMode,
 
                 // Lookups needed for output and intersection adjustments
@@ -62,7 +67,6 @@
 
             // Recreate temp entities
             applyMode = ApplyMode.Clear;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             inputDeps = ScheduleDefinitionsJob(inputDeps, ToolOutputMode.Preview);
 
             // Reset the flag after processing
@@ -78,9 +82,10 @@
         }
 
         private JobHandle Apply(JobHandle inputDeps) {
-            applyMode = ApplyMode.Clear;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
+            applyMode = ApplyMode.Apply;
             var jobHandle = ScheduleDefinitionsJob(inputDeps, ToolOutputMode.Apply);
+
+            jobHandle.Complete();
 
             ResetToIdle();
 

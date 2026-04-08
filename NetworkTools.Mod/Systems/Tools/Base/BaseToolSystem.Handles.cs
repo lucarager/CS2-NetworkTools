@@ -338,7 +338,7 @@ namespace NetworkTools.Systems.Tools {
                     def.Key,
                     def.Position,
                     def.Value,
-                    default,
+                    new float3(0f, 1f, 0f),
                     def.TypeFlags);
             }
 
@@ -373,6 +373,13 @@ namespace NetworkTools.Systems.Tools {
                 var childPos = EntityManager.GetComponentData<NT_HandlePosition>(child);
                 childPos.Position += delta;
                 EntityManager.SetComponentData(child, childPos);
+
+                // Keep circle handle center in sync with position for hit detection
+                if (EntityManager.HasComponent<NT_HandleCircle>(child)) {
+                    var circle = EntityManager.GetComponentData<NT_HandleCircle>(child);
+                    circle.Center += delta;
+                    EntityManager.SetComponentData(child, circle);
+                }
             }
         }
 

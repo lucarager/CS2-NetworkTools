@@ -18,7 +18,7 @@
             // Place loop center perpendicular to start direction (to the right)
             var right = new float3(config.StartDirection.z, 0f, -config.StartDirection.x);
             config.LoopControlPointPosition = config.StartPosition + config.StartDirection * distance + right * distance;
-            config.LoopRadius = distance;
+            config.LoopRadius = distance * 2/3;
         }
 
         public void GenerateConnection(
