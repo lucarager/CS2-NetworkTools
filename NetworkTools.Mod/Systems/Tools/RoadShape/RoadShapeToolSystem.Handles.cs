@@ -15,22 +15,15 @@
     using Unity.Collections;
 
     public partial class NT_RoadShapeToolSystem {
-        /// <summary>
-        /// Called each frame while dragging a handle.
-        /// Converts handle world position to parameter value (0-0.5) for ease handles.
-        /// </summary>
-        protected override void OnHandleDragging(Entity handle) {
-            var link = EntityManager.GetComponentData<NT_HandleLink>(handle);
-            var handlePos = EntityManager.GetComponentData<NT_HandlePosition>(handle).Position;
+        /// <inheritdoc />
+        protected override void OnPositionHandleDragged(Entity handle, int key, float3 position) {
+            m_Log.Debug($"OnPositionHandleDragged: key={key}, position={position}");
 
-            m_Log.Debug($"OnHandleDragging: key={link.Key}, handlePos={handlePos}");
-
-            switch (link.Key)
-            {
+            switch (key) {
                 case HandleKeys.EaseInLength:
                     var easeInAxis = GetHandleConstraintAxisXZ(handle, m_ShapeTransformContext.StartPosition, m_ShapeTransformContext.EndPosition);
                     var easeInParam = CalculateEaseParameter(
-                        handlePos,
+                        position,
                         m_ShapeTransformContext.StartPosition,
                         m_ShapeTransformContext.EndPosition,
                         easeInAxis);
@@ -41,7 +34,7 @@
                 case HandleKeys.EaseOutLength:
                     var easeOutAxis = GetHandleConstraintAxisXZ(handle, m_ShapeTransformContext.EndPosition, m_ShapeTransformContext.StartPosition);
                     var easeOutParam = CalculateEaseParameter(
-                        handlePos,
+                        position,
                         m_ShapeTransformContext.EndPosition,
                         m_ShapeTransformContext.StartPosition,
                         easeOutAxis);
@@ -49,8 +42,6 @@
                     ShapeTransformConfig.EaseOutLength = easeOutParam;
                     break;
             }
-
-            m_UpdateNeeded = true;
         }
 
         /// <summary>

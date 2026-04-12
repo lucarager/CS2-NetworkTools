@@ -72,14 +72,10 @@
 
 
                 // For now, no difference between preview and apply - both create the same definition entities
-                if (OutputMode == ToolOutputMode.Preview) {
-                    OutputPreview(edge1Entity, edge2Entity, nodeEntity, edge1, edge2, curve1, curve2);
-                } else {
-                    OutputApply(edge1Entity, edge2Entity, nodeEntity, edge1, edge2, curve1, curve2);
-                }
+                Output(edge1Entity, edge2Entity, nodeEntity, edge1, edge2, curve1, curve2);
             }
 
-            private void OutputPreview(Entity edge1Entity, Entity edge2Entity, Entity nodeEntity, Edge edge1,
+            private void Output(Entity edge1Entity, Entity edge2Entity, Entity nodeEntity, Edge edge1,
                                        Edge   edge2,       Curve  curve1,      Curve  curve2) {
                 // Create the new merged curve (as a new edge)
                 ProcessNewCurveDef(nodeEntity, edge1, edge2, curve1, curve2, edge1Entity);
@@ -101,17 +97,6 @@
                     // Debug: Node that will be removed
                     RenderBuffer.DrawCircle(Color.red, NodeLookup[nodeEntity].m_Position, 2f);
                 }
-            }
-
-            private void OutputApply(Entity edge1Entity, Entity edge2Entity, Entity nodeEntity, Edge edge1,
-                                     Edge   edge2,       Curve  curve1,      Curve  curve2) {
-                // Create the new merged curve (as a new edge)
-                ProcessNewCurveDef(nodeEntity, edge1, edge2, curve1, curve2, edge1Entity);
-                // Delete the redundant edge
-                ProcessEdgeDeletionDef(edge1Entity, edge1);
-                ProcessEdgeDeletionDef(edge2Entity, edge2);
-                // Delete the node
-                //ECB.AddComponent(nodeEntity, new Deleted());
             }
 
             /// <summary>

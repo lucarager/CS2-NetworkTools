@@ -46,7 +46,9 @@ namespace NetworkTools.Systems.Tools {
         public void UpdateConfig(GridConfig config) {
             CurrentConfig.Angle    = config.Angle;
             CurrentConfig.XSpacing = config.XSpacing;
-            CurrentConfig.YSpacing = config.YSpacing;
+            CurrentConfig.ZSpacing = config.ZSpacing;
+            CurrentConfig.XNum     = config.XNum;
+            CurrentConfig.ZNum     = config.ZNum;
             m_UpdateNeeded         = true;
         }
 

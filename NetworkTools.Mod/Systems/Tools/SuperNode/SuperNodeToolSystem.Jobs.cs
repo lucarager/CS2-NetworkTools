@@ -64,14 +64,14 @@
                         var curve       = CurveLookup[edgeEntity];
                         var isStartNode = edge.m_Start == nodeEntity;
 
-                        // Mark any edge that connects two of our selected nodes as deleted
-                        if (SelectedNodeSet.Contains(isStartNode ? edge.m_End : edge.m_Start)) {
-                            ProcessEdgeDeletionDef(edgeEntity, edge);
+                        // First, mark edge as deleted. We need to re-create it in order to move the node position
+                        ProcessEdgeDeletionDef(edgeEntity, edge);
 
+                        // If this is an edge that connects to any of our selected nodes, it should just be removed
+                        // No further processing is needed
+                        if (SelectedNodeSet.Contains(edge.m_Start) || SelectedNodeSet.Contains(edge.m_End)) {
                             if (DebugMode) {
-                                // Debug: Draw the deleted edge in red
-                                var curveOfDeletedEdge = CurveLookup[edgeEntity];
-                                RenderBuffer.DrawDashedCurve(Color.red, curveOfDeletedEdge.m_Bezier, 1f, 1f, 1f);
+                                RenderBuffer.DrawDashedCurve(Color.red, CurveLookup[edgeEntity].m_Bezier, 1f, 1f, 1f);
                             }
 
                             continue;
@@ -98,9 +98,6 @@
                             endNodeEntity = Entity.Null;
                             endNodePos    = nodePosition;
                         }
-
-                        // Also delete this edge now
-                        ProcessEdgeDeletionDef(edgeEntity, edge);
 
                         OutputPreviewEdge(edgeEntity,
                                           startNodeEntity,
@@ -165,7 +162,8 @@
                 var definitionEntity = ECB.CreateEntity();
 
                 var creationDefinition = new CreationDefinition {
-                    //m_Original = roadEntity,
+                    // Do not set original as we're deleting them
+                    m_Original = Entity.Null,
                     m_Prefab = prefabEntity,
                     m_Flags  = CreationFlags.Parent | CreationFlags.Recreate | CreationFlags.Upgrade
                 };
@@ -173,6 +171,7 @@
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
+                // Include upgrades from the original
                 if (UpgradedLookup.TryGetComponent(roadEntity, out var upgraded)) {
                     ECB.AddComponent(definitionEntity, upgraded);
                 }

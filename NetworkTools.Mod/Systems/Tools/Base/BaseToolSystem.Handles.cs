@@ -29,26 +29,16 @@ namespace NetworkTools.Systems.Tools {
     ///     Partial class containing centralized handle management for all tool systems.
     /// </summary>
     public abstract partial class NT_BaseToolSystem {
-        #region Virtual Properties
-
         /// <summary>
         ///     Override to return true when the tool should perform handle raycasting.
         ///     Default returns true when handles exist.
         /// </summary>
         protected virtual bool ShouldRaycastHandles => m_Handles.IsCreated && m_Handles.Length > 0;
 
-        #endregion
-
-        #region Constants
-
         /// <summary>
         ///     World units the mouse must move before being considered a drag.
         /// </summary>
         protected const float HandleDragThreshold = 0.5f;
-
-        #endregion
-
-        #region Handle State
 
         /// <summary>
         ///     List of all handle entities created by this tool.
@@ -74,10 +64,6 @@ namespace NetworkTools.Systems.Tools {
         ///     Entity query for all handle entities.
         /// </summary>
         protected EntityQuery m_HandleQuery;
-
-        #endregion
-
-        #region Lifecycle (Called by NT_BaseToolSystem)
 
         /// <summary>
         ///     Initializes handle management. Called from OnCreate().
@@ -108,8 +94,6 @@ namespace NetworkTools.Systems.Tools {
             m_HandleInputState = HandleInputState.Idle;
             m_DraggedHandle    = Entity.Null;
         }
-
-        #endregion
 
         #region Handle Creation
 
@@ -430,20 +414,34 @@ namespace NetworkTools.Systems.Tools {
         #region Handle Raycasting
 
         /// <summary>
+        ///     Constructs a camera ray from the current mouse position.
+        ///     Returns false if Camera.main is unavailable.
+        /// </summary>
+        /// <param name="rayOrigin">World-space origin of the ray.</param>
+        /// <param name="rayDir">World-space direction of the ray.</param>
+        protected bool TryGetCurrentMouseRay(out float3 rayOrigin, out float3 rayDir) {
+            rayOrigin = float3.zero;
+            rayDir    = float3.zero;
+
+            var camera = Camera.main;
+            if (camera == null) return false;
+
+            var mousePos = Mouse.current.position.ReadValue();
+            var ray      = camera.ScreenPointToRay(mousePos);
+            rayOrigin = (float3)ray.origin;
+            rayDir    = (float3)ray.direction;
+            return true;
+        }
+
+
+        /// <summary>
         ///     Gets the closest handle entity from the current camera ray.
         ///     Performs type-aware intersection testing (point, line, circle).
         /// </summary>
         /// <returns>The closest handle entity, or Entity.Null if none hit.</returns>
         protected Entity GetClosestHandleFromRay() {
             if (!m_Handles.IsCreated || m_Handles.Length == 0) return Entity.Null;
-
-            var camera = Camera.main;
-            if (camera == null) return Entity.Null;
-
-            var mousePos  = Mouse.current.position.ReadValue();
-            var ray       = camera.ScreenPointToRay(mousePos);
-            var rayOrigin = (float3)ray.origin;
-            var rayDir    = (float3)ray.direction;
+            if (!TryGetCurrentMouseRay(out var rayOrigin, out var rayDir)) return Entity.Null;
 
             var closestHandle = Entity.Null;
             var closestT      = float.MaxValue;
@@ -589,11 +587,15 @@ namespace NetworkTools.Systems.Tools {
         /// <summary>
         ///     Updates the dragged handle's position by projecting mouse onto appropriate plane.
         ///     Applies any constraints defined on the handle.
+        ///     Circle handles are excluded — their radius is computed directly from the mouse ray.
         /// </summary>
         /// <param name="handleEntity">The handle entity to update.</param>
-        protected void UpdateHandleDragPosition(Entity handleEntity) {
+        private void UpdateHandleDragPosition(Entity handleEntity) {
             if (!EntityManager.Exists(handleEntity)) return;
             if (!EntityManager.HasComponent<NT_HandlePosition>(handleEntity)) return;
+
+            // Circle handles don't move their position; radius is computed separately
+            if (EntityManager.HasComponent<NT_HandleCircle>(handleEntity)) return;
 
             var currentPos = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
             var newPos     = currentPos;
@@ -623,36 +625,24 @@ namespace NetworkTools.Systems.Tools {
                 line.PointB += delta;
                 EntityManager.SetComponentData(handleEntity, line);
             }
-
-            // Update circle handle center if applicable
-            if (EntityManager.HasComponent<NT_HandleCircle>(handleEntity)) {
-                var circle = EntityManager.GetComponentData<NT_HandleCircle>(handleEntity);
-                circle.Center = newPos;
-                EntityManager.SetComponentData(handleEntity, circle);
-            }
         }
 
         /// <summary>
-        ///     Updates a circle handle's radius based on the XZ distance from the drag position
-        ///     to the specified center, and resets the handle's position back to the center.
+        ///     Computes a circle handle's new radius from the current mouse position
+        ///     projected onto the XZ plane at the circle center's Y.
+        ///     Does not move the handle's position.
         /// </summary>
         /// <param name="handleEntity">The circle handle entity being dragged.</param>
-        /// <param name="center">The center point to measure radius from.</param>
-        /// <returns>The newly computed radius.</returns>
-        protected float UpdateCircleHandleRadius(Entity handleEntity, float3 center) {
-            var dragPos = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
-            var newRadius = math.distance(center.xz, dragPos.xz);
-
-            // Reset handle position back to center (UpdateHandleDragPosition moved it to drag point)
-            EntityManager.SetComponentData(handleEntity,
-                                           new NT_HandlePosition {
-                                               Position = center,
-                                               Rotation = quaternion.identity
-                                           });
-
-            // Update circle component: fix center and apply new radius
+        /// <returns>The newly computed radius, or the current radius if projection fails.</returns>
+        private float ComputeCircleHandleRadius(Entity handleEntity) {
             var circle = EntityManager.GetComponentData<NT_HandleCircle>(handleEntity);
-            circle.Center = center;
+
+            if (!TryGetXZPlaneIntersection(circle.Center.y, out var dragPos)) {
+                return circle.Radius;
+            }
+
+            var newRadius = math.distance(circle.Center.xz, dragPos.xz);
+
             circle.Radius = newRadius;
             EntityManager.SetComponentData(handleEntity, circle);
 
@@ -758,20 +748,14 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         protected bool TryGetXZPlaneIntersection(float planeY, out float3 intersection) {
             intersection = float3.zero;
+            if (!TryGetCurrentMouseRay(out var rayOrigin, out var rayDir)) return false;
 
-            var camera = Camera.main;
-            if (camera == null) return false;
+            if (math.abs(rayDir.y) < 0.0001f) return false;
 
-            var mousePos = Mouse.current.position.ReadValue();
-            var ray      = camera.ScreenPointToRay(mousePos);
-
-            // Plane equation: y = planeY
-            if (math.abs(ray.direction.y) < 0.0001f) return false;
-
-            var t = (planeY - ray.origin.y) / ray.direction.y;
+            var t = (planeY - rayOrigin.y) / rayDir.y;
             if (t < 0) return false;
 
-            intersection = (float3)ray.origin + (float3)ray.direction * t;
+            intersection = rayOrigin + rayDir * t;
             return true;
         }
 
@@ -780,19 +764,14 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         protected bool TryGetYZPlaneIntersection(float planeX, out float3 intersection) {
             intersection = float3.zero;
+            if (!TryGetCurrentMouseRay(out var rayOrigin, out var rayDir)) return false;
 
-            var camera = Camera.main;
-            if (camera == null) return false;
+            if (math.abs(rayDir.x) < 0.0001f) return false;
 
-            var mousePos = Mouse.current.position.ReadValue();
-            var ray      = camera.ScreenPointToRay(mousePos);
-
-            if (math.abs(ray.direction.x) < 0.0001f) return false;
-
-            var t = (planeX - ray.origin.x) / ray.direction.x;
+            var t = (planeX - rayOrigin.x) / rayDir.x;
             if (t < 0) return false;
 
-            intersection = (float3)ray.origin + (float3)ray.direction * t;
+            intersection = rayOrigin + rayDir * t;
             return true;
         }
 
@@ -801,19 +780,14 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         protected bool TryGetXYPlaneIntersection(float planeZ, out float3 intersection) {
             intersection = float3.zero;
+            if (!TryGetCurrentMouseRay(out var rayOrigin, out var rayDir)) return false;
 
-            var camera = Camera.main;
-            if (camera == null) return false;
+            if (math.abs(rayDir.z) < 0.0001f) return false;
 
-            var mousePos = Mouse.current.position.ReadValue();
-            var ray      = camera.ScreenPointToRay(mousePos);
-
-            if (math.abs(ray.direction.z) < 0.0001f) return false;
-
-            var t = (planeZ - ray.origin.z) / ray.direction.z;
+            var t = (planeZ - rayOrigin.z) / rayDir.z;
             if (t < 0) return false;
 
-            intersection = (float3)ray.origin + (float3)ray.direction * t;
+            intersection = rayOrigin + rayDir * t;
             return true;
         }
 
@@ -822,14 +796,7 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         protected bool TryGetAxisIntersection(float3 axisOrigin, float3 axisDir, out float3 intersection) {
             intersection = axisOrigin;
-
-            var camera = Camera.main;
-            if (camera == null) return false;
-
-            var mousePos  = Mouse.current.position.ReadValue();
-            var ray       = camera.ScreenPointToRay(mousePos);
-            var rayOrigin = (float3)ray.origin;
-            var rayDir    = (float3)ray.direction;
+            if (!TryGetCurrentMouseRay(out var rayOrigin, out var rayDir)) return false;
 
             // Find closest point between two lines
             var w0    = rayOrigin - axisOrigin;
@@ -880,14 +847,6 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Called each frame while dragging a handle.
-        /// </summary>
-        /// <param name="handle">The handle entity being dragged.</param>
-        protected virtual void OnHandleDragging(Entity handle) {
-            // Override in derived tools
-        }
-
-        /// <summary>
         ///     Called when a handle drag operation ends.
         /// </summary>
         /// <param name="handle">The handle entity that was dragged.</param>
@@ -900,6 +859,40 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         /// <param name="handle">The handle entity that was clicked.</param>
         protected virtual void OnHandleClick(Entity handle) {
+            // Override in derived tools
+        }
+
+        /// <summary>
+        ///     Called each frame while dragging a position handle.
+        ///     The handle's ECS position has already been updated before this call.
+        /// </summary>
+        /// <param name="handle">The handle entity being dragged.</param>
+        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
+        /// <param name="position">The handle's updated world position.</param>
+        protected virtual void OnPositionHandleDragged(Entity handle, int key, float3 position) {
+            // Override in derived tools
+        }
+
+        /// <summary>
+        ///     Called each frame while dragging a parameter handle.
+        ///     The handle's ECS position has already been updated before this call.
+        /// </summary>
+        /// <param name="handle">The handle entity being dragged.</param>
+        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
+        /// <param name="position">The handle's updated world position.</param>
+        /// <param name="value">The current <see cref="NT_HandleValue.Value"/>.</param>
+        protected virtual void OnParameterHandleDragged(Entity handle, int key, float3 position, float value) {
+            // Override in derived tools
+        }
+
+        /// <summary>
+        ///     Called each frame while dragging a circle handle.
+        ///     The circle's radius has already been recomputed from the mouse position.
+        /// </summary>
+        /// <param name="handle">The circle handle entity being dragged.</param>
+        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
+        /// <param name="radius">The newly computed radius.</param>
+        protected virtual void OnCircleHandleDragged(Entity handle, int key, float radius) {
             // Override in derived tools
         }
 
@@ -1014,9 +1007,27 @@ namespace NetworkTools.Systems.Tools {
                 return true;
             }
 
-            // Continue dragging
+            // Update position (skipped for circle handles)
             UpdateHandleDragPosition(m_DraggedHandle);
-            OnHandleDragging(m_DraggedHandle);
+
+            // Read common data once and dispatch to typed hook
+            var link      = EntityManager.GetComponentData<NT_HandleLink>(m_DraggedHandle);
+            var handleData = EntityManager.GetComponentData<NT_Handle>(m_DraggedHandle);
+
+            if (handleData.HasAnyFlag(HandleTypeFlags.Circle)) {
+                var newRadius = ComputeCircleHandleRadius(m_DraggedHandle);
+                OnCircleHandleDragged(m_DraggedHandle, link.Key, newRadius);
+            } else if (handleData.HasAnyFlag(HandleTypeFlags.Parameter)
+                    && EntityManager.HasComponent<NT_HandleValue>(m_DraggedHandle)) {
+                var handlePos = EntityManager.GetComponentData<NT_HandlePosition>(m_DraggedHandle).Position;
+                var value     = EntityManager.GetComponentData<NT_HandleValue>(m_DraggedHandle).Value;
+                OnParameterHandleDragged(m_DraggedHandle, link.Key, handlePos, value);
+            } else {
+                var handlePos = EntityManager.GetComponentData<NT_HandlePosition>(m_DraggedHandle).Position;
+                OnPositionHandleDragged(m_DraggedHandle, link.Key, handlePos);
+            }
+
+            m_UpdateNeeded = true;
             return true;
         }
 

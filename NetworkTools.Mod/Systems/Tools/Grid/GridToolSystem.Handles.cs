@@ -66,24 +66,16 @@ namespace NetworkTools.Systems.Tools {
             };
         }
 
-        /// <summary>
-        ///     Called each frame while dragging a handle.
-        ///     Updates the config from the handle's current value.
-        /// </summary>
-        protected override void OnHandleDragging(Entity handle) {
-            var link      = EntityManager.GetComponentData<NT_HandleLink>(handle);
-            var handlePos = EntityManager.GetComponentData<NT_HandlePosition>(handle).Position;
+        /// <inheritdoc />
+        protected override void OnParameterHandleDragged(Entity handle, int key, float3 position, float value) {
+            m_Log.Debug($"OnParameterHandleDragged: key={key}, value={value}");
+            ApplyConfigValue(key, value);
+        }
 
-            m_Log.Debug($"OnHandleDragging: key={link.Key}, handlePos={handlePos}");
-
-            if (EntityManager.HasComponent<NT_HandleValue>(handle)) {
-                var handleValue = EntityManager.GetComponentData<NT_HandleValue>(handle);
-                ApplyConfigValue(link.Key, handleValue.Value);
-            } else {
-                ApplyConfigPosition(link.Key, handlePos);
-            }
-
-            m_UpdateNeeded = true;
+        /// <inheritdoc />
+        protected override void OnPositionHandleDragged(Entity handle, int key, float3 position) {
+            m_Log.Debug($"OnPositionHandleDragged: key={key}, position={position}");
+            ApplyConfigPosition(key, position);
         }
 
         /// <summary>
