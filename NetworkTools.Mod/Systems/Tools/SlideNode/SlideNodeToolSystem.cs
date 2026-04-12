@@ -27,7 +27,6 @@ namespace NetworkTools.Systems.Tools {
     /// </summary>
     public partial class NT_SlideNodeToolSystem : NT_BaseToolSystem, IToolPrefabProvider {
         private ControlPoint m_LastControlPoint;
-        private bool         m_UpdateNeeded;
 
         /// <summary>Whether the user is currently dragging a node.</summary>
         private bool m_IsDragging;

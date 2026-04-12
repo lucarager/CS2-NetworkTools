@@ -25,11 +25,6 @@ namespace NetworkTools.Systems.Tools {
         private float3 m_LastHitPosition;
 
         /// <summary>
-        ///     Tracks whether an update/re-render is needed on the next frame.
-        /// </summary>
-        private bool m_UpdateNeeded;
-
-        /// <summary>
         ///     Control points defining the grid origin and direction.
         ///     Index 0 = start, Index 1 = end.
         /// </summary>

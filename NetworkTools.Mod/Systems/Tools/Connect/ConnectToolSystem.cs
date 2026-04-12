@@ -10,7 +10,7 @@
     /// <summary>
     ///     Tool system for
     /// </summary>
-    public partial class NT_ConnectToolSystem : NT_BaseToolSystem, IToolPrefabProvider, INetPrefabCachingProvider, INodeSelectionProvider, INetPrefabSelectionProvider {
+    public partial class NT_ConnectToolSystem : NT_BaseToolSystem, IToolPrefabProvider, INetPrefabCachingProvider, INodeSelectionProvider, INetPrefabSelectionProvider, IManualApplyProvider {
         /// <inheritdoc />
         public override string toolID => "ConnectTool";
 
@@ -21,11 +21,6 @@
         ///     Caches the last hit position for tool-specific use.
         /// </summary>
         private float3 m_LastHitPosition;
-
-        /// <summary>
-        ///     Tracks whether an update/re-render is needed on the next frame.
-        /// </summary>
-        private bool m_UpdateNeeded;
 
         /// <summary>
         ///     List of user-selected node entities that define path endpoints.

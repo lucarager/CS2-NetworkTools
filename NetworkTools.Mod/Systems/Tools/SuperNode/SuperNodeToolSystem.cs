@@ -23,7 +23,6 @@ namespace NetworkTools.Systems.Tools {
     public partial class NT_SuperNodeToolSystem : NT_BaseToolSystem, IToolPrefabProvider, IManualApplyProvider,
                                                   INodeSelectionProvider {
         protected       NativeList<Entity> m_SelectedNodes;
-        private         bool               m_UpdateNeeded;
         public override string             toolID => "SuperNode Tool";
 
 

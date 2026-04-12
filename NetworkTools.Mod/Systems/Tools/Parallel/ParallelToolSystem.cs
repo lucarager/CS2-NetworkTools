@@ -24,11 +24,6 @@ namespace NetworkTools.Systems.Tools.Parallel {
         public override string toolID => "ParallelTool";
 
         /// <summary>
-        ///     Tracks whether an update/re-render is needed on the next frame.
-        /// </summary>
-        private bool m_UpdateNeeded;
-
-        /// <summary>
         ///     Current parallel configuration (distance and side).
         /// </summary>
         internal ParallelConfig CurrentConfig = new ParallelConfig {

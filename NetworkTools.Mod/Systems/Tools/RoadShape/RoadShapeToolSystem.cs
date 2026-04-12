@@ -17,13 +17,6 @@
         private float3 m_LastHitPosition;
 
         /// <summary>
-        ///     Tracks whether an update/re-render is needed on the next frame.
-        ///     This is set to true when something changes that requires regenerating preview entities.
-        ///     Gets reset to false after being processed.
-        /// </summary>
-        private bool m_UpdateNeeded;
-
-        /// <summary>
         ///     Current transformation config.
         /// </summary>
         internal ShapeTransformConfig ShapeTransformConfig;

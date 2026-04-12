@@ -199,6 +199,13 @@ namespace NetworkTools.Systems.Tools {
         public OperationPhase Phase = OperationPhase.Idle;
 
         /// <summary>
+        ///     Tracks whether an update/re-render is needed on the next frame.
+        ///     Set to true when something changes that requires regenerating preview entities.
+        ///     Gets reset to false after being processed by the derived tool's update loop.
+        /// </summary>
+        protected bool m_UpdateNeeded;
+
+        /// <summary>
         ///     Tool requests rendering edges
         /// </summary>
         public bool RenderEligibleEdges = false;
