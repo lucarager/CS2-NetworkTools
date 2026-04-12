@@ -125,6 +125,22 @@ export const EMPTY_NET_PREFAB_DATA: NetPrefabData = {
     Name: "",
 };
 
+export type GridConfigData = {
+    angle: number;
+    xSpacing: number;
+    zSpacing: number;
+    xNum: number;
+    zNum: number;
+};
+
+export const DEFAULT_GRID_CONFIG: GridConfigData = {
+    angle: 0,
+    xSpacing: 80,
+    zSpacing: 80,
+    xNum: 2,
+    zNum: 2,
+};
+
 export const GAME_BINDINGS = {
     UI_DATA: new TwoWayBinding<ToolUIData[]>("UI_DATA", []),
     SELECTED_ENTITIES: new TwoWayBinding<ToolSelectionData[]>("SELECTED_ENTITIES", []),
@@ -135,6 +151,7 @@ export const GAME_BINDINGS = {
         "PARALLEL_CONFIG",
         DEFAULT_PARALLEL_CONFIG,
     ),
+    GRID_CONFIG: new TwoWayBinding<GridConfigData>("GRID_CONFIG", DEFAULT_GRID_CONFIG),
     CONNECT_MODE: new TwoWayBinding<number>("CONNECT_MODE", ConnectMode.None),
     SELECTED_NET_PREFAB: new TwoWayBinding<NetPrefabData>(
         "SELECTED_NET_PREFAB",

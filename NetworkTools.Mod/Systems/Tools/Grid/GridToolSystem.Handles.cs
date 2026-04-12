@@ -17,13 +17,13 @@ namespace NetworkTools.Systems.Tools {
 
             m_Log.Debug("RefreshTransformHandles: Creating handles");
 
-            var handleDefs = GetHandleDefinitions();
-            CreateHandlesFromDefinitions(handleDefs);
+            //var handleDefs = GetHandleDefinitions();
+            //CreateHandlesFromDefinitions(handleDefs);
         }
 
         /// <summary>
         ///     Builds handle definitions for the current grid config.
-        ///     Creates parameter handles for Angle, XSpacing, and YSpacing.
+        ///     Creates parameter handles for Angle, XSpacing, and ZSpacing.
         /// </summary>
         private TransformHandleDefinition[] GetHandleDefinitions() {
             var startPos = CurrentConfig.StartPosition;
@@ -57,9 +57,9 @@ namespace NetworkTools.Systems.Tools {
                 // Y Spacing handle offset along Y axis
                 new TransformHandleDefinition {
                     Key       = HandleKeys.YSpacing,
-                    Position  = startPos + yDir * CurrentConfig.YSpacing,
+                    Position  = startPos + yDir * CurrentConfig.ZSpacing,
                     TypeFlags = HandleTypeFlags.Parameter | HandleTypeFlags.Secondary | HandleTypeFlags.ParameterRange,
-                    Value     = CurrentConfig.YSpacing,
+                    Value     = CurrentConfig.ZSpacing,
                     MinValue  = GridConfig.MinSpacing,
                     MaxValue  = GridConfig.MaxSpacing
                 }
@@ -93,7 +93,7 @@ namespace NetworkTools.Systems.Tools {
             return key switch {
                 HandleKeys.Angle    => CurrentConfig.Angle,
                 HandleKeys.XSpacing => CurrentConfig.XSpacing,
-                HandleKeys.YSpacing => CurrentConfig.YSpacing,
+                HandleKeys.YSpacing => CurrentConfig.ZSpacing,
                 _                   => 0f
             };
         }
@@ -110,7 +110,7 @@ namespace NetworkTools.Systems.Tools {
                     CurrentConfig.XSpacing = value;
                     break;
                 case HandleKeys.YSpacing:
-                    CurrentConfig.YSpacing = value;
+                    CurrentConfig.ZSpacing = value;
                     break;
             }
         }

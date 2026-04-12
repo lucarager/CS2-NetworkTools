@@ -12,9 +12,7 @@ import { TargetSelection } from "./shared/targetSelection";
 import { ViewSelection } from "./shared/viewSelection";
 import { SuperNodeControls } from "./tools/superNode";
 import { ParallelControls } from "./tools/parallel";
-import { Button } from "cs2/ui";
-import { c } from "utils/classes";
-import { VC } from "components/vanilla/Components";
+import { GridControls } from "./tools/grid";
 
 // Registry of tool components mapped by tool ID
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
@@ -23,6 +21,7 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
     Connect: ConnectControls,
     SuperNode: SuperNodeControls,
     Parallel: ParallelControls,
+    Grid: GridControls,
 };
 
 export const ToolActionPanel = () => {
@@ -31,6 +30,9 @@ export const ToolActionPanel = () => {
     const activeTool = toolUIDataBinding.find((t) => t.PrefabId === selectedBinding);
     const { translate } = useLocalization();
     const [showTutorial, setShowTutorial] = useState(false);
+
+    console.log("Selected Tool ID:", selectedBinding);
+    console.log("Active Tool Data:", activeTool);
 
     useEffect(() => {
         setShowTutorial(false);

@@ -28,9 +28,13 @@ namespace NetworkTools.Systems.Tools {
         public float XSpacing;
 
         /// <summary>
-        ///     Spacing between grid lines along the secondary (Y) axis.
+        ///     Spacing between grid lines along the secondary (Z) axis.
         /// </summary>
-        public float YSpacing;
+        public float ZSpacing;
+
+        public int XNum = 1;
+
+        public int ZNum = 1;
 
         /// <summary>
         ///     Default X spacing value in world units.
@@ -40,12 +44,15 @@ namespace NetworkTools.Systems.Tools {
         /// <summary>
         ///     Default Y spacing value in world units.
         /// </summary>
-        public const float DefaultYSpacing = 80f;
+        public const float DefaultZSpacing = 80f;
 
         /// <summary>
         ///     Minimum spacing value in world units.
         /// </summary>
-        public const float MinSpacing = 10f;
+        public const float MinSpacing = 4f;
+
+        public const int DefaultXNum = 2;
+        public const int DefaultZNum = 2;
 
         /// <summary>
         ///     Maximum spacing value in world units.
@@ -62,7 +69,9 @@ namespace NetworkTools.Systems.Tools {
             Angle = math.degrees(math.atan2(delta.z, delta.x));
 
             XSpacing = DefaultXSpacing;
-            YSpacing = DefaultYSpacing;
+            ZSpacing = DefaultZSpacing;
+            XNum = DefaultXNum;
+            ZNum = DefaultZNum;
         }
 
         /// <inheritdoc />
@@ -75,9 +84,14 @@ namespace NetworkTools.Systems.Tools {
             writer.PropertyName("xSpacing");
             writer.Write(XSpacing);
 
-            writer.PropertyName("ySpacing");
-            writer.Write(YSpacing);
+            writer.PropertyName("zSpacing");
+            writer.Write(ZSpacing);
 
+            writer.PropertyName("xNum");
+            writer.Write(XNum);
+
+            writer.PropertyName("zNum");
+            writer.Write(ZNum);
             writer.TypeEnd();
         }
 
@@ -93,9 +107,17 @@ namespace NetworkTools.Systems.Tools {
             reader.Read(out float xSpacing);
             XSpacing = xSpacing;
 
-            reader.ReadProperty("ySpacing");
-            reader.Read(out float ySpacing);
-            YSpacing = ySpacing;
+            reader.ReadProperty("zSpacing");
+            reader.Read(out float zSpacing);
+            ZSpacing = zSpacing;
+
+            reader.ReadProperty("xNum");
+            reader.Read(out int xNum);
+            XNum = xNum;
+
+            reader.ReadProperty("zNum");
+            reader.Read(out int zNum);
+            ZNum = zNum;
 
             reader.ReadMapEnd();
         }

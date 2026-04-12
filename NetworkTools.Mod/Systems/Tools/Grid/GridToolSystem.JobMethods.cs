@@ -1,4 +1,6 @@
 namespace NetworkTools.Systems.Tools {
+    using Game.Common;
+    using Game.Net;
     using Game.Prefabs;
     using Game.Tools;
 
@@ -10,21 +12,25 @@ namespace NetworkTools.Systems.Tools {
     /// </summary>
     public partial class NT_GridToolSystem {
         private JobHandle ScheduleDefinitionsJob(JobHandle inputDeps, ToolOutputMode outputMode) {
-            m_Log.Debug($"ScheduleDefinitionsJob: OutputMode={outputMode}");
+            m_Log.Debug("ScheduleDefinitionsJob");
 
-            if (m_ControlPoints.Length != 2) {
-                return inputDeps;
-            }
+            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
-            if (m_SelectedNetPrefabEntity == Entity.Null) {
-                return inputDeps;
-            }
+            // If both are null, we fall back to the prefab of the first edge's start node
+            //if (m_SelectedNetPrefabEntity == Entity.Null && m_SelectedNetLanePrefabEntity == Entity.Null)
+            //{
+            //    var firstEdge = EntityManager.GetComponentData<Edge>(m_CurrentPathEdges[0]);
+            //    var prefabRef = EntityManager.GetComponentData<PrefabRef>(firstEdge.m_Start);
+            //    m_SelectedNetPrefab = m_PrefabSystem.GetPrefab<NetPrefab>(prefabRef);
+            //    m_SelectedNetPrefabEntity = prefabRef.m_Prefab;
+            //}
 
             var jobHandle = new CreateDefinitionsJob {
-                Config       = CurrentConfig,
-                OutputMode   = outputMode,
-                PrefabEntity = m_SelectedNetPrefabEntity,
-                ECB          = m_Barrier.CreateCommandBuffer(),
+                OutputMode = outputMode,
+                Config = CurrentConfig,
+                NetPrefabEntity = m_SelectedNetPrefabEntity,
+                NetLanePrefabEntity = m_SelectedNetLanePrefabEntity,
+                ECB = m_Barrier.CreateCommandBuffer()
             }.Schedule(inputDeps);
             m_Barrier.AddJobHandleForProducer(jobHandle);
 
@@ -32,15 +38,19 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private JobHandle Update(JobHandle inputDeps) {
-            if (!m_UpdateNeeded) {
+            // Check if we can reuse existing temp entities
+            // This will be true if the selected nodes and operation config didn't change
+            if (!m_UpdateNeeded)
+            {
                 applyMode = ApplyMode.None;
                 return inputDeps;
             }
 
+            // Recreate temp entities
             applyMode = ApplyMode.Clear;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             inputDeps = ScheduleDefinitionsJob(inputDeps, ToolOutputMode.Preview);
 
+            // Reset the flag after processing
             m_UpdateNeeded = false;
 
             return inputDeps;
@@ -53,9 +63,10 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private JobHandle Apply(JobHandle inputDeps) {
-            applyMode = ApplyMode.Clear;
-            inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
+            applyMode = ApplyMode.Apply;
             var jobHandle = ScheduleDefinitionsJob(inputDeps, ToolOutputMode.Apply);
+
+            jobHandle.Complete();
 
             ResetToIdle();
 
