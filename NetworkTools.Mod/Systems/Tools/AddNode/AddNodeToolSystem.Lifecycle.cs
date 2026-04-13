@@ -42,6 +42,8 @@ namespace NetworkTools.Systems.Tools {
             base.OnStartRunning();
 
             Phase = OperationPhase.Idle;
+
+            MarkEligibleEntities();
         }
 
         protected override void OnStopRunning() {

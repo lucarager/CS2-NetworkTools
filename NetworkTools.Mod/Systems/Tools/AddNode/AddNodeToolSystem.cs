@@ -13,6 +13,7 @@ namespace NetworkTools.Systems.Tools {
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+    using NetworkTools.Components;
     using NetworkTools.Systems.Tools;
     using Unity.Collections;
     using Unity.Entities;
@@ -153,7 +154,7 @@ namespace NetworkTools.Systems.Tools {
             }
 
             // Check that the entity we're hitting is eligible
-            if (candidateEntity != Entity.Null) {
+            if (candidateEntity != Entity.Null && EntityManager.HasComponent<NT_Eligible>(candidateEntity)) {
                 controlPoint = new ControlPoint(candidateEntity, hit);
                 controlPoint.m_CurvePosition = curvePosition;
             }
