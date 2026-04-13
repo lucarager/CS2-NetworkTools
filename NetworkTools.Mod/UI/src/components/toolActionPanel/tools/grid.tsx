@@ -4,10 +4,10 @@ import { GAME_BINDINGS, GAME_TRIGGERS, GridConfigData } from "gameBindings";
 import { useValue } from "cs2/api";
 import { Button } from "cs2/ui";
 import { VC } from "components/vanilla/Components";
+import { PrefabSelection } from "../shared/prefabSelection";
 
 export const GridControls: React.FC = () => {
     const gridConfig = useValue(GAME_BINDINGS.GRID_CONFIG.binding);
-    const selectedNetPrefab = useValue(GAME_BINDINGS.SELECTED_NET_PREFAB.binding);
 
     const handleConfigChange = (param: keyof GridConfigData, value: number) => {
         const newConfig: GridConfigData = {
@@ -20,22 +20,9 @@ export const GridControls: React.FC = () => {
 
     return (
         <>
+            <PrefabSelection />
             <div className={styles.divider}></div>
             <div className={styles.col}>
-                <div className={styles.controlRow}>
-                    <div className={styles.controlRowInner}>
-                        <span className={styles.paramLabel}>Network Prefab</span>
-                        <div className={styles.entityPreview}>
-                            <img
-                                src={selectedNetPrefab.Thumbnail}
-                                className={styles.entityPreview__thumbnail}
-                            />
-                            <span className={styles.entityPreview__name}>
-                                {selectedNetPrefab.Name}
-                            </span>
-                        </div>
-                    </div>
-                </div>
                 <div className={styles.controlRow}>
                     <div className={styles.sliderField}>
                         <VC.FloatSliderField
@@ -80,9 +67,7 @@ export const GridControls: React.FC = () => {
                             min={1}
                             max={20}
                             fractionDigits={0}
-                            onChange={(e: number) =>
-                                handleConfigChange("xNum", Math.round(e))
-                            }
+                            onChange={(e: number) => handleConfigChange("xNum", Math.round(e))}
                         />
                     </div>
                 </div>
@@ -94,9 +79,7 @@ export const GridControls: React.FC = () => {
                             min={1}
                             max={20}
                             fractionDigits={0}
-                            onChange={(e: number) =>
-                                handleConfigChange("zNum", Math.round(e))
-                            }
+                            onChange={(e: number) => handleConfigChange("zNum", Math.round(e))}
                         />
                     </div>
                 </div>

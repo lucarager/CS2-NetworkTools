@@ -14,17 +14,6 @@ namespace NetworkTools.Systems.Tools {
         /// <inheritdoc />
         public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_GridTool>(prefab); }
 
-        /// <inheritdoc />
-        public bool? TryCacheNetPrefab(PrefabBase prefab) {
-            if (prefab is NetPrefab netPrefab) {
-                m_SelectedNetPrefab       = netPrefab;
-                m_SelectedNetPrefabEntity = m_PrefabSystem.GetEntity(netPrefab);
-                return m_ToolSystem.activeTool == this;
-            }
-
-            return null;
-        }
-
         /// <summary>
         ///     Initializes the grid config from the two control points.
         /// </summary>

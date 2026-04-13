@@ -158,6 +158,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_GridToolSystem>(SystemUpdatePhase.ToolUpdate);
             // UI
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
+            updateSystem.UpdateAt<NT_PrefabSelectionUISystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_UITooltipSystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_HintTooltipSystem>(SystemUpdatePhase.UITooltip);
             // Rendering

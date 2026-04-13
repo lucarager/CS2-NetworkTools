@@ -113,6 +113,21 @@ export enum ViewOption {
     All = Underground | ZoneGrid | InvisibleNetworks,
 }
 
+export enum PrefabType {
+    Road = 0,
+    Path = 1,
+    Rail = 2,
+    Waterway = 3,
+    NetLane = 4,
+}
+
+export type PrefabSelectionEntry = {
+    Entity: Entity;
+    Name: string;
+    Icon: string;
+    Type: PrefabType;
+};
+
 export type NetPrefabData = {
     Entity: Entity;
     Thumbnail: string;
@@ -163,6 +178,8 @@ export const GAME_BINDINGS = {
     SELECTED_TARGETS: new TwoWayBinding<number>("SELECTED_TARGETS", TargetOption.All),
     AVAILABLE_VIEWS: new TwoWayBinding<number>("AVAILABLE_VIEWS", ViewOption.All),
     SELECTED_VIEWS: new TwoWayBinding<number>("SELECTED_VIEWS", ViewOption.None),
+    PS_SELECTED_TYPE: new TwoWayBinding<number>("PS:SELECTED_TYPE", PrefabType.Road),
+    PS_DATA: new TwoWayBinding<PrefabSelectionEntry[]>("PS:DATA", []),
 };
 
 export const GAME_TRIGGERS = {
@@ -171,5 +188,8 @@ export const GAME_TRIGGERS = {
     },
     REQUEST_APPLY: () => {
         trigger(mod.id, "TRIGGER:REQUEST_APPLY");
+    },
+    PS_SELECT: (entity: Entity) => {
+        trigger(mod.id, "TRIGGER:PS:SELECT", entity);
     },
 };

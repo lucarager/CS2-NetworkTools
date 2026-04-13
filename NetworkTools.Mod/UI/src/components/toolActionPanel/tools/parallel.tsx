@@ -11,6 +11,7 @@ import { useValue } from "cs2/api";
 import { Button } from "cs2/ui";
 import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
+import { PrefabSelection } from "../shared/prefabSelection";
 
 const SIDE_OPTIONS: { label: string; id: ParallelSide; icon: string }[] = [
     {
@@ -41,7 +42,6 @@ const VERTICAL_SIDE_OPTIONS: { label: string; id: VerticalSide; icon: string }[]
 export const ParallelControls: React.FC = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
     const parallelConfig = useValue(GAME_BINDINGS.PARALLEL_CONFIG.binding);
-    const selectedNetPrefab = useValue(GAME_BINDINGS.SELECTED_NET_PREFAB.binding);
 
     const handleConfigChange = (param: keyof ParallelConfigData, value: number | boolean) => {
         const newConfig: ParallelConfigData = {
@@ -57,26 +57,13 @@ export const ParallelControls: React.FC = () => {
     return (
         <>
             {/* <NodeSelection selectedEntities={selectedEntitiesBinding} /> */}
+            <PrefabSelection />
 
             {/* Configuration Controls - Show when 2+ nodes selected */}
             {selectedEntitiesBinding.length >= 2 && (
                 <>
                     <div className={styles.divider}></div>
                     <div className={styles.col}>
-                        <div className={styles.controlRow}>
-                            <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>Network Prefab</span>
-                                <div className={styles.entityPreview}>
-                                    <img
-                                        src={selectedNetPrefab.Thumbnail}
-                                        className={styles.entityPreview__thumbnail}
-                                    />
-                                    <span className={styles.entityPreview__name}>
-                                        {selectedNetPrefab.Name}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
                                 <span className={styles.paramLabel}>Side</span>

@@ -13,6 +13,8 @@ import { ViewSelection } from "./shared/viewSelection";
 import { SuperNodeControls } from "./tools/superNode";
 import { ParallelControls } from "./tools/parallel";
 import { GridControls } from "./tools/grid";
+import { PrefabSearchProvider, usePrefabSearch } from "./prefabSearchPanel/prefabSearchContext";
+import { PrefabSearchPanel } from "./prefabSearchPanel/prefabSearchPanel";
 
 // Registry of tool components mapped by tool ID
 const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
@@ -24,18 +26,20 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
     Grid: GridControls,
 };
 
-export const ToolActionPanel = () => {
+const ToolActionPanelInner = () => {
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
     const toolUIDataBinding = useValue(GAME_BINDINGS.UI_DATA.binding);
     const activeTool = toolUIDataBinding.find((t) => t.PrefabId === selectedBinding);
     const { translate } = useLocalization();
     const [showTutorial, setShowTutorial] = useState(false);
+    const { isOpen: prefabSearchOpen, close: closePrefabSearch } = usePrefabSearch();
 
     console.log("Selected Tool ID:", selectedBinding);
     console.log("Active Tool Data:", activeTool);
 
     useEffect(() => {
         setShowTutorial(false);
+        closePrefabSearch();
     }, [selectedBinding]);
 
     if (!activeTool) {
@@ -83,6 +87,13 @@ export const ToolActionPanel = () => {
                     </div>
                 </div>
             )}
+            {prefabSearchOpen && <PrefabSearchPanel onClose={closePrefabSearch} />}
         </div>
     );
 };
+
+export const ToolActionPanel = () => (
+    <PrefabSearchProvider>
+        <ToolActionPanelInner />
+    </PrefabSearchProvider>
+);

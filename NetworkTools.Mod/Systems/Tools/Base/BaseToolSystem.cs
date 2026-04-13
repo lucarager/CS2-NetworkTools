@@ -475,16 +475,10 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Default prefab activation logic driven by <see cref="IToolPrefabProvider" />
-        ///     and <see cref="INetPrefabCachingProvider" />.
+        ///     Default prefab activation logic driven by <see cref="IToolPrefabProvider" />.
         ///     Tools with custom activation logic (e.g. multi-component checks) may override.
         /// </summary>
         public override bool TrySetPrefab(PrefabBase prefab) {
-            // Delegate to net prefab caching if this tool supports it
-            if (this is INetPrefabCachingProvider && TryCacheNetPrefab(prefab)) {
-                return true;
-            }
-
             // Standard tool activation via IToolPrefabProvider
             if (this is IToolPrefabProvider toolProvider) {
                 m_Log.Debug($"TrySetPrefab {prefab is NT_ToolPrefab} {toolProvider.HasToolComponent(prefab)}");
@@ -505,9 +499,7 @@ namespace NetworkTools.Systems.Tools {
         ///     Attempts to cache a net prefab selection.
         /// </summary>
         /// <param name="prefab">The prefab offered by the game.</param>
-        /// <returns>
-        ///     <c>true</c> to consume the prefab (tool is active and should reflect the change),
-        ///     <c>false</c> to reject (prefab was cached but tool is not active),
+        /// <returns> Boolean whether the prefab was recognized and cached as the current selection. 
         /// </returns>
         public bool TryCacheNetPrefab(PrefabBase prefab) {
             switch (prefab) {
@@ -517,7 +509,8 @@ namespace NetworkTools.Systems.Tools {
                     m_SelectedNetPrefabEntity     = m_PrefabSystem.GetEntity(m_SelectedNetPrefab);
                     m_SelectedNetLanePrefab       = null;
                     m_SelectedNetLanePrefabEntity = Entity.Null;
-                    return m_ToolSystem.activeTool == this;
+                    m_UpdateNeeded                = true;
+                    return true;
                 }
                 case NetLanePrefab netLanePrefab:
                 {
@@ -526,7 +519,8 @@ namespace NetworkTools.Systems.Tools {
                     var foundContainers = GetContainers(m_ContainerQuery, out var laneContainer, out _);
                     m_SelectedNetPrefab       = null;
                     m_SelectedNetPrefabEntity = laneContainer;
-                    return m_ToolSystem.activeTool == this;
+                    m_UpdateNeeded            = true;
+                    return true;
                 }
             }
 

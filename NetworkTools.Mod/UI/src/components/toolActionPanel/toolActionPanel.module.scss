@@ -58,6 +58,15 @@
     padding: 4rem;
     flex: 1;
     overflow: hidden;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    position: relative;
+
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.05);
+    }
 
     &__thumbnail {
         width: 32rem;
@@ -68,7 +77,16 @@
     &__name {
         font-size: var(--fontSizeS);
         line-height: 1.25em;
+        flex: 2;
         color: rgba(255, 255, 255, 0.75);
+        overflow: hidden;
+    }
+
+    &__chevron {
+        width: 16rem;
+        height: 16rem;
+        margin-left: 4rem;
+        opacity: 0.5;
     }
 }
 

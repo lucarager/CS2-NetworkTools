@@ -14,31 +14,6 @@
     /// </summary>
     public partial class NT_ConnectToolSystem {
         /// <inheritdoc />
-        public bool? TryCacheNetPrefab(PrefabBase prefab) {
-            switch (prefab) {
-                case RoadPrefab or TrackPrefab or WaterwayPrefab or PathwayPrefab:
-                {
-                    m_SelectedNetPrefab           = (NetPrefab)prefab;
-                    m_SelectedNetPrefabEntity     = m_PrefabSystem.GetEntity(m_SelectedNetPrefab);
-                    m_SelectedNetLanePrefab       = null;
-                    m_SelectedNetLanePrefabEntity = Entity.Null;
-                    return m_ToolSystem.activeTool == this;
-                }
-                case NetLanePrefab netLanePrefab:
-                {
-                    m_SelectedNetLanePrefab       = netLanePrefab;
-                    m_SelectedNetLanePrefabEntity = m_PrefabSystem.GetEntity(netLanePrefab);
-                    var foundContainers = GetContainers(m_ContainerQuery, out var laneContainer, out _);
-                    m_SelectedNetPrefab       = null;
-                    m_SelectedNetPrefabEntity = laneContainer;
-                    return m_ToolSystem.activeTool == this;
-                }
-                default:
-                    return null;
-            }
-        }
-
-        /// <inheritdoc />
         public bool HasToolComponent(PrefabBase prefab) {
             return m_PrefabSystem.HasComponent<NT_ConnectTool>(prefab);
         }

@@ -3,7 +3,7 @@ import styles from "../toolActionPanel.module.scss";
 import { ConnectMode, GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
-import { NodeSelection } from "../shared/nodeSelection";
+import { PrefabSelection } from "../shared/prefabSelection";
 import { c } from "utils/classes";
 
 const CONNECT_MODES: { label: string; id: ConnectMode; icon: string }[] = [
@@ -32,33 +32,19 @@ const CONNECT_MODES: { label: string; id: ConnectMode; icon: string }[] = [
 export const ConnectControls: React.FC = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
     const activeConnectMode = useValue(GAME_BINDINGS.CONNECT_MODE.binding);
-    const selectedNetPrefab = useValue(GAME_BINDINGS.SELECTED_NET_PREFAB.binding);
 
     console.log("Selected Entities in ConnectControls:", selectedEntitiesBinding);
 
     return (
         <>
-            <NodeSelection selectedEntities={selectedEntitiesBinding} />
+            {/* <NodeSelection selectedEntities={selectedEntitiesBinding} /> */}
+            <PrefabSelection />
 
             {/* Transform Controls - Show when 2+ nodes selected */}
             {selectedEntitiesBinding.length >= 2 && (
                 <>
                     <div className={styles.divider}></div>
                     <div className={styles.col}>
-                        <div className={styles.controlRow}>
-                            <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>Network Prefab</span>
-                                <div className={styles.entityPreview}>
-                                    <img
-                                        src={selectedNetPrefab.Thumbnail}
-                                        className={styles.entityPreview__thumbnail}
-                                    />
-                                    <span className={styles.entityPreview__name}>
-                                        {selectedNetPrefab.Name}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
                                 <span className={styles.paramLabel}>Mode</span>
