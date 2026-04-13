@@ -1,37 +1,26 @@
 namespace NetworkTools.Systems.Tools.Connect {
-    using Game.Net;
-    using Game.Prefabs;
-
-    using NetworkTools.Components;
-    using NetworkTools.Components.Handles;
-    using NetworkTools.Components.Tools;
     using NetworkTools.Systems.Tools.Base;
-    using NetworkTools.Systems.Tools.RoadShape;
-
-    using Unity.Collections;
     using Unity.Entities;
     using Unity.Mathematics;
-    using Unity.Jobs;
 
     public partial class NT_ConnectToolSystem {
         /// <summary>
-        /// Creates or refreshes handles based on the current mode and config.
+        ///     Creates or refreshes handles based on the current mode and config.
         /// </summary>
         private void RefreshTransformHandles() {
             DestroyAllHandles();
 
-            m_Log.Debug($"RefreshTransformHandles: Creating handles");
+            m_Log.Debug("RefreshTransformHandles: Creating handles");
 
             var handleDefs = GetHandleDefinitions();
             CreateHandlesFromDefinitions(handleDefs);
         }
 
         /// <summary>
-        /// Gets handle definitions for the current mode.
+        ///     Gets handle definitions for the current mode.
         /// </summary>
         private TransformHandleDefinition[] GetHandleDefinitions() {
-            switch (CurrentMode)
-            {
+            switch (CurrentMode) {
                 case ConnectMode.SimpleCurve:
                     return new SimpleCurveGenerator().GetHandleDefinitions(CurrentMode, CurrentConfig);
                 case ConnectMode.Loop:
@@ -51,6 +40,19 @@ namespace NetworkTools.Systems.Tools.Connect {
         protected override void OnCircleHandleDragged(Entity handle, int key, float radius) {
             m_Log.Debug($"OnCircleHandleDragged: key={key}, radius={radius}");
             CurrentConfig.LoopRadius = radius;
+        }
+
+        /// <inheritdoc />
+        protected override void OnRotationHandleDragged(Entity handle, int key, float angle, float3 direction) {
+            m_Log.Debug($"OnRotationHandleDragged: key={key}, angle={angle}");
+            switch (key) {
+                case HandleKeys.StartDirection:
+                    CurrentConfig.StartDirection = direction;
+                    break;
+                case HandleKeys.EndDirection:
+                    CurrentConfig.EndDirection = direction;
+                    break;
+            }
         }
 
         /// <inheritdoc />

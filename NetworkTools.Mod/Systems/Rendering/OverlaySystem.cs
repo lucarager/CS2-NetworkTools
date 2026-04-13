@@ -111,6 +111,7 @@ namespace NetworkTools.Systems {
                     m_NTHandleLinkComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandleLink>(),
                     m_HandleLineComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandleLine>(),
                     m_HandleCircleComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandleCircle>(),
+                    m_HandleRotationComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandleRotation>(),
                     m_HandleConstraintsComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandleConstraints>(),
                     m_HandleParentComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandleParent>(),
                     m_HandlePositionLookup = SystemAPI.GetComponentLookup<NT_HandlePosition>(true),

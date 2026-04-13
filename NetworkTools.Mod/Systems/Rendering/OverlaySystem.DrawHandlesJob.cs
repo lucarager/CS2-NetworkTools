@@ -15,7 +15,7 @@ namespace NetworkTools.Systems {
     public partial class NT_OverlaySystem {
         /// <summary>
         ///     Job to draw handle overlays.
-        ///     Supports point, line, and circle handle types.
+        ///     Supports point, line, circle, and rotation handle types.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
 #if BURST
@@ -32,6 +32,7 @@ namespace NetworkTools.Systems {
             [ReadOnly] public required ComponentTypeHandle<NT_Selected>          m_SelectedComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleLine>        m_HandleLineComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleCircle>      m_HandleCircleComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_HandleRotation>    m_HandleRotationComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleConstraints> m_HandleConstraintsComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleParent>      m_HandleParentComponentTypeHandle;
             [ReadOnly] public required ComponentLookup<NT_HandlePosition>         m_HandlePositionLookup;
@@ -50,11 +51,13 @@ namespace NetworkTools.Systems {
                 var markerArray             = chunk.GetNativeArray(ref m_NTHandleComponentTypeHandle);
                 var hasLineComponent        = chunk.Has(ref m_HandleLineComponentTypeHandle);
                 var hasCircleComponent      = chunk.Has(ref m_HandleCircleComponentTypeHandle);
+                var hasRotationComponent    = chunk.Has(ref m_HandleRotationComponentTypeHandle);
                 var hasConstraintsComponent = chunk.Has(ref m_HandleConstraintsComponentTypeHandle);
                 var hasParentComponent      = chunk.Has(ref m_HandleParentComponentTypeHandle);
 
                 NativeArray<NT_HandleLine>        lineArray        = default;
                 NativeArray<NT_HandleCircle>      circleArray      = default;
+                NativeArray<NT_HandleRotation>    rotationArray    = default;
                 NativeArray<NT_HandleConstraints> constraintsArray = default;
                 NativeArray<NT_HandleParent>      parentArray      = default;
 
@@ -64,6 +67,10 @@ namespace NetworkTools.Systems {
 
                 if (hasCircleComponent) {
                     circleArray = chunk.GetNativeArray(ref m_HandleCircleComponentTypeHandle);
+                }
+
+                if (hasRotationComponent) {
+                    rotationArray = chunk.GetNativeArray(ref m_HandleRotationComponentTypeHandle);
                 }
 
                 if (hasConstraintsComponent) {
@@ -90,6 +97,10 @@ namespace NetworkTools.Systems {
                     } else if (handle.HasAnyFlag(HandleTypeFlags.Circle) && hasCircleComponent) {
                         var circle = circleArray[i];
                         RenderCircleHandle(position, circle, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
+                    } else if (handle.HasAnyFlag(HandleTypeFlags.Rotation) && hasRotationComponent && hasCircleComponent) {
+                        var circle   = circleArray[i];
+                        var rotation = rotationArray[i];
+                        RenderRotationHandle(position, circle, rotation, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.ParameterRange) && hasConstraintsComponent) {
                         // Parameter handle with range indicator (origin dot + line to handle)
                         var constraints = constraintsArray[i];
@@ -208,6 +219,41 @@ namespace NetworkTools.Systems {
 
                 // Draw a small center point
                 buffer.DrawCircle(fillColor, fillColor, 0.3f, 0, new float2(0, 1), position.Position, 1f);
+            }
+
+            /// <summary>
+            ///     Renders a rotation handle: circle outline with an angle indicator line.
+            /// </summary>
+            private static void RenderRotationHandle(NT_HandlePosition          position,      NT_HandleCircle circle,
+                                                     NT_HandleRotation          rotation,      NT_Handle       handle,
+                                                     bool                       isHighlighted, bool            isSelected,
+                                                     RenderColors               colors,
+                                                     CustomOverlayRenderSystem.Buffer buffer) {
+                GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
+                var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
+
+                // Draw the circle outline
+                buffer.DrawCircle(outlineColor, new Color(255, 255, 255, 0), borderWidth, 0, new float2(0, 1), position.Position, circle.Radius * 2f);
+
+                // Draw a small center point
+                buffer.DrawCircle(fillColor, position.Position, 1f);
+
+                // Draw angle indicator: arrow from center toward the angle point
+                var direction   = rotation.GetDirection(circle.Normal);
+                var anglePoint  = circle.Center + direction * circle.Radius;
+                var arrowHeight = circle.Radius / 3f;
+                var arrowWidth  = 1f;
+
+                // Rotate local +Y to point along direction on the XZ plane
+                var arrowRotation = quaternion.LookRotationSafe(direction, circle.Normal);
+                // LookRotation points +Z along direction; rotate -90° around X to align +Y with direction instead
+                arrowRotation = math.mul(arrowRotation, quaternion.RotateX(math.PI * 0.5f));
+
+                buffer.DrawCustomMesh(outlineColor, circle.Center, arrowHeight, arrowWidth,
+                                      CustomOverlayRenderSystem.CustomMeshType.Arrow, arrowRotation);
+
+                // Draw a small handle dot at the angle point
+                buffer.DrawCircle(outlineColor, fillColor, 0.4f, 0, new float2(0, 1), anglePoint, handle.Radius * 2f);
             }
 
             /// <summary>

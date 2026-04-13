@@ -165,6 +165,22 @@
                     Radius = NT_Handle.SecondaryRadius,
                     ParentKey = HandleKeys.LoopControlPointPosition,
                 },
+                new TransformHandleDefinition {
+                    Key = HandleKeys.StartDirection,
+                    TypeFlags = HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
+                    Position = config.StartPosition,
+                    Value = 0,
+                    ReferenceDirection = config.StartDirection,
+                    Angle = 0,
+                },
+                new TransformHandleDefinition {
+                    Key = HandleKeys.EndDirection,
+                    TypeFlags = HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
+                    Position = config.EndPosition,
+                    Value = 0,
+                    ReferenceDirection = config.EndDirection,
+                    Angle = 0,
+                },
             };
         }
     }

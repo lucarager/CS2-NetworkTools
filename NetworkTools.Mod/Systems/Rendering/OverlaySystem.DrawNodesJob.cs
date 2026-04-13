@@ -111,7 +111,7 @@
                     // Select
                     var position = averagedPosition;
                     var nodeDiameter = averagedSize * 0.5f;
-                    var nodeBorderWidth = math.min(1f, averagedSize);
+                    var nodeBorderWidth = math.max(1f, averagedSize / 3f);
                     
                     if (isSelectedFirst || isSelectedLast) {
                         // First or last path node
