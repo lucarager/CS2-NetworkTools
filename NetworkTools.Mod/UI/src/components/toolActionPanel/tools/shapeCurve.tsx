@@ -8,7 +8,7 @@ import {
 } from "gameBindings";
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
-import { VC } from "components/vanilla/Components";
+import { VC, VF } from "components/vanilla/Components";
 import { NodeSelection } from "../shared/nodeSelection";
 import { c } from "utils/classes";
 
@@ -64,7 +64,28 @@ export const ShapeCurveControls: React.FC = () => {
                                             key={preset.id}
                                             tooltip={preset.label}
                                             delayTime={0}>
-                                            <Button
+                                            <VC.ToolButton
+                                                key={preset.id}
+                                                className={c(
+                                                    styles.iconButton,
+                                                    styles.iconButton__xl,
+                                                    shapeConfig.template === preset.id
+                                                        ? styles.iconButton__active
+                                                        : null,
+                                                )}
+                                                src={preset.icon}
+                                                onSelect={() =>
+                                                    handleShapeParameterChange(
+                                                        "template",
+                                                        preset.id,
+                                                    )
+                                                }
+                                                selected={shapeConfig.template === preset.id}
+                                                multiSelect={false}
+                                                disabled={false}
+                                                focusKey={VF.FOCUS_DISABLED}
+                                            />
+                                            {/* <Button
                                                 key={preset.id}
                                                 variant="primary"
                                                 className={c(
@@ -80,7 +101,7 @@ export const ShapeCurveControls: React.FC = () => {
                                                     )
                                                 }>
                                                 <img src={preset.icon} className={styles.icon} />
-                                            </Button>
+                                            </Button> */}
                                         </Tooltip>
                                     ))}
                                 </div>

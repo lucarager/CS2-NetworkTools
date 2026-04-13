@@ -1,3 +1,23 @@
 // Panel padding
 $panel-padding-x: 16rem;
 $panel-padding-y: 12rem;
+
+// Colors
+$magenta-haze: #ae4377ff;
+$raspberry-rose: #b4446eff;
+$raspberry-rose-2: #ba4565ff;
+$cerise: #c0455cff;
+$bittersweet-shimmer: #c64653ff;
+$bittersweet-shimmer-2: #cc474aff;
+$bittersweet-shimmer-3: rgb(204, 87, 71);
+$color1: $magenta-haze;
+$color2: $raspberry-rose;
+$color3: $raspberry-rose-2;
+$color4: $cerise;
+$color5: $bittersweet-shimmer;
+$color6: $bittersweet-shimmer-2;
+$color7: $bittersweet-shimmer-3;
+
+$color-nt-1: rgb(193, 44, 234);
+$color-nt-2: rgb(150, 69, 255);
+$color-nt-3: linear-gradient(to bottom, $color-nt-1 0%, $color-nt-2 100%);

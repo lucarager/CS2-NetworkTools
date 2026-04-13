@@ -72,7 +72,7 @@ export const ParallelControls: React.FC = () => {
                                         <VC.ToolButton
                                             key={option.id}
                                             tooltip={option.label}
-                                            className={c(VT.toolButton.button, styles.toolButton)}
+                                            className={c(VT.toolButton.button, styles.iconButton)}
                                             src={option.icon}
                                             onSelect={() =>
                                                 handleConfigChange("horizontalDirection", option.id)
@@ -111,7 +111,7 @@ export const ParallelControls: React.FC = () => {
                                         <VC.ToolButton
                                             key={option.id}
                                             tooltip={option.label}
-                                            className={c(VT.toolButton.button, styles.toolButton)}
+                                            className={c(VT.toolButton.button, styles.iconButton)}
                                             src={option.icon}
                                             onSelect={() =>
                                                 handleConfigChange("verticalDirection", option.id)
@@ -148,7 +148,7 @@ export const ParallelControls: React.FC = () => {
                                 <div className={styles.buttonRow}>
                                     <VC.ToolButton
                                         tooltip="Same"
-                                        className={c(VT.toolButton.button, styles.toolButton)}
+                                        className={c(VT.toolButton.button, styles.iconButton)}
                                         src="coui://nt/Direction/Same.svg"
                                         onSelect={() =>
                                             handleConfigChange("reverseDirection", false)
@@ -160,7 +160,7 @@ export const ParallelControls: React.FC = () => {
                                     />
                                     <VC.ToolButton
                                         tooltip="Reverse"
-                                        className={c(VT.toolButton.button, styles.toolButton)}
+                                        className={c(VT.toolButton.button, styles.iconButton)}
                                         src="coui://nt/Direction/Opposite.svg"
                                         onSelect={() =>
                                             handleConfigChange("reverseDirection", true)

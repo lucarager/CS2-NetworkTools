@@ -10,7 +10,7 @@ type NodeSelectionProps = {
 export const NodeSelection: React.FC<NodeSelectionProps> = ({ selectedEntities }) => {
     return (
         <>
-            <div className={styles.divider}></div>
+            {/* <div className={styles.divider}></div>
             <div className={styles.col} style={{ minHeight: "80rem" }}>
                 {selectedEntities.length > 0 && (
                     <div>
@@ -29,7 +29,7 @@ export const NodeSelection: React.FC<NodeSelectionProps> = ({ selectedEntities }
                         ))}
                     </div>
                 )}
-            </div>
+            </div> */}
         </>
     );
 };

@@ -1,36 +1,23 @@
 @use '../shared/animations.module.scss' as *;
+@use '../shared/variables.module.scss' as *;
 
-$magenta-haze: #ae4377ff;
-$raspberry-rose: #b4446eff;
-$raspberry-rose-2: #ba4565ff;
-$cerise: #c0455cff;
-$bittersweet-shimmer: #c64653ff;
-$bittersweet-shimmer-2: #cc474aff;
-$bittersweet-shimmer-3: rgb(204, 87, 71);
-$color1: $magenta-haze;
-$color2: $raspberry-rose;
-$color3: $raspberry-rose-2;
-$color4: $cerise;
-$color5: $bittersweet-shimmer;
-$color6: $bittersweet-shimmer-2;
-$color7: $bittersweet-shimmer-3;
 $opacityRest: 100%;
 $brighten: 10%;
-$color-nt-3: linear-gradient(to bottom, rgb(205, 56, 219) 0%,rgb(150, 69, 255) 100%);
+
 $iconSize: 26rem;
 $iconPadding: 6rem;
 $barHeight: $iconSize + $iconPadding * 2;
 
 .wrapper {
     animation: slideInLeft 0.16s ease-out forwards;
+    width: 40rem;
 }
 
 .column {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 14rem 4rem;
+    padding: 14rem 0;
     position: relative;
 
     & > * {
@@ -44,17 +31,21 @@ $barHeight: $iconSize + $iconPadding * 2;
 
 .toolItem {
     position: relative;
+    width: 100%;
+    padding: 0 4rem;
 }
 
 .activeIndicator {
+    --size: 3rem;
+
     position: absolute;
     top: 0;
-    left: -4rem;
-    width: 4rem;
+    left: 0;
+    width: var(--size);
     height: 100%;
     background: $color-nt-3;
-    border-top-right-radius: 4rem;
-    border-bottom-right-radius: 4rem;
+    border-top-right-radius: var(--size);
+    border-bottom-right-radius: var(--size);
     transition: opacity 0.2s ease-out;
     pointer-events: none;
 }
@@ -69,6 +60,7 @@ $barHeight: $iconSize + $iconPadding * 2;
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s ease;
+    opacity: 0.75;
 
     img {
         width: $iconSize;
@@ -76,11 +68,13 @@ $barHeight: $iconSize + $iconPadding * 2;
     }
 
     &:hover {
+        opacity: 1;
         background: rgba(255, 255, 255, 0.1);
     }
 
-    &:active {
-        background: rgba(255, 255, 255, 0.3);
+    &__active {
+        opacity: 1;
+        // background: rgba(255, 255, 255, 0.3);
     }
 
     &__inactive {

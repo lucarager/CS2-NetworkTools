@@ -42,7 +42,7 @@ export const ViewSelection: React.FC = () => {
                 <span className={styles.paramLabel}>View</span>
                 <div className={styles.buttonRow}>
                     <VC.ToolButton
-                        className={c(VT.toolButton.button, styles.toolButton)}
+                        className={c(VT.toolButton.button, styles.iconButton)}
                         src={"coui://nt/View/All.svg"}
                         onSelect={handleToggleAll}
                         selected={allSelected}
@@ -54,7 +54,7 @@ export const ViewSelection: React.FC = () => {
                     {visibleFlags.map((view) => (
                         <VC.ToolButton
                             key={view.flag}
-                            className={c(VT.toolButton.button, styles.toolButton)}
+                            className={c(VT.toolButton.button, styles.iconButton)}
                             src={view.icon}
                             onSelect={() => toggleFlag(view.flag)}
                             selected={hasFlag(view.flag)}

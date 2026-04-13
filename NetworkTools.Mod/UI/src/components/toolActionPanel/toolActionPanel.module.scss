@@ -98,6 +98,9 @@
 
 .sliderField {
     width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 
     // Override some vanilla styles
     & > * {
@@ -112,9 +115,20 @@
         flex-basis: auto;
     }
 
-    // input {
-    //     display: none;
-    // }
+    // Apply flex to the vanilla editor div
+    & > div {
+        flex: 1;
+    }
+
+    .unitLabel {
+        font-size: var(--fontSizeS);
+        line-height: 1.25em;
+        color: rgba(255, 255, 255, 0.75);
+        margin-left: 8rem;
+    }
+
+    &__withUnit {
+    }
 }
 
 .controlRow {
@@ -123,10 +137,16 @@
         flex-direction: row;
         align-items: center;
     }
-}
 
-.controlRow + .controlRow {
-    margin-top: 8rem;
+    & + .controlRow {
+        margin-top: 8rem;
+    }
+
+    button[class^="selected"],
+    button[class*="selected"] {
+        background-image: $color-nt-3 !important;
+        background-color: $color-nt-1 !important;
+    }
 }
 
 .buttonRow {
@@ -167,17 +187,26 @@
 }
 
 .iconButton {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(169, 155, 182, 0.19);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 4rem;
-    opacity: 0.6;
     position: relative;
     overflow: hidden;
 
-    &__active {
-        opacity: 1;
+    &__xl {
+        --size: calc(36rem * ((var(--fontScale)-1) / 2+1));
+        --iconSize: calc(var(--size)-4rem);
+        width: var(--size);
+        height: var(--size);
+    }
+
+    &__active,
+    button[class^="selected"],
+    button[class*="selected"] {
+        background-image: $color-nt-3 !important;
+        background-color: $color-nt-1 !important;
     }
 
     &:hover {
@@ -186,7 +215,6 @@
 }
 
 .toolButton {
-
 }
 
 .icon {

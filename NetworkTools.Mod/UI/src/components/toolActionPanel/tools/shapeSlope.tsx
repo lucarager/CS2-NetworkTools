@@ -8,7 +8,7 @@ import {
 } from "gameBindings";
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
-import { VC } from "components/vanilla/Components";
+import { VC, VF } from "components/vanilla/Components";
 import { NodeSelection } from "../shared/nodeSelection";
 import { c } from "utils/classes";
 
@@ -64,23 +64,27 @@ export const ShapeSlopeControls: React.FC = () => {
                                             key={preset.id}
                                             tooltip={preset.label}
                                             delayTime={0}>
-                                            <Button
+                                            <VC.ToolButton
                                                 key={preset.id}
-                                                variant="primary"
                                                 className={c(
                                                     styles.iconButton,
+                                                    styles.iconButton__xl,
                                                     shapeConfig.template === preset.id
                                                         ? styles.iconButton__active
                                                         : null,
                                                 )}
+                                                src={preset.icon}
                                                 onSelect={() =>
                                                     handleShapeParameterChange(
                                                         "template",
                                                         preset.id,
                                                     )
-                                                }>
-                                                <img src={preset.icon} className={styles.icon} />
-                                            </Button>
+                                                }
+                                                selected={shapeConfig.template === preset.id}
+                                                multiSelect={false}
+                                                disabled={false}
+                                                focusKey={VF.FOCUS_DISABLED}
+                                            />
                                         </Tooltip>
                                     ))}
                                 </div>
@@ -88,34 +92,53 @@ export const ShapeSlopeControls: React.FC = () => {
                         </div>
 
                         {/* EaseInOut Parameters */}
-                        {/* {shapeConfig.template === ShapeTransformTemplate.SlopeEaseInOut && (
+                        {shapeConfig.template === ShapeTransformTemplate.SlopeEaseInOut && (
                             <>
-                                <div className={styles.sliderField}>
-                                    <VC.FloatSliderField
-                                        value={shapeConfig.easeInLength}
-                                        label={"Start easing strength"}
-                                        min={0}
-                                        max={0.5}
-                                        fractionDigits={3}
-                                        onChange={(e: number) => {
-                                            handleShapeParameterChange("easeInLength", e);
-                                        }}
-                                    />
+                                <div className={styles.controlRow}>
+                                    <div
+                                        className={c(
+                                            styles.sliderField,
+                                            styles.sliderField__withUnit,
+                                        )}>
+                                        {/* We mask the internal 0 - 0.5 float range into 0 - 100% for the player */}
+                                        <VC.FloatSliderField
+                                            value={shapeConfig.easeInLength * 200}
+                                            label={"Starting Flatness"}
+                                            min={0}
+                                            max={100}
+                                            fractionDigits={0}
+                                            onChange={(e: number) => {
+                                                handleShapeParameterChange("easeInLength", e / 200);
+                                            }}
+                                        />
+                                        <span className={styles.unitLabel}>%</span>
+                                    </div>
                                 </div>
-                                <div className={styles.sliderField}>
-                                    <VC.FloatSliderField
-                                        value={shapeConfig.easeOutLength}
-                                        label={"End easing strength"}
-                                        min={0}
-                                        max={0.5}
-                                        fractionDigits={3}
-                                        onChange={(e: number) => {
-                                            handleShapeParameterChange("easeOutLength", e);
-                                        }}
-                                    />
+                                <div className={styles.controlRow}>
+                                    <div
+                                        className={c(
+                                            styles.sliderField,
+                                            styles.sliderField__withUnit,
+                                        )}>
+                                        {/* We mask the internal 0 - 0.5 float range into 0 - 100% for the player */}
+                                        <VC.FloatSliderField
+                                            value={shapeConfig.easeOutLength * 200}
+                                            label={"Ending Flatness"}
+                                            min={0}
+                                            max={100}
+                                            fractionDigits={0}
+                                            onChange={(e: number) => {
+                                                handleShapeParameterChange(
+                                                    "easeOutLength",
+                                                    e / 200,
+                                                );
+                                            }}
+                                        />
+                                        <span className={styles.unitLabel}>%</span>
+                                    </div>
                                 </div>
                             </>
-                        )} */}
+                        )}
 
                         {/* Parabolic Parameters */}
                         {shapeConfig.template === ShapeTransformTemplate.SlopeParabolic && (

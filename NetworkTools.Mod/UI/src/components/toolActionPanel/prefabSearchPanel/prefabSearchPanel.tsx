@@ -5,6 +5,7 @@ import { GAME_BINDINGS, GAME_TRIGGERS, PrefabType } from "gameBindings";
 import { useValue } from "cs2/api";
 import { c } from "utils/classes";
 import { VC } from "components/vanilla/Components";
+import { useLocalization } from "cs2/l10n";
 
 const PREFAB_TABS: { label: string; type: PrefabType }[] = [
     { label: "Road", type: PrefabType.Road },
@@ -22,12 +23,15 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
     const selectedType = useValue(GAME_BINDINGS.PS_SELECTED_TYPE.binding);
     const prefabData = useValue(GAME_BINDINGS.PS_DATA.binding);
     const [searchQuery, setSearchQuery] = useState("");
+    const { translate } = useLocalization();
 
     const filteredPrefabs = useMemo(() => {
         if (!searchQuery.trim()) return prefabData;
         const query = searchQuery.toLowerCase();
-        return prefabData.filter((p) => p.Name.toLowerCase().includes(query));
-    }, [prefabData, searchQuery]);
+        return prefabData.filter((p) =>
+            translate(`Assets.NAME[${p.Name}]`, p.Name)?.toLowerCase().includes(query),
+        );
+    }, [prefabData, searchQuery, translate]);
 
     return (
         <div className={c(panels.nt_panel, styles.panel)}>
@@ -78,7 +82,7 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
                                 onClose();
                             }}>
                             <img src={prefab.Icon} className={styles.listItem__icon} />
-                            {prefab.Name}
+                            {translate(`Assets.NAME[${prefab.Name}]`, prefab.Name)}
                         </div>
                     ))}
                 </VC.Scrollable>

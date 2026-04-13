@@ -37,7 +37,7 @@ export const SnapSelection: React.FC = () => {
                 <span className={styles.paramLabel}>Snapping</span>
                 <div className={styles.buttonRow}>
                     <VC.ToolButton
-                        className={c(VT.toolButton.button, styles.toolButton)}
+                        className={c(VT.toolButton.button, styles.iconButton)}
                         src={"coui://nt/Snap/All.svg"}
                         onSelect={handleToggleAll}
                         selected={allSelected}
@@ -49,7 +49,7 @@ export const SnapSelection: React.FC = () => {
                     {visibleFlags.map((snap) => (
                         <VC.ToolButton
                             key={snap.flag}
-                            className={c(VT.toolButton.button, styles.toolButton)}
+                            className={c(VT.toolButton.button, styles.iconButton)}
                             src={snap.icon}
                             onSelect={() => toggleFlag(snap.flag)}
                             selected={hasFlag(snap.flag)}

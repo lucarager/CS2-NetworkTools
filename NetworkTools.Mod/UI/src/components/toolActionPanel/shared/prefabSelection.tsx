@@ -3,11 +3,12 @@ import styles from "../toolActionPanel.module.scss";
 import { GAME_BINDINGS } from "gameBindings";
 import { useValue } from "cs2/api";
 import { usePrefabSearch } from "../prefabSearchPanel/prefabSearchContext";
+import { useLocalization } from "cs2/l10n";
 
 export const PrefabSelection: React.FC = () => {
     const selectedNetPrefab = useValue(GAME_BINDINGS.SELECTED_NET_PREFAB.binding);
     const { isOpen, open, close } = usePrefabSearch();
-
+    const { translate } = useLocalization();
     return (
         <>
             <div className={styles.divider}></div>
@@ -23,7 +24,10 @@ export const PrefabSelection: React.FC = () => {
                                 className={styles.entityPreview__thumbnail}
                             />
                             <span className={styles.entityPreview__name}>
-                                {selectedNetPrefab.Name}
+                                {translate(
+                                    `Assets.NAME[${selectedNetPrefab.Name}]`,
+                                    selectedNetPrefab.Name,
+                                )}
                             </span>
                             <img
                                 src={"coui://uil/Standard/ArrowRightThickStroke.svg"}
