@@ -155,8 +155,9 @@ namespace NetworkTools.Systems.Tools {
 
             // Check that the entity we're hitting is eligible
             if (candidateEntity != Entity.Null && EntityManager.HasComponent<NT_Eligible>(candidateEntity)) {
-                controlPoint = new ControlPoint(candidateEntity, hit);
-                controlPoint.m_CurvePosition = curvePosition;
+                controlPoint = new ControlPoint(candidateEntity, hit) {
+                    m_CurvePosition = curvePosition
+                };
             }
 
             return controlPoint;

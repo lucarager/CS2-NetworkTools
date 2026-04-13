@@ -67,9 +67,9 @@
                         // First, mark edge as deleted. We need to re-create it in order to move the node position
                         ProcessEdgeDeletionDef(edgeEntity, edge);
 
-                        // If this is an edge that connects to any of our selected nodes, it should just be removed
-                        // No further processing is needed
-                        if (SelectedNodeSet.Contains(edge.m_Start) || SelectedNodeSet.Contains(edge.m_End)) {
+                        // If this is an edge that connects two of our selected nodes
+                        // no further processing is needed. It should just be removed 
+                        if (SelectedNodeSet.Contains(isStartNode ? edge.m_End : edge.m_Start)) {
                             if (DebugMode) {
                                 RenderBuffer.DrawDashedCurve(Color.red, CurveLookup[edgeEntity].m_Bezier, 1f, 1f, 1f);
                             }

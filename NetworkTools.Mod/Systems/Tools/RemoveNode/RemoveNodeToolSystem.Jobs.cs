@@ -173,7 +173,7 @@
                 var creationDefinition = new CreationDefinition {
                     //m_Original = edge1Entity,
                     m_Prefab = PrefabRefLookup[edge1Entity].m_Prefab,
-                    m_Flags  = CreationFlags.Parent | CreationFlags.Recreate | CreationFlags.Upgrade
+                    m_Flags  = CreationFlags.Construction | CreationFlags.Upgrade
                 };
 
                 if (UpgradedLookup.TryGetComponent(edge1Entity, out var upgraded)) {

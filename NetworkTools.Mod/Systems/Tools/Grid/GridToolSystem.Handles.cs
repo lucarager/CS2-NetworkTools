@@ -36,14 +36,13 @@ namespace NetworkTools.Systems.Tools {
             var yDir      = new float3(-math.sin(angleRad), 0f, math.cos(angleRad));
 
             return new[] {
-                // Angle handle at midpoint
+                // Angle handle at start point
                 new TransformHandleDefinition {
                     Key       = HandleKeys.Angle,
-                    Position  = midPoint + xDir * 20f,
-                    TypeFlags = HandleTypeFlags.Parameter | HandleTypeFlags.Primary | HandleTypeFlags.ShapeControl,
-                    Value     = CurrentConfig.Angle,
-                    MinValue  = -180f,
-                    MaxValue  = 180f
+                    Position  = startPos,
+                    TypeFlags =  HandleTypeFlags.Parameter | HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
+                    Value = 0,
+                    Angle = 0,
                 },
                 // X Spacing handle offset along X axis
                 new TransformHandleDefinition {

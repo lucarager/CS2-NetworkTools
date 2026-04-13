@@ -77,7 +77,7 @@ namespace NetworkTools.Systems.Tools {
         }
         private JobHandle Update(JobHandle inputDeps) {
             // Guard
-            if (m_LastHoveredEntity.Value == Entity.Null) {
+            if (m_LastControlPoint.m_OriginalEntity == Entity.Null) {
                 return inputDeps;
             }
 
@@ -105,7 +105,7 @@ namespace NetworkTools.Systems.Tools {
 
         private JobHandle Apply(JobHandle inputDeps) {
             // Guard
-            if (m_LastHoveredEntity.Value == Entity.Null) {
+            if (m_LastControlPoint.m_OriginalEntity == Entity.Null) {
                 return inputDeps;
             }
 
@@ -113,8 +113,11 @@ namespace NetworkTools.Systems.Tools {
             applyMode = ApplyMode.Apply;
             inputDeps = UpdateDefinitions(inputDeps, ToolOutputMode.Apply);
 
+            inputDeps.Complete();
+
             // Clear state to completely blank
             Phase = OperationPhase.Idle;
+            MarkEligibleEntities();
 
             return inputDeps;
         }
