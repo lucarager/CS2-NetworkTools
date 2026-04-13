@@ -41,6 +41,7 @@
         private int                                      m_LastSelectedSnaps;
         private int                                      m_LastSelectedTargets;
         private int                                      m_LastSelectedViews;
+        private int                                      m_LastShapeConfigRevision;
         private int                                      m_LastToolPrefabCount;
         private PrefixedLogger                           m_Log;
         private NameSystem                               m_NameSystem;

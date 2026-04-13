@@ -16,8 +16,8 @@
 
     public partial class NT_RoadShapeToolSystem {
         /// <inheritdoc />
-        protected override void OnPositionHandleDragged(Entity handle, int key, float3 position) {
-            m_Log.Debug($"OnPositionHandleDragged: key={key}, position={position}");
+        protected override void OnParameterHandleDragged(Entity handle, int key, float3 position, float value) {
+            m_Log.Debug($"OnParameterHandleDragged: key={key}, position={position}, value={value}");
 
             switch (key) {
                 case HandleKeys.EaseInLength:
@@ -29,6 +29,7 @@
                         easeInAxis);
                     m_Log.Debug($"EaseInLength: {ShapeTransformConfig.EaseInLength} -> {easeInParam}");
                     ShapeTransformConfig.EaseInLength = easeInParam;
+                    ShapeConfigRevision++;
                     break;
 
                 case HandleKeys.EaseOutLength:
@@ -40,6 +41,7 @@
                         easeOutAxis);
                     m_Log.Debug($"EaseOutLength: {ShapeTransformConfig.EaseOutLength} -> {easeOutParam}");
                     ShapeTransformConfig.EaseOutLength = easeOutParam;
+                    ShapeConfigRevision++;
                     break;
             }
         }

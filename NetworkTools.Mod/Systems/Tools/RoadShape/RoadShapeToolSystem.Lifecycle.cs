@@ -114,6 +114,7 @@
         /// </summary>
         public void SetTransformationConfig(ShapeTransformConfig config) {
             ShapeTransformConfig = config;
+            ShapeConfigRevision++;
             m_UpdateNeeded       = true;
 
             // Enable/Disable rendering based on config
@@ -138,7 +139,13 @@
         /// </summary>
         public void UpdateTransformationConfig(ShapeTransformConfig config) {
             ShapeTransformConfig = config;
+            ShapeConfigRevision++;
             m_UpdateNeeded       = true;
+
+            // Refresh handle positions to match the new config values
+            if (Phase == OperationPhase.Ready) {
+                RefreshTransformHandles();
+            }
 
             m_Log.Debug(
                 $"Transformation config updated: ShapeTemplate={config.Template}");

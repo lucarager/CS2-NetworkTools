@@ -17,8 +17,8 @@ namespace NetworkTools.Systems.Tools {
 
             m_Log.Debug("RefreshTransformHandles: Creating handles");
 
-            //var handleDefs = GetHandleDefinitions();
-            //CreateHandlesFromDefinitions(handleDefs);
+            var handleDefs = GetHandleDefinitions();
+            CreateHandlesFromDefinitions(handleDefs);
         }
 
         /// <summary>
@@ -43,6 +43,13 @@ namespace NetworkTools.Systems.Tools {
                     TypeFlags =  HandleTypeFlags.Parameter | HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
                     Value = 0,
                     Angle = 0,
+                },
+                // Start position handle
+                new TransformHandleDefinition {
+                    Key       = HandleKeys.StartPosition,
+                    Position  = startPos,
+                    TypeFlags = HandleTypeFlags.Parameter | HandleTypeFlags.Position | HandleTypeFlags.Primary,
+                    Radius    = NT_Handle.PrimaryRadius
                 },
                 // X Spacing handle offset along X axis
                 new TransformHandleDefinition {

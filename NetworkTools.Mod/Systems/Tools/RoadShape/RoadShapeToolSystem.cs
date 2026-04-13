@@ -21,6 +21,13 @@
         /// </summary>
         internal ShapeTransformConfig ShapeTransformConfig;
 
+        /// <summary>
+        ///     Monotonically increasing revision counter for config changes.
+        ///     Incremented whenever <see cref="ShapeTransformConfig"/> is modified,
+        ///     allowing the UI system to detect and sync changes.
+        /// </summary>
+        internal int ShapeConfigRevision;
+
         #region Template Method Implementations
 
         /// <inheritdoc />
