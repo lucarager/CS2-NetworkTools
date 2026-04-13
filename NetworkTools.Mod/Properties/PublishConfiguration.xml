@@ -17,15 +17,17 @@
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.1.15" />
+  <ModVersion Value="1.1.16" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog>- RemoveNode: Fix directionality of newly generated segment, should address accidental reversal of certain segments like asymmetricals
-- ConnectTool: Further internal changes for handle and generator system
-- Translations: Added Spanish (Thanks to @elGendo87)</ChangeLog>
+  <ChangeLog>- Parallel (and others): Added search UI for selecting network prefab.
+- RemoveNode/SuperNode: Further improve logic.
+- Updated translations (Thank you volunteers!)
+- Minor improvements and fixes.
+- Grid/Connect: Add more handle types</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
