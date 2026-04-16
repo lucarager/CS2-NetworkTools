@@ -163,6 +163,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_HintTooltipSystem>(SystemUpdatePhase.UITooltip);
             // Rendering
             updateSystem.UpdateAt<NT_OverlaySystem>(SystemUpdatePhase.Rendering);
+            updateSystem.UpdateAt<NT_ToolOverlayRenderSystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<CustomOverlayRenderSystem>(SystemUpdatePhase.Rendering);
             // Debug Tools
             //updateSystem.UpdateBefore<NT_DebugSystem, ElectricityGraphSystem>(SystemUpdatePhase.Deserialize);

@@ -31,9 +31,6 @@ namespace NetworkTools.Systems.Tools {
 
             // Configuration
             EligibilityTarget           = EligibilityTarget.Edge;
-            RenderTempEdges             = true;
-            RenderTempNodes             = true;
-            RenderEligibleNodes         = true;
             DisableVanillaValidation    = true;
             DisableVanillaNodeReduction = true;
         }

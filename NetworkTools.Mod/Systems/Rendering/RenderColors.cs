@@ -36,6 +36,11 @@
         public float4 TempEdge;
         public float4 TempNode;
 
+        // AddNode Colors
+        public float4 AddNodeEdgeEligible;
+        public float4 AddNodeEdgeTemp;
+        public float4 AddNodeNode;
+
         /// <summary>
         ///     Standard color values.
         /// </summary>
@@ -68,7 +73,12 @@
 
             // Temp entity colors
             TempEdge = (Vector4)new Color(1f, 1f, 1f, 1f),
-            TempNode = (Vector4)new Color(1f, 1f, 1f, 1f)
+            TempNode = (Vector4)new Color(1f, 1f, 1f, 1f),
+
+            // AddNode Colors
+            AddNodeEdgeEligible = (Vector4)new Color(1f, 1f, 1f, 0.3f),
+            AddNodeEdgeTemp = (Vector4)new Color(1f, 1f, 1f, 1f),
+            AddNodeNode = (Vector4)new Color(1f, 1f, 1f, 1f),
         };
     }
 }

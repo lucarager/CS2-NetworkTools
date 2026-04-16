@@ -202,7 +202,7 @@ namespace NetworkTools.Systems.Tools {
 
                 var creationDefinition = new CreationDefinition {
                     m_Original = Entity.Null,
-                    m_Flags    = CreationFlags.Recreate
+                    m_Flags    = CreationFlags.Construction 
                 };
 
                 if (prefabRef.m_Prefab != Entity.Null) {
@@ -220,7 +220,7 @@ namespace NetworkTools.Systems.Tools {
                     m_FixedIndex = -1,
                     m_Elevation  = default,
                     m_StartPosition = new CoursePos {
-                        m_Entity      = EdgeEntity,
+                        m_Entity      = Entity.Null,
                         m_Position    = HitPosition,
                         m_Rotation    = default,
                         m_CourseDelta = 0,
@@ -231,7 +231,7 @@ namespace NetworkTools.Systems.Tools {
                         m_SplitPosition = CurvePosition
                     },
                     m_EndPosition = new CoursePos {
-                        m_Entity      = EdgeEntity,
+                        m_Entity      = Entity.Null,
                         m_Position    = HitPosition,
                         m_Rotation    = default,
                         m_CourseDelta = 1,

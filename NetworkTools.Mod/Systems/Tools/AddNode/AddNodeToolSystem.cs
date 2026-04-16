@@ -87,7 +87,7 @@ namespace NetworkTools.Systems.Tools {
             return Phase switch
             {
                 // No temp entities needed
-                OperationPhase.Idle => inputDeps,
+                OperationPhase.Idle => Clear(inputDeps),
                 // Preview temp entities
                 OperationPhase.Ready or OperationPhase.Configuring => Update(inputDeps),
                 // Apply real entities
