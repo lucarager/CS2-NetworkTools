@@ -17,21 +17,14 @@
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.1.17" />
+  <ModVersion Value="1.1.18" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog>- UI: Various UI polish and improvements
-	- Adjusted colors, look and feel for consistency and better user experience
-	- Adjusted sizes and spacing
-	- Added labels and tooltips to various elements
-	- Prefab selection: Added actual asset names
-- Slope: 
-	- Added easing sliders back to the UI. They work alongside in-game handles.
-	- Fixed handles not affecting eased slope.
-	- Fixed handle/UI sync.</ChangeLog>
+  <ChangeLog>- AddNode: Rework rendering
+- AddNode: Remove reference to existing edge from tool component.</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
