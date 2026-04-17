@@ -31,7 +31,7 @@ namespace NetworkTools.Systems.Rendering {
             DepthFadeBelow = 4
         }
 
-        private readonly ComputeBuffer[]               m_CustomMeshBuffer = new ComputeBuffer[3];
+        private readonly ComputeBuffer[]              m_CustomMeshBuffer = new ComputeBuffer[3];
         private readonly NativeList<CustomMeshData>[] m_CustomMeshData   = new NativeList<CustomMeshData>[3];
 
         private readonly Mesh[] m_CustomMeshes = new Mesh[3];

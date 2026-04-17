@@ -1,7 +1,9 @@
 namespace NetworkTools.Systems {
+    using System;
     using Game;
     using Game.Common;
     using Game.Net;
+    using Game.Rendering;
     using Game.Tools;
     using NetworkTools.Components;
     using NetworkTools.Systems.Rendering;
@@ -10,18 +12,23 @@ namespace NetworkTools.Systems {
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
+    using Unity.Mathematics;
+    using UnityEngine;
+    using FrustumPlanes = Game.Rendering.FrustumPlanes;
 
     /// <summary>
     ///     Tool-specific overlay rendering system.
-    ///     Each tool gets its own render job scheduled via a switch on the active tool type.
     /// </summary>
     public partial class NT_ToolOverlayRenderSystem : GameSystemBase {
+        /// <summary>Maximum render distance for overlay entities (squared).</summary>
+        private const float MAX_OVERLAY_DISTANCE    = 3000f * 3000f;
+
         private PrefixedLogger            m_Log;
         private CustomOverlayRenderSystem m_OverlayRenderSystem;
         private ToolSystem                m_ToolSystem;
 
         // AddNode query: edges that are either NT-tagged or Temp
-        private EntityQuery m_AddNodeEdgeQuery;
+        private EntityQuery m_AddNodeQuery;
 
         // Narrow query for temp edges only, used by CollectTempOriginalsJob
         private EntityQuery m_TempEdgeQuery;
@@ -36,7 +43,7 @@ namespace NetworkTools.Systems {
             m_Log = new PrefixedLogger(nameof(NT_ToolOverlayRenderSystem));
             m_Log.Debug("OnCreate()");
 
-            m_AddNodeEdgeQuery = SystemAPI.QueryBuilder()
+            m_AddNodeQuery = SystemAPI.QueryBuilder()
                                           .WithAll<Edge, Curve, EdgeGeometry>()
                                           .WithAny<NT_Eligible, NT_Highlighted, NT_Selected, Temp>()
                                           .WithNone<Deleted, Hidden>()
@@ -58,7 +65,14 @@ namespace NetworkTools.Systems {
                 return;
             }
 
-            // Collect temp originals once, shared by all tool overlay methods
+            // Exit early on empty queries
+            var activeQuery = GetQueryForTool(tool);
+
+            if (activeQuery.IsEmptyIgnoreFilter && m_TempEdgeQuery.IsEmptyIgnoreFilter) {
+                return;
+            }
+
+            // 1. Collect temp entities so that we can use them in parallel jobs
             m_TempOriginals = new NativeParallelHashSet<Entity>(16, Allocator.TempJob);
 
             var collectJob = new CollectTempOriginalsJob {
@@ -67,46 +81,116 @@ namespace NetworkTools.Systems {
             };
 
             var collectHandle = collectJob.ScheduleByRef(m_TempEdgeQuery, Dependency);
+            var overlayBuffer = m_OverlayRenderSystem.GetBuffer(out var bufferDeps);
 
-            switch (tool) {
-                case NT_AddNodeToolSystem:
-                    ScheduleAddNodeOverlay(collectHandle);
-                    break;
-            }
+            // 2. Shared frustum + distance culling pre-pass
+            var cameraPos      = Camera.main != null ? (float3)Camera.main.transform.position : float3.zero;
+            var visibleEntities = new NativeParallelHashSet<Entity>(128, Allocator.TempJob);
+            var planePackets = BuildCullingPlanes();
 
-            // Dispose the set after all scheduled work completes
-            m_TempOriginals.Dispose(Dependency);
+            var cullJob = new FrustumCullEntitiesJob {
+                m_EntityTypeHandle         = SystemAPI.GetEntityTypeHandle(),
+                m_CurveComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Curve>(),
+                m_NodeComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<Node>(),
+                m_CullingPlanes            = planePackets.AsArray(),
+                m_CameraPosition           = cameraPos,
+                m_MaxDistance              = MAX_OVERLAY_DISTANCE,
+                m_VisibleEntities          = visibleEntities.AsParallelWriter(),
+            };
+
+            var cullHandle = cullJob.ScheduleParallel(activeQuery, collectHandle);
+
+            // 3. Tool-specific prepare job
+            var prepareHandle = SchedulePrepareJob(tool, cullHandle, visibleEntities, out var commandStream, out var chunkCount);
+
+            // 4. Sequential dispatch of pre-computed commands to the overlay buffer
+            var renderJob = new RenderOverlayCommandsJob {
+                m_Buffer        = overlayBuffer,
+                m_CommandReader = commandStream.AsReader(),
+                m_ForEachCount  = chunkCount,
+            };
+
+            var renderHandle = renderJob.Schedule(JobHandle.CombineDependencies(prepareHandle, bufferDeps));
+
+            m_OverlayRenderSystem.AddBufferWriter(renderHandle);
+            m_TempOriginals.Dispose(renderHandle);
+            visibleEntities.Dispose(renderHandle);
+            commandStream.Dispose(renderHandle);
+            planePackets.Dispose(renderHandle);
+            Dependency = renderHandle;
         }
 
         /// <summary>
-        ///     Schedules the combined overlay render job for the AddNode tool.
+        ///     Builds SOA frustum plane packets from the main camera for per-entity culling.
         /// </summary>
-        private void ScheduleAddNodeOverlay(JobHandle collectHandle) {
-            var drawAddNodeJob = new DrawAddNodeJob {
-                m_Buffer                          = m_OverlayRenderSystem.GetBuffer(out var bufferJobHandle),
-                m_Colors                          = RenderColors.Default,
-                m_Dimensions                      = RenderDimensions.Default,
-                m_EntityTypeHandle                = SystemAPI.GetEntityTypeHandle(),
-                m_EdgeComponentTypeHandle         = SystemAPI.GetComponentTypeHandle<Edge>(),
-                m_CurveComponentTypeHandle        = SystemAPI.GetComponentTypeHandle<Curve>(),
-                m_EdgeGeometryComponentTypeHandle = SystemAPI.GetComponentTypeHandle<EdgeGeometry>(),
-                m_EligibleComponentTypeHandle     = SystemAPI.GetComponentTypeHandle<NT_Eligible>(),
-                m_HighlightedComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
-                m_SelectedComponentTypeHandle     = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
-                m_TempComponentTypeHandle         = SystemAPI.GetComponentTypeHandle<Temp>(),
-                m_TempOriginals                   = m_TempOriginals,
-                m_NodeLookup                      = SystemAPI.GetComponentLookup<Node>(true),
-                m_EdgeGeometryLookup              = SystemAPI.GetComponentLookup<EdgeGeometry>(true),
-                m_TempLookup                      = SystemAPI.GetComponentLookup<Temp>(true),
-                m_EdgeLookup                      = SystemAPI.GetComponentLookup<Edge>(true)
+        private static NativeList<FrustumPlanes.PlanePacket4> BuildCullingPlanes() {
+            var planePackets = new NativeList<FrustumPlanes.PlanePacket4>(2, Allocator.TempJob);
+
+            if (Camera.main is null) {
+                return planePackets;
+            }
+
+            var managedPlanes = GeometryUtility.CalculateFrustumPlanes(Camera.main);
+            var nativePlanes  = new NativeArray<Plane>(6, Allocator.TempJob);
+            nativePlanes.CopyFrom(managedPlanes);
+            FrustumPlanes.BuildSOAPlanePackets(nativePlanes, 6, planePackets);
+            nativePlanes.Dispose();
+
+            return planePackets;
+        }
+
+        /// <summary>
+        ///     Returns the entity query for the given tool, or null if unrecognised.
+        /// </summary>
+        private EntityQuery GetQueryForTool(NT_BaseToolSystem tool) {
+            return tool switch {
+                NT_AddNodeToolSystem => m_AddNodeQuery,
+            };
+        }
+
+        /// <summary>
+        ///     Dispatches to the correct tool-specific prepare job.
+        /// </summary>
+        private JobHandle SchedulePrepareJob(
+            NT_BaseToolSystem tool,
+            JobHandle inputDeps,
+            NativeParallelHashSet<Entity> visibleEntities,
+            out NativeStream commandStream,
+            out int chunkCount) {
+            return tool switch {
+                NT_AddNodeToolSystem => ScheduleAddNodePrepare(inputDeps, visibleEntities, out commandStream, out chunkCount),
+            };
+        }
+
+        /// <summary>
+        ///     Schedules the parallel prepare job for the AddNode tool overlay.
+        /// </summary>
+        private JobHandle ScheduleAddNodePrepare(
+            JobHandle inputDeps,
+            NativeParallelHashSet<Entity> visibleEntities,
+            out NativeStream commandStream,
+            out int chunkCount) {
+            chunkCount    = math.max(1, m_AddNodeQuery.CalculateChunkCountWithoutFiltering());
+            commandStream = new NativeStream(chunkCount, Allocator.TempJob);
+
+            var prepareJob = new PrepareAddNodeCommandsJob {
+                m_Colors                         = RenderColors.Default,
+                m_EntityTypeHandle               = SystemAPI.GetEntityTypeHandle(),
+                m_EdgeComponentTypeHandle        = SystemAPI.GetComponentTypeHandle<Edge>(),
+                m_CurveComponentTypeHandle       = SystemAPI.GetComponentTypeHandle<Curve>(),
+                m_EligibleComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Eligible>(),
+                m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
+                m_SelectedComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
+                m_TempComponentTypeHandle        = SystemAPI.GetComponentTypeHandle<Temp>(),
+                m_TempOriginals                  = m_TempOriginals,
+                m_VisibleEntities                = visibleEntities,
+                m_NodeLookup                     = SystemAPI.GetComponentLookup<Node>(true),
+                m_TempLookup                     = SystemAPI.GetComponentLookup<Temp>(true),
+                m_EdgeLookup                     = SystemAPI.GetComponentLookup<Edge>(true),
+                m_CommandWriter                  = commandStream.AsWriter(),
             };
 
-            var drawHandle = drawAddNodeJob.ScheduleByRef(m_AddNodeEdgeQuery,
-                                                           JobHandle.CombineDependencies(collectHandle,
-                                                                                         bufferJobHandle));
-
-            m_OverlayRenderSystem.AddBufferWriter(drawHandle);
-            Dependency = drawHandle;
+            return prepareJob.ScheduleParallel(m_AddNodeQuery, inputDeps);
         }
     }
 }

@@ -467,6 +467,17 @@ namespace NetworkTools.Systems.Tools {
                 m_LastRaycastEntity.Dispose();
             }
 
+            // Disable actions
+            m_ApplyAction.shouldBeEnabled = false;
+            m_SecondaryApplyAction.shouldBeEnabled = false;
+
+            // Re-enable vanilla systems
+            m_ValidationSystem.Enabled = true;
+            m_NodeReductionSystem.Enabled = true;
+
+            // Cleanup rendering state
+            m_RenderingSystem.markersVisible = false;
+
             base.OnDestroy();
         }
 
@@ -573,14 +584,10 @@ namespace NetworkTools.Systems.Tools {
             m_ApplyAction.shouldBeEnabled          = false;
             m_SecondaryApplyAction.shouldBeEnabled = false;
 
-            if (DisableVanillaValidation) {
-                m_ValidationSystem.Enabled = true;
-            }
-
-            if (DisableVanillaNodeReduction) {
-                m_NodeReductionSystem.Enabled = true;
-            }
-
+            // Re-enable vanilla systems
+            m_ValidationSystem.Enabled = true;
+            m_NodeReductionSystem.Enabled = true;
+            
             // Cleanup rendering state
             m_RenderingSystem.markersVisible = false;
 
