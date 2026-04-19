@@ -68,7 +68,7 @@ namespace NetworkTools.Systems {
             // Exit early on empty queries
             var activeQuery = GetQueryForTool(tool);
 
-            if (activeQuery.IsEmptyIgnoreFilter && m_TempEdgeQuery.IsEmptyIgnoreFilter) {
+            if (!activeQuery.HasValue || (activeQuery.Value.IsEmptyIgnoreFilter && m_TempEdgeQuery.IsEmptyIgnoreFilter)) {
                 return;
             }
 
@@ -98,7 +98,7 @@ namespace NetworkTools.Systems {
                 m_VisibleEntities          = visibleEntities.AsParallelWriter(),
             };
 
-            var cullHandle = cullJob.ScheduleParallel(activeQuery, collectHandle);
+            var cullHandle = cullJob.ScheduleParallel(activeQuery.Value, collectHandle);
 
             // 3. Tool-specific prepare job
             var prepareHandle = SchedulePrepareJob(tool, cullHandle, visibleEntities, out var commandStream, out var chunkCount);
@@ -142,9 +142,10 @@ namespace NetworkTools.Systems {
         /// <summary>
         ///     Returns the entity query for the given tool, or null if unrecognised.
         /// </summary>
-        private EntityQuery GetQueryForTool(NT_BaseToolSystem tool) {
+        private EntityQuery? GetQueryForTool(NT_BaseToolSystem tool) {
             return tool switch {
                 NT_AddNodeToolSystem => m_AddNodeQuery,
+                _ => null
             };
         }
 
@@ -159,6 +160,7 @@ namespace NetworkTools.Systems {
             out int chunkCount) {
             return tool switch {
                 NT_AddNodeToolSystem => ScheduleAddNodePrepare(inputDeps, visibleEntities, out commandStream, out chunkCount),
+                _ => throw new NotImplementedException($"No prepare job implemented for tool type: {tool.GetType().Name}")
             };
         }
 
