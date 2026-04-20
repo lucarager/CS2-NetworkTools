@@ -144,7 +144,7 @@ namespace NetworkTools.Systems {
         /// </summary>
         private EntityQuery? GetQueryForTool(NT_BaseToolSystem tool) {
             return tool switch {
-                NT_AddNodeToolSystem => m_AddNodeQuery,
+                //NT_AddNodeToolSystem => m_AddNodeQuery,
                 _ => null
             };
         }
@@ -159,7 +159,7 @@ namespace NetworkTools.Systems {
             out NativeStream commandStream,
             out int chunkCount) {
             return tool switch {
-                NT_AddNodeToolSystem => ScheduleAddNodePrepare(inputDeps, visibleEntities, out commandStream, out chunkCount),
+                //NT_AddNodeToolSystem => ScheduleAddNodePrepare(inputDeps, visibleEntities, out commandStream, out chunkCount),
                 _ => throw new NotImplementedException($"No prepare job implemented for tool type: {tool.GetType().Name}")
             };
         }
