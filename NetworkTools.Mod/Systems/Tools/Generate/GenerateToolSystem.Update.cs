@@ -14,9 +14,9 @@ namespace NetworkTools.Systems.Tools {
     using static Colossal.IO.AssetDatabase.AtlasFrame;
 
     /// <summary>
-    ///     Update loop and state management for <see cref="NT_GridToolSystem"/>.
+    ///     Update loop and state management for <see cref="NT_GenerateToolSystem"/>.
     /// </summary>
-    public partial class NT_GridToolSystem {
+    public partial class NT_GenerateToolSystem {
         /// <inheritdoc />
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();

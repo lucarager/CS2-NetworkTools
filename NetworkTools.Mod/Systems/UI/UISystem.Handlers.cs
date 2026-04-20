@@ -68,8 +68,8 @@ namespace NetworkTools.Systems.UI {
                 }
 
                 // Sync grid config binding when the grid tool is activated
-                if (m_ToolSystem.activeTool == m_NtGridToolSystem) {
-                    m_GridConfigBinding.Value = m_NtGridToolSystem.CurrentConfig;
+                if (m_ToolSystem.activeTool == m_NTGenerateToolSystem) {
+                    m_GridConfigBinding.Value = m_NTGenerateToolSystem.CurrentConfig;
                 }
 
                 // Sync parallel config binding when the parallel tool is activated
@@ -86,10 +86,10 @@ namespace NetworkTools.Systems.UI {
             m_ConnectModeBinding.Value = mode;
         }
 
-        private void HandleUpdateGridConfig(GridConfig configData) {
+        private void HandleUpdateGridConfig(GenerateConfig configData) {
             m_Log.Debug("HandleUpdateGridConfig");
             m_GridConfigBinding.Value = configData;
-            m_NtGridToolSystem.UpdateConfig(configData);
+            m_NTGenerateToolSystem.UpdateConfig(configData);
         }
 
         private void HandleUpdateParallelConfig(ParallelConfig configData) {

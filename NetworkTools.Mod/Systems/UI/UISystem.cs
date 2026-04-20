@@ -46,7 +46,7 @@
         private PrefixedLogger                           m_Log;
         private NameSystem                               m_NameSystem;
         private NT_ConnectToolSystem                     m_NtConnectToolSystem;
-        private NT_GridToolSystem                        m_NtGridToolSystem;
+        private NT_GenerateToolSystem                        m_NTGenerateToolSystem;
         private NT_ParallelToolSystem                    m_NtParallelToolSystem;
         private NT_RoadShapeToolSystem                   m_NtRoadShapeToolSystem;
         private ValueBindingHelper<ParallelConfig>       m_ParallelConfigBinding;
@@ -58,7 +58,7 @@
         private ValueBindingHelper<int>                  m_SelectedSnapsBinding;
         private ValueBindingHelper<int>                  m_SelectedTargetsBinding;
         private ValueBindingHelper<int>                  m_SelectedViewsBinding;
-        private ValueBindingHelper<GridConfig>            m_GridConfigBinding;
+        private ValueBindingHelper<GenerateConfig>            m_GridConfigBinding;
         private ValueBindingHelper<ShapeTransformConfig> m_ShapeConfigBinding;
         private ProxyAction                              m_ToggleToolPanelAction;
         private ProxyAction                              m_OpenTool1Action;
@@ -86,7 +86,7 @@
             m_PrefabSystem          = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_ToolSystem            = World.GetOrCreateSystemManaged<ToolSystem>();
             m_NtConnectToolSystem   = World.GetOrCreateSystemManaged<NT_ConnectToolSystem>();
-            m_NtGridToolSystem      = World.GetOrCreateSystemManaged<NT_GridToolSystem>();
+            m_NTGenerateToolSystem      = World.GetOrCreateSystemManaged<NT_GenerateToolSystem>();
             m_NtParallelToolSystem  = World.GetOrCreateSystemManaged<NT_ParallelToolSystem>();
             m_NtRoadShapeToolSystem = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
             m_NameSystem            = World.GetOrCreateSystemManaged<NameSystem>();
@@ -102,10 +102,10 @@
                                                  new ValueWriter<ShapeTransformConfig>(),
                                                  new ValueReader<ShapeTransformConfig>());
             m_GridConfigBinding = CreateBinding("GRID_CONFIG",
-                                                 new GridConfig(),
+                                                 new GenerateConfig(),
                                                  HandleUpdateGridConfig,
-                                                 new ValueWriter<GridConfig>(),
-                                                 new ValueReader<GridConfig>());
+                                                 new ValueWriter<GenerateConfig>(),
+                                                 new ValueReader<GenerateConfig>());
             m_ParallelConfigBinding = CreateBinding("PARALLEL_CONFIG",
                                                     ParallelConfig.Default,
                                                     HandleUpdateParallelConfig,

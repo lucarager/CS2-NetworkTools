@@ -8,11 +8,11 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Mathematics;
 
     /// <summary>
-    ///     Lifecycle methods for <see cref="NT_GridToolSystem"/>.
+    ///     Lifecycle methods for <see cref="NT_GenerateToolSystem"/>.
     /// </summary>
-    public partial class NT_GridToolSystem {
+    public partial class NT_GenerateToolSystem {
         /// <inheritdoc />
-        public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_GridTool>(prefab); }
+        public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_GenerateTool>(prefab); }
 
         /// <summary>
         ///     Initializes the grid config from the two control points.
@@ -24,7 +24,7 @@ namespace NetworkTools.Systems.Tools {
                 return;
             }
 
-            CurrentConfig = new GridConfig(m_ControlPoints[0], m_ControlPoints[1]);
+            CurrentConfig = new GenerateConfig(m_ControlPoints[0], m_ControlPoints[1]);
             RefreshTransformHandles();
         }
 
@@ -32,7 +32,7 @@ namespace NetworkTools.Systems.Tools {
         ///     Updates the grid configuration from the UI without reinitializing handles.
         /// </summary>
         /// <param name="config">The updated config from the UI.</param>
-        public void UpdateConfig(GridConfig config) {
+        public void UpdateConfig(GenerateConfig config) {
             CurrentConfig.Angle    = config.Angle;
             CurrentConfig.XSpacing = config.XSpacing;
             CurrentConfig.ZSpacing = config.ZSpacing;
@@ -45,7 +45,7 @@ namespace NetworkTools.Systems.Tools {
         protected override void OnCreate() {
             base.OnCreate();
 
-            m_Log.Prefix = nameof(NT_GridToolSystem);
+            m_Log.Prefix = nameof(NT_GenerateToolSystem);
 
             // Configuration
             RenderHandles            = true;

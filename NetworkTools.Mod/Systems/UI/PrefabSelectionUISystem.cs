@@ -35,7 +35,7 @@
         private PrefixedLogger         m_Log;
         private NameSystem             m_NameSystem;
         private NT_ConnectToolSystem   m_NtConnectToolSystem;
-        private NT_GridToolSystem      m_NtGridToolSystem;
+        private NT_GenerateToolSystem      m_NTGenerateToolSystem;
         private NT_ParallelToolSystem  m_NtParallelToolSystem;
         private NT_RoadShapeToolSystem m_NtRoadShapeToolSystem;
         private PrefabSystem           m_PrefabSystem;
@@ -54,7 +54,7 @@
             m_PrefabSystem          = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_ToolSystem            = World.GetOrCreateSystemManaged<ToolSystem>();
             m_NtConnectToolSystem   = World.GetOrCreateSystemManaged<NT_ConnectToolSystem>();
-            m_NtGridToolSystem      = World.GetOrCreateSystemManaged<NT_GridToolSystem>();
+            m_NTGenerateToolSystem      = World.GetOrCreateSystemManaged<NT_GenerateToolSystem>();
             m_NtParallelToolSystem  = World.GetOrCreateSystemManaged<NT_ParallelToolSystem>();
             m_NtRoadShapeToolSystem = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
             m_NameSystem            = World.GetOrCreateSystemManaged<NameSystem>();

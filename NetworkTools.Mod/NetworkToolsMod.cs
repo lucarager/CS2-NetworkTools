@@ -155,7 +155,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_SlideNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_ConnectToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_ParallelToolSystem>(SystemUpdatePhase.ToolUpdate);
-            updateSystem.UpdateAt<NT_GridToolSystem>(SystemUpdatePhase.ToolUpdate);
+            updateSystem.UpdateAt<NT_GenerateToolSystem>(SystemUpdatePhase.ToolUpdate);
             // UI
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_PrefabSelectionUISystem>(SystemUpdatePhase.UIUpdate);

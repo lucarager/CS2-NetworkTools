@@ -8,13 +8,11 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Mathematics;
 
     /// <summary>
-    ///     Tool system for generating road grids.
-    ///     Two control points define the grid origin and direction; configurable properties
-    ///     (Angle, X Spacing, Y Spacing) are exposed via handles and the UI.
+    ///     Tool system for generating networks.
     /// </summary>
-    public partial class NT_GridToolSystem : NT_BaseToolSystem, IToolPrefabProvider, INetPrefabCachingProvider, IManualApplyProvider, INetPrefabSelectionProvider {
+    public partial class NT_GenerateToolSystem : NT_BaseToolSystem, IToolPrefabProvider, INetPrefabCachingProvider, IManualApplyProvider, INetPrefabSelectionProvider {
         /// <inheritdoc />
-        public override string toolID => "GridTool";
+        public override string toolID => "GenerateTool";
 
         /// <inheritdoc />
         public override TargetOption AvailableTargets => TargetOption.Road | TargetOption.Path;
@@ -33,7 +31,7 @@ namespace NetworkTools.Systems.Tools {
         /// <summary>
         ///     Current grid configuration.
         /// </summary>
-        internal GridConfig CurrentConfig = new GridConfig();
+        internal GenerateConfig CurrentConfig = new GenerateConfig();
 
         /// <summary>
         ///     Gets the current selection state based on the number of control points.

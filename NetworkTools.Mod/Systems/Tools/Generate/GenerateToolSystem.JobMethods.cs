@@ -8,9 +8,9 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Jobs;
 
     /// <summary>
-    ///     Job scheduling and output methods for <see cref="NT_GridToolSystem"/>.
+    ///     Job scheduling and output methods for <see cref="NT_GenerateToolSystem"/>.
     /// </summary>
-    public partial class NT_GridToolSystem {
+    public partial class NT_GenerateToolSystem {
         private JobHandle ScheduleDefinitionsJob(JobHandle inputDeps, ToolOutputMode outputMode) {
             m_Log.Debug("ScheduleDefinitionsJob");
 

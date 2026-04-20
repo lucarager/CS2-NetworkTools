@@ -4,9 +4,9 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Mathematics;
 
     /// <summary>
-    ///     Holds grid generation parameters and control point positions.
+    ///     Holds generation parameters and control point positions.
     /// </summary>
-    public struct GridConfig : IJsonWritable, IJsonReadable {
+    public struct GenerateConfig : IJsonWritable, IJsonReadable {
         /// <summary>
         ///     First control point position (grid origin).
         /// </summary>
@@ -59,7 +59,7 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         public const float MaxSpacing = 500f;
 
-        public GridConfig(float3 startPosition, float3 endPosition) {
+        public GenerateConfig(float3 startPosition, float3 endPosition) {
             StartPosition = startPosition;
             EndPosition   = endPosition;
 

@@ -6,5 +6,5 @@
 namespace NetworkTools.Components.Tools {
     using Unity.Entities;
 
-    public struct NT_GridTool : IComponentData { }
+    public struct NT_GenerateTool : IComponentData { }
 }

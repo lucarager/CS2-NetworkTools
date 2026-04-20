@@ -9,14 +9,14 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Mathematics;
 
     /// <summary>
-    ///     Job definitions for <see cref="NT_GridToolSystem" />.
+    ///     Job definitions for <see cref="NT_GenerateToolSystem" />.
     /// </summary>
-    public partial class NT_GridToolSystem {
+    public partial class NT_GenerateToolSystem {
 #if BURST
         [BurstCompile]
 #endif
         internal struct CreateDefinitionsJob : IJob {
-            [ReadOnly] public required GridConfig     Config;
+            [ReadOnly] public required GenerateConfig     Config;
             [ReadOnly] public required ToolOutputMode OutputMode;
             [ReadOnly] public required Entity         NetPrefabEntity;
             [ReadOnly] public required Entity         NetLanePrefabEntity;

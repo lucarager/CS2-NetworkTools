@@ -6,9 +6,9 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Mathematics;
 
     /// <summary>
-    ///     Handle management for <see cref="NT_GridToolSystem"/>.
+    ///     Handle management for <see cref="NT_GenerateToolSystem"/>.
     /// </summary>
-    public partial class NT_GridToolSystem {
+    public partial class NT_GenerateToolSystem {
         /// <summary>
         ///     Creates or refreshes handles based on the current config.
         /// </summary>
@@ -57,8 +57,8 @@ namespace NetworkTools.Systems.Tools {
                     Position  = startPos + xDir * CurrentConfig.XSpacing,
                     TypeFlags = HandleTypeFlags.Parameter | HandleTypeFlags.Secondary | HandleTypeFlags.ParameterRange,
                     Value     = CurrentConfig.XSpacing,
-                    MinValue  = GridConfig.MinSpacing,
-                    MaxValue  = GridConfig.MaxSpacing
+                    MinValue  = GenerateConfig.MinSpacing,
+                    MaxValue  = GenerateConfig.MaxSpacing
                 },
                 // Y Spacing handle offset along Y axis
                 new TransformHandleDefinition {
@@ -66,8 +66,8 @@ namespace NetworkTools.Systems.Tools {
                     Position  = startPos + yDir * CurrentConfig.ZSpacing,
                     TypeFlags = HandleTypeFlags.Parameter | HandleTypeFlags.Secondary | HandleTypeFlags.ParameterRange,
                     Value     = CurrentConfig.ZSpacing,
-                    MinValue  = GridConfig.MinSpacing,
-                    MaxValue  = GridConfig.MaxSpacing
+                    MinValue  = GenerateConfig.MinSpacing,
+                    MaxValue  = GenerateConfig.MaxSpacing
                 }
             };
         }
