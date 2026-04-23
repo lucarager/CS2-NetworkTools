@@ -1,7 +1,5 @@
-﻿namespace NetworkTools.Systems.Tooltips {
+namespace NetworkTools.Systems.Tooltips {
     using System.Collections.Generic;
-    using System.Linq;
-    using Colossal.Entities;
     using Colossal.Mathematics;
     using Game.Net;
     using Game.Tools;
@@ -17,21 +15,18 @@
     using UnityEngine;
 
     /// <summary>
-    ///     System responsible for UI Bindings & Lookup Handling.
+    ///     Builds tooltip groups for the active NT tool each frame and pushes them to the UI binding.
     /// </summary>
     public partial class NT_UITooltipSystem : UISystemBase {
-        private const float                            MinCurveLength     = 8f;
-        private const float                            TempTooltipYOffset = 20f;
-        private       Dictionary<Entity, TooltipGroup> m_EdgeTooltipCache;
-        private       PrefixedLogger                   m_Log;
-        private       Dictionary<Entity, TooltipGroup> m_NodeTooltipCache;
-
-        private EntityQuery        m_SelectedEdgesQuery;
-        private EntityQuery        m_SelectedNodesQuery;
-        private EntityQuery        m_TempEdgesQuery;
-        private ToolSystem         m_ToolSystem;
-        private WidgetBindings     m_WidgetBindings;
-        private List<TooltipGroup> Groups { get; set; }
+        private Camera               m_Camera;
+        private PrefixedLogger       m_Log;
+        private HashSet<PathSegment> m_SeenPaths;
+        private EntityQuery          m_SelectedEdgesQuery;
+        private EntityQuery          m_SelectedNodesQuery;
+        private EntityQuery          m_TempEdgesQuery;
+        private ToolSystem           m_ToolSystem;
+        private WidgetBindings       m_WidgetBindings;
+        private List<TooltipGroup>   Groups { get; set; }
 
         /// <inheritdoc />
         protected override void OnCreate() {
@@ -39,29 +34,24 @@
 
             m_ToolSystem = World.GetOrCreateSystemManaged<ToolSystem>();
 
-            m_EdgeTooltipCache = new Dictionary<Entity, TooltipGroup>();
-            m_NodeTooltipCache = new Dictionary<Entity, TooltipGroup>();
-
-            // Queries
             m_SelectedEdgesQuery = SystemAPI.QueryBuilder()
                                             .WithAll<Edge>()
                                             .WithAny<NT_Selected>()
                                             .Build();
             m_SelectedNodesQuery = SystemAPI.QueryBuilder()
                                             .WithAll<Node>()
-                                            .WithAny<NT_Highlighted, NT_Eligible, NT_Selected,
-                                                NT_SelectedFirst, NT_SelectedLast>()
+                                            .WithAny<NT_SelectedFirst, NT_SelectedLast>()
                                             .Build();
             m_TempEdgesQuery = SystemAPI.QueryBuilder()
-                                            .WithAll<Edge>()
-                                            .WithAny<Temp>()
-                                            .Build();
+                                        .WithAll<Edge>()
+                                        .WithAny<Temp>()
+                                        .Build();
 
-            // Data
             m_Log = new PrefixedLogger(nameof(NT_UITooltipSystem));
             m_Log.Debug("OnCreate()");
             AddUpdateBinding(m_WidgetBindings = new WidgetBindings("NT_tooltip", "groups"));
-            Groups = new List<TooltipGroup>();
+            Groups      = new List<TooltipGroup>();
+            m_SeenPaths = new HashSet<PathSegment>();
         }
 
         /// <inheritdoc />
@@ -72,8 +62,15 @@
 
             m_WidgetBindings.children.Clear();
             Groups.Clear();
+            m_SeenPaths.Clear();
 
-            UpdateTooltips();
+            if (m_ToolSystem.activeTool is NT_BaseToolSystem tool) {
+                BuildEdgeTooltips(tool);
+
+                if (tool.RenderNodeTooltips) {
+                    BuildNodeTooltips();
+                }
+            }
 
             foreach (var group in Groups) {
                 m_WidgetBindings.children.Add(group);
@@ -82,166 +79,106 @@
             base.OnUpdate();
         }
 
-        private void UpdateEdgeTooltips(NT_BaseToolSystem tool) {
-            var activeEdges = new NativeHashSet<Entity>(32, Allocator.Temp);
+        private void BuildEdgeTooltips(NT_BaseToolSystem tool) {
+            var contexts = CollectEdgeContexts();
+            foreach (var ctx in contexts) {
+                var position = WorldToTooltipPos(MathUtils.Position(ctx.CurrentCurve.m_Bezier, 0.5f));
+                var group = new TooltipGroup {
+                    path     = $"NT_Edge_{ctx.Edge.Index}_{ctx.Edge.Version}",
+                    category = TooltipGroup.Category.Network,
+                    position = position,
+                };
 
-            if (tool.RenderSlopeTooltips) {
-                ProcessSlopeTooltips(activeEdges);
-            }
-
-            CleanupStaleEntries(m_EdgeTooltipCache, activeEdges);
-            activeEdges.Dispose();
-        }
-
-        private void ProcessSlopeTooltips(NativeHashSet<Entity> activeEdges) {
-            var edgeEntities = m_SelectedEdgesQuery.ToEntityArray(Allocator.Temp);
-
-            if (!m_TempEdgesQuery.IsEmpty) {
-                // Process temp edges
-                var tempEdgeEntities = m_TempEdgesQuery.ToEntityArray(Allocator.Temp);
-                foreach (var edgeEntity in tempEdgeEntities)
-                {
-                    var temp = EntityManager.GetComponentData<Temp>(edgeEntity);
-                    var originalEdge = temp.m_Original;
-
-                    // Ignore if original edge is not NT_Selected, meaning its in our current set
-                    if (!edgeEntities.Contains(originalEdge))
-                    {
-                        continue;
-                    }
-
-                    var tempCurve = EntityManager.GetComponentData<Curve>(edgeEntity);
-                    var (newSlopePercent, tempPosition) = CalculateEdgeSlopeData(tempCurve);
-                    var originalCurve = EntityManager.GetComponentData<Curve>(originalEdge);
-                    var (originalSlopePercent, originalPosition) = CalculateEdgeSlopeData(originalCurve);
-
-                    // Mark edge
-                    activeEdges.Add(edgeEntity);
-
-                    var tooltipGroup = GetOrCreateSlopeTooltip(originalEdge, tempPosition, originalSlopePercent, newSlopePercent);
-                    if (tooltipGroup.children.Count > 0)
-                    {
-                        AddGroup(tooltipGroup);
-                    }
+                // Per-feature children — each gated on its own flag.
+                if (tool.RenderSlopeTooltips) {
+                    AppendSlopeTooltip(group, ctx);
                 }
-            } else {
-                // Process real edges
-                foreach (var edgeEntity in edgeEntities) {
-                    var curve  = EntityManager.GetComponentData<Curve>(edgeEntity);
-                    var (slopePercent, position) = CalculateEdgeSlopeData(curve);
+                // future: if (tool.RenderLengthTooltips) AppendLengthTooltip(group, ctx);
 
-                    // Mark edge
-                    activeEdges.Add(edgeEntity);
-
-                    var tooltipGroup = GetOrCreateSlopeTooltip(edgeEntity, position, slopePercent);
-                    if (tooltipGroup.children.Count > 0) {
-                        AddGroup(tooltipGroup);
-                    }
+                if (group.children.Count > 0) {
+                    AddGroup(group);
                 }
             }
-
-
-            edgeEntities.Dispose();
         }
 
-        private (float slopePercent, float2 position) CalculateEdgeSlopeData(Curve curve) {
-            // Calculate deltaY from the bezier curve itself, not from node positions
-            // This ensures we get the correct slope for transformed temp edges
-            var startY = curve.m_Bezier.a.y;
-            var endY   = curve.m_Bezier.d.y;
+        // Resolves the set of edges to render tooltips for, normalizing temp/non-temp into one shape.
+        // CurrentCurve is the curve to render at (the temp curve when previewing); OriginalCurve is the
+        // pre-edit baseline; HasPreview lets features show "before vs after" pairs.
+        private List<EdgeTooltipContext> CollectEdgeContexts() {
+            var contexts      = new List<EdgeTooltipContext>();
+            var selectedEdges = m_SelectedEdgesQuery.ToEntityArray(Allocator.Temp);
 
-            var deltaY       = math.abs(endY - startY);
-            var slopePercent = deltaY / curve.m_Length * 100f;
-
-            var position = WorldToTooltipPos(MathUtils.Position(curve.m_Bezier, 0.5f));
-
-            return (slopePercent, position);
-        }
-
-        private TooltipGroup GetOrCreateSlopeTooltip(Entity edgeEntity, float2 position, float slopePercent,
-                                                     float  newSlopePercent = float.NaN) {
-            // Retrieve cached tooltip group
-            var hasCached = m_EdgeTooltipCache.TryGetValue(edgeEntity, out var tooltipGroup);
-
-            // If no cached group, create new one
-            if (!hasCached) {
-                tooltipGroup                   = CreateSlopeTooltipGroup(edgeEntity, position);
-                m_EdgeTooltipCache[edgeEntity] = tooltipGroup;
+            if (m_TempEdgesQuery.IsEmpty) {
+                foreach (var edge in selectedEdges) {
+                    var curve = EntityManager.GetComponentData<Curve>(edge);
+                    contexts.Add(new EdgeTooltipContext {
+                        Edge          = edge,
+                        CurrentCurve  = curve,
+                        OriginalCurve = curve,
+                        HasPreview    = false,
+                    });
+                }
+                selectedEdges.Dispose();
+                return contexts;
             }
 
-            // Update group with new data
-            UpdateSlopeTooltipGroup(tooltipGroup, position, slopePercent, newSlopePercent);
-            return tooltipGroup;
-        }
-
-        private static TooltipGroup CreateSlopeTooltipGroup(Entity edgeEntity, float2 position) {
-            var tooltipGroup = new TooltipGroup {
-                path     = $"NT_Slope_{edgeEntity.Index}_{edgeEntity.Version}",
-                category = TooltipGroup.Category.Network,
-                position = position
-            };
-            tooltipGroup.children.Add(new SlopeTooltip());
-
-            return tooltipGroup;
-        }
-
-        private static void UpdateSlopeTooltipGroup(TooltipGroup tooltipGroup, float2 position, float slopePercent,
-                                                    float        newSlopePercent = float.NaN) {
-            var slopeTooltip = (SlopeTooltip)tooltipGroup.children[0];
-
-            if (!Mathf.Approximately(slopeTooltip.CurrentSlope, slopePercent)) {
-                slopeTooltip.CurrentSlope = slopePercent;
-                tooltipGroup.SetChildrenChanged();
+            var selectedSet = new NativeHashSet<Entity>(selectedEdges.Length, Allocator.Temp);
+            foreach (var e in selectedEdges) {
+                selectedSet.Add(e);
             }
+            selectedEdges.Dispose();
 
-            if (!Mathf.Approximately(slopeTooltip.NewSlope, newSlopePercent)) {
-                slopeTooltip.NewSlope = newSlopePercent;
-                tooltipGroup.SetChildrenChanged();
-            }
-
-            if (!tooltipGroup.position.Equals(position)) {
-                tooltipGroup.position = position;
-                tooltipGroup.SetChildrenChanged();
-            }
-        }
-        private void UpdateNodeTooltips(NT_BaseToolSystem tool) {
-            var activeNodes  = new NativeHashSet<Entity>(32, Allocator.Temp);
-            var nodeEntities = m_SelectedNodesQuery.ToEntityArray(Allocator.Temp);
-
-            foreach (var entity in nodeEntities) {
-                activeNodes.Add(entity);
-
-                var node        = EntityManager.GetComponentData<Node>(entity);
-                var newPosition = WorldToTooltipPos(node.m_Position);
-
-                // Get or create cached tooltip group
-                if (!m_NodeTooltipCache.TryGetValue(entity, out var group)) {
-                    group = new TooltipGroup {
-                        position            = newPosition,
-                        path                = $"NT_Node_{entity.Index}_{entity.Version}",
-                        horizontalAlignment = TooltipGroup.Alignment.Center,
-                        verticalAlignment   = TooltipGroup.Alignment.Center,
-                        category            = TooltipGroup.Category.Network
-                    };
-                    m_NodeTooltipCache[entity] = group;
-                } else {
-                    if (!group.position.Equals(newPosition)) {
-                        group.position = newPosition;
-                        group.SetChildrenChanged();
-                    }
+            var tempEdges = m_TempEdgesQuery.ToEntityArray(Allocator.Temp);
+            foreach (var tempEdge in tempEdges) {
+                var temp = EntityManager.GetComponentData<Temp>(tempEdge);
+                if (!selectedSet.Contains(temp.m_Original)) {
+                    continue;
                 }
 
-                // Update children based on current components
-                //var hasFirst = EntityManager.HasComponent<NT_SelectedFirst>(entity);
-                //var hasLast = EntityManager.HasComponent<NT_SelectedLast>(entity);
-                //var hasSelected = EntityManager.HasComponent<NT_Selected>(entity);
+                contexts.Add(new EdgeTooltipContext {
+                    Edge          = temp.m_Original,
+                    CurrentCurve  = EntityManager.GetComponentData<Curve>(tempEdge),
+                    OriginalCurve = EntityManager.GetComponentData<Curve>(temp.m_Original),
+                    HasPreview    = true,
+                });
+            }
+            tempEdges.Dispose();
+            selectedSet.Dispose();
+            return contexts;
+        }
 
-                //var expectedChildren = (hasFirst ? 1 : 0) + (hasLast ? 1 : 0);
-                //if (group.children.Count != expectedChildren) {
+        private static void AppendSlopeTooltip(TooltipGroup group, EdgeTooltipContext ctx) {
+            var current  = ComputeSlopePercent(ctx.OriginalCurve);
+            var newValue = ctx.HasPreview ? ComputeSlopePercent(ctx.CurrentCurve) : float.NaN;
+            group.children.Add(new SlopeTooltip { CurrentSlope = current, NewSlope = newValue });
+        }
 
-                //}
+        private static float ComputeSlopePercent(Curve curve) {
+            // Read deltaY from the bezier endpoints (not node positions) so transformed temp edges read correctly.
+            var deltaY = math.abs(curve.m_Bezier.d.y - curve.m_Bezier.a.y);
+            return deltaY / curve.m_Length * 100f;
+        }
 
-                group.children.Clear();
+        private struct EdgeTooltipContext {
+            public Entity Edge;
+            public Curve  CurrentCurve;
+            public Curve  OriginalCurve;
+            public bool   HasPreview;
+        }
+
+        private void BuildNodeTooltips() {
+            var nodes = m_SelectedNodesQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in nodes) {
+                var node     = EntityManager.GetComponentData<Node>(entity);
+                var position = WorldToTooltipPos(node.m_Position);
+
+                var group = new TooltipGroup {
+                    path                = $"NT_Node_{entity.Index}_{entity.Version}",
+                    category            = TooltipGroup.Category.Network,
+                    position            = position,
+                    horizontalAlignment = TooltipGroup.Alignment.Center,
+                    verticalAlignment   = TooltipGroup.Alignment.Center,
+                };
 
                 if (EntityManager.HasComponent<NT_SelectedFirst>(entity)) {
                     group.children.Add(new StringTooltip { value = "Start" });
@@ -251,66 +188,24 @@
                     group.children.Add(new StringTooltip { value = "End" });
                 }
 
-                //if (EntityManager.HasComponent<NT_Highlighted>(entity)) {
-                //    group.children.Add(new StringTooltip { value = "Highlighted" });
-                //}
-
-                //if (EntityManager.HasComponent<NT_Eligible>(entity)) {
-                //    group.children.Add(new StringTooltip { value = "Eligible" });
-                //}
-
-                //if (EntityManager.HasComponent<NT_Selected>(entity)) {
-                //    group.children.Add(new StringTooltip { value = "Selected" });
-                //}
-
-                group.SetChildrenChanged();
-
                 if (group.children.Count > 0) {
                     AddGroup(group);
                 }
             }
-
-            nodeEntities.Dispose();
-
-            CleanupStaleEntries(m_NodeTooltipCache, activeNodes);
-            activeNodes.Dispose();
+            nodes.Dispose();
         }
 
-        private static void CleanupStaleEntries(Dictionary<Entity, TooltipGroup> cache,
-                                                NativeHashSet<Entity>            activeEntities) {
-            var entitiesToRemove = new List<Entity>();
-
-            foreach (var key in cache.Keys) {
-                if (!activeEntities.Contains(key)) {
-                    entitiesToRemove.Add(key);
-                }
+        private float2 WorldToTooltipPos(Vector3 worldPos) {
+            if (m_Camera == null) {
+                m_Camera = Camera.main;
             }
 
-            foreach (var key in entitiesToRemove) {
-                cache.Remove(key);
-            }
-        }
-
-        private void UpdateTooltips() {
-            if (m_ToolSystem.activeTool is not NT_BaseToolSystem tool) {
-                // Clear caches when tool is not active
-                m_EdgeTooltipCache.Clear();
-                m_NodeTooltipCache.Clear();
-                return;
-            }
-
-            UpdateEdgeTooltips(tool);
-            UpdateNodeTooltips(tool);
-        }
-
-        private static float2 WorldToTooltipPos(Vector3 worldPos) {
-            var screenPoint = Camera.main.WorldToScreenPoint(worldPos);
-            var xy          = new float2(screenPoint.x, Screen.height - screenPoint.y);
-            return xy;
+            var screenPoint = m_Camera.WorldToScreenPoint(worldPos);
+            return new float2(screenPoint.x, Screen.height - screenPoint.y);
         }
 
         private void AddGroup(TooltipGroup group) {
-            if (group.path != PathSegment.Empty && Groups.Any(g => g.path == group.path)) {
+            if (group.path != PathSegment.Empty && !m_SeenPaths.Add(group.path)) {
                 m_Log.Debug($"Trying to add tooltip group with duplicate path '{group.path}'");
                 return;
             }

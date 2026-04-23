@@ -226,6 +226,11 @@ namespace NetworkTools.Systems.Tools {
         public bool RenderSlopeTooltips = false;
 
         /// <summary>
+        ///     Tool requests rendering tooltips for selected start/end nodes
+        /// </summary>
+        public bool RenderNodeTooltips = true;
+
+        /// <summary>
         ///     Tool requests rendering temp edges
         /// </summary>
         public bool RenderTempEdges = false;
