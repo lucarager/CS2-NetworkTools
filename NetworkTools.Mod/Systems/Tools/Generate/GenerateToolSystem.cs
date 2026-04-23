@@ -1,4 +1,5 @@
 namespace NetworkTools.Systems.Tools.Generate {
+    using Game.Tools;
     using NetworkTools.Systems.Tools;
     using Unity.Collections;
     using Unity.Mathematics;
@@ -19,13 +20,12 @@ namespace NetworkTools.Systems.Tools.Generate {
         private float3 m_LastHitPosition;
 
         /// <summary>
-        ///     Control points defining the grid origin and direction.
-        ///     Index 0 = start, Index 1 = end.
+        ///     Control points
         /// </summary>
-        protected NativeList<float3> m_ControlPoints;
+        protected NativeList<ControlPoint> m_ControlPoints;
 
         /// <summary>
-        ///     Current grid configuration.
+        ///     Current configuration.
         /// </summary>
         internal GenerateConfig CurrentConfig = new GenerateConfig();
 

@@ -93,7 +93,10 @@ namespace NetworkTools.Systems.Tooltips {
                 if (tool.RenderSlopeTooltips) {
                     AppendSlopeTooltip(group, ctx);
                 }
-                // future: if (tool.RenderLengthTooltips) AppendLengthTooltip(group, ctx);
+
+                if (tool.RenderLengthTooltips && ctx.HasPreview) {
+                    AppendLengthTooltip(group, ctx);
+                }
 
                 if (group.children.Count > 0) {
                     AddGroup(group);
@@ -102,8 +105,6 @@ namespace NetworkTools.Systems.Tooltips {
         }
 
         // Resolves the set of edges to render tooltips for, normalizing temp/non-temp into one shape.
-        // CurrentCurve is the curve to render at (the temp curve when previewing); OriginalCurve is the
-        // pre-edit baseline; HasPreview lets features show "before vs after" pairs.
         private List<EdgeTooltipContext> CollectEdgeContexts() {
             var contexts      = new List<EdgeTooltipContext>();
             var selectedEdges = m_SelectedEdgesQuery.ToEntityArray(Allocator.Temp);
@@ -153,6 +154,11 @@ namespace NetworkTools.Systems.Tooltips {
             group.children.Add(new SlopeTooltip { CurrentSlope = current, NewSlope = newValue });
         }
 
+        private static void AppendLengthTooltip(TooltipGroup group, EdgeTooltipContext ctx) {
+            var length = MathUtils.Length(ctx.CurrentCurve.m_Bezier);
+            group.children.Add(new FloatTooltip { value = length, unit = "m"});
+        }
+
         private static float ComputeSlopePercent(Curve curve) {
             // Read deltaY from the bezier endpoints (not node positions) so transformed temp edges read correctly.
             var deltaY = math.abs(curve.m_Bezier.d.y - curve.m_Bezier.a.y);
@@ -197,6 +203,10 @@ namespace NetworkTools.Systems.Tooltips {
 
         private float2 WorldToTooltipPos(Vector3 worldPos) {
             if (m_Camera == null) {
+                if (Camera.main == null) {
+                    return default;
+                }
+
                 m_Camera = Camera.main;
             }
 

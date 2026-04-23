@@ -45,7 +45,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                 HandleRemoveControlPoint();
                 m_UpdateNeeded = true;
             } else if (raycastHit && leftClickPressed) {
-                HandleAddControlPoint(hitPosition);
+                HandleAddControlPoint(controlPoint);
                 m_UpdateNeeded = true;
             }
 
@@ -59,16 +59,15 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// <summary>
         ///     Adds a control point at the given position. Transitions phase accordingly.
         /// </summary>
-        /// <param name="position">World position for the new control point.</param>
         /// <returns>True if the control point was added.</returns>
-        protected bool HandleAddControlPoint(float3 position) {
+        protected bool HandleAddControlPoint(ControlPoint controlPoint) {
             if (m_ControlPoints.Length != 0) {
                 return false;
             }
 
-            m_Log.Debug($"Adding control point at {position}");
+            m_Log.Debug($"Adding control point at {controlPoint.m_Position}");
 
-            m_ControlPoints.Add(position);
+            m_ControlPoints.Add(controlPoint);
             UpdatePhaseFromSelection();
 
             // When a point is placed, initialize the config

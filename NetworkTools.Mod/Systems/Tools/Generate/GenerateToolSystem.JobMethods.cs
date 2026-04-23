@@ -23,6 +23,8 @@ namespace NetworkTools.Systems.Tools.Generate {
                 NetLanePrefabEntity    = m_SelectedNetLanePrefabEntity,
                 OutputMode             = outputMode,
                 IsHoverPreview         = m_ControlPoints.Length == 0,
+                ControlPoint           = m_ControlPoints.Length == 0 ? default : m_ControlPoints[0],
+
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
                 EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),

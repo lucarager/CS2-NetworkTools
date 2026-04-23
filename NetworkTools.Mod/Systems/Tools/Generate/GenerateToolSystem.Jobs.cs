@@ -19,12 +19,13 @@ namespace NetworkTools.Systems.Tools.Generate {
         [BurstCompile]
 #endif
         internal struct CreateDefinitionsJob : IJob {
-            [ReadOnly] public required GenerateMode       Mode;
-            [ReadOnly] public required GenerateConfig     Config;
-            [ReadOnly] public required ToolOutputMode     OutputMode;
-            [ReadOnly] public required Entity             NetPrefabEntity;
-            [ReadOnly] public required Entity             NetLanePrefabEntity;
-            [ReadOnly] public required bool IsHoverPreview;
+            [ReadOnly] public required GenerateMode   Mode;
+            [ReadOnly] public required GenerateConfig Config;
+            [ReadOnly] public required ToolOutputMode OutputMode;
+            [ReadOnly] public required Entity         NetPrefabEntity;
+            [ReadOnly] public required Entity         NetLanePrefabEntity;
+            [ReadOnly] public required bool           IsHoverPreview;
+            [ReadOnly] public required ControlPoint   ControlPoint;
 
             [ReadOnly] public required ComponentLookup<Node> NodeLookup;
             [ReadOnly] public required ComponentLookup<PrefabRef> PrefabRefLookup;
@@ -46,9 +47,9 @@ namespace NetworkTools.Systems.Tools.Generate {
                 {
                     case GenerateMode.Grid:
                         if (IsHoverPreview) {
-                            new GridGenerator().GeneratePreview(Mode, Config, ref curves);
+                            new GridGenerator().GeneratePreview(ControlPoint.m_Position, ControlPoint.m_Rotation, ref curves);
                         } else {
-                            new GridGenerator().GenerateNetwork(Mode, Config, ref curves);
+                            new GridGenerator().GenerateNetwork(Config, ref curves);
                         }
                         break;
                     case GenerateMode.Circle:
