@@ -1,4 +1,4 @@
-﻿// <copyright file="NT_HintTooltipSystem.cs" company="Luca Rager">
+﻿// <copyright file="NT_ActionTooltipSystem.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -13,7 +13,7 @@ namespace NetworkTools.Systems.Tooltips {
     ///     Tooltip System.
     ///     Queries the active tool for hint tooltips and displays them.
     /// </summary>
-    public partial class NT_HintTooltipSystem : TooltipSystemBase {
+    public partial class NT_ActionTooltipSystem : TooltipSystemBase {
         private ToolSystem  m_ToolSystem;
         private ProxyAction m_ApplyAction;
         private ProxyAction m_SecondaryApplyAction;
