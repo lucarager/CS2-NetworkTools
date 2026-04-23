@@ -8,7 +8,7 @@
     using NetworkTools.Settings;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
-    using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Generate;
     using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Utils;
@@ -31,10 +31,12 @@
         private ValueBindingHelper<int>                  m_AvailableTargetsBinding;
         private ValueBindingHelper<int>                  m_AvailableViewsBinding;
         private ValueBindingHelper<int>                  m_ConnectModeBinding;
+        private ValueBindingHelper<int>                  m_GenerateModeBinding;
         private int                                      m_LastAvailableSnaps;
         private int                                      m_LastAvailableTargets;
         private int                                      m_LastAvailableViews;
         private int                                      m_LastConnectMode;
+        private int                                      m_LastGenerateMode;
         private Entity                                   m_LastNetPrefabEntity;
         private int                                      m_LastSelectedNodesHash;
         private string                                   m_LastSelectedPrefab;
@@ -46,7 +48,7 @@
         private PrefixedLogger                           m_Log;
         private NameSystem                               m_NameSystem;
         private NT_ConnectToolSystem                     m_NtConnectToolSystem;
-        private NT_GenerateToolSystem                        m_NTGenerateToolSystem;
+        private NT_GenerateToolSystem                    m_NtGenerateToolSystem;
         private NT_ParallelToolSystem                    m_NtParallelToolSystem;
         private NT_RoadShapeToolSystem                   m_NtRoadShapeToolSystem;
         private ValueBindingHelper<ParallelConfig>       m_ParallelConfigBinding;
@@ -58,7 +60,7 @@
         private ValueBindingHelper<int>                  m_SelectedSnapsBinding;
         private ValueBindingHelper<int>                  m_SelectedTargetsBinding;
         private ValueBindingHelper<int>                  m_SelectedViewsBinding;
-        private ValueBindingHelper<GenerateConfig>            m_GridConfigBinding;
+        private ValueBindingHelper<GenerateConfig>       m_GenerateConfigBinding;
         private ValueBindingHelper<ShapeTransformConfig> m_ShapeConfigBinding;
         private ProxyAction                              m_ToggleToolPanelAction;
         private ProxyAction                              m_OpenTool1Action;
@@ -86,7 +88,7 @@
             m_PrefabSystem          = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_ToolSystem            = World.GetOrCreateSystemManaged<ToolSystem>();
             m_NtConnectToolSystem   = World.GetOrCreateSystemManaged<NT_ConnectToolSystem>();
-            m_NTGenerateToolSystem      = World.GetOrCreateSystemManaged<NT_GenerateToolSystem>();
+            m_NtGenerateToolSystem  = World.GetOrCreateSystemManaged<NT_GenerateToolSystem>();
             m_NtParallelToolSystem  = World.GetOrCreateSystemManaged<NT_ParallelToolSystem>();
             m_NtRoadShapeToolSystem = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
             m_NameSystem            = World.GetOrCreateSystemManaged<NameSystem>();
@@ -101,9 +103,9 @@
                                                  HandleUpdateShapeConfig,
                                                  new ValueWriter<ShapeTransformConfig>(),
                                                  new ValueReader<ShapeTransformConfig>());
-            m_GridConfigBinding = CreateBinding("GRID_CONFIG",
+            m_GenerateConfigBinding = CreateBinding("GENERATE_CONFIG",
                                                  new GenerateConfig(),
-                                                 HandleUpdateGridConfig,
+                                                 HandleUpdateGenerateConfig,
                                                  new ValueWriter<GenerateConfig>(),
                                                  new ValueReader<GenerateConfig>());
             m_ParallelConfigBinding = CreateBinding("PARALLEL_CONFIG",
@@ -111,13 +113,14 @@
                                                     HandleUpdateParallelConfig,
                                                  new ValueWriter<ParallelConfig>(),
                                                  new ValueReader<ParallelConfig>());
-            m_ConnectModeBinding   = CreateBinding("CONNECT_MODE", (int)ConnectMode.None, HandleUpdateConnectMode);
+            m_ConnectModeBinding      = CreateBinding("CONNECT_MODE", (int)ConnectMode.None, HandleUpdateConnectMode);
             m_AvailableSnapsBinding   = CreateBinding("AVAILABLE_SNAPS",   (int)SnapOption.None);
             m_SelectedSnapsBinding    = CreateBinding("SELECTED_SNAPS",    (int)SnapOption.None, HandleUpdateSelectedSnaps);
             m_AvailableTargetsBinding = CreateBinding("AVAILABLE_TARGETS", (int)TargetOption.All);
             m_SelectedTargetsBinding  = CreateBinding("SELECTED_TARGETS",  (int)TargetOption.All, HandleUpdateSelectedTargets);
             m_AvailableViewsBinding   = CreateBinding("AVAILABLE_VIEWS",   (int)ViewOption.All);
             m_SelectedViewsBinding    = CreateBinding("SELECTED_VIEWS",    (int)ViewOption.None, HandleUpdateSelectedViews);
+            m_GenerateModeBinding     = CreateBinding("GENERATE_MODE", (int)GenerateMode.None, HandleUpdateGenerateMode);
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
             CreateTrigger("REQUEST_APPLY", HandleRequestApply);

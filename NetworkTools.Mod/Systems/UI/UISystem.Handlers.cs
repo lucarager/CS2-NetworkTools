@@ -2,6 +2,7 @@ namespace NetworkTools.Systems.UI {
     using Game.Prefabs;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
+    using NetworkTools.Systems.Tools.Generate;
     using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
 
@@ -68,8 +69,8 @@ namespace NetworkTools.Systems.UI {
                 }
 
                 // Sync grid config binding when the grid tool is activated
-                if (m_ToolSystem.activeTool == m_NTGenerateToolSystem) {
-                    m_GridConfigBinding.Value = m_NTGenerateToolSystem.CurrentConfig;
+                if (m_ToolSystem.activeTool == m_NtGenerateToolSystem) {
+                    m_GenerateConfigBinding.Value = m_NtGenerateToolSystem.CurrentConfig;
                 }
 
                 // Sync parallel config binding when the parallel tool is activated
@@ -86,10 +87,17 @@ namespace NetworkTools.Systems.UI {
             m_ConnectModeBinding.Value = mode;
         }
 
-        private void HandleUpdateGridConfig(GenerateConfig configData) {
-            m_Log.Debug("HandleUpdateGridConfig");
-            m_GridConfigBinding.Value = configData;
-            m_NTGenerateToolSystem.UpdateConfig(configData);
+        private void HandleUpdateGenerateMode(int mode) {
+            m_Log.Debug($"HandleUpdateGenerateMode(mode: {mode})");
+            var generateMode = (GenerateMode)mode;
+            m_NtGenerateToolSystem.SetMode(generateMode);
+            m_GenerateModeBinding.Value = mode;
+        }
+
+        private void HandleUpdateGenerateConfig(GenerateConfig configData) {
+            m_Log.Debug("HandleUpdateGenerateConfig");
+            m_GenerateConfigBinding.Value = configData;
+            m_NtGenerateToolSystem.UpdateConfig(configData);
         }
 
         private void HandleUpdateParallelConfig(ParallelConfig configData) {

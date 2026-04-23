@@ -1,10 +1,10 @@
-namespace NetworkTools.Systems.Tools {
+namespace NetworkTools.Systems.Tools.Generate {
     using Game.Prefabs;
 
     using NetworkTools.Components.Tools;
+    using NetworkTools.Systems.Tools.Connect;
 
     using Unity.Collections;
-    using Unity.Entities;
     using Unity.Mathematics;
 
     /// <summary>
@@ -28,16 +28,31 @@ namespace NetworkTools.Systems.Tools {
             RefreshTransformHandles();
         }
 
+
+        /// <summary>
+        ///     Sets a new transformation.
+        /// </summary>
+        public void SetMode(GenerateMode mode) {
+            CurrentMode = mode;
+            m_UpdateNeeded = true;
+
+            // Re-initialize configs
+            InitializeConfig();
+
+            m_Log.Debug($"Mode set: mode={mode}");
+        }
+
+
         /// <summary>
         ///     Updates the grid configuration from the UI without reinitializing handles.
         /// </summary>
         /// <param name="config">The updated config from the UI.</param>
         public void UpdateConfig(GenerateConfig config) {
-            CurrentConfig.Angle    = config.Angle;
-            CurrentConfig.XSpacing = config.XSpacing;
-            CurrentConfig.ZSpacing = config.ZSpacing;
-            CurrentConfig.XNum     = config.XNum;
-            CurrentConfig.ZNum     = config.ZNum;
+            //CurrentConfig.Angle    = config.Angle;
+            //CurrentConfig.XSpacing = config.XSpacing;
+            //CurrentConfig.ZSpacing = config.ZSpacing;
+            //CurrentConfig.XNum     = config.XNum;
+            //CurrentConfig.ZNum     = config.ZNum;
             m_UpdateNeeded         = true;
         }
 

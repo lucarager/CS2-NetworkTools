@@ -1,17 +1,10 @@
-namespace NetworkTools.Systems.Tools {
+namespace NetworkTools.Systems.Tools.Generate {
     using Game.Common;
     using Game.Net;
-    using Game.Prefabs;
-    using Game.Tools;
     using Game.Notifications;
-
-    using NetworkTools.Components;
-
-    using Unity.Entities;
+    using Game.Tools;
     using Unity.Jobs;
     using Unity.Mathematics;
-
-    using static Colossal.IO.AssetDatabase.AtlasFrame;
 
     /// <summary>
     ///     Update loop and state management for <see cref="NT_GenerateToolSystem"/>.
@@ -69,17 +62,18 @@ namespace NetworkTools.Systems.Tools {
         /// <param name="position">World position for the new control point.</param>
         /// <returns>True if the control point was added.</returns>
         protected bool HandleAddControlPoint(float3 position) {
-            if (CurrentSelectionState == SelectionState.EndNodeSelected) {
+            if (m_ControlPoints.Length != 0) {
                 return false;
             }
 
-            m_Log.Debug($"[{CurrentSelectionState}] Adding control point at {position}");
+            m_Log.Debug($"Adding control point at {position}");
 
             m_ControlPoints.Add(position);
             UpdatePhaseFromSelection();
 
-            // When second point is placed, initialize the grid config
-            if (Phase == OperationPhase.Ready) {
+            // When a point is placed, initialize the config
+            if (Phase == OperationPhase.Ready)
+            {
                 InitializeConfig();
             }
 
@@ -91,19 +85,20 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         /// <returns>True if a control point was removed.</returns>
         protected bool HandleRemoveControlPoint() {
-            if (CurrentSelectionState == SelectionState.NoSelection) {
+            if (m_ControlPoints.Length == 0) {
                 m_Log.Debug("Cancel pressed, exiting tool.");
                 RequestDisable();
                 return false;
             }
 
-            m_Log.Debug($"[{CurrentSelectionState}] Removing last control point");
+            m_Log.Debug($"Removing last control point");
 
-            m_ControlPoints.RemoveAt(m_ControlPoints.Length - 1);
+            m_ControlPoints.RemoveAt(0);
             UpdatePhaseFromSelection();
 
             // Destroy handles when moving out of Ready
-            if (Phase != OperationPhase.Ready) {
+            if (Phase != OperationPhase.Ready)
+            {
                 DestroyAllHandles();
             }
 
@@ -117,10 +112,9 @@ namespace NetworkTools.Systems.Tools {
         private OperationPhase UpdatePhaseFromSelection() {
             var previousPhase = Phase;
 
-            Phase = CurrentSelectionState switch {
-                SelectionState.NoSelection        => OperationPhase.Idle,
-                SelectionState.StartNodeSelected  => OperationPhase.Configuring,
-                _                                 => OperationPhase.Ready
+            Phase = m_ControlPoints.Length switch {
+                0 => OperationPhase.Idle,
+                1 => OperationPhase.Ready,
             };
 
             return previousPhase;
@@ -128,13 +122,16 @@ namespace NetworkTools.Systems.Tools {
 
         /// <summary>
         ///     Dispatches temp entity handling based on current phase.
+        ///     For Generate, we use:
+        ///     - OperationPhase.Idle: No control point, player will see hover preview
+        ///     - OperationPhase.Ready: Control point was set, player can use handles +  UI to configure
+        ///     - OperationPhase.Applying: Player requested apply, show final preview and apply 
         /// </summary>
         private JobHandle HandleTempEntities(JobHandle inputDeps) {
             return Phase switch {
-                OperationPhase.Ready                              => Update(inputDeps),
-                OperationPhase.Applying                           => Apply(inputDeps),
-                OperationPhase.Idle or OperationPhase.Configuring => Clear(inputDeps),
-                _                                                 => Clear(inputDeps)
+                OperationPhase.Idle or OperationPhase.Ready => Update(inputDeps),
+                OperationPhase.Applying                     => Apply(inputDeps),
+                _                                           => Clear(inputDeps)
             };
         }
 

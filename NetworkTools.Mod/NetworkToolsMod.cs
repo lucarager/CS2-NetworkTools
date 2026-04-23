@@ -43,6 +43,7 @@ namespace NetworkTools {
     using Settings;
 
     using UnityEngine;
+    using NT_GenerateToolSystem = NetworkTools.Systems.Tools.Generate.NT_GenerateToolSystem;
     using NT_UITooltipSystem = NetworkTools.Systems.Tooltips.NT_UITooltipSystem;
     using StreamReader = System.IO.StreamReader;
 
@@ -160,7 +161,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_UISystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_PrefabSelectionUISystem>(SystemUpdatePhase.UIUpdate);
             updateSystem.UpdateAt<NT_UITooltipSystem>(SystemUpdatePhase.UIUpdate);
-            updateSystem.UpdateAt<NT_HintTooltipSystem>(SystemUpdatePhase.UITooltip);
+            updateSystem.UpdateAt<NT_ActionTooltipSystem>(SystemUpdatePhase.UITooltip);
             // Rendering
             updateSystem.UpdateAt<NT_OverlaySystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<NT_ToolOverlayRenderSystem>(SystemUpdatePhase.Rendering);

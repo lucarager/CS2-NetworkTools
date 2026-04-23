@@ -1,4 +1,4 @@
-namespace NetworkTools.Systems.Tools {
+namespace NetworkTools.Systems.Tools.Generate {
     /// <summary>
     ///     Constants for transform handle identification in the Grid tool.
     ///     Used in NT_HandleLink.Key to map handles to config parameters.

@@ -1,4 +1,4 @@
-namespace NetworkTools.Systems.Tools {
+namespace NetworkTools.Systems.Tools.Generate {
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
@@ -12,25 +12,26 @@ namespace NetworkTools.Systems.Tools {
     /// </summary>
     public partial class NT_GenerateToolSystem {
         private JobHandle ScheduleDefinitionsJob(JobHandle inputDeps, ToolOutputMode outputMode) {
-            m_Log.Debug("ScheduleDefinitionsJob");
+            m_Log.Debug($"ScheduleDefinitionsJob: Mode={CurrentMode}");
 
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
-            // If both are null, we fall back to the prefab of the first edge's start node
-            //if (m_SelectedNetPrefabEntity == Entity.Null && m_SelectedNetLanePrefabEntity == Entity.Null)
-            //{
-            //    var firstEdge = EntityManager.GetComponentData<Edge>(m_CurrentPathEdges[0]);
-            //    var prefabRef = EntityManager.GetComponentData<PrefabRef>(firstEdge.m_Start);
-            //    m_SelectedNetPrefab = m_PrefabSystem.GetPrefab<NetPrefab>(prefabRef);
-            //    m_SelectedNetPrefabEntity = prefabRef.m_Prefab;
-            //}
-
             var jobHandle = new CreateDefinitionsJob {
-                OutputMode = outputMode,
-                Config = CurrentConfig,
-                NetPrefabEntity = m_SelectedNetPrefabEntity,
-                NetLanePrefabEntity = m_SelectedNetLanePrefabEntity,
-                ECB = m_Barrier.CreateCommandBuffer()
+                Mode                   = CurrentMode,
+                Config                 = CurrentConfig,
+                NetPrefabEntity        = m_SelectedNetPrefabEntity,
+                NetLanePrefabEntity    = m_SelectedNetLanePrefabEntity,
+                OutputMode             = outputMode,
+                IsHoverPreview         = m_ControlPoints.Length == 0,
+                NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
+                CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
+                EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),
+                UpgradedLookup         = SystemAPI.GetComponentLookup<Upgraded>(true),
+                PrefabRefLookup        = SystemAPI.GetComponentLookup<PrefabRef>(true),
+                PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
+                ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
+                AggregatedLookup       = SystemAPI.GetComponentLookup<Aggregated>(true),
+                ECB                    = m_Barrier.CreateCommandBuffer(),
             }.Schedule(inputDeps);
             m_Barrier.AddJobHandleForProducer(jobHandle);
 

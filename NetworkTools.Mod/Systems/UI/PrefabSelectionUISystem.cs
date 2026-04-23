@@ -12,6 +12,7 @@
     using NetworkTools.Utils;
     using Unity.Collections;
     using Unity.Entities;
+    using NT_GenerateToolSystem = NetworkTools.Systems.Tools.Generate.NT_GenerateToolSystem;
 
     /// <summary>
     ///     System responsible for UI Bindings & Lookup Handling.

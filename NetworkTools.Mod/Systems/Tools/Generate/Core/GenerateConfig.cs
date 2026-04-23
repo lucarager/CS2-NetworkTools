@@ -1,124 +1,51 @@
-namespace NetworkTools.Systems.Tools {
+namespace NetworkTools.Systems.Tools.Generate {
     using Colossal.UI.Binding;
-
     using Unity.Mathematics;
 
     /// <summary>
     ///     Holds generation parameters and control point positions.
     /// </summary>
     public struct GenerateConfig : IJsonWritable, IJsonReadable {
-        /// <summary>
-        ///     First control point position (grid origin).
-        /// </summary>
+        // Shared
         public float3 StartPosition;
+        public float3 StartDirection;
 
-        /// <summary>
-        ///     Second control point position (defines initial direction).
-        /// </summary>
-        public float3 EndPosition;
+        // Grid
+        public float GridXSpacing;
+        public float GridZSpacing;
+        public int GridXNum = 1;
+        public int GridZNum = 1;
+        public const float GridDefaultXSpacing = 80f;
+        public const float GridDefaultZSpacing = 80f;
+        public const float GridMinSpacing = 4f;
+        public const float GridMaxSpacing = 500f;
+        public const int GridDefaultXNum = 2;
+        public const int GridDefaultZNum = 2;
 
-        /// <summary>
-        ///     Grid rotation angle in degrees, initially derived from the two control points.
-        /// </summary>
-        public float Angle;
+        // Circle
 
-        /// <summary>
-        ///     Spacing between grid lines along the primary (X) axis.
-        /// </summary>
-        public float XSpacing;
-
-        /// <summary>
-        ///     Spacing between grid lines along the secondary (Z) axis.
-        /// </summary>
-        public float ZSpacing;
-
-        public int XNum = 1;
-
-        public int ZNum = 1;
-
-        /// <summary>
-        ///     Default X spacing value in world units.
-        /// </summary>
-        public const float DefaultXSpacing = 80f;
-
-        /// <summary>
-        ///     Default Y spacing value in world units.
-        /// </summary>
-        public const float DefaultZSpacing = 80f;
-
-        /// <summary>
-        ///     Minimum spacing value in world units.
-        /// </summary>
-        public const float MinSpacing = 4f;
-
-        public const int DefaultXNum = 2;
-        public const int DefaultZNum = 2;
-
-        /// <summary>
-        ///     Maximum spacing value in world units.
-        /// </summary>
-        public const float MaxSpacing = 500f;
-
-        public GenerateConfig(float3 startPosition, float3 endPosition) {
+        public GenerateConfig(float3 startPosition, float3 startDirection) {
             StartPosition = startPosition;
-            EndPosition   = endPosition;
+            StartDirection = startDirection;
 
-            // Calculate angle from the direction between the two control points
-            var delta = endPosition - startPosition;
-            delta.y = 0f;
-            Angle = math.degrees(math.atan2(delta.z, delta.x));
+            // Grid defaults
+            GridXSpacing = GridDefaultXSpacing;
+            GridZSpacing = GridDefaultZSpacing;
+            GridXNum = GridDefaultXNum;
+            GridZNum = GridDefaultZNum;
 
-            XSpacing = DefaultXSpacing;
-            ZSpacing = DefaultZSpacing;
-            XNum = DefaultXNum;
-            ZNum = DefaultZNum;
+            // Circle Defaults
         }
 
         /// <inheritdoc />
         public void Write(IJsonWriter writer) {
             writer.TypeBegin(GetType().FullName);
-
-            writer.PropertyName("angle");
-            writer.Write(Angle);
-
-            writer.PropertyName("xSpacing");
-            writer.Write(XSpacing);
-
-            writer.PropertyName("zSpacing");
-            writer.Write(ZSpacing);
-
-            writer.PropertyName("xNum");
-            writer.Write(XNum);
-
-            writer.PropertyName("zNum");
-            writer.Write(ZNum);
             writer.TypeEnd();
         }
 
         /// <inheritdoc />
         public void Read(IJsonReader reader) {
             reader.ReadMapBegin();
-
-            reader.ReadProperty("angle");
-            reader.Read(out float angle);
-            Angle = angle;
-
-            reader.ReadProperty("xSpacing");
-            reader.Read(out float xSpacing);
-            XSpacing = xSpacing;
-
-            reader.ReadProperty("zSpacing");
-            reader.Read(out float zSpacing);
-            ZSpacing = zSpacing;
-
-            reader.ReadProperty("xNum");
-            reader.Read(out int xNum);
-            XNum = xNum;
-
-            reader.ReadProperty("zNum");
-            reader.Read(out int zNum);
-            ZNum = zNum;
-
             reader.ReadMapEnd();
         }
     }

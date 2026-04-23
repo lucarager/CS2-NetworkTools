@@ -47,7 +47,7 @@ namespace NetworkTools.L10N {
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool7Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool8Str), "Open Parallel Tool" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool8Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
-                { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool9Str), "Open Grid Tool" },
+                { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool9Str), "Open Generate Tool" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool9Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
 
                 // Sections
@@ -133,10 +133,10 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.Tools.Parallel.Name", "Parallel Tool" },
                 { "NetworkTools.Tools.Parallel.Description", "Allows creating perfect parallel networks from a source network." },
 
-                // ## Grid
-                // ### Grid - Metadata
-                { "NetworkTools.Tools.Grid.Name", "Grid Tool (Coming Soon!)" },
-                { "NetworkTools.Tools.Grid.Description", "Allows creating perfect road grids with a number of configurable options." },
+                // ## Generate
+                // ### Generate - Metadata
+                { "NetworkTools.Tools.Generate.Name", "Generate Tool (Coming Soon!)" },
+                { "NetworkTools.Tools.Generate.Description", "Allows generating a variety of networks such as perfect road grids and circles." },
             };
         }
 

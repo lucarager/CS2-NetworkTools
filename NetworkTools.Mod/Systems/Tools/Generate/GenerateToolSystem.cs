@@ -1,10 +1,6 @@
-namespace NetworkTools.Systems.Tools {
-    using Game.Prefabs;
-
+namespace NetworkTools.Systems.Tools.Generate {
     using NetworkTools.Systems.Tools;
-
     using Unity.Collections;
-    using Unity.Entities;
     using Unity.Mathematics;
 
     /// <summary>
@@ -15,7 +11,7 @@ namespace NetworkTools.Systems.Tools {
         public override string toolID => "GenerateTool";
 
         /// <inheritdoc />
-        public override TargetOption AvailableTargets => TargetOption.Road | TargetOption.Path;
+        public override TargetOption AvailableTargets => TargetOption.None;
 
         /// <summary>
         ///     Caches the last hit position for tool-specific use.
@@ -34,13 +30,8 @@ namespace NetworkTools.Systems.Tools {
         internal GenerateConfig CurrentConfig = new GenerateConfig();
 
         /// <summary>
-        ///     Gets the current selection state based on the number of control points.
+        ///     Currently selected GenerateMode.
         /// </summary>
-        public SelectionState CurrentSelectionState =>
-            m_ControlPoints.Length switch {
-                0 => SelectionState.NoSelection,
-                1 => SelectionState.StartNodeSelected,
-                _ => SelectionState.EndNodeSelected
-            };
+        public GenerateMode CurrentMode = GenerateMode.None;
     }
 }

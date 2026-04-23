@@ -56,23 +56,6 @@
             }
 
             private void Output(NativeList<CurveDef> curves) {
-                if (OutputMode == ToolOutputMode.Preview) {
-                    OutputPreview(curves);
-                } else {
-                    OutputApply(curves);
-                }
-            }
-
-            private void OutputPreview(NativeList<CurveDef> curves) {
-                // Output selected edges
-                for (var i = 0; i < curves.Length; i++)
-                {
-                    var curve = curves[i];
-                    OutputPreviewEdge(curve);
-                }
-            }
-
-            private void OutputApply(NativeList<CurveDef> curves) {
                 // Output selected edges
                 for (var i = 0; i < curves.Length; i++)
                 {

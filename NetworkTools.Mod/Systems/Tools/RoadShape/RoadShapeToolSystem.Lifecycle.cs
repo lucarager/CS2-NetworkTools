@@ -119,6 +119,7 @@
 
             // Enable/Disable rendering based on config
             RenderSlopeTooltips = config.RenderSlopeTooltips;
+            RenderNodeTooltips  = config.RenderSlopeTooltips;
 
             // RE-INITIALIZE: Config changed while in Ready phase
             if (Phase == OperationPhase.Ready)

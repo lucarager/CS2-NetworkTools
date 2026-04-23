@@ -1,7 +1,6 @@
-namespace NetworkTools.Systems.Tools {
-    using NetworkTools.Components.Handles;
+namespace NetworkTools.Systems.Tools.Generate {
     using NetworkTools.Systems.Tools.Base;
-
+    using NetworkTools.Systems.Tools.Connect;
     using Unity.Entities;
     using Unity.Mathematics;
 
@@ -22,55 +21,67 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Builds handle definitions for the current grid config.
-        ///     Creates parameter handles for Angle, XSpacing, and ZSpacing.
+        ///     Gets handle definitions for the current mode.
         /// </summary>
         private TransformHandleDefinition[] GetHandleDefinitions() {
-            var startPos = CurrentConfig.StartPosition;
-            var endPos   = CurrentConfig.EndPosition;
-            var midPoint = (startPos + endPos) * 0.5f;
-
-            // Direction vector for placing spacing handles along the grid axes
-            var angleRad  = math.radians(CurrentConfig.Angle);
-            var xDir      = new float3(math.cos(angleRad), 0f, math.sin(angleRad));
-            var yDir      = new float3(-math.sin(angleRad), 0f, math.cos(angleRad));
-
-            return new[] {
-                // Angle handle at start point
-                new TransformHandleDefinition {
-                    Key       = HandleKeys.Angle,
-                    Position  = startPos,
-                    TypeFlags =  HandleTypeFlags.Parameter | HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
-                    Value = 0,
-                    Angle = 0,
-                },
-                // Start position handle
-                new TransformHandleDefinition {
-                    Key       = HandleKeys.StartPosition,
-                    Position  = startPos,
-                    TypeFlags = HandleTypeFlags.Parameter | HandleTypeFlags.Position | HandleTypeFlags.Primary,
-                    Radius    = NT_Handle.PrimaryRadius
-                },
-                // X Spacing handle offset along X axis
-                new TransformHandleDefinition {
-                    Key       = HandleKeys.XSpacing,
-                    Position  = startPos + xDir * CurrentConfig.XSpacing,
-                    TypeFlags = HandleTypeFlags.Parameter | HandleTypeFlags.Secondary | HandleTypeFlags.ParameterRange,
-                    Value     = CurrentConfig.XSpacing,
-                    MinValue  = GenerateConfig.MinSpacing,
-                    MaxValue  = GenerateConfig.MaxSpacing
-                },
-                // Y Spacing handle offset along Y axis
-                new TransformHandleDefinition {
-                    Key       = HandleKeys.YSpacing,
-                    Position  = startPos + yDir * CurrentConfig.ZSpacing,
-                    TypeFlags = HandleTypeFlags.Parameter | HandleTypeFlags.Secondary | HandleTypeFlags.ParameterRange,
-                    Value     = CurrentConfig.ZSpacing,
-                    MinValue  = GenerateConfig.MinSpacing,
-                    MaxValue  = GenerateConfig.MaxSpacing
-                }
-            };
+            switch (CurrentMode)
+            {
+                case GenerateMode.Grid:
+                    return new GridGenerator().GetHandleDefinitions(CurrentMode, CurrentConfig);
+                case GenerateMode.Circle:
+                    // todo
+                    return null;
+                default:
+                    return System.Array.Empty<TransformHandleDefinition>();
+            }
         }
+
+        //private TransformHandleDefinition[] GetHandleDefinitions() {
+        //    var startPos = CurrentConfig.StartPosition;
+        //    var endPos   = CurrentConfig.EndPosition;
+        //    var midPoint = (startPos + endPos) * 0.5f;
+
+        //    // Direction vector for placing spacing handles along the grid axes
+        //    var angleRad  = math.radians(CurrentConfig.Angle);
+        //    var xDir      = new float3(math.cos(angleRad), 0f, math.sin(angleRad));
+        //    var yDir      = new float3(-math.sin(angleRad), 0f, math.cos(angleRad));
+
+        //    return new[] {
+        //        // Angle handle at start point
+        //        new TransformHandleDefinition {
+        //            Key       = HandleKeys.Angle,
+        //            Position  = startPos,
+        //            TypeFlags =  HandleTypeFlags.Parameter | HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
+        //            Value = 0,
+        //            Angle = 0,
+        //        },
+        //        // Start position handle
+        //        new TransformHandleDefinition {
+        //            Key       = HandleKeys.StartPosition,
+        //            Position  = startPos,
+        //            TypeFlags = HandleTypeFlags.Parameter | HandleTypeFlags.Position | HandleTypeFlags.Primary,
+        //            Radius    = NT_Handle.PrimaryRadius
+        //        },
+        //        // X Spacing handle offset along X axis
+        //        new TransformHandleDefinition {
+        //            Key       = HandleKeys.XSpacing,
+        //            Position  = startPos + xDir * CurrentConfig.XSpacing,
+        //            TypeFlags = HandleTypeFlags.Parameter | HandleTypeFlags.Secondary | HandleTypeFlags.ParameterRange,
+        //            Value     = CurrentConfig.XSpacing,
+        //            MinValue  = GenerateConfig.MinSpacing,
+        //            MaxValue  = GenerateConfig.MaxSpacing
+        //        },
+        //        // Y Spacing handle offset along Y axis
+        //        new TransformHandleDefinition {
+        //            Key       = HandleKeys.YSpacing,
+        //            Position  = startPos + yDir * CurrentConfig.ZSpacing,
+        //            TypeFlags = HandleTypeFlags.Parameter | HandleTypeFlags.Secondary | HandleTypeFlags.ParameterRange,
+        //            Value     = CurrentConfig.ZSpacing,
+        //            MinValue  = GenerateConfig.MinSpacing,
+        //            MaxValue  = GenerateConfig.MaxSpacing
+        //        }
+        //    };
+        //}
 
         /// <inheritdoc />
         protected override void OnParameterHandleDragged(Entity handle, int key, float3 position, float value) {
@@ -89,9 +100,9 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         private float GetConfigValue(int key) {
             return key switch {
-                HandleKeys.Angle    => CurrentConfig.Angle,
-                HandleKeys.XSpacing => CurrentConfig.XSpacing,
-                HandleKeys.YSpacing => CurrentConfig.ZSpacing,
+                //HandleKeys.Angle    => CurrentConfig.Angle,
+                //HandleKeys.XSpacing => CurrentConfig.XSpacing,
+                //HandleKeys.YSpacing => CurrentConfig.ZSpacing,
                 _                   => 0f
             };
         }
@@ -101,15 +112,15 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         private void ApplyConfigValue(int key, float value) {
             switch (key) {
-                case HandleKeys.Angle:
-                    CurrentConfig.Angle = value;
-                    break;
-                case HandleKeys.XSpacing:
-                    CurrentConfig.XSpacing = value;
-                    break;
-                case HandleKeys.YSpacing:
-                    CurrentConfig.ZSpacing = value;
-                    break;
+                //case HandleKeys.Angle:
+                //    CurrentConfig.Angle = value;
+                //    break;
+                //case HandleKeys.XSpacing:
+                //    CurrentConfig.XSpacing = value;
+                //    break;
+                //case HandleKeys.YSpacing:
+                //    CurrentConfig.ZSpacing = value;
+                //    break;
             }
         }
 
@@ -121,9 +132,9 @@ namespace NetworkTools.Systems.Tools {
                 case HandleKeys.StartPosition:
                     CurrentConfig.StartPosition = position;
                     break;
-                case HandleKeys.EndPosition:
-                    CurrentConfig.EndPosition = position;
-                    break;
+                //case HandleKeys.EndPosition:
+                //    CurrentConfig.EndPosition = position;
+                //    break;
             }
         }
     }
