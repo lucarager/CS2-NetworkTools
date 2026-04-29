@@ -17,13 +17,16 @@
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.1.20" />
+  <ModVersion Value="1.1.21" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog>Hotfix for rendering error.</ChangeLog>
+  <ChangeLog>- Disabled experimental renderer that could cause crashes.
+- Improvements to code and performance of the tooltip hint system.
+- Tweaked parallel tool, elevation should be more accurate in more cases now. 
+- More behind the scenes work on the Generate tool.</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
