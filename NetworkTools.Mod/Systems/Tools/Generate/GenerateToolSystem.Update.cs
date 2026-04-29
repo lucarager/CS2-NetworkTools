@@ -26,15 +26,19 @@ namespace NetworkTools.Systems.Tools.Generate {
             // CONTROL POINT PLACEMENT: Input Detection
             // ═══════════════════════════════════════════════════════════════════════════
 
-            var rightClickPressed = m_SecondaryApplyAction.WasPressedThisFrame();
-            var leftClickPressed  = m_ApplyAction.WasPressedThisFrame();
-            var raycastHit        = false;
-            var hitPosition       = float3.zero;
-            ControlPoint controlPoint = default;
+            var          rightClickPressed       = m_SecondaryApplyAction.WasPressedThisFrame();
+            var          leftClickPressed        = m_ApplyAction.WasPressedThisFrame();
+            var          raycastHit              = false;
+            var          hitPosition             = float3.zero;
+            var          lastHoveredControlPoint = m_HoveredControlPoint.value;
+            var          hasSelectedControlPoint = !m_SelectedControlPoint.value.Equals(default);
+            var          hasNewHoverTarget       = false;
+            ControlPoint controlPoint            = default;
 
             raycastHit = GetRaycastResult(out controlPoint);
             if (raycastHit) {
                 hitPosition = controlPoint.m_HitPosition;
+                hasNewHoverTarget = !controlPoint.Equals(lastHoveredControlPoint);
             }
 
             // ═══════════════════════════════════════════════════════════════════════════
@@ -42,10 +46,14 @@ namespace NetworkTools.Systems.Tools.Generate {
             // ═══════════════════════════════════════════════════════════════════════════
 
             if (rightClickPressed) {
+                // todo handle rotation
                 HandleRemoveControlPoint();
                 m_UpdateNeeded = true;
-            } else if (raycastHit && leftClickPressed) {
+            } else if (raycastHit && !hasSelectedControlPoint && leftClickPressed) {
                 HandleAddControlPoint(controlPoint);
+                m_UpdateNeeded = true;
+            } else if (raycastHit && !hasSelectedControlPoint && hasNewHoverTarget) {
+                m_HoveredControlPoint.value = controlPoint;
                 m_UpdateNeeded = true;
             }
 

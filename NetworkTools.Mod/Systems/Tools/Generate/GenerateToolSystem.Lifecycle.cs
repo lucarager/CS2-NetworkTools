@@ -1,6 +1,7 @@
 namespace NetworkTools.Systems.Tools.Generate {
+    using Colossal.Collections;
     using Game.Prefabs;
-
+    using Game.Tools;
     using NetworkTools.Components.Tools;
     using NetworkTools.Systems.Tools.Connect;
 
@@ -24,7 +25,9 @@ namespace NetworkTools.Systems.Tools.Generate {
                 return;
             }
 
-            CurrentConfig = new GenerateConfig(m_ControlPoints[0], m_ControlPoints[1]);
+            var point = m_ControlPoints[0];
+
+            CurrentConfig = new GenerateConfig(point.m_Position, point.m_Rotation);
             RefreshTransformHandles();
         }
 
@@ -67,12 +70,16 @@ namespace NetworkTools.Systems.Tools.Generate {
             DisableVanillaValidation = true;
 
             // Data
-            m_ControlPoints = new NativeList<float3>(2, Allocator.Persistent);
+            m_ControlPoints = new NativeList<ControlPoint>(2, Allocator.Persistent);
+            m_SelectedControlPoint = new NativeValue<ControlPoint>(Allocator.Persistent);
+            m_HoveredControlPoint = new NativeValue<ControlPoint>(Allocator.Persistent);
         }
 
         /// <inheritdoc />
         protected override void OnDestroy() {
             if (m_ControlPoints.IsCreated) m_ControlPoints.Dispose();
+            if (m_SelectedControlPoint.IsCreated) m_SelectedControlPoint.Dispose();
+            if (m_HoveredControlPoint.IsCreated) m_HoveredControlPoint.Dispose();
 
             base.OnDestroy();
         }

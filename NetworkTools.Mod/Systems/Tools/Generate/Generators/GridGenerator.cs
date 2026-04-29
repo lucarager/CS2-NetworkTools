@@ -13,11 +13,11 @@
 
         public void GeneratePreview(
             in  float3 StartPosition,
-            in  float3 StartDirection,
+            in  quaternion StartDirection,
             ref NativeList<CurveDef> curves) {
                 // Create a rectangle to preview the grid
                 var startPos = StartPosition;
-                var startDir = StartDirection;
+                var startDir = math.forward(StartDirection);
                 var crossDir = math.cross(startDir, new float3(0, 1, 0));
 
                 var row0col0 = startPos;

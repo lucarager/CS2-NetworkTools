@@ -8,7 +8,7 @@ namespace NetworkTools.Systems.Tools.Generate {
     public struct GenerateConfig : IJsonWritable, IJsonReadable {
         // Shared
         public float3 StartPosition;
-        public float3 StartDirection;
+        public quaternion StartDirection;
 
         // Grid
         public float GridXSpacing;
@@ -24,7 +24,7 @@ namespace NetworkTools.Systems.Tools.Generate {
 
         // Circle
 
-        public GenerateConfig(float3 startPosition, float3 startDirection) {
+        public GenerateConfig(float3 startPosition, quaternion startDirection) {
             StartPosition = startPosition;
             StartDirection = startDirection;
 

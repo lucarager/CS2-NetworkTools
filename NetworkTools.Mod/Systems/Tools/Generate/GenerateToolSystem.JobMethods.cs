@@ -16,14 +16,23 @@ namespace NetworkTools.Systems.Tools.Generate {
 
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
+            var isHoverPreview = m_SelectedControlPoint.value.Equals(default);
+            var controlPoint = isHoverPreview ? m_HoveredControlPoint.value : m_SelectedControlPoint.value;
+
+            if (controlPoint.Equals(default))
+            {
+                m_Log.Debug("No valid control point for definition generation. Skipping job scheduling.");
+                return inputDeps;
+            }
+
             var jobHandle = new CreateDefinitionsJob {
                 Mode                   = CurrentMode,
                 Config                 = CurrentConfig,
                 NetPrefabEntity        = m_SelectedNetPrefabEntity,
                 NetLanePrefabEntity    = m_SelectedNetLanePrefabEntity,
                 OutputMode             = outputMode,
-                IsHoverPreview         = m_ControlPoints.Length == 0,
-                ControlPoint           = m_ControlPoints.Length == 0 ? default : m_ControlPoints[0],
+                IsHoverPreview         = isHoverPreview,
+                ControlPoint           = controlPoint,
 
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),

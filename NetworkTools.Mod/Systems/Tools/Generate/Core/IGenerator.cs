@@ -14,7 +14,7 @@
 
         void GeneratePreview(
             in float3 StartPosition,
-            in float3 StartDirection,
+            in quaternion StartDirection,
             ref NativeList<CurveDef> curves);
 
         void GenerateNetwork(

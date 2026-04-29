@@ -27,7 +27,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             switch (CurrentMode)
             {
                 case GenerateMode.Grid:
-                    return new GridGenerator().GetHandleDefinitions(CurrentMode, CurrentConfig);
+                    return new GridGenerator().GetHandleDefinitions(CurrentConfig);
                 case GenerateMode.Circle:
                     // todo
                     return null;
