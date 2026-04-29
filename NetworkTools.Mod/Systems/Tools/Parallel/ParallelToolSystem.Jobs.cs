@@ -139,8 +139,7 @@
                     var endTangent    = math.normalize(MathUtils.EndTangent(offsetBezier));
                     var startRotation = quaternion.LookRotationSafe(startTangent, math.up());
                     var endRotation   = quaternion.LookRotationSafe(endTangent,   math.up());
-
-                    var offsetLength = MathUtils.Length(offsetBezier);
+                    var offsetLength  = MathUtils.Length(offsetBezier);
 
                     // Reverse direction if configured: swap start/end and reverse bezier
                     if (Config.ReverseDirection) {
@@ -229,17 +228,18 @@
                     m_Original  = Entity.Null,
                     m_Prefab    = NetPrefabEntity,
                     m_SubPrefab = NetLanePrefabEntity,
-                    m_Flags     = CreationFlags.Construction
+                    m_Flags     = CreationFlags.SubElevation
                 };
 
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
-                var startNodeFlags  = CoursePosFlags.IsLeft | CoursePosFlags.DisableMerge | CoursePosFlags.FreeHeight;
-                var endNodeFlags    = CoursePosFlags.IsLeft | CoursePosFlags.DisableMerge | CoursePosFlags.FreeHeight;
-                var startElevation  = new float2(elevation);
-                var endElevation    = new float2(elevation);
-                var courseElevation = new float2(elevation);
+                var startNodeFlags  = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge;
+                var endNodeFlags    = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge;
+                var startElevation  = new float2(0f);
+                var endElevation    = new float2(0f);
+                var courseElevation = new float2(0f);
+
 
                 var netCourse = new NetCourse {
                     m_Curve      = existingBezier,
