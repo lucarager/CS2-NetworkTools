@@ -12,7 +12,7 @@ import { TargetSelection } from "./shared/targetSelection";
 import { ViewSelection } from "./shared/viewSelection";
 import { SuperNodeControls } from "./tools/superNode";
 import { ParallelControls } from "./tools/parallel";
-import { GridControls } from "./tools/grid";
+import { GenerateControls } from "./tools/generate";
 import { PrefabSearchProvider, usePrefabSearch } from "./prefabSearchPanel/prefabSearchContext";
 import { PrefabSearchPanel } from "./prefabSearchPanel/prefabSearchPanel";
 
@@ -23,7 +23,7 @@ const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
     Connect: ConnectControls,
     SuperNode: SuperNodeControls,
     Parallel: ParallelControls,
-    Grid: GridControls,
+    Generate: GenerateControls,
 };
 
 const ToolActionPanelInner = () => {
@@ -40,7 +40,7 @@ const ToolActionPanelInner = () => {
     useEffect(() => {
         setShowTutorial(false);
         closePrefabSearch();
-    }, [selectedBinding]);
+    }, [closePrefabSearch, selectedBinding]);
 
     if (!activeTool) {
         return <div className={styles.wrapper}></div>;

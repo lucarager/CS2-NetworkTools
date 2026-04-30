@@ -5,7 +5,7 @@ namespace NetworkTools.Systems.Tools.Generate {
     using Game.Net;
     using Game.Prefabs;
     using Game.Tools;
-
+    using NetworkTools.Systems.Tools.Utils;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -40,7 +40,7 @@ namespace NetworkTools.Systems.Tools.Generate {
 
             public void Execute() {
                 // 1. Create data structures
-                var curves = new NativeList<CurveDef>(64, Allocator.Temp);
+                var curves = new NativeList<EdgeConfig>(64, Allocator.Temp);
 
                 // 2. Create definitions
                 switch (Mode)
@@ -120,7 +120,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             //}
 
 
-            private void Output(NativeList<CurveDef> curves) {
+            private void Output(NativeList<EdgeConfig> curves) {
                 // Output selected edges
                 for (var i = 0; i < curves.Length; i++)
                 {
@@ -129,7 +129,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                 }
             }
 
-            private void OutputPreviewEdge(CurveDef curve) {
+            private void OutputPreviewEdge(EdgeConfig curve) {
                 var definitionEntity = ECB.CreateEntity();
 
                 var creationDefinition = new CreationDefinition {

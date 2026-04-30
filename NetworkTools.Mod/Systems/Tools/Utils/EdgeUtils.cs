@@ -2,7 +2,7 @@
     using Colossal.Mathematics;
 
     using Game.Net;
-
+    using Game.Tools;
     using Unity.Entities;
     using Unity.Mathematics;
 
@@ -32,6 +32,13 @@
         ///     Multiplier applied to minimum split distance when an edge end is connected to other roads.
         /// </summary>
         public const float CONNECTED_END_MULTIPLIER = 2f;
+
+        public static Bezier4x3 GenerateStraightEdge(float3 startPos, float3 endPos) {
+            return new Bezier4x3(startPos,
+                                       math.lerp(startPos, endPos, 1f / 3f),
+                                       math.lerp(startPos, endPos, 2f / 3f),
+                                       endPos);
+        }
 
         /// <summary>
         ///     Calculates the minimum split distance (in curve position 0-1) from edge endpoints.

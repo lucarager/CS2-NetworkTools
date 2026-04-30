@@ -21,11 +21,6 @@ namespace NetworkTools.Systems.Tools.Generate {
         private float3 m_LastHitPosition;
 
         /// <summary>
-        ///     Control points
-        /// </summary>
-        protected NativeList<ControlPoint> m_ControlPoints;
-
-        /// <summary>
         ///     Hovered control point
         /// </summary>
         protected NativeValue<ControlPoint> m_HoveredControlPoint;

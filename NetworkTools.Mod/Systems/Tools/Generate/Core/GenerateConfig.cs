@@ -40,12 +40,43 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// <inheritdoc />
         public void Write(IJsonWriter writer) {
             writer.TypeBegin(GetType().FullName);
+
+            writer.PropertyName("gridXSpacing");
+            writer.Write(GridXSpacing);
+
+            writer.PropertyName("gridZSpacing");
+            writer.Write(GridZSpacing);
+
+            writer.PropertyName("gridXNum");
+            writer.Write(GridXNum);
+
+            writer.PropertyName("gridZNum");
+            writer.Write(GridZNum);
+
+
             writer.TypeEnd();
         }
 
         /// <inheritdoc />
         public void Read(IJsonReader reader) {
             reader.ReadMapBegin();
+
+            reader.ReadProperty("gridXSpacing");
+            reader.Read(out float gridXSpacing);
+            GridXSpacing = gridXSpacing;
+
+            reader.ReadProperty("gridZSpacing");
+            reader.Read(out float gridZSpacing);
+            GridZSpacing = gridZSpacing;
+
+            reader.ReadProperty("gridXNum");
+            reader.Read(out int gridXNum);
+            GridXNum = gridXNum;
+
+            reader.ReadProperty("gridZNum");
+            reader.Read(out int gridZNum);
+            GridZNum = gridZNum;
+
             reader.ReadMapEnd();
         }
     }

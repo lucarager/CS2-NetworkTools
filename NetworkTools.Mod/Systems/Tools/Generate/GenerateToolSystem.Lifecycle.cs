@@ -3,17 +3,16 @@ namespace NetworkTools.Systems.Tools.Generate {
     using Game.Prefabs;
     using Game.Tools;
     using NetworkTools.Components.Tools;
-    using NetworkTools.Systems.Tools.Connect;
-
     using Unity.Collections;
-    using Unity.Mathematics;
 
     /// <summary>
-    ///     Lifecycle methods for <see cref="NT_GenerateToolSystem"/>.
+    ///     Lifecycle methods for <see cref="NT_GenerateToolSystem" />.
     /// </summary>
     public partial class NT_GenerateToolSystem {
         /// <inheritdoc />
-        public bool HasToolComponent(PrefabBase prefab) { return m_PrefabSystem.HasComponent<NT_GenerateTool>(prefab); }
+        public bool HasToolComponent(PrefabBase prefab) {
+            return m_PrefabSystem.HasComponent<NT_GenerateTool>(prefab);
+        }
 
         /// <summary>
         ///     Initializes the grid config from the two control points.
@@ -25,7 +24,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                 return;
             }
 
-            var point = m_ControlPoints[0];
+            var point = m_SelectedControlPoint.value;
 
             CurrentConfig = new GenerateConfig(point.m_Position, point.m_Rotation);
             RefreshTransformHandles();
@@ -36,7 +35,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         ///     Sets a new transformation.
         /// </summary>
         public void SetMode(GenerateMode mode) {
-            CurrentMode = mode;
+            CurrentMode    = mode;
             m_UpdateNeeded = true;
 
             // Re-initialize configs
@@ -51,12 +50,11 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// </summary>
         /// <param name="config">The updated config from the UI.</param>
         public void UpdateConfig(GenerateConfig config) {
-            //CurrentConfig.Angle    = config.Angle;
-            //CurrentConfig.XSpacing = config.XSpacing;
-            //CurrentConfig.ZSpacing = config.ZSpacing;
-            //CurrentConfig.XNum     = config.XNum;
-            //CurrentConfig.ZNum     = config.ZNum;
-            m_UpdateNeeded         = true;
+            CurrentConfig.GridXSpacing = config.GridXSpacing;
+            CurrentConfig.GridZSpacing = config.GridZSpacing;
+            CurrentConfig.GridXNum     = config.GridXNum;
+            CurrentConfig.GridZNum     = config.GridZNum;
+            m_UpdateNeeded             = true;
         }
 
         /// <inheritdoc />
@@ -70,16 +68,19 @@ namespace NetworkTools.Systems.Tools.Generate {
             DisableVanillaValidation = true;
 
             // Data
-            m_ControlPoints = new NativeList<ControlPoint>(2, Allocator.Persistent);
             m_SelectedControlPoint = new NativeValue<ControlPoint>(Allocator.Persistent);
-            m_HoveredControlPoint = new NativeValue<ControlPoint>(Allocator.Persistent);
+            m_HoveredControlPoint  = new NativeValue<ControlPoint>(Allocator.Persistent);
         }
 
         /// <inheritdoc />
         protected override void OnDestroy() {
-            if (m_ControlPoints.IsCreated) m_ControlPoints.Dispose();
-            if (m_SelectedControlPoint.IsCreated) m_SelectedControlPoint.Dispose();
-            if (m_HoveredControlPoint.IsCreated) m_HoveredControlPoint.Dispose();
+            if (m_SelectedControlPoint.IsCreated) {
+                m_SelectedControlPoint.Dispose();
+            }
+
+            if (m_HoveredControlPoint.IsCreated) {
+                m_HoveredControlPoint.Dispose();
+            }
 
             base.OnDestroy();
         }

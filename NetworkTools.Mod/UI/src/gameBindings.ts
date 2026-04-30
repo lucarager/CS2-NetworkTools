@@ -60,6 +60,12 @@ export enum ConnectMode {
     Loop = 3,
 }
 
+export enum GenerateMode {
+    None = 0,
+    Grid = 1,
+    Circle = 2,
+}
+
 export enum ParallelSide {
     Left = 0,
     Right = 1,
@@ -140,20 +146,18 @@ export const EMPTY_NET_PREFAB_DATA: NetPrefabData = {
     Name: "",
 };
 
-export type GridConfigData = {
-    angle: number;
-    xSpacing: number;
-    zSpacing: number;
-    xNum: number;
-    zNum: number;
+export type GenerateConfigData = {
+    gridXSpacing: number;
+    gridZSpacing: number;
+    gridXNum: number;
+    gridZNum: number;
 };
 
-export const DEFAULT_GRID_CONFIG: GridConfigData = {
-    angle: 0,
-    xSpacing: 80,
-    zSpacing: 80,
-    xNum: 2,
-    zNum: 2,
+export const DEFAULT_GENERATE_CONFIG: GenerateConfigData = {
+    gridXSpacing: 80,
+    gridZSpacing: 80,
+    gridXNum: 2,
+    gridZNum: 2,
 };
 
 export const GAME_BINDINGS = {
@@ -166,7 +170,11 @@ export const GAME_BINDINGS = {
         "PARALLEL_CONFIG",
         DEFAULT_PARALLEL_CONFIG,
     ),
-    GRID_CONFIG: new TwoWayBinding<GridConfigData>("GRID_CONFIG", DEFAULT_GRID_CONFIG),
+    GENERATE_CONFIG: new TwoWayBinding<GenerateConfigData>(
+        "GENERATE_CONFIG",
+        DEFAULT_GENERATE_CONFIG,
+    ),
+    GENERATE_MODE: new TwoWayBinding<number>("GENERATE_MODE", GenerateMode.Grid),
     CONNECT_MODE: new TwoWayBinding<number>("CONNECT_MODE", ConnectMode.None),
     SELECTED_NET_PREFAB: new TwoWayBinding<NetPrefabData>(
         "SELECTED_NET_PREFAB",

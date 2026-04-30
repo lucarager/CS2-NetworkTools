@@ -1,6 +1,6 @@
 ﻿namespace NetworkTools.Systems.Tools.Generate {
     using NetworkTools.Systems.Tools.Base;
-
+    using NetworkTools.Systems.Tools.Utils;
     using Unity.Collections;
     using Unity.Mathematics;
 
@@ -15,11 +15,11 @@
         void GeneratePreview(
             in float3 StartPosition,
             in quaternion StartDirection,
-            ref NativeList<CurveDef> curves);
+            ref NativeList<EdgeConfig> curves);
 
         void GenerateNetwork(
             in  GenerateConfig       config,
-            ref NativeList<CurveDef> curves);
+            ref NativeList<EdgeConfig> curves);
     }
 
     public interface IHandleableGenerator : IGenerator {

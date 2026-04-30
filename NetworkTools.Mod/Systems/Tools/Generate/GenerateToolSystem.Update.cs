@@ -49,13 +49,14 @@ namespace NetworkTools.Systems.Tools.Generate {
                 // todo handle rotation
                 HandleRemoveControlPoint();
                 m_UpdateNeeded = true;
-            } else if (raycastHit && !hasSelectedControlPoint && leftClickPressed) {
-                HandleAddControlPoint(controlPoint);
+            } else if (raycastHit && !hasSelectedControlPoint) {
+                if (leftClickPressed) {
+                    HandleAddControlPoint(controlPoint);
+                } else if (hasNewHoverTarget) {
+                    m_HoveredControlPoint.value = controlPoint;
+                }
                 m_UpdateNeeded = true;
-            } else if (raycastHit && !hasSelectedControlPoint && hasNewHoverTarget) {
-                m_HoveredControlPoint.value = controlPoint;
-                m_UpdateNeeded = true;
-            }
+            } 
 
             // ═══════════════════════════════════════════════════════════════════════════
             // OUTPUT
@@ -69,13 +70,13 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// </summary>
         /// <returns>True if the control point was added.</returns>
         protected bool HandleAddControlPoint(ControlPoint controlPoint) {
-            if (m_ControlPoints.Length != 0) {
+            if (!m_SelectedControlPoint.value.Equals(default)) {
                 return false;
             }
 
             m_Log.Debug($"Adding control point at {controlPoint.m_Position}");
 
-            m_ControlPoints.Add(controlPoint);
+            m_SelectedControlPoint.value = controlPoint;
             UpdatePhaseFromSelection();
 
             // When a point is placed, initialize the config
@@ -88,11 +89,11 @@ namespace NetworkTools.Systems.Tools.Generate {
         }
 
         /// <summary>
-        ///     Removes the last control point. Transitions phase accordingly.
+        ///     Removes the control point. Transitions phase accordingly.
         /// </summary>
         /// <returns>True if a control point was removed.</returns>
         protected bool HandleRemoveControlPoint() {
-            if (m_ControlPoints.Length == 0) {
+            if (m_SelectedControlPoint.value.Equals(default)) {
                 m_Log.Debug("Cancel pressed, exiting tool.");
                 RequestDisable();
                 return false;
@@ -100,7 +101,7 @@ namespace NetworkTools.Systems.Tools.Generate {
 
             m_Log.Debug($"Removing last control point");
 
-            m_ControlPoints.RemoveAt(0);
+            m_SelectedControlPoint.Clear();
             UpdatePhaseFromSelection();
 
             // Destroy handles when moving out of Ready
@@ -113,15 +114,15 @@ namespace NetworkTools.Systems.Tools.Generate {
         }
 
         /// <summary>
-        ///     Updates the OperationPhase based on the number of control points.
+        ///     Updates the OperationPhase based on the selected control point.
         /// </summary>
         /// <returns>The previous phase before the update.</returns>
         private OperationPhase UpdatePhaseFromSelection() {
             var previousPhase = Phase;
 
-            Phase = m_ControlPoints.Length switch {
-                0 => OperationPhase.Idle,
-                1 => OperationPhase.Ready,
+            Phase = m_SelectedControlPoint.value.Equals(default) switch {
+                true => OperationPhase.Idle,
+                false => OperationPhase.Ready
             };
 
             return previousPhase;
@@ -166,7 +167,8 @@ namespace NetworkTools.Systems.Tools.Generate {
         ///     Clears all control point state.
         /// </summary>
         protected void ClearSelectionState() {
-            m_ControlPoints.Clear();
+            m_SelectedControlPoint.Clear();
+            m_HoveredControlPoint.Clear();
             ClearAllHighlights();
         }
 
@@ -191,9 +193,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             m_ToolRaycastSystem.netLayerMask   = Layer.All;
             m_ToolRaycastSystem.iconLayerMask  = IconLayerMask.None;
             m_ToolRaycastSystem.utilityTypeMask = UtilityTypes.None;
-            m_ToolRaycastSystem.raycastFlags    = RaycastFlags.Markers | RaycastFlags.ElevateOffset |
-                                                  RaycastFlags.SubElements |
-                                                  RaycastFlags.Cargo | RaycastFlags.Passenger;
+            m_ToolRaycastSystem.raycastFlags    = RaycastFlags.Markers | RaycastFlags.ElevateOffset;
         }
     }
 }
