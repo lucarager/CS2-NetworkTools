@@ -4,23 +4,25 @@ import { SnapOption } from "gameBindings";
 import { useSnap } from "hooks/useSnap";
 import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
+import { useLocalization } from "cs2/l10n";
 
 /** Human-readable metadata for each snap flag. */
-const SNAP_FLAGS: { flag: SnapOption; label: string; icon: string }[] = [
+const SNAP_FLAGS: { flag: SnapOption; localeKey: string; icon: string }[] = [
     {
         flag: SnapOption.ZoneGrid,
-        label: "Zone Grid",
+        localeKey: "NetworkTools.UI.Snap.ZoneGrid",
         icon: "coui://nt/Snap/ZoneGrid.svg",
     },
     {
         flag: SnapOption.MidPoint,
-        label: "Mid Point",
+        localeKey: "NetworkTools.UI.Snap.MidPoint",
         icon: "coui://nt/Snap/MidPoint.svg",
     },
 ];
 
 export const SnapSelection: React.FC = () => {
     const { available, selected, setSelected, hasFlag, toggleFlag } = useSnap();
+    const { translate } = useLocalization();
 
     if (available === SnapOption.None) return null;
 
@@ -34,7 +36,7 @@ export const SnapSelection: React.FC = () => {
     return (
         <div className={styles.controlRow}>
             <div className={styles.controlRowInner}>
-                <span className={styles.paramLabel}>Snapping</span>
+                <span className={styles.paramLabel}>{translate("NetworkTools.UI.Snap.Label")}</span>
                 <div className={styles.buttonRow}>
                     <VC.ToolButton
                         className={c(VT.toolButton.button, styles.iconButton)}
@@ -44,7 +46,7 @@ export const SnapSelection: React.FC = () => {
                         multiSelect={true}
                         disabled={false}
                         focusKey={VF.FOCUS_DISABLED}
-                        tooltip={"Toggle All"}
+                        tooltip={translate("NetworkTools.UI.Common.ToggleAll")}
                     />
                     {visibleFlags.map((snap) => (
                         <VC.ToolButton
@@ -56,7 +58,7 @@ export const SnapSelection: React.FC = () => {
                             multiSelect={true}
                             disabled={false}
                             focusKey={VF.FOCUS_DISABLED}
-                            tooltip={snap.label}
+                            tooltip={translate(snap.localeKey)}
                         />
                     ))}
                 </div>

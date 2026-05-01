@@ -62,7 +62,7 @@ const ToolActionPanelInner = () => {
                     </div>
                     {/* <Button
                         variant="icon"
-                        tooltipLabel={"How to use"}
+                        tooltipLabel={translate("NetworkTools.UI.Common.HowToUse")}
                         className={c(styles.infoButton, showTutorial && styles.infoButtonActive)}
                         onSelect={() => setShowTutorial((v) => !v)}>
                             <VC.TintedIcon src={"Media/Glyphs/Info.svg"} className={styles.icon} />
@@ -78,11 +78,9 @@ const ToolActionPanelInner = () => {
             {showTutorial && (
                 <div className={[panels.nt_panel, styles.tutorialPanel].join(" ")}>
                     <div className={styles.col}>
-                        <span className={styles.tutorialTitle}>How to use</span>
+                        <span className={styles.tutorialTitle}>{translate("NetworkTools.UI.Common.HowToUse")}</span>
                         <span className={styles.tutorialText}>
-                            Select the tool to configure it. Adjust snapping, target selection, and
-                            view mode using the options in the panel. Each tool provides its own
-                            specific parameters below.
+                            {translate("NetworkTools.UI.Common.Tutorial")}
                         </span>
                     </div>
                 </div>

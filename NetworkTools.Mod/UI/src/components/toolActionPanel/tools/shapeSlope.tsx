@@ -11,21 +11,22 @@ import { Button, Tooltip } from "cs2/ui";
 import { VC, VF } from "components/vanilla/Components";
 import { NodeSelection } from "../shared/nodeSelection";
 import { c } from "utils/classes";
+import { useLocalization } from "cs2/l10n";
 
 // Slope modes (Y-axis transformations)
-const SLOPE_MODES: { label: string; id: ShapeTransformTemplate; icon: string }[] = [
+const SLOPE_MODES: { localeKey: string; id: ShapeTransformTemplate; icon: string }[] = [
     {
-        label: "Preserve",
+        localeKey: "NetworkTools.UI.Slope.Preserve",
         id: ShapeTransformTemplate.Preserve,
         icon: "coui://nt/Modes/Original.svg",
     },
     {
-        label: "Constant Slope",
+        localeKey: "NetworkTools.UI.Slope.ConstantSlope",
         id: ShapeTransformTemplate.SlopeLinear,
         icon: "coui://nt/Modes/SlopeLinear.svg",
     },
     {
-        label: "EaseInOut Slope",
+        localeKey: "NetworkTools.UI.Slope.EaseInOutSlope",
         id: ShapeTransformTemplate.SlopeEaseInOut,
         icon: "coui://nt/Modes/SlopeEaseInOut.svg",
     },
@@ -34,6 +35,7 @@ const SLOPE_MODES: { label: string; id: ShapeTransformTemplate; icon: string }[]
 export const ShapeSlopeControls: React.FC = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
     const shapeConfig = useValue(GAME_BINDINGS.SHAPE_CONFIG.binding);
+    const { translate } = useLocalization();
 
     const handleShapeParameterChange = (param: keyof ShapeConfigData, value: string | number) => {
         const newConfig: ShapeConfigData = {
@@ -57,12 +59,12 @@ export const ShapeSlopeControls: React.FC = () => {
                     <div className={styles.col}>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>Mode</span>
+                                <span className={styles.paramLabel}>{translate("NetworkTools.UI.Common.Mode")}</span>
                                 <div className={styles.buttonRow}>
                                     {SLOPE_MODES.map((preset) => (
                                         <Tooltip
                                             key={preset.id}
-                                            tooltip={preset.label}
+                                            tooltip={translate(preset.localeKey)}
                                             delayTime={0}>
                                             <VC.ToolButton
                                                 key={preset.id}
@@ -103,7 +105,7 @@ export const ShapeSlopeControls: React.FC = () => {
                                         {/* We mask the internal 0 - 0.5 float range into 0 - 100% for the player */}
                                         <VC.FloatSliderField
                                             value={shapeConfig.easeInLength * 200}
-                                            label={"Starting Flatness"}
+                                            label={translate("NetworkTools.UI.Slope.StartingFlatness") ?? ""}
                                             min={0}
                                             max={100}
                                             fractionDigits={0}
@@ -123,7 +125,7 @@ export const ShapeSlopeControls: React.FC = () => {
                                         {/* We mask the internal 0 - 0.5 float range into 0 - 100% for the player */}
                                         <VC.FloatSliderField
                                             value={shapeConfig.easeOutLength * 200}
-                                            label={"Ending Flatness"}
+                                            label={translate("NetworkTools.UI.Slope.EndingFlatness") ?? ""}
                                             min={0}
                                             max={100}
                                             fractionDigits={0}
@@ -146,7 +148,7 @@ export const ShapeSlopeControls: React.FC = () => {
                                 <div className={styles.controlRow}>
                                     <VC.FloatSliderField
                                         value={shapeConfig.archHeight}
-                                        label={"Arch Height"}
+                                        label={translate("NetworkTools.UI.Slope.ArchHeight") ?? ""}
                                         min={-1}
                                         max={1}
                                         fractionDigits={3}
@@ -158,7 +160,7 @@ export const ShapeSlopeControls: React.FC = () => {
                                 <div className={styles.controlRow}>
                                     <VC.FloatSliderField
                                         value={shapeConfig.archPosition}
-                                        label={"Arch Position"}
+                                        label={translate("NetworkTools.UI.Slope.ArchPosition") ?? ""}
                                         min={0.1}
                                         max={0.9}
                                         fractionDigits={3}
@@ -178,7 +180,7 @@ export const ShapeSlopeControls: React.FC = () => {
             <div className={styles.row}>
                 <div className={styles.actions}>
                     {selectedEntitiesBinding.length < 2 && (
-                        <span className={styles.helper}>Select at least two nodes.</span>
+                        <span className={styles.helper}>{translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}</span>
                     )}
                     {selectedEntitiesBinding.length >= 2 && (
                         <Button
@@ -186,7 +188,7 @@ export const ShapeSlopeControls: React.FC = () => {
                             className={styles.applyButton}
                             disabled={selectedEntitiesBinding.length < 2 || !hasTransform}
                             onSelect={() => GAME_TRIGGERS.REQUEST_APPLY()}>
-                            Apply Slope
+                            {translate("NetworkTools.UI.Slope.ApplySlope")}
                         </Button>
                     )}
                 </div>

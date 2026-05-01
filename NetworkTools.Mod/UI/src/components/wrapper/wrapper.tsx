@@ -5,13 +5,15 @@ import { ToolSelectPanel } from "components/toolSelectPanel/toolSelectPanel";
 import { Button, Tooltip } from "cs2/ui";
 import { useValue } from "cs2/api";
 import { GAME_BINDINGS } from "gameBindings";
+import { useLocalization } from "cs2/l10n";
 
 export const Wrapper = () => {
     const panelOpenBinding = useValue(GAME_BINDINGS.PANEL_OPEN.binding);
+    const { translate } = useLocalization();
 
     return (
         <>
-            <Tooltip tooltip={`Network Tools`} delayTime={0} direction="down">
+            <Tooltip tooltip={translate("NetworkTools.UI.Common.NetworkTools")} delayTime={0} direction="down">
                 <Button
                     variant="floating"
                     onSelect={() => GAME_BINDINGS.PANEL_OPEN.set(!panelOpenBinding)}

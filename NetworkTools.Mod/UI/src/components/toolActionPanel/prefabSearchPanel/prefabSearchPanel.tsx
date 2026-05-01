@@ -7,12 +7,12 @@ import { c } from "utils/classes";
 import { VC } from "components/vanilla/Components";
 import { useLocalization } from "cs2/l10n";
 
-const PREFAB_TABS: { label: string; type: PrefabType }[] = [
-    { label: "Road", type: PrefabType.Road },
-    { label: "Path", type: PrefabType.Path },
-    { label: "Rail", type: PrefabType.Rail },
-    { label: "Waterway", type: PrefabType.Waterway },
-    { label: "NetLane", type: PrefabType.NetLane },
+const PREFAB_TABS: { localeKey: string; type: PrefabType }[] = [
+    { localeKey: "NetworkTools.UI.PrefabTab.Road", type: PrefabType.Road },
+    { localeKey: "NetworkTools.UI.PrefabTab.Path", type: PrefabType.Path },
+    { localeKey: "NetworkTools.UI.PrefabTab.Rail", type: PrefabType.Rail },
+    { localeKey: "NetworkTools.UI.PrefabTab.Waterway", type: PrefabType.Waterway },
+    { localeKey: "NetworkTools.UI.PrefabTab.NetLane", type: PrefabType.NetLane },
 ];
 
 type PrefabSearchPanelProps = {
@@ -36,7 +36,7 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
     return (
         <div className={c(panels.nt_panel, styles.panel)}>
             <div className={styles.header}>
-                <span className={styles.title}>Select Prefab</span>
+                <span className={styles.title}>{translate("NetworkTools.UI.PrefabSearch.Title")}</span>
                 <button className={styles.closeButton} onClick={onClose}>
                     <img
                         src={"coui://uil/Standard/XClose.svg"}
@@ -48,7 +48,7 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
             <div className={styles.searchBar}>
                 <input
                     type="text"
-                    placeholder="Search prefabs..."
+                    placeholder={translate("NetworkTools.UI.PrefabSearch.Placeholder") ?? ""}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -63,7 +63,7 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
                             selectedType === tab.type ? styles.tab__active : "",
                         )}
                         onClick={() => GAME_BINDINGS.PS_SELECTED_TYPE.set(tab.type)}>
-                        {tab.label}
+                        {translate(tab.localeKey)}
                     </button>
                 ))}
             </div>
@@ -71,7 +71,7 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
             <div className={styles.list}>
                 <VC.Scrollable>
                     {filteredPrefabs.length === 0 && (
-                        <div className={styles.empty}>No prefabs found.</div>
+                        <div className={styles.empty}>{translate("NetworkTools.UI.PrefabSearch.Empty")}</div>
                     )}
                     {filteredPrefabs.map((prefab) => (
                         <div

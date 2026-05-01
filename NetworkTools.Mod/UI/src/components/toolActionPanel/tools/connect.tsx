@@ -5,25 +5,26 @@ import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
 import { PrefabSelection } from "../shared/prefabSelection";
 import { c } from "utils/classes";
+import { useLocalization } from "cs2/l10n";
 
-const CONNECT_MODES: { label: string; id: ConnectMode; icon: string }[] = [
+const CONNECT_MODES: { localeKey: string; id: ConnectMode; icon: string }[] = [
     {
-        label: "None",
+        localeKey: "NetworkTools.UI.Connect.None",
         id: ConnectMode.None,
         icon: "coui://nt/Modes/Original.svg",
     },
     {
-        label: "Simple Curve",
+        localeKey: "NetworkTools.UI.Connect.SimpleCurve",
         id: ConnectMode.SimpleCurve,
         icon: "coui://nt/Modes/ConnectSimpleCurve.svg",
     },
     {
-        label: "Complex Curve",
+        localeKey: "NetworkTools.UI.Connect.ComplexCurve",
         id: ConnectMode.ComplexCurve,
         icon: "coui://nt/Modes/ConnectComplexCurve.svg",
     },
     {
-        label: "Loop",
+        localeKey: "NetworkTools.UI.Connect.Loop",
         id: ConnectMode.Loop,
         icon: "coui://nt/Modes/ConnectLoop.svg",
     },
@@ -32,6 +33,7 @@ const CONNECT_MODES: { label: string; id: ConnectMode; icon: string }[] = [
 export const ConnectControls: React.FC = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
     const activeConnectMode = useValue(GAME_BINDINGS.CONNECT_MODE.binding);
+    const { translate } = useLocalization();
 
     console.log("Selected Entities in ConnectControls:", selectedEntitiesBinding);
 
@@ -47,10 +49,10 @@ export const ConnectControls: React.FC = () => {
                     <div className={styles.col}>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>Mode</span>
+                                <span className={styles.paramLabel}>{translate("NetworkTools.UI.Common.Mode")}</span>
                                 <div className={styles.buttonRow}>
                                     {CONNECT_MODES.map((mode) => (
-                                        <Tooltip key={mode.id} tooltip={mode.label} delayTime={0}>
+                                        <Tooltip key={mode.id} tooltip={translate(mode.localeKey)} delayTime={0}>
                                             <Button
                                                 key={mode.id}
                                                 variant="primary"
@@ -79,7 +81,7 @@ export const ConnectControls: React.FC = () => {
             <div className={styles.row}>
                 <div className={styles.actions}>
                     {selectedEntitiesBinding.length < 2 && (
-                        <span className={styles.helper}>Select at least two nodes.</span>
+                        <span className={styles.helper}>{translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}</span>
                     )}
                     {selectedEntitiesBinding.length >= 2 && (
                         <Button
@@ -90,7 +92,7 @@ export const ConnectControls: React.FC = () => {
                                 activeConnectMode === ConnectMode.None
                             }
                             onSelect={() => GAME_TRIGGERS.REQUEST_APPLY()}>
-                            Apply Curve
+                            {translate("NetworkTools.UI.Connect.ApplyCurve")}
                         </Button>
                     )}
                 </div>

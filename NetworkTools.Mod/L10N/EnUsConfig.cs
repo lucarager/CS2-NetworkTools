@@ -137,6 +137,96 @@ namespace NetworkTools.L10N {
                 // ### Generate - Metadata
                 { "NetworkTools.Tools.Generate.Name", "Generate Tool (Coming Soon!)" },
                 { "NetworkTools.Tools.Generate.Description", "Allows generating a variety of networks such as perfect road grids and circles." },
+
+                // # UI Strings
+                // ## Common
+                { "NetworkTools.UI.Common.NetworkTools", "Network Tools" },
+                { "NetworkTools.UI.Common.Mode", "Mode" },
+                { "NetworkTools.UI.Common.ToggleAll", "Toggle All" },
+                { "NetworkTools.UI.Common.SelectAtLeastTwoNodes", "Select at least two nodes." },
+                { "NetworkTools.UI.Common.HowToUse", "How to use" },
+                { "NetworkTools.UI.Common.Tutorial", "Select the tool to configure it. Adjust snapping, target selection, and view mode using the options in the panel. Each tool provides its own specific parameters below." },
+
+                // ## Prefab Search
+                { "NetworkTools.UI.PrefabSearch.Title", "Select Prefab" },
+                { "NetworkTools.UI.PrefabSearch.Placeholder", "Search prefabs..." },
+                { "NetworkTools.UI.PrefabSearch.Empty", "No prefabs found." },
+                { "NetworkTools.UI.PrefabSearch.NetworkPrefab", "Network Prefab" },
+
+                // ## Prefab Tabs
+                { "NetworkTools.UI.PrefabTab.Road", "Road" },
+                { "NetworkTools.UI.PrefabTab.Path", "Path" },
+                { "NetworkTools.UI.PrefabTab.Rail", "Rail" },
+                { "NetworkTools.UI.PrefabTab.Waterway", "Waterway" },
+                { "NetworkTools.UI.PrefabTab.NetLane", "NetLane" },
+
+                // ## View Options
+                { "NetworkTools.UI.View.Label", "View" },
+                { "NetworkTools.UI.View.Underground", "Underground" },
+                { "NetworkTools.UI.View.ZoneGrid", "Zone Grid" },
+                { "NetworkTools.UI.View.InvisibleNetworks", "Invisible Networks" },
+
+                // ## Target Options
+                { "NetworkTools.UI.Target.Label", "Targets" },
+                { "NetworkTools.UI.Target.Road", "Road" },
+                { "NetworkTools.UI.Target.Path", "Path" },
+                { "NetworkTools.UI.Target.Rail", "Rail" },
+                { "NetworkTools.UI.Target.Waterway", "Waterway" },
+                { "NetworkTools.UI.Target.InvisiblePath", "InvisiblePath" },
+
+                // ## Snap Options
+                { "NetworkTools.UI.Snap.Label", "Snapping" },
+                { "NetworkTools.UI.Snap.ZoneGrid", "Zone Grid" },
+                { "NetworkTools.UI.Snap.MidPoint", "Mid Point" },
+
+                // ## Slope Tool
+                { "NetworkTools.UI.Slope.Preserve", "Preserve" },
+                { "NetworkTools.UI.Slope.ConstantSlope", "Constant Slope" },
+                { "NetworkTools.UI.Slope.EaseInOutSlope", "EaseInOut Slope" },
+                { "NetworkTools.UI.Slope.StartingFlatness", "Starting Flatness" },
+                { "NetworkTools.UI.Slope.EndingFlatness", "Ending Flatness" },
+                { "NetworkTools.UI.Slope.ArchHeight", "Arch Height" },
+                { "NetworkTools.UI.Slope.ArchPosition", "Arch Position" },
+                { "NetworkTools.UI.Slope.ApplySlope", "Apply Slope" },
+
+                // ## Curve Tool
+                { "NetworkTools.UI.Curve.Preserve", "Preserve" },
+                { "NetworkTools.UI.Curve.StraightenCurve", "Straighten Curve" },
+                { "NetworkTools.UI.Curve.SmoothingFactor", "Smoothing Factor" },
+                { "NetworkTools.UI.Curve.ApplyCurve", "Apply Curve" },
+
+                // ## Connect Tool
+                { "NetworkTools.UI.Connect.None", "None" },
+                { "NetworkTools.UI.Connect.SimpleCurve", "Simple Curve" },
+                { "NetworkTools.UI.Connect.ComplexCurve", "Complex Curve" },
+                { "NetworkTools.UI.Connect.Loop", "Loop" },
+                { "NetworkTools.UI.Connect.ApplyCurve", "Apply Curve" },
+
+                // ## SuperNode Tool
+                { "NetworkTools.UI.SuperNode.CreateSupernode", "Create Supernode" },
+
+                // ## Parallel Tool
+                { "NetworkTools.UI.Parallel.Side", "Side" },
+                { "NetworkTools.UI.Parallel.Left", "Left" },
+                { "NetworkTools.UI.Parallel.Right", "Right" },
+                { "NetworkTools.UI.Parallel.HorizontalOffset", "Horizontal Offset" },
+                { "NetworkTools.UI.Parallel.VerticalDirection", "Vertical Direction" },
+                { "NetworkTools.UI.Parallel.Up", "Up" },
+                { "NetworkTools.UI.Parallel.Down", "Down" },
+                { "NetworkTools.UI.Parallel.VerticalOffset", "Vertical Offset" },
+                { "NetworkTools.UI.Parallel.Direction", "Direction" },
+                { "NetworkTools.UI.Parallel.Same", "Same" },
+                { "NetworkTools.UI.Parallel.Reverse", "Reverse" },
+                { "NetworkTools.UI.Parallel.CreateParallel", "Create parallel network" },
+
+                // ## Generate Tool
+                { "NetworkTools.UI.Generate.Grid", "Grid" },
+                { "NetworkTools.UI.Generate.Circle", "Circle" },
+                { "NetworkTools.UI.Generate.XSpacing", "X Spacing" },
+                { "NetworkTools.UI.Generate.ZSpacing", "Z Spacing" },
+                { "NetworkTools.UI.Generate.XCount", "X Count" },
+                { "NetworkTools.UI.Generate.ZCount", "Z Count" },
+                { "NetworkTools.UI.Generate.CreateGrid", "Create grid network" },
             };
         }
 

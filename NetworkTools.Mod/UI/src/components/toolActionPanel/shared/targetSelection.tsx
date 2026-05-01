@@ -4,38 +4,40 @@ import { TargetOption } from "gameBindings";
 import { useTargets } from "hooks/useTargets";
 import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
+import { useLocalization } from "cs2/l10n";
 
 /** Human-readable metadata for each target flag. */
-const TARGET_FLAGS: { flag: TargetOption; label: string; icon: string }[] = [
+const TARGET_FLAGS: { flag: TargetOption; localeKey: string; icon: string }[] = [
     {
         flag: TargetOption.Road,
-        label: "Road",
+        localeKey: "NetworkTools.UI.Target.Road",
         icon: "coui://nt/Target/Road.svg",
     },
     {
         flag: TargetOption.Path,
-        label: "Path",
+        localeKey: "NetworkTools.UI.Target.Path",
         icon: "coui://nt/Target/Path.svg",
     },
     {
         flag: TargetOption.Rail,
-        label: "Rail",
+        localeKey: "NetworkTools.UI.Target.Rail",
         icon: "coui://nt/Target/Rail.svg",
     },
     {
         flag: TargetOption.Waterway,
-        label: "Waterway",
+        localeKey: "NetworkTools.UI.Target.Waterway",
         icon: "coui://nt/Target/Waterway.svg",
     },
     {
         flag: TargetOption.InvisiblePath,
-        label: "InvisiblePath",
+        localeKey: "NetworkTools.UI.Target.InvisiblePath",
         icon: "coui://nt/Target/InvisiblePath.svg",
     },
 ];
 
 export const TargetSelection: React.FC = () => {
     const { available, selected, setSelected, hasFlag, toggleFlag } = useTargets();
+    const { translate } = useLocalization();
 
     if (available === TargetOption.None) return null;
 
@@ -49,7 +51,7 @@ export const TargetSelection: React.FC = () => {
     return (
         <div className={styles.controlRow}>
             <div className={styles.controlRowInner}>
-                <span className={styles.paramLabel}>Targets</span>
+                <span className={styles.paramLabel}>{translate("NetworkTools.UI.Target.Label")}</span>
                 <div className={styles.buttonRow}>
                     <VC.ToolButton
                         className={c(VT.toolButton.button, styles.iconButton)}
@@ -59,7 +61,7 @@ export const TargetSelection: React.FC = () => {
                         multiSelect={true}
                         disabled={false}
                         focusKey={VF.FOCUS_DISABLED}
-                        tooltip={"Toggle All"}
+                        tooltip={translate("NetworkTools.UI.Common.ToggleAll")}
                     />
                     {visibleFlags.map((target) => (
                         <VC.ToolButton
@@ -71,7 +73,7 @@ export const TargetSelection: React.FC = () => {
                             multiSelect={true}
                             disabled={false}
                             focusKey={VF.FOCUS_DISABLED}
-                            tooltip={target.label}
+                            tooltip={translate(target.localeKey)}
                         />
                     ))}
                 </div>

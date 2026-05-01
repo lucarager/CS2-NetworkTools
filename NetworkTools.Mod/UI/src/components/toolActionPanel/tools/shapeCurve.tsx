@@ -11,21 +11,22 @@ import { Button, Tooltip } from "cs2/ui";
 import { VC, VF } from "components/vanilla/Components";
 import { NodeSelection } from "../shared/nodeSelection";
 import { c } from "utils/classes";
+import { useLocalization } from "cs2/l10n";
 
 // Curve modes (XZ plane transformations)
-const CURVE_MODES: { label: string; id: ShapeTransformTemplate; icon: string }[] = [
+const CURVE_MODES: { localeKey: string; id: ShapeTransformTemplate; icon: string }[] = [
     {
-        label: "Preserve",
+        localeKey: "NetworkTools.UI.Curve.Preserve",
         id: ShapeTransformTemplate.Preserve,
         icon: "coui://nt/Modes/Original.svg",
     },
     {
-        label: "Straighten Curve",
+        localeKey: "NetworkTools.UI.Curve.StraightenCurve",
         id: ShapeTransformTemplate.CurveStraighten,
         icon: "coui://nt/Modes/CurveStraighten.svg",
     },
     // {
-    //     label: "Smooth Curve",
+    //     localeKey: "NetworkTools.UI.Curve.SmoothCurve",
     //     id: ShapeTransformTemplate.CurveSmooth,
     //     icon: "coui://nt/Modes/CurveSmooth.svg",
     // },
@@ -34,6 +35,7 @@ const CURVE_MODES: { label: string; id: ShapeTransformTemplate; icon: string }[]
 export const ShapeCurveControls: React.FC = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
     const shapeConfig = useValue(GAME_BINDINGS.SHAPE_CONFIG.binding);
+    const { translate } = useLocalization();
 
     const handleShapeParameterChange = (param: keyof ShapeConfigData, value: string | number) => {
         const newConfig: ShapeConfigData = {
@@ -57,12 +59,12 @@ export const ShapeCurveControls: React.FC = () => {
                     <div className={styles.col}>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>Mode</span>
+                                <span className={styles.paramLabel}>{translate("NetworkTools.UI.Common.Mode")}</span>
                                 <div className={styles.buttonRow}>
                                     {CURVE_MODES.map((preset) => (
                                         <Tooltip
                                             key={preset.id}
-                                            tooltip={preset.label}
+                                            tooltip={translate(preset.localeKey)}
                                             delayTime={0}>
                                             <VC.ToolButton
                                                 key={preset.id}
@@ -113,7 +115,7 @@ export const ShapeCurveControls: React.FC = () => {
                             <div className={styles.sliderField}>
                                 <VC.FloatSliderField
                                     value={shapeConfig.smoothingFactor}
-                                    label={"Smoothing Factor"}
+                                    label={translate("NetworkTools.UI.Curve.SmoothingFactor") ?? ""}
                                     min={0}
                                     max={1}
                                     fractionDigits={2}
@@ -132,7 +134,7 @@ export const ShapeCurveControls: React.FC = () => {
             <div className={styles.row}>
                 <div className={styles.actions}>
                     {selectedEntitiesBinding.length < 2 && (
-                        <span className={styles.helper}>Select at least two nodes.</span>
+                        <span className={styles.helper}>{translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}</span>
                     )}
                     {selectedEntitiesBinding.length >= 2 && (
                         <Button
@@ -140,7 +142,7 @@ export const ShapeCurveControls: React.FC = () => {
                             className={styles.applyButton}
                             disabled={selectedEntitiesBinding.length < 2 || !hasTransform}
                             onSelect={() => GAME_TRIGGERS.REQUEST_APPLY()}>
-                            Apply Curve
+                            {translate("NetworkTools.UI.Curve.ApplyCurve")}
                         </Button>
                     )}
                 </div>

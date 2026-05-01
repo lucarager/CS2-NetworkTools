@@ -71,7 +71,20 @@ module.exports = {
                         },
                     },
                     "postcss-loader",
-                    "sass-loader",
+                    {
+                        loader: "sass-loader",
+                        options: {
+                            sassOptions: {
+                                quietDeps: true, // Silences warnings from node_modules
+                                silenceDeprecations: [
+                                    "legacy-js-api",
+                                    "import",
+                                    "color-functions",
+                                    "global-builtin",
+                                ],
+                            },
+                        },
+                    },
                 ],
             },
             {

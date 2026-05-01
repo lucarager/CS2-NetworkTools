@@ -15,7 +15,7 @@ export const PrefabSelection: React.FC = () => {
             <div className={styles.col}>
                 <div className={styles.controlRow}>
                     <div className={styles.controlRowInner}>
-                        <span className={styles.paramLabel}>Network Prefab</span>
+                        <span className={styles.paramLabel}>{translate("NetworkTools.UI.PrefabSearch.NetworkPrefab")}</span>
                         <button
                             className={styles.entityPreview}
                             onClick={() => (isOpen ? close() : open())}>

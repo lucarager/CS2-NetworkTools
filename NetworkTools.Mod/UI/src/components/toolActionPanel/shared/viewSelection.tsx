@@ -4,28 +4,30 @@ import { ViewOption } from "gameBindings";
 import { useViews } from "hooks/useViews";
 import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
+import { useLocalization } from "cs2/l10n";
 
 /** Human-readable metadata for each view flag. */
-const VIEW_FLAGS: { flag: ViewOption; label: string; icon: string }[] = [
+const VIEW_FLAGS: { flag: ViewOption; localeKey: string; icon: string }[] = [
     {
         flag: ViewOption.Underground,
-        label: "Underground",
+        localeKey: "NetworkTools.UI.View.Underground",
         icon: "coui://nt/View/Underground.svg",
     },
     {
         flag: ViewOption.ZoneGrid,
-        label: "Zone Grid",
+        localeKey: "NetworkTools.UI.View.ZoneGrid",
         icon: "coui://nt/View/ZoneGrid.svg",
     },
     {
         flag: ViewOption.InvisibleNetworks,
-        label: "Invisible Networks",
+        localeKey: "NetworkTools.UI.View.InvisibleNetworks",
         icon: "coui://nt/View/InvisibleNetworks.svg",
     },
 ];
 
 export const ViewSelection: React.FC = () => {
     const { available, selected, setSelected, hasFlag, toggleFlag } = useViews();
+    const { translate } = useLocalization();
 
     if (available === ViewOption.None) return null;
 
@@ -39,7 +41,7 @@ export const ViewSelection: React.FC = () => {
     return (
         <div className={styles.controlRow}>
             <div className={styles.controlRowInner}>
-                <span className={styles.paramLabel}>View</span>
+                <span className={styles.paramLabel}>{translate("NetworkTools.UI.View.Label")}</span>
                 <div className={styles.buttonRow}>
                     <VC.ToolButton
                         className={c(VT.toolButton.button, styles.iconButton)}
@@ -49,7 +51,7 @@ export const ViewSelection: React.FC = () => {
                         multiSelect={true}
                         disabled={false}
                         focusKey={VF.FOCUS_DISABLED}
-                        tooltip={"Toggle All"}
+                        tooltip={translate("NetworkTools.UI.Common.ToggleAll")}
                     />
                     {visibleFlags.map((view) => (
                         <VC.ToolButton
@@ -61,7 +63,7 @@ export const ViewSelection: React.FC = () => {
                             multiSelect={true}
                             disabled={false}
                             focusKey={VF.FOCUS_DISABLED}
-                            tooltip={view.label}
+                            tooltip={translate(view.localeKey)}
                         />
                     ))}
                 </div>

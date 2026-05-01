@@ -6,15 +6,16 @@ import { Button, Tooltip } from "cs2/ui";
 import { VC } from "components/vanilla/Components";
 import { PrefabSelection } from "../shared/prefabSelection";
 import { c } from "utils/classes";
+import { useLocalization } from "cs2/l10n";
 
-const GENERATE_MODES: { label: string; id: GenerateMode; icon: string }[] = [
+const GENERATE_MODES: { localeKey: string; id: GenerateMode; icon: string }[] = [
     {
-        label: "Grid",
+        localeKey: "NetworkTools.UI.Generate.Grid",
         id: GenerateMode.Grid,
         icon: "coui://nt/Modes/Original.svg",
     },
     {
-        label: "Circle",
+        localeKey: "NetworkTools.UI.Generate.Circle",
         id: GenerateMode.Circle,
         icon: "coui://nt/Modes/Original.svg",
     },
@@ -23,6 +24,7 @@ const GENERATE_MODES: { label: string; id: GenerateMode; icon: string }[] = [
 export const GenerateControls: React.FC = () => {
     const gridConfig = useValue(GAME_BINDINGS.GENERATE_CONFIG.binding);
     const activeGenerateMode = useValue(GAME_BINDINGS.GENERATE_MODE.binding);
+    const { translate } = useLocalization();
 
     const handleConfigChange = (param: keyof GenerateConfigData, value: number) => {
         const newConfig: GenerateConfigData = {
@@ -40,10 +42,10 @@ export const GenerateControls: React.FC = () => {
             <div className={styles.col}>
                 <div className={styles.controlRow}>
                     <div className={styles.controlRowInner}>
-                        <span className={styles.paramLabel}>Mode</span>
+                        <span className={styles.paramLabel}>{translate("NetworkTools.UI.Common.Mode")}</span>
                         <div className={styles.buttonRow}>
                             {GENERATE_MODES.map((mode) => (
-                                <Tooltip key={mode.id} tooltip={mode.label} delayTime={0}>
+                                <Tooltip key={mode.id} tooltip={translate(mode.localeKey)} delayTime={0}>
                                     <Button
                                         key={mode.id}
                                         variant="primary"
@@ -68,7 +70,7 @@ export const GenerateControls: React.FC = () => {
                     <div className={styles.sliderField}>
                         <VC.FloatSliderField
                             value={gridConfig.gridXSpacing}
-                            label={"X Spacing"}
+                            label={translate("NetworkTools.UI.Generate.XSpacing") ?? ""}
                             min={4}
                             max={500}
                             fractionDigits={1}
@@ -80,7 +82,7 @@ export const GenerateControls: React.FC = () => {
                     <div className={styles.sliderField}>
                         <VC.FloatSliderField
                             value={gridConfig.gridZSpacing}
-                            label={"Z Spacing"}
+                            label={translate("NetworkTools.UI.Generate.ZSpacing") ?? ""}
                             min={4}
                             max={500}
                             fractionDigits={1}
@@ -92,7 +94,7 @@ export const GenerateControls: React.FC = () => {
                     <div className={styles.sliderField}>
                         <VC.FloatSliderField
                             value={gridConfig.gridXNum}
-                            label={"X Count"}
+                            label={translate("NetworkTools.UI.Generate.XCount") ?? ""}
                             min={1}
                             max={20}
                             fractionDigits={0}
@@ -104,7 +106,7 @@ export const GenerateControls: React.FC = () => {
                     <div className={styles.sliderField}>
                         <VC.FloatSliderField
                             value={gridConfig.gridZNum}
-                            label={"Z Count"}
+                            label={translate("NetworkTools.UI.Generate.ZCount") ?? ""}
                             min={1}
                             max={20}
                             fractionDigits={0}
@@ -122,7 +124,7 @@ export const GenerateControls: React.FC = () => {
                         variant="primary"
                         className={styles.applyButton}
                         onSelect={() => GAME_TRIGGERS.REQUEST_APPLY()}>
-                        Create grid network
+                        {translate("NetworkTools.UI.Generate.CreateGrid")}
                     </Button>
                 </div>
             </div>
