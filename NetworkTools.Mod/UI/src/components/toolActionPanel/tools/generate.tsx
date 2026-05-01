@@ -12,12 +12,12 @@ const GENERATE_MODES: { localeKey: string; id: GenerateMode; icon: string }[] = 
     {
         localeKey: "NetworkTools.UI.Generate.Grid",
         id: GenerateMode.Grid,
-        icon: "coui://nt/Modes/Original.svg",
+        icon: "coui://nt/Modes/GenerateGrid.svg",
     },
     {
         localeKey: "NetworkTools.UI.Generate.Circle",
         id: GenerateMode.Circle,
-        icon: "coui://nt/Modes/Original.svg",
+        icon: "coui://nt/Modes/GenerateCircle.svg",
     },
 ];
 
@@ -42,10 +42,15 @@ export const GenerateControls: React.FC = () => {
             <div className={styles.col}>
                 <div className={styles.controlRow}>
                     <div className={styles.controlRowInner}>
-                        <span className={styles.paramLabel}>{translate("NetworkTools.UI.Common.Mode")}</span>
+                        <span className={styles.paramLabel}>
+                            {translate("NetworkTools.UI.Common.Mode")}
+                        </span>
                         <div className={styles.buttonRow}>
                             {GENERATE_MODES.map((mode) => (
-                                <Tooltip key={mode.id} tooltip={translate(mode.localeKey)} delayTime={0}>
+                                <Tooltip
+                                    key={mode.id}
+                                    tooltip={translate(mode.localeKey)}
+                                    delayTime={0}>
                                     <Button
                                         key={mode.id}
                                         variant="primary"
