@@ -1,12 +1,22 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
-import { GAME_BINDINGS, GAME_TRIGGERS, ParallelSide, VerticalSide } from "gameBindings";
+import { GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
+import {
+    ParallelSide,
+    VerticalSide,
+    PARAM_META,
+    PARAM_BINDINGS,
+} from "generated/parameters.generated";
 import { useValue } from "cs2/api";
 import { Button } from "cs2/ui";
 import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
 import { PrefabSelection } from "../shared/prefabSelection";
 import { useLocalization } from "cs2/l10n";
+
+const P = PARAM_BINDINGS.parallel;
+const hOffsetMeta = PARAM_META["parallel.horizontalOffset"];
+const vOffsetMeta = PARAM_META["parallel.verticalOffset"];
 
 const SIDE_OPTIONS: { localeKey: string; id: ParallelSide; icon: string }[] = [
     {
@@ -36,15 +46,11 @@ const VERTICAL_SIDE_OPTIONS: { localeKey: string; id: VerticalSide; icon: string
 
 export const ParallelControls: React.FC = () => {
     const selectedEntities = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
-    const horizontalOffset = useValue(GAME_BINDINGS.PARALLEL_HORIZONTAL_OFFSET.binding);
-    const verticalOffset = useValue(GAME_BINDINGS.PARALLEL_VERTICAL_OFFSET.binding);
-    const horizontalDirection = useValue(
-        GAME_BINDINGS.PARALLEL_HORIZONTAL_DIRECTION.binding,
-    ) as ParallelSide;
-    const verticalDirection = useValue(
-        GAME_BINDINGS.PARALLEL_VERTICAL_DIRECTION.binding,
-    ) as VerticalSide;
-    const reverseDirection = useValue(GAME_BINDINGS.PARALLEL_REVERSE_DIRECTION.binding);
+    const horizontalOffset = useValue(P.horizontalOffset.binding);
+    const verticalOffset = useValue(P.verticalOffset.binding);
+    const horizontalDirection = useValue(P.horizontalDirection.binding) as ParallelSide;
+    const verticalDirection = useValue(P.verticalDirection.binding) as VerticalSide;
+    const reverseDirection = useValue(P.reverseDirection.binding);
     const { translate } = useLocalization();
 
     return (
@@ -69,11 +75,7 @@ export const ParallelControls: React.FC = () => {
                                             tooltip={translate(option.localeKey)}
                                             className={c(VT.toolButton.button, styles.iconButton)}
                                             src={option.icon}
-                                            onSelect={() =>
-                                                GAME_BINDINGS.PARALLEL_HORIZONTAL_DIRECTION.set(
-                                                    option.id,
-                                                )
-                                            }
+                                            onSelect={() => P.horizontalDirection.set(option.id)}
                                             selected={horizontalDirection === option.id}
                                             multiSelect={false}
                                             disabled={false}
@@ -90,12 +92,10 @@ export const ParallelControls: React.FC = () => {
                                     label={
                                         translate("NetworkTools.UI.Parallel.HorizontalOffset") ?? ""
                                     }
-                                    min={0}
-                                    max={80}
+                                    min={hOffsetMeta.min}
+                                    max={hOffsetMeta.max}
                                     fractionDigits={0}
-                                    onChange={(e: number) =>
-                                        GAME_BINDINGS.PARALLEL_HORIZONTAL_OFFSET.set(e)
-                                    }
+                                    onChange={(e: number) => P.horizontalOffset.set(e)}
                                 />
                             </div>
                         </div>
@@ -111,11 +111,7 @@ export const ParallelControls: React.FC = () => {
                                             tooltip={translate(option.localeKey)}
                                             className={c(VT.toolButton.button, styles.iconButton)}
                                             src={option.icon}
-                                            onSelect={() =>
-                                                GAME_BINDINGS.PARALLEL_VERTICAL_DIRECTION.set(
-                                                    option.id,
-                                                )
-                                            }
+                                            onSelect={() => P.verticalDirection.set(option.id)}
                                             selected={verticalDirection === option.id}
                                             multiSelect={false}
                                             disabled={false}
@@ -132,12 +128,10 @@ export const ParallelControls: React.FC = () => {
                                     label={
                                         translate("NetworkTools.UI.Parallel.VerticalOffset") ?? ""
                                     }
-                                    min={0}
-                                    max={80}
+                                    min={vOffsetMeta.min}
+                                    max={vOffsetMeta.max}
                                     fractionDigits={0}
-                                    onChange={(e: number) =>
-                                        GAME_BINDINGS.PARALLEL_VERTICAL_OFFSET.set(e)
-                                    }
+                                    onChange={(e: number) => P.verticalOffset.set(e)}
                                 />
                             </div>
                         </div>
@@ -151,9 +145,7 @@ export const ParallelControls: React.FC = () => {
                                         tooltip={translate("NetworkTools.UI.Parallel.Same")}
                                         className={c(VT.toolButton.button, styles.iconButton)}
                                         src="coui://nt/Direction/Same.svg"
-                                        onSelect={() =>
-                                            GAME_BINDINGS.PARALLEL_REVERSE_DIRECTION.set(false)
-                                        }
+                                        onSelect={() => P.reverseDirection.set(false)}
                                         selected={!reverseDirection}
                                         multiSelect={false}
                                         disabled={false}
@@ -163,9 +155,7 @@ export const ParallelControls: React.FC = () => {
                                         tooltip={translate("NetworkTools.UI.Parallel.Reverse")}
                                         className={c(VT.toolButton.button, styles.iconButton)}
                                         src="coui://nt/Direction/Opposite.svg"
-                                        onSelect={() =>
-                                            GAME_BINDINGS.PARALLEL_REVERSE_DIRECTION.set(true)
-                                        }
+                                        onSelect={() => P.reverseDirection.set(true)}
                                         selected={reverseDirection}
                                         multiSelect={false}
                                         disabled={false}

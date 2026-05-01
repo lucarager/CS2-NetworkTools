@@ -66,17 +66,6 @@ export enum GenerateMode {
     Circle = 2,
 }
 
-export enum ParallelSide {
-    Left = 0,
-    Right = 1,
-}
-
-export enum VerticalSide {
-    Up = 0,
-    Down = 1,
-}
-
-
 // Snap options (bitflags)
 export enum SnapOption {
     None = 0,
@@ -152,11 +141,6 @@ export const GAME_BINDINGS = {
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
     PANEL_OPEN: new TwoWayBinding<boolean>("PANEL_OPEN", false),
     SHAPE_CONFIG: new TwoWayBinding<ShapeConfigData>("SHAPE_CONFIG", DEFAULT_SHAPE_CONFIG),
-    PARALLEL_HORIZONTAL_OFFSET: new TwoWayBinding<number>("parallel.horizontalOffset", 20),
-    PARALLEL_VERTICAL_OFFSET: new TwoWayBinding<number>("parallel.verticalOffset", 0),
-    PARALLEL_HORIZONTAL_DIRECTION: new TwoWayBinding<number>("parallel.horizontalDirection", ParallelSide.Right),
-    PARALLEL_VERTICAL_DIRECTION: new TwoWayBinding<number>("parallel.verticalDirection", VerticalSide.Up),
-    PARALLEL_REVERSE_DIRECTION: new TwoWayBinding<boolean>("parallel.reverseDirection", false),
     GENERATE_CONFIG: new TwoWayBinding<GenerateConfigData>(
         "GENERATE_CONFIG",
         DEFAULT_GENERATE_CONFIG,

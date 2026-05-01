@@ -447,11 +447,12 @@ Ship the parameter system end-to-end against the simplest tool. Parallel has no 
 
 End-to-end: UI edit → binding → parameter → `OnChanged` → `m_UpdateNeeded` → snapshot → job → network. Burst job code unchanged.
 
-### Phase 2 — Build-time TS codegen
+### Phase 2 — Build-time TS codegen ✅
 
-- Add MSBuild task project that emits `parameters.generated.ts` (enums, `PARAM_KEYS`, `PARAM_META`)
-- Wire into UI build so React picks it up.
-- Convert the Parallel React panel to consume `PARAM_KEYS` and `PARAM_META` instead of hardcoded keys/ranges.
+- Add MSBuild task project (`NetworkTools.Codegen`, net8.0 console app) that emits `parameters.generated.ts` (enums, `PARAM_KEYS`, `PARAM_META`, `PARAM_BINDINGS`)
+- Wire into UI build via `GenerateParametersTS` MSBuild target (runs before `BuildUI`).
+- Convert the Parallel React panel to consume `PARAM_BINDINGS` and `PARAM_META` instead of hardcoded keys/ranges/bindings.
+- Remove duplicated `ParallelSide`/`VerticalSide` enums and parallel `TwoWayBinding` entries from `gameBindings.ts` (now generated).
 
 ### Phase 3 — Migrate remaining tools
 
@@ -512,8 +513,8 @@ See section 10 for tool-specific gotchas.
 | New | `Systems/Parameters/ParameterSchema.cs` |
 | New | `Systems/Tools/Base/BaseToolSystem.Parameters.cs` (partial — adds `Parameters`, `Reset`, `ResetAll`) |
 | New | Per-tool `*JobConfig.cs` snapshot structs |
-| New | MSBuild task project for TS codegen (Phase 2) |
-| New | `UI/src/parameters.generated.ts` (Phase 2) |
+| New | `NetworkTools.Codegen/` — net8.0 console app for TS codegen (Phase 2 ✅) |
+| New | `UI/src/generated/parameters.generated.ts` (Phase 2 ✅) |
 | Modified | `Systems/UI/UISystem.cs` (reflection-driven binding setup) |
 | Modified | `Systems/UI/UISystem.Handlers.cs` (generic handle dispatch) |
 | Modified | `Systems/Tools/Parallel/*` (Phase 1 ✅) |
