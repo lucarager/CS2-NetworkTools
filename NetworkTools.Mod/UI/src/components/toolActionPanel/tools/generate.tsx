@@ -78,7 +78,7 @@ export const GenerateControls: React.FC = () => {
                             label={translate("NetworkTools.UI.Generate.XSpacing") ?? ""}
                             min={4}
                             max={500}
-                            fractionDigits={1}
+                            fractionDigits={0}
                             onChange={(e: number) => handleConfigChange("gridXSpacing", e)}
                         />
                     </div>
@@ -90,7 +90,7 @@ export const GenerateControls: React.FC = () => {
                             label={translate("NetworkTools.UI.Generate.ZSpacing") ?? ""}
                             min={4}
                             max={500}
-                            fractionDigits={1}
+                            fractionDigits={0}
                             onChange={(e: number) => handleConfigChange("gridZSpacing", e)}
                         />
                     </div>

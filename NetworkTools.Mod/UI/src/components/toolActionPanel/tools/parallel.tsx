@@ -1,11 +1,6 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
-import {
-    GAME_BINDINGS,
-    GAME_TRIGGERS,
-    ParallelSide,
-    VerticalSide,
-} from "gameBindings";
+import { GAME_BINDINGS, GAME_TRIGGERS, ParallelSide, VerticalSide } from "gameBindings";
 import { useValue } from "cs2/api";
 import { Button } from "cs2/ui";
 import { VC, VF, VT } from "components/vanilla/Components";
@@ -40,12 +35,16 @@ const VERTICAL_SIDE_OPTIONS: { localeKey: string; id: VerticalSide; icon: string
 ];
 
 export const ParallelControls: React.FC = () => {
-    const selectedEntities      = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
-    const horizontalOffset      = useValue(GAME_BINDINGS.PARALLEL_HORIZONTAL_OFFSET.binding);
-    const verticalOffset        = useValue(GAME_BINDINGS.PARALLEL_VERTICAL_OFFSET.binding);
-    const horizontalDirection   = useValue(GAME_BINDINGS.PARALLEL_HORIZONTAL_DIRECTION.binding) as ParallelSide;
-    const verticalDirection     = useValue(GAME_BINDINGS.PARALLEL_VERTICAL_DIRECTION.binding) as VerticalSide;
-    const reverseDirection      = useValue(GAME_BINDINGS.PARALLEL_REVERSE_DIRECTION.binding);
+    const selectedEntities = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
+    const horizontalOffset = useValue(GAME_BINDINGS.PARALLEL_HORIZONTAL_OFFSET.binding);
+    const verticalOffset = useValue(GAME_BINDINGS.PARALLEL_VERTICAL_OFFSET.binding);
+    const horizontalDirection = useValue(
+        GAME_BINDINGS.PARALLEL_HORIZONTAL_DIRECTION.binding,
+    ) as ParallelSide;
+    const verticalDirection = useValue(
+        GAME_BINDINGS.PARALLEL_VERTICAL_DIRECTION.binding,
+    ) as VerticalSide;
+    const reverseDirection = useValue(GAME_BINDINGS.PARALLEL_REVERSE_DIRECTION.binding);
     const { translate } = useLocalization();
 
     return (
@@ -60,7 +59,9 @@ export const ParallelControls: React.FC = () => {
                     <div className={styles.col}>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>{translate("NetworkTools.UI.Parallel.Side")}</span>
+                                <span className={styles.paramLabel}>
+                                    {translate("NetworkTools.UI.Parallel.Side")}
+                                </span>
                                 <div className={styles.buttonRow}>
                                     {SIDE_OPTIONS.map((option) => (
                                         <VC.ToolButton
@@ -69,7 +70,9 @@ export const ParallelControls: React.FC = () => {
                                             className={c(VT.toolButton.button, styles.iconButton)}
                                             src={option.icon}
                                             onSelect={() =>
-                                                GAME_BINDINGS.PARALLEL_HORIZONTAL_DIRECTION.set(option.id)
+                                                GAME_BINDINGS.PARALLEL_HORIZONTAL_DIRECTION.set(
+                                                    option.id,
+                                                )
                                             }
                                             selected={horizontalDirection === option.id}
                                             multiSelect={false}
@@ -84,10 +87,12 @@ export const ParallelControls: React.FC = () => {
                             <div className={styles.sliderField}>
                                 <VC.FloatSliderField
                                     value={horizontalOffset}
-                                    label={translate("NetworkTools.UI.Parallel.HorizontalOffset") ?? ""}
+                                    label={
+                                        translate("NetworkTools.UI.Parallel.HorizontalOffset") ?? ""
+                                    }
                                     min={0}
                                     max={80}
-                                    fractionDigits={1}
+                                    fractionDigits={0}
                                     onChange={(e: number) =>
                                         GAME_BINDINGS.PARALLEL_HORIZONTAL_OFFSET.set(e)
                                     }
@@ -96,7 +101,9 @@ export const ParallelControls: React.FC = () => {
                         </div>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>{translate("NetworkTools.UI.Parallel.VerticalDirection")}</span>
+                                <span className={styles.paramLabel}>
+                                    {translate("NetworkTools.UI.Parallel.VerticalDirection")}
+                                </span>
                                 <div className={styles.buttonRow}>
                                     {VERTICAL_SIDE_OPTIONS.map((option) => (
                                         <VC.ToolButton
@@ -105,7 +112,9 @@ export const ParallelControls: React.FC = () => {
                                             className={c(VT.toolButton.button, styles.iconButton)}
                                             src={option.icon}
                                             onSelect={() =>
-                                                GAME_BINDINGS.PARALLEL_VERTICAL_DIRECTION.set(option.id)
+                                                GAME_BINDINGS.PARALLEL_VERTICAL_DIRECTION.set(
+                                                    option.id,
+                                                )
                                             }
                                             selected={verticalDirection === option.id}
                                             multiSelect={false}
@@ -120,10 +129,12 @@ export const ParallelControls: React.FC = () => {
                             <div className={styles.sliderField}>
                                 <VC.FloatSliderField
                                     value={verticalOffset}
-                                    label={translate("NetworkTools.UI.Parallel.VerticalOffset") ?? ""}
+                                    label={
+                                        translate("NetworkTools.UI.Parallel.VerticalOffset") ?? ""
+                                    }
                                     min={0}
                                     max={80}
-                                    fractionDigits={1}
+                                    fractionDigits={0}
                                     onChange={(e: number) =>
                                         GAME_BINDINGS.PARALLEL_VERTICAL_OFFSET.set(e)
                                     }
@@ -132,7 +143,9 @@ export const ParallelControls: React.FC = () => {
                         </div>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>{translate("NetworkTools.UI.Parallel.Direction")}</span>
+                                <span className={styles.paramLabel}>
+                                    {translate("NetworkTools.UI.Parallel.Direction")}
+                                </span>
                                 <div className={styles.buttonRow}>
                                     <VC.ToolButton
                                         tooltip={translate("NetworkTools.UI.Parallel.Same")}
@@ -170,7 +183,9 @@ export const ParallelControls: React.FC = () => {
             <div className={styles.row}>
                 <div className={styles.actions}>
                     {selectedEntities.length < 2 && (
-                        <span className={styles.helper}>{translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}</span>
+                        <span className={styles.helper}>
+                            {translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}
+                        </span>
                     )}
                     {selectedEntities.length >= 2 && (
                         <Button
