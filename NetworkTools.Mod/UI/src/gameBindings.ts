@@ -76,20 +76,6 @@ export enum VerticalSide {
     Down = 1,
 }
 
-export type ParallelConfigData = {
-    horizontalOffset: number;
-    verticalOffset: number;
-    horizontalDirection: ParallelSide;
-    verticalDirection: VerticalSide;
-    reverseDirection: boolean;
-};
-export const DEFAULT_PARALLEL_CONFIG: ParallelConfigData = {
-    horizontalOffset: 20,
-    verticalOffset: 0,
-    horizontalDirection: ParallelSide.Right,
-    verticalDirection: VerticalSide.Up,
-    reverseDirection: false,
-};
 
 // Snap options (bitflags)
 export enum SnapOption {
@@ -166,10 +152,11 @@ export const GAME_BINDINGS = {
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
     PANEL_OPEN: new TwoWayBinding<boolean>("PANEL_OPEN", false),
     SHAPE_CONFIG: new TwoWayBinding<ShapeConfigData>("SHAPE_CONFIG", DEFAULT_SHAPE_CONFIG),
-    PARALLEL_CONFIG: new TwoWayBinding<ParallelConfigData>(
-        "PARALLEL_CONFIG",
-        DEFAULT_PARALLEL_CONFIG,
-    ),
+    PARALLEL_HORIZONTAL_OFFSET: new TwoWayBinding<number>("parallel.horizontalOffset", 20),
+    PARALLEL_VERTICAL_OFFSET: new TwoWayBinding<number>("parallel.verticalOffset", 0),
+    PARALLEL_HORIZONTAL_DIRECTION: new TwoWayBinding<number>("parallel.horizontalDirection", ParallelSide.Right),
+    PARALLEL_VERTICAL_DIRECTION: new TwoWayBinding<number>("parallel.verticalDirection", VerticalSide.Up),
+    PARALLEL_REVERSE_DIRECTION: new TwoWayBinding<boolean>("parallel.reverseDirection", false),
     GENERATE_CONFIG: new TwoWayBinding<GenerateConfigData>(
         "GENERATE_CONFIG",
         DEFAULT_GENERATE_CONFIG,
@@ -199,5 +186,11 @@ export const GAME_TRIGGERS = {
     },
     PS_SELECT: (entity: Entity) => {
         trigger(mod.id, "TRIGGER:PS:SELECT", entity);
+    },
+    RESET_PARAM: (key: string) => {
+        trigger(mod.id, "TRIGGER:RESET_PARAM", key);
+    },
+    RESET_TOOL: () => {
+        trigger(mod.id, "TRIGGER:RESET_TOOL");
     },
 };

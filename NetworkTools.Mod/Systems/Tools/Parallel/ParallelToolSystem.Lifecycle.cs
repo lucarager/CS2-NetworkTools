@@ -32,6 +32,10 @@ namespace NetworkTools.Systems.Tools.Parallel {
             DisableVanillaValidation    = true;
             DisableVanillaNodeReduction = true;
 
+            // Parameter changes trigger a preview rebuild
+            foreach (var p in Parameters)
+                p.OnChanged += () => m_UpdateNeeded = true;
+
             // Initialize selection state (base class NativeLists)
             InitializeSelectionState();
         }

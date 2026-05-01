@@ -109,57 +109,59 @@ What stays (intentionally):
 
 ```csharp
 public abstract class ParameterBase {
-    public string Key { get; }
-    public string LabelKey { get; }   // localization id, optional
-    public int    Modes { get; }      // bitflag: which modes use this param (0 = all)
+    public string Key   { get; }
+    public int    Modes { get; }  // bitflag: which modes use this param (0 = all)
 
     public event Action OnChanged;
 
-    public abstract Type ValueType { get; }
-    public abstract object GetValueBoxed();
-    public abstract void   SetValueBoxed(object value);
-
-    public abstract void WriteJson(IJsonWriter w);
-    public abstract void ReadJson(IJsonReader r);
-
     // Reset to declared default. Fires OnChanged.
     public abstract void ResetToDefault();
-
-    // For codegen: emit a TS type descriptor
-    public abstract ParameterDescriptor Describe();
+    // Fire OnChanged unconditionally (e.g., to re-sync UI on tool activation).
+    public void ForceNotify() => OnChanged?.Invoke();
 }
 
-public class Parameter<T> : ParameterBase {
-    private T m_Value;
+public abstract class Parameter<T> : ParameterBase {
+    public T Default { get; }
     public T Value {
         get => m_Value;
         set {
             if (EqualityComparer<T>.Default.Equals(m_Value, value)) return;
             m_Value = value;
-            OnChanged?.Invoke();
+            RaiseChanged();
         }
     }
-    public T Default { get; }
-    // ...
 }
 
-public class FloatParameter : Parameter<float> {
-    public float Min { get; }
-    public float Max { get; }
-    public FloatParameter(string key, float @default, float min, float max, int modes = 0) { ... }
+public class FloatParameter : Parameter<float> { public float Min, Max; ... }
+public class IntParameter   : Parameter<int>   { public int   Min, Max; ... }
+public class BoolParameter  : Parameter<bool>  { ... }
+public class EnumParameter<TEnum> : Parameter<TEnum>, IEnumParameter where TEnum : struct, Enum { ... }
+public class Float3Parameter : Parameter<float3> { ... }
+// Add Quaternion, Color, etc. only when needed.
+
+// IEnumParameter — non-generic handle for UISystem binding registration
+public interface IEnumParameter {
+    string Key      { get; }
+    int    IntValue { get; set; }
 }
+```
 
-// At the tool level
-public abstract class NT_ToolDefinition {
-    // Reflect parameter fields once per tool type, cache statically.
-    public IReadOnlyList<ParameterBase> Parameters => ParameterSchema.For(GetType());
+### Parameter management lives on `NT_BaseToolSystem`
 
-    // Reset every parameter on this tool to its declared default.
-    public void ResetAll() {
-        foreach (var p in Parameters) p.ResetToDefault();
-    }
+There is **no separate tool-definition class**. Parameters are declared as `public` fields directly on the concrete tool system. `NT_BaseToolSystem` provides discovery, reset, and the parameter list via a new partial file `BaseToolSystem.Parameters.cs`:
 
-    // Reset by key (single-parameter reset surfaced to UI).
+```csharp
+// BaseToolSystem.Parameters.cs
+public abstract partial class NT_BaseToolSystem {
+    private ParameterBase[] m_ToolParameters;
+
+    // All ParameterBase fields declared on the concrete tool, in declaration order.
+    // Lazily discovered via reflection and cached per instance.
+    public IReadOnlyList<ParameterBase> Parameters =>
+        m_ToolParameters ??= ParameterSchema.Discover(this);
+
+    public void ResetAll() { foreach (var p in Parameters) p.ResetToDefault(); }
+
     public bool Reset(string key) {
         foreach (var p in Parameters) {
             if (p.Key == key) { p.ResetToDefault(); return true; }
@@ -167,44 +169,26 @@ public abstract class NT_ToolDefinition {
         return false;
     }
 }
-
-public class IntParameter   : Parameter<int>  { public int Min, Max; ... }
-public class BoolParameter  : Parameter<bool> { ... }
-public class EnumParameter<TEnum> : Parameter<TEnum> where TEnum : struct, Enum { ... }
-public class Float3Parameter : Parameter<float3> { ... }
-// Add Quaternion, Color, etc. only when needed.
 ```
 
-### Tool definition example (Parallel)
+`ParameterSchema.Discover(object instance)` reflects the concrete type's **public instance fields**, filters for `ParameterBase` subtypes, and caches `FieldInfo[]` per type. Tool systems may have many other fields (ECS queries, native lists, etc.) — they are all private or non-`ParameterBase`, so reflection is unambiguous.
+
+### Parameter declaration example (Parallel)
 
 ```csharp
-public class ParallelTool : NT_ToolDefinition {
-    public FloatParameter HorizontalOffset = new(
-        key: "parallel.horizontalOffset",
-        @default: 20f, min: 0f, max: 80f);
-
-    public FloatParameter VerticalOffset = new(
-        key: "parallel.verticalOffset",
-        @default: 0f, min: -50f, max: 50f);
-
-    public EnumParameter<ParallelSide> HorizontalDirection = new(
-        key: "parallel.horizontalDirection",
-        @default: ParallelSide.Right);
-
-    public EnumParameter<VerticalSide> VerticalDirection = new(
-        key: "parallel.verticalDirection",
-        @default: VerticalSide.Up);
-
-    public BoolParameter ReverseDirection = new(
-        key: "parallel.reverseDirection",
-        @default: false);
+public partial class NT_ParallelToolSystem : NT_PathSelectionToolSystem, ... {
+    public FloatParameter              HorizontalOffset    = new("parallel.horizontalOffset", 20f, 0f, 80f);
+    public FloatParameter              VerticalOffset      = new("parallel.verticalOffset",   0f,  0f, 80f);
+    public EnumParameter<ParallelSide> HorizontalDirection = new("parallel.horizontalDirection", ParallelSide.Right);
+    public EnumParameter<VerticalSide> VerticalDirection   = new("parallel.verticalDirection",   VerticalSide.Up);
+    public BoolParameter               ReverseDirection    = new("parallel.reverseDirection", false);
 }
 ```
 
-### Tool definition example (Connect, with mode tags)
+### Parameter declaration example (Connect, with mode tags)
 
 ```csharp
-public class ConnectTool : NT_ToolDefinition {
+public partial class NT_ConnectToolSystem : NT_BaseToolSystem, ... {
     public EnumParameter<ConnectMode> Mode = new(
         key: "connect.mode",
         @default: ConnectMode.None);
@@ -242,38 +226,45 @@ public class ConnectTool : NT_ToolDefinition {
 ### Pseudo code
 
 ```csharp
-foreach (var tool in m_Tools) {
-    foreach (var param in ReflectParameters(tool)) {
-        RegisterBinding(param);
-        param.OnChanged += () => MarkUpdateNeeded(tool);
-    }
+// In NT_UISystem.OnCreate — register per tool system that has parameters:
+RegisterToolParameterBindings(m_NtParallelToolSystem);
+
+void RegisterToolParameterBindings(NT_BaseToolSystem tool) {
+    foreach (var param in tool.Parameters)
+        RegisterParameterBinding(param);
 }
 
-void RegisterBinding(ParameterBase param) {
-    switch (param) {
-        case FloatParameter f:
-            var binding = CreateBinding(f.Key, f.Value, v => f.Value = v);
-            f.OnChanged += () => binding.Value = f.Value;
-            break;
-        case EnumParameter<TEnum> e:
-            // Cast to/from int for transport
-            ...
-        case Float3Parameter v3:
-            // Use ValueWriter<float3> / ValueReader<float3>
-            ...
+void RegisterParameterBinding(ParameterBase param) {
+    if (param is FloatParameter fp) {
+        var b = CreateBinding(fp.Key, fp.Value, (float v) => fp.Value = v);
+        fp.OnChanged += () => b.Value = fp.Value;
+    } else if (param is BoolParameter bp) {
+        var b = CreateBinding(bp.Key, bp.Value, (bool v) => bp.Value = v);
+        bp.OnChanged += () => b.Value = bp.Value;
+    } else if (param is IEnumParameter ep) {
+        // Enums transported as int over the binding bridge
+        var b = CreateBinding(ep.Key, ep.IntValue, (int v) => ep.IntValue = v);
+        ep.OnChanged += () => b.Value = ep.IntValue;
     }
 }
 ```
 
-Reflection runs once per tool type at static init. `ParameterSchema.For(Type)` caches the discovered `ParameterBase[]` in a `Dictionary<Type, ParameterBase[]>` keyed by tool type. Subsequent lookups (binding setup, reset, codegen) hit the cache. No reflection on hot paths.
+`ParameterSchema.Discover` caches `FieldInfo[]` per concrete type. First access on each tool instance runs reflection; all subsequent lookups are O(n) array iteration only. No reflection on hot paths.
+
+On tool activation, force-notify all parameters to re-sync UI bindings:
+
+```csharp
+foreach (var p in m_NtParallelToolSystem.Parameters)
+    p.ForceNotify();
+```
 
 ### Reset triggers
 
 Expose two triggers for the UI:
 
 ```csharp
-CreateTrigger<string>("RESET_PARAM", key => CurrentTool?.Reset(key));
-CreateTrigger("RESET_TOOL",          ()  => CurrentTool?.ResetAll());
+CreateTrigger<string>("RESET_PARAM", key => (m_ToolSystem.activeTool as NT_BaseToolSystem)?.Reset(key));
+CreateTrigger("RESET_TOOL",          ()  => (m_ToolSystem.activeTool as NT_BaseToolSystem)?.ResetAll());
 ```
 
 Resetting a parameter fires its `OnChanged`, which pushes the new value through its binding the same way any other edit would.
@@ -386,7 +377,7 @@ var jobConfig = new ParallelJobConfig {
 
 ### What gets generated
 
-A single `.generated.ts` file emitted into `UI/src/` by the C# build (Roslyn source generator OR an MSBuild task that runs a small C# console tool).
+A single `.generated.ts` file emitted into `UI/src/` by the C# build (via MSBuild task that runs a small C# console tool).
 
 Contents:
 
@@ -433,33 +424,28 @@ const offset = useBinding<number>(PARAM_KEYS.parallel.horizontalOffset);
 
 ### Implementation choice
 
-Two viable paths:
-
-1. **Roslyn incremental generator** — runs inside `dotnet build`. Cleanest. Steeper learning curve.
-2. **MSBuild PreBuild task** — a small console exe that loads the compiled assembly, reflects, writes the `.ts` file. Easier to write, requires assembly to compile first (chicken/egg avoided by emitting only on the second pass or by parsing source instead of loading the assembly).
-
-Recommend starting with option 2 (MSBuild task) — lower barrier, easy to iterate. Migrate to a Roslyn generator later if build-pipeline complexity warrants it.
+**MSBuild PreBuild task** — a small console exe that loads the compiled assembly, reflects, writes the `.ts` file. Easier to write, requires assembly to compile first (chicken/egg avoided by emitting only on the second pass or by parsing source instead of loading the assembly).
 
 ---
 
 ## 9. Migration Plan
 
-### Phase 1 — Foundation + Parallel migration (smallest viable first PR)
+### Phase 1 — Foundation + Parallel migration (smallest viable first PR) ✅
 
 Ship the parameter system end-to-end against the simplest tool. Parallel has no modes, no float3, no complex handles — ideal validation target.
 
 - Implement `ParameterBase`, `Parameter<T>`, and concrete subclasses (`Float`, `Int`, `Bool`, `Enum<T>`, `Float3`).
-- Implement `ParameterSchema.For(Type)` with cached per-type reflection.
-- Implement `NT_ToolDefinition` base with `ResetAll()` / `Reset(key)`.
-- Implement reflection-driven binding registration in `NT_UISystem`.
-- Implement generic handle drag dispatch using parameter refs (no `HandleKeys` switch).
-- Convert `ParallelConfig` -> `ParallelTool : NT_ToolDefinition`.
-- Replace `UpdateConfig(ParallelConfig)` with parameter-driven flow.
-- Update `ParallelToolSystem` to build a `ParallelJobConfig` snapshot before scheduling.
+- Implement `ParameterSchema.Discover(object)` with cached per-type `FieldInfo[]` reflection.
+- Add `Parameters`, `Reset(key)`, `ResetAll()` to `NT_BaseToolSystem` via `BaseToolSystem.Parameters.cs`.
+- Implement reflection-driven binding registration in `NT_UISystem` (`RegisterToolParameterBindings`, `RegisterParameterBinding`).
+- Declare parameters inline on `NT_ParallelToolSystem` (no separate definition class).
+- Wire `OnChanged → m_UpdateNeeded = true` in `NT_ParallelToolSystem.OnCreate`.
+- Replace `UpdateConfig(ParallelConfig)` and `CurrentConfig` with snapshot built from inline parameters.
+- Add `ParallelJobConfig` snapshot struct; update job to use it.
 - Add `RESET_PARAM` and `RESET_TOOL` triggers.
-- Update the React Parallel panel to consume per-parameter bindings.
+- Update React Parallel panel to consume five individual parameter bindings.
 
-End-to-end: UI edit -> binding -> parameter -> snapshot -> job -> network. Burst job code unchanged.
+End-to-end: UI edit → binding → parameter → `OnChanged` → `m_UpdateNeeded` → snapshot → job → network. Burst job code unchanged.
 
 ### Phase 2 — Build-time TS codegen
 
@@ -472,11 +458,12 @@ End-to-end: UI edit -> binding -> parameter -> snapshot -> job -> network. Burst
 Order: Generate -> Connect -> RoadShape (increasing complexity).
 
 For each:
-- Convert config struct to `NT_ToolDefinition` subclass with parameter fields.
-- Update generators to read from the snapshot struct (mostly mechanical rename).
+- Declare parameters inline on the tool system class (no separate definition class).
+- Wire `OnChanged → m_UpdateNeeded = true` in `OnCreate`.
+- Update generators to read from the `*JobConfig` snapshot struct (mostly mechanical rename).
 - Replace `HandleKeys.X` references with parameter refs.
 - Construct mode-specific handles inside generators (unchanged), but with parameter refs instead of keys.
-- Drop the now-unused config struct.
+- Drop the now-unused `*Config.cs` canonical struct.
 
 See section 10 for tool-specific gotchas.
 
@@ -501,7 +488,7 @@ See section 10 for tool-specific gotchas.
 ### Tool-specific gotchas
 
 8. **`ShapeTransformConfig` factory methods.** `Preserve()`, `SlopeLinear()`, `SlopeEaseInOut()`, `SlopeArch()`, `CurveSmooth()` etc. are called from `UISystem.Handlers.HandleUpdateShapeConfig`'s template-change switch. They reset the config to template-specific defaults. When migrating RoadShape, the equivalent must exist as either:
-   - Per-template "preset" methods on `RoadShapeTool` (e.g., `ApplySlopeLinearPreset()`), each calling `ResetAll()` then setting template-specific parameters, **or**
+   - Per-template "preset" methods on `NT_RoadShapeToolSystem` (e.g., `ApplySlopeLinearPreset()`), each calling `ResetAll()` then setting template-specific parameters, **or**
    - Mode-conditional defaults baked into each parameter via the `modes` tag plus a `ResetForMode(mode)` helper.
    The first is closer to current behavior; pick during Phase 3 RoadShape migration.
 
@@ -521,17 +508,19 @@ See section 10 for tool-specific gotchas.
 
 | Area | Files |
 | --- | --- |
-| New | `Systems/Parameters/Parameter.cs`, `FloatParameter.cs`, etc. |
-| New | `Systems/Parameters/NT_ToolDefinition.cs` |
-| New | MSBuild task project for TS codegen |
-| New | `UI/src/parameters.generated.ts` |
+| New | `Systems/Parameters/ParameterBase.cs`, `Parameter.cs`, `FloatParameter.cs`, `IntParameter.cs`, `BoolParameter.cs`, `EnumParameter.cs` |
+| New | `Systems/Parameters/ParameterSchema.cs` |
+| New | `Systems/Tools/Base/BaseToolSystem.Parameters.cs` (partial — adds `Parameters`, `Reset`, `ResetAll`) |
+| New | Per-tool `*JobConfig.cs` snapshot structs |
+| New | MSBuild task project for TS codegen (Phase 2) |
+| New | `UI/src/parameters.generated.ts` (Phase 2) |
 | Modified | `Systems/UI/UISystem.cs` (reflection-driven binding setup) |
 | Modified | `Systems/UI/UISystem.Handlers.cs` (generic handle dispatch) |
-| Modified | `Systems/Tools/Parallel/*` (Phase 2) |
-| Modified | `Systems/Tools/Generate/*`, `Connect/*`, `RoadShape/*` (Phase 4) |
-| Deleted | `HandleKeys.cs` (Phase 5) |
-| Deleted | Per-tool `*Config.cs` canonical structs (replaced by `*JobConfig.cs` snapshots) |
-| Modified | `UI/src/gameBindings.ts` (drop duplicated types) |
+| Modified | `Systems/Tools/Parallel/*` (Phase 1 ✅) |
+| Modified | `Systems/Tools/Generate/*`, `Connect/*`, `RoadShape/*` (Phase 3) |
+| Deleted | `HandleKeys.cs` (Phase 4) |
+| Deleted | Per-tool `*Config.cs` canonical structs (Phase 4) |
+| Modified | `UI/src/gameBindings.ts` (drop duplicated types, Phase 4) |
 
 ---
 
@@ -539,9 +528,11 @@ See section 10 for tool-specific gotchas.
 
 | Concern | Today | After |
 | --- | --- | --- |
-| Parameter declaration | C# const + binding default + TS default + React slider props | One C# parameter field, codegen handles the rest |
+| Parameter declaration | C# const + binding default + TS default + React slider props | `public FloatParameter X = new(...)` on tool system, codegen handles the rest |
+| Parameter management | Each tool class owns it ad hoc | `NT_BaseToolSystem` provides `Parameters`, `Reset`, `ResetAll` |
+| Separate definition class | n/a | **None** — params are inline on the tool system |
 | Serialization | Manual `Write` / `Read` per config | `Parameter<T>` base class |
-| TS types | Hand-mirrored in `gameBindings.ts` | Build-time generated |
+| TS types | Hand-mirrored in `gameBindings.ts` | Build-time generated (Phase 2) |
 | UI binding | One per config struct | One per parameter |
 | Handle -> field | `HandleKeys` enum + dispatch switch | Direct parameter reference |
 | Mode dispatch in jobs | `switch (Mode)` -> generator | Unchanged (Burst-mandated) |

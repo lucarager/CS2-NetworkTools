@@ -6,6 +6,7 @@
 namespace NetworkTools.Systems.Tools.Parallel {
     using Game.Prefabs;
 
+    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Parallel;
 
@@ -23,27 +24,11 @@ namespace NetworkTools.Systems.Tools.Parallel {
         /// <inheritdoc />
         public override string toolID => "ParallelTool";
 
-        /// <summary>
-        ///     Current parallel configuration (distance and side).
-        /// </summary>
-        internal ParallelConfig CurrentConfig = new ParallelConfig {
-            HorizontalOffset = ParallelConfig.DefaultDistance,
-            HorizontalDirection     = ParallelSide.Right,
-            ReverseDirection        = false
-        };
-
-        /// <summary>
-        ///     Updates the parallel configuration from the UI.
-        /// </summary>
-        /// <param name="config">The updated config from the UI.</param>
-        public void UpdateConfig(ParallelConfig config) {
-            CurrentConfig.HorizontalOffset = config.HorizontalOffset;
-            CurrentConfig.VerticalOffset = config.VerticalOffset;
-            CurrentConfig.HorizontalDirection = config.HorizontalDirection;
-            CurrentConfig.VerticalDirection = config.VerticalDirection;
-            CurrentConfig.ReverseDirection = config.ReverseDirection;
-            m_UpdateNeeded         = true;
-        }
+        public FloatParameter              HorizontalOffset    = new("parallel.horizontalOffset", 20f, 0f, 80f);
+        public FloatParameter              VerticalOffset      = new("parallel.verticalOffset",   0f,  0f, 80f);
+        public EnumParameter<ParallelSide> HorizontalDirection = new("parallel.horizontalDirection", ParallelSide.Right);
+        public EnumParameter<VerticalSide> VerticalDirection   = new("parallel.verticalDirection",   VerticalSide.Up);
+        public BoolParameter               ReverseDirection    = new("parallel.reverseDirection", false);
 
         #region Template Method Implementations
 

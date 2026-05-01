@@ -3,7 +3,6 @@ import styles from "../toolActionPanel.module.scss";
 import {
     GAME_BINDINGS,
     GAME_TRIGGERS,
-    ParallelConfigData,
     ParallelSide,
     VerticalSide,
 } from "gameBindings";
@@ -41,28 +40,21 @@ const VERTICAL_SIDE_OPTIONS: { localeKey: string; id: VerticalSide; icon: string
 ];
 
 export const ParallelControls: React.FC = () => {
-    const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
-    const parallelConfig = useValue(GAME_BINDINGS.PARALLEL_CONFIG.binding);
+    const selectedEntities      = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
+    const horizontalOffset      = useValue(GAME_BINDINGS.PARALLEL_HORIZONTAL_OFFSET.binding);
+    const verticalOffset        = useValue(GAME_BINDINGS.PARALLEL_VERTICAL_OFFSET.binding);
+    const horizontalDirection   = useValue(GAME_BINDINGS.PARALLEL_HORIZONTAL_DIRECTION.binding) as ParallelSide;
+    const verticalDirection     = useValue(GAME_BINDINGS.PARALLEL_VERTICAL_DIRECTION.binding) as VerticalSide;
+    const reverseDirection      = useValue(GAME_BINDINGS.PARALLEL_REVERSE_DIRECTION.binding);
     const { translate } = useLocalization();
-
-    const handleConfigChange = (param: keyof ParallelConfigData, value: number | boolean) => {
-        const newConfig: ParallelConfigData = {
-            ...parallelConfig,
-            [param]: value,
-        };
-
-        console.log(newConfig);
-
-        GAME_BINDINGS.PARALLEL_CONFIG.set(newConfig);
-    };
 
     return (
         <>
-            {/* <NodeSelection selectedEntities={selectedEntitiesBinding} /> */}
+            {/* <NodeSelection selectedEntities={selectedEntities} /> */}
             <PrefabSelection />
 
             {/* Configuration Controls - Show when 2+ nodes selected */}
-            {selectedEntitiesBinding.length >= 2 && (
+            {selectedEntities.length >= 2 && (
                 <>
                     <div className={styles.divider}></div>
                     <div className={styles.col}>
@@ -77,11 +69,9 @@ export const ParallelControls: React.FC = () => {
                                             className={c(VT.toolButton.button, styles.iconButton)}
                                             src={option.icon}
                                             onSelect={() =>
-                                                handleConfigChange("horizontalDirection", option.id)
+                                                GAME_BINDINGS.PARALLEL_HORIZONTAL_DIRECTION.set(option.id)
                                             }
-                                            selected={
-                                                parallelConfig.horizontalDirection === option.id
-                                            }
+                                            selected={horizontalDirection === option.id}
                                             multiSelect={false}
                                             disabled={false}
                                             focusKey={VF.FOCUS_DISABLED}
@@ -93,15 +83,14 @@ export const ParallelControls: React.FC = () => {
                         <div className={styles.controlRow}>
                             <div className={styles.sliderField}>
                                 <VC.FloatSliderField
-                                    value={parallelConfig.horizontalOffset}
+                                    value={horizontalOffset}
                                     label={translate("NetworkTools.UI.Parallel.HorizontalOffset") ?? ""}
                                     min={0}
                                     max={80}
                                     fractionDigits={1}
-                                    onChange={(e: number) => {
-                                        console.log(e);
-                                        handleConfigChange("horizontalOffset", e);
-                                    }}
+                                    onChange={(e: number) =>
+                                        GAME_BINDINGS.PARALLEL_HORIZONTAL_OFFSET.set(e)
+                                    }
                                 />
                             </div>
                         </div>
@@ -116,11 +105,9 @@ export const ParallelControls: React.FC = () => {
                                             className={c(VT.toolButton.button, styles.iconButton)}
                                             src={option.icon}
                                             onSelect={() =>
-                                                handleConfigChange("verticalDirection", option.id)
+                                                GAME_BINDINGS.PARALLEL_VERTICAL_DIRECTION.set(option.id)
                                             }
-                                            selected={
-                                                parallelConfig.verticalDirection === option.id
-                                            }
+                                            selected={verticalDirection === option.id}
                                             multiSelect={false}
                                             disabled={false}
                                             focusKey={VF.FOCUS_DISABLED}
@@ -132,15 +119,14 @@ export const ParallelControls: React.FC = () => {
                         <div className={styles.controlRow}>
                             <div className={styles.sliderField}>
                                 <VC.FloatSliderField
-                                    value={parallelConfig.verticalOffset}
+                                    value={verticalOffset}
                                     label={translate("NetworkTools.UI.Parallel.VerticalOffset") ?? ""}
                                     min={0}
                                     max={80}
                                     fractionDigits={1}
-                                    onChange={(e: number) => {
-                                        console.log(e);
-                                        handleConfigChange("verticalOffset", e);
-                                    }}
+                                    onChange={(e: number) =>
+                                        GAME_BINDINGS.PARALLEL_VERTICAL_OFFSET.set(e)
+                                    }
                                 />
                             </div>
                         </div>
@@ -153,9 +139,9 @@ export const ParallelControls: React.FC = () => {
                                         className={c(VT.toolButton.button, styles.iconButton)}
                                         src="coui://nt/Direction/Same.svg"
                                         onSelect={() =>
-                                            handleConfigChange("reverseDirection", false)
+                                            GAME_BINDINGS.PARALLEL_REVERSE_DIRECTION.set(false)
                                         }
-                                        selected={!parallelConfig.reverseDirection}
+                                        selected={!reverseDirection}
                                         multiSelect={false}
                                         disabled={false}
                                         focusKey={VF.FOCUS_DISABLED}
@@ -165,9 +151,9 @@ export const ParallelControls: React.FC = () => {
                                         className={c(VT.toolButton.button, styles.iconButton)}
                                         src="coui://nt/Direction/Opposite.svg"
                                         onSelect={() =>
-                                            handleConfigChange("reverseDirection", true)
+                                            GAME_BINDINGS.PARALLEL_REVERSE_DIRECTION.set(true)
                                         }
-                                        selected={parallelConfig.reverseDirection}
+                                        selected={reverseDirection}
                                         multiSelect={false}
                                         disabled={false}
                                         focusKey={VF.FOCUS_DISABLED}
@@ -183,14 +169,14 @@ export const ParallelControls: React.FC = () => {
             <div className={styles.divider}></div>
             <div className={styles.row}>
                 <div className={styles.actions}>
-                    {selectedEntitiesBinding.length < 2 && (
+                    {selectedEntities.length < 2 && (
                         <span className={styles.helper}>{translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}</span>
                     )}
-                    {selectedEntitiesBinding.length >= 2 && (
+                    {selectedEntities.length >= 2 && (
                         <Button
                             variant="primary"
                             className={styles.applyButton}
-                            disabled={selectedEntitiesBinding.length < 2}
+                            disabled={selectedEntities.length < 2}
                             onSelect={() => GAME_TRIGGERS.REQUEST_APPLY()}>
                             {translate("NetworkTools.UI.Parallel.CreateParallel")}
                         </Button>

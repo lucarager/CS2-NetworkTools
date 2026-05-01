@@ -15,7 +15,7 @@
 #endif
         internal struct CreateDefinitionsJob : IJob {
             [ReadOnly] public required ToolOutputMode                    OutputMode;
-            [ReadOnly] public required ParallelConfig                    Config;
+            [ReadOnly] public required ParallelJobConfig                 Config;
             [ReadOnly] public required NativeList<Entity>                CurrentPathNodes;
             [ReadOnly] public required NativeList<Entity>                CurrentPathEdges;
             [ReadOnly] public required ComponentLookup<Node>             NodeLookup;

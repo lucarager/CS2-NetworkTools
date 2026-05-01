@@ -3,7 +3,6 @@ namespace NetworkTools.Systems.UI {
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools.Generate;
-    using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
 
     public partial class NT_UISystem {
@@ -73,9 +72,10 @@ namespace NetworkTools.Systems.UI {
                     m_GenerateConfigBinding.Value = m_NtGenerateToolSystem.CurrentConfig;
                 }
 
-                // Sync parallel config binding when the parallel tool is activated
+                // Re-sync per-parameter bindings when the parallel tool is activated
                 if (m_ToolSystem.activeTool == m_NtParallelToolSystem) {
-                    m_ParallelConfigBinding.Value = m_NtParallelToolSystem.CurrentConfig;
+                    foreach (var p in m_NtParallelToolSystem.Parameters)
+                        p.ForceNotify();
                 }
             }
         }
@@ -98,12 +98,6 @@ namespace NetworkTools.Systems.UI {
             m_Log.Debug("HandleUpdateGenerateConfig");
             m_GenerateConfigBinding.Value = configData;
             m_NtGenerateToolSystem.UpdateConfig(configData);
-        }
-
-        private void HandleUpdateParallelConfig(ParallelConfig configData) {
-            m_Log.Debug("HandleUpdateParallelConfig");
-            m_ParallelConfigBinding.Value = configData;
-            m_NtParallelToolSystem.UpdateConfig(configData);
         }
 
         private void HandleRequestApply() {
