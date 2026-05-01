@@ -55,6 +55,8 @@ Generator/transform interfaces already exist and stay in scope:
 - Auto-serialize via the parameter base class (no per-config Write/Read).
 - Bind handles to parameters by reference (eliminate `HandleKeys` and dispatch switches).
 - Keep the Burst execution path unchanged: snapshot parameters into a struct at job-schedule time.
+- Updates are granular: a single edit (slider drag, handle drag, mode change) pushes only the changed parameter, not a whole-config struct. No monolithic config serialization on every edit.
+- Support reset semantics: reset a single parameter to its declared default, and reset all parameters in a tool to defaults.
 
 ### Non-goals
 
@@ -120,6 +122,9 @@ public abstract class ParameterBase {
     public abstract void WriteJson(IJsonWriter w);
     public abstract void ReadJson(IJsonReader r);
 
+    // Reset to declared default. Fires OnChanged.
+    public abstract void ResetToDefault();
+
     // For codegen: emit a TS type descriptor
     public abstract ParameterDescriptor Describe();
 }
@@ -142,6 +147,25 @@ public class FloatParameter : Parameter<float> {
     public float Min { get; }
     public float Max { get; }
     public FloatParameter(string key, float @default, float min, float max, int modes = 0) { ... }
+}
+
+// At the tool level
+public abstract class NT_ToolDefinition {
+    // Reflect parameter fields once per tool type, cache statically.
+    public IReadOnlyList<ParameterBase> Parameters => ParameterSchema.For(GetType());
+
+    // Reset every parameter on this tool to its declared default.
+    public void ResetAll() {
+        foreach (var p in Parameters) p.ResetToDefault();
+    }
+
+    // Reset by key (single-parameter reset surfaced to UI).
+    public bool Reset(string key) {
+        foreach (var p in Parameters) {
+            if (p.Key == key) { p.ResetToDefault(); return true; }
+        }
+        return false;
+    }
 }
 
 public class IntParameter   : Parameter<int>  { public int Min, Max; ... }
@@ -241,7 +265,18 @@ void RegisterBinding(ParameterBase param) {
 }
 ```
 
-Reflection runs once at init. Cache the discovered `ParameterBase[]` per tool type in a static dictionary if desired.
+Reflection runs once per tool type at static init. `ParameterSchema.For(Type)` caches the discovered `ParameterBase[]` in a `Dictionary<Type, ParameterBase[]>` keyed by tool type. Subsequent lookups (binding setup, reset, codegen) hit the cache. No reflection on hot paths.
+
+### Reset triggers
+
+Expose two triggers for the UI:
+
+```csharp
+CreateTrigger<string>("RESET_PARAM", key => CurrentTool?.Reset(key));
+CreateTrigger("RESET_TOOL",          ()  => CurrentTool?.ResetAll());
+```
+
+Resetting a parameter fires its `OnChanged`, which pushes the new value through its binding the same way any other edit would.
 
 ### Per-parameter bindings vs single config binding
 
@@ -409,62 +444,76 @@ Recommend starting with option 2 (MSBuild task) — lower barrier, easy to itera
 
 ## 9. Migration Plan
 
-### Phase 1 — Foundation
+### Phase 1 — Foundation + Parallel migration (smallest viable first PR)
+
+Ship the parameter system end-to-end against the simplest tool. Parallel has no modes, no float3, no complex handles — ideal validation target.
 
 - Implement `ParameterBase`, `Parameter<T>`, and concrete subclasses (`Float`, `Int`, `Bool`, `Enum<T>`, `Float3`).
+- Implement `ParameterSchema.For(Type)` with cached per-type reflection.
+- Implement `NT_ToolDefinition` base with `ResetAll()` / `Reset(key)`.
 - Implement reflection-driven binding registration in `NT_UISystem`.
-- Implement generic handle drag dispatch (parameter ref instead of key switch).
-- Cover `Parameter<T>.WriteJson` / `ReadJson` in the base class.
-
-### Phase 2 — Migrate Parallel tool
-
-Simplest target: no modes, no float3, simple handles. Use it to validate the design end-to-end.
-
-- Convert `ParallelConfig` -> `ParallelTool : NT_ToolDefinition` with parameter fields.
+- Implement generic handle drag dispatch using parameter refs (no `HandleKeys` switch).
+- Convert `ParallelConfig` -> `ParallelTool : NT_ToolDefinition`.
 - Replace `UpdateConfig(ParallelConfig)` with parameter-driven flow.
 - Update `ParallelToolSystem` to build a `ParallelJobConfig` snapshot before scheduling.
-- Verify UI bindings work, verify Burst job runs unchanged.
+- Add `RESET_PARAM` and `RESET_TOOL` triggers.
+- Update the React Parallel panel to consume per-parameter bindings.
 
-### Phase 3 — Build-time TS codegen
+End-to-end: UI edit -> binding -> parameter -> snapshot -> job -> network. Burst job code unchanged.
 
-- Add MSBuild task project that emits `parameters.generated.ts`.
+### Phase 2 — Build-time TS codegen
+
+- Add MSBuild task project that emits `parameters.generated.ts` (enums, `PARAM_KEYS`, `PARAM_META`)
 - Wire into UI build so React picks it up.
-- Convert one React component (a Parallel slider) to consume `PARAM_KEYS` and `PARAM_META`.
+- Convert the Parallel React panel to consume `PARAM_KEYS` and `PARAM_META` instead of hardcoded keys/ranges.
 
-### Phase 4 — Migrate remaining tools
+### Phase 3 — Migrate remaining tools
 
 Order: Generate -> Connect -> RoadShape (increasing complexity).
 
 For each:
-- Convert config struct to tool definition with parameters.
-- Update generators to read from snapshot struct (mostly mechanical rename).
+- Convert config struct to `NT_ToolDefinition` subclass with parameter fields.
+- Update generators to read from the snapshot struct (mostly mechanical rename).
 - Replace `HandleKeys.X` references with parameter refs.
+- Construct mode-specific handles inside generators (unchanged), but with parameter refs instead of keys.
 - Drop the now-unused config struct.
 
-### Phase 5 — Cleanup
+See section 10 for tool-specific gotchas.
+
+### Phase 4 — Cleanup
 
 - Delete `HandleKeys` enum.
 - Delete TS type duplication from `gameBindings.ts` (replaced by generated file).
 - Delete revision counters (`ShapeConfigRevision` etc.) — replaced by per-parameter `OnChanged` events.
-- Update `.docs` with the final shape.
+- Update this doc with the final shape.
 
 ---
 
-## 10. Open Questions / Risks
+## 10. Open Questions / Risks / Migration Gotchas
 
-1. **Binding count at scale.** Going from ~5 to ~30 Colossal bindings. Almost certainly fine (vanilla CS2 tool options use this pattern), but verify there is no per-binding overhead before committing. Test mid-Phase 2.
+### General
 
-2. **`float3` over the binding bridge.** Confirm `ValueWriter<float3>` / `ValueReader<float3>` work with the Colossal binding system. If not, decompose into three float bindings under one parameter.
+1. **`float3` over the binding bridge.** If `ValueWriter<float3>` doesn't work, decompose into three float bindings under one parameter.
+2. **Two-way sync edge cases.** Handle drag updates parameter -> fires `OnChanged` -> pushes to UI binding. UI slider updates binding -> writes to parameter -> fires `OnChanged` -> needs to NOT bounce back. The value-equality short-circuit in `Parameter<T>.Value` setter handles this; verify with a Parallel slider during Phase 1.
+3. **Codegen failure modes.** If the MSBuild task fails, the TS build should fail loudly. Don't let stale `.generated.ts` ship.
+4. **Mode-tag bitflag width.** `int` modes field assumes <32 modes per tool. True for current and foreseeable scope.
 
-3. **Two-way sync edge cases.** Handle drag updates parameter -> fires `OnChanged` -> pushes to UI binding. UI slider updates binding -> writes to parameter -> fires `OnChanged` -> needs to NOT bounce back. Use a re-entrancy guard or value-equality short-circuit (already in `Parameter<T>.Value` setter).
+### Tool-specific gotchas
 
-4. **Codegen failure modes.** If the MSBuild task fails, the TS build should fail loudly. Don't let stale `.generated.ts` ship.
+8. **`ShapeTransformConfig` factory methods.** `Preserve()`, `SlopeLinear()`, `SlopeEaseInOut()`, `SlopeArch()`, `CurveSmooth()` etc. are called from `UISystem.Handlers.HandleUpdateShapeConfig`'s template-change switch. They reset the config to template-specific defaults. When migrating RoadShape, the equivalent must exist as either:
+   - Per-template "preset" methods on `RoadShapeTool` (e.g., `ApplySlopeLinearPreset()`), each calling `ResetAll()` then setting template-specific parameters, **or**
+   - Mode-conditional defaults baked into each parameter via the `modes` tag plus a `ResetForMode(mode)` helper.
+   The first is closer to current behavior; pick during Phase 3 RoadShape migration.
 
-5. **Save game compatibility.** If existing saves contain serialized configs, the new per-parameter serialization must read them. Plan: have `Parameter<T>.ReadJson` accept the legacy property name as a fallback during a deprecation window. Or perform a one-time migration on load.
+9. **`ConnectConfig` / `GenerateConfig` contextual init.** These configs have `float3` fields (positions, directions) that get populated from selected nodes at `SetMode()` time, not from declared defaults. Mirror this with a `ResetWith(args)` method on the tool that resets parameters AND seeds runtime context (start/end positions). Don't try to encode contextual defaults as attribute metadata.
 
-6. **Source-generator vs MSBuild task.** Decision deferred to Phase 3. Recommend MSBuild task first.
+### Migration-window concerns (during Phase 3)
 
-7. **Mode-tag bitflag width.** `int` modes field assumes <32 modes per tool. True for current and foreseeable scope. If a tool ever needs more, switch to `long` or `BitArray`.
+10. **`m_UpdateNeeded` flag.** Until a tool fully migrates, leave its update flag flow alone. Parameter `OnChanged` should mark `m_UpdateNeeded = true` for the owning tool system — same downstream effect as today's `UpdateConfig` calls.
+
+11. **`ShapeConfigRevision` counter.** Stays in place until RoadShape migrates. Replaced by per-parameter `OnChanged` only in Phase 4 cleanup.
+
+12. **JSON property name stability mid-migration.** During Phase 3, partially migrated tools still flow over their existing config bindings while others use per-parameter bindings. Don't rename JSON keys mid-migration; rename only at end-of-phase cleanup if needed.
 
 ---
 
