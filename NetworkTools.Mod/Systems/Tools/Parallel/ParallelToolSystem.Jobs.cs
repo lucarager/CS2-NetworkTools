@@ -31,8 +31,18 @@
 
             public required EntityCommandBuffer ECB;
 
+            /// <summary>
+            ///     Height thresholds that forces a road to be a tunnel
+            /// </summary>
+            public static float2 TunnelThreshold = new(-11f, -11f);
+
+            /// <summary>
+            ///     Height thresholds that forces a road to be elevated.
+            /// </summary>
+            public static float2 ElevatedThreshold = new(11f, 11f);
+
             public void Execute() {
-                var signedDistance  = Config.SignedHorizontalOffset;
+                var signedDistance = Config.SignedHorizontalOffset;
                 var verticalOffset = Config.SignedVerticalOffset;
                 var verticalShift  = new float3(0f, verticalOffset, 0f);
                 var edgeCount      = CurrentPathEdges.Length;
@@ -59,7 +69,7 @@
                     edges[i] = new ParallelEdgeState {
                         EdgeEntity    = edgeEntity,
                         PathStartNode = isForward ? edge.m_Start : edge.m_End,
-                        PathEndNode   = isForward ? edge.m_End   : edge.m_Start,
+                        PathEndNode   = isForward ? edge.m_End : edge.m_Start,
                         IsForward     = isForward,
                         IsValid       = true,
                         Bezier        = bezier,
@@ -141,6 +151,14 @@
                     var endRotation   = quaternion.LookRotationSafe(endTangent,   math.up());
                     var offsetLength  = MathUtils.Length(offsetBezier);
 
+                    var elevation = new float2(0f);
+
+                    if (Config.SignedVerticalOffset > 0) {
+                        elevation = ElevatedThreshold;
+                    } else if (Config.SignedVerticalOffset < 0) {
+                        elevation = TunnelThreshold;
+                    }
+
                     // Reverse direction if configured: swap start/end and reverse bezier
                     if (Config.ReverseDirection) {
                         var reversedBezier        = new Bezier4x3(offsetBezier.d, offsetBezier.c, offsetBezier.b, offsetBezier.a);
@@ -155,7 +173,7 @@
                                           reversedEndRotation,
                                           reversedBezier,
                                           offsetLength,
-                                          verticalOffset);
+                                          elevation);
                     } else {
                         OutputPreviewEdge(offsetStartPos,
                                           offsetEndPos,
@@ -163,7 +181,7 @@
                                           endRotation,
                                           offsetBezier,
                                           offsetLength,
-                                          verticalOffset);
+                                          elevation);
                     }
                 }
 
@@ -179,7 +197,8 @@
             /// <param name="unitPerpIncoming">Unit perpendicular of the incoming edge's end tangent.</param>
             /// <param name="unitPerpOutgoing">Unit perpendicular of the outgoing edge's start tangent.</param>
             /// <param name="signedDistance">Signed offset distance (positive = right of travel).</param>
-            private static float3 ComputeMiterOffset(float3 unitPerpIncoming, float3 unitPerpOutgoing, float signedDistance) {
+            private static float3 ComputeMiterOffset(float3 unitPerpIncoming, float3 unitPerpOutgoing,
+                                                     float  signedDistance) {
                 var miterDir = unitPerpIncoming + unitPerpOutgoing;
                 var miterLen = math.length(miterDir);
 
@@ -220,7 +239,7 @@
 
             private void OutputPreviewEdge(float3     startNodePosition, float3     endNodePosition,
                                            quaternion startNodeRotation, quaternion endNodeRotation,
-                                           Bezier4x3  existingBezier,    float      existingLength, float elevation
+                                           Bezier4x3  existingBezier,    float      existingLength, float2 elevation
             ) {
                 var definitionEntity = ECB.CreateEntity();
 
@@ -234,11 +253,12 @@
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
-                var startNodeFlags  = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge;
-                var endNodeFlags    = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge;
-                var startElevation  = new float2(0f);
-                var endElevation    = new float2(0f);
-                var courseElevation = new float2(0f);
+                var startNodeFlags = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge;
+                var endNodeFlags   = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge;
+
+                var startElevation  = elevation;
+                var endElevation    = elevation;
+                var courseElevation = elevation;
 
 
                 var netCourse = new NetCourse {
