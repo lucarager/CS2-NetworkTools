@@ -31,7 +31,7 @@
             if (Phase == OperationPhase.Ready && ProcessHandleInput())
             {
                 // Handle consumed input this frame:
-                // - OnHandleDragging() may have updated ShapeTransformConfig
+                // - OnHandleDragging() may have updated parameters
                 // - m_UpdateNeeded was set to true
                 // - Skip node selection, go straight to output
                 return HandleTempEntities(inputDeps);

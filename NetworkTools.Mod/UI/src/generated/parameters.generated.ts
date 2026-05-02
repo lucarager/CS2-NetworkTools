@@ -5,6 +5,7 @@ import { TwoWayBinding } from "utils/bidirectionalBinding";
 export enum ConnectMode { None = 0, SimpleCurve = 1, ComplexCurve = 2, Loop = 3 }
 export enum GenerateMode { None = 0, Grid = 1, Circle = 2 }
 export enum ParallelSide { Left = 0, Right = 1 }
+export enum ShapeTransformTemplate { Preserve = 0, SlopeLinear = 1, SlopeEaseInOut = 2, SlopeArch = 3, CurveStraighten = 4, CurveSmooth = 5 }
 export enum VerticalSide { Up = 0, Down = 1 }
 
 export const PARAM_KEYS = {
@@ -37,6 +38,14 @@ export const PARAM_KEYS = {
         verticalDirection: "parallel.verticalDirection",
         reverseDirection: "parallel.reverseDirection",
     },
+    roadShape: {
+        template: "roadShape.template",
+        easeInLength: "roadShape.easeInLength",
+        easeOutLength: "roadShape.easeOutLength",
+        archHeight: "roadShape.archHeight",
+        archPosition: "roadShape.archPosition",
+        smoothingFactor: "roadShape.smoothingFactor",
+    },
 } as const;
 
 export const PARAM_META = {
@@ -63,6 +72,12 @@ export const PARAM_META = {
     "parallel.horizontalDirection": { type: "enum", enumType: "ParallelSide", default: 1, modes: 0 },
     "parallel.verticalDirection": { type: "enum", enumType: "VerticalSide", default: 0, modes: 0 },
     "parallel.reverseDirection": { type: "bool", default: false, modes: 0 },
+    "roadShape.template": { type: "enum", enumType: "ShapeTransformTemplate", default: 0, modes: 0 },
+    "roadShape.easeInLength": { type: "float", default: 0.1, min: 0, max: 0.4, modes: 2 },
+    "roadShape.easeOutLength": { type: "float", default: 0.1, min: 0, max: 0.4, modes: 2 },
+    "roadShape.archHeight": { type: "float", default: 0.5, min: -1, max: 1, modes: 3 },
+    "roadShape.archPosition": { type: "float", default: 0.5, min: 0.1, max: 0.9, modes: 3 },
+    "roadShape.smoothingFactor": { type: "float", default: 0.5, min: 0, max: 1, modes: 5 },
 } as const;
 
 export const PARAM_BINDINGS = {
@@ -83,5 +98,13 @@ export const PARAM_BINDINGS = {
         horizontalDirection: new TwoWayBinding<number>("parallel.horizontalDirection", 1),
         verticalDirection: new TwoWayBinding<number>("parallel.verticalDirection", 0),
         reverseDirection: new TwoWayBinding<boolean>("parallel.reverseDirection", false),
+    },
+    roadShape: {
+        template: new TwoWayBinding<number>("roadShape.template", 0),
+        easeInLength: new TwoWayBinding<number>("roadShape.easeInLength", 0.1),
+        easeOutLength: new TwoWayBinding<number>("roadShape.easeOutLength", 0.1),
+        archHeight: new TwoWayBinding<number>("roadShape.archHeight", 0.5),
+        archPosition: new TwoWayBinding<number>("roadShape.archPosition", 0.5),
+        smoothingFactor: new TwoWayBinding<number>("roadShape.smoothingFactor", 0.5),
     },
 };

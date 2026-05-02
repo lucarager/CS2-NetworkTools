@@ -23,7 +23,7 @@
         /// </summary>
         /// <param name="ctx">The transform context (path geometry).</param>
         /// <param name="config">The transform configuration (can be modified to store computed values).</param>
-        void InitializeConfig(in ShapeTransformContext ctx, ref ShapeTransformConfig config);
+        void InitializeConfig(in ShapeTransformContext ctx, ref ShapeJobConfig config);
 
         /// <summary>
         /// Called before processing edges. Use for per-frame calculations
@@ -32,7 +32,7 @@
         /// <param name="edges">All edges in the path.</param>
         /// <param name="ctx">The transform context (path geometry).</param>
         /// <param name="config">The transform configuration (user settings).</param>
-        void PreProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeTransformConfig config);
+        void PreProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config);
 
         /// <summary>
         /// Called for each edge in sequence. The main transformation logic.
@@ -41,7 +41,7 @@
         /// <param name="index">Index of this edge in the path.</param>
         /// <param name="ctx">The transform context (path geometry).</param>
         /// <param name="config">The transform configuration (user settings).</param>
-        void Process(ref EdgeState edge, int index, in ShapeTransformContext ctx, in ShapeTransformConfig config);
+        void Process(ref EdgeState edge, int index, in ShapeTransformContext ctx, in ShapeJobConfig config);
 
         /// <summary>
         /// Called after all edges are processed. Use for cleanup or
@@ -50,7 +50,7 @@
         /// <param name="edges">All edges in the path.</param>
         /// <param name="ctx">The transform context (path geometry).</param>
         /// <param name="config">The transform configuration (user settings).</param>
-        void PostProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeTransformConfig config);
+        void PostProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config);
     }
 
     /// <summary>
@@ -70,7 +70,7 @@
         /// <returns>Array of handle definitions.</returns>
         TransformHandleDefinition[] GetHandleDefinitions(
             in ShapeTransformContext ctx,
-            in ShapeTransformConfig config,
+            in ShapeJobConfig config,
             float3 pathStartPos,
             float3 pathEndPos,
             in NativeArray<EdgeState> edgeStates);

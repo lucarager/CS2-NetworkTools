@@ -22,12 +22,12 @@
         /// </summary>
         public Bezier4x3 ReferenceBezier;
 
-        public void InitializeConfig(in ShapeTransformContext ctx, ref ShapeTransformConfig config) {
+        public void InitializeConfig(in ShapeTransformContext ctx, ref ShapeJobConfig config) {
             // EaseInOut uses simple normalized parameters (0-0.5) stored in config.
             // No additional computed state needed - handles read directly from config.EaseInLength/EaseOutLength
         }
 
-        public void PreProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeTransformConfig config) {
+        public void PreProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config) {
             // Build a 2D height curve where x = path ratio (0-1) and y = height.
             // We solve for t where x(t) = pathRatio to get the correct height.
             //
@@ -44,7 +44,7 @@
             ReferenceBezier = new Bezier4x3(a, b, c, d);
         }
 
-        public void Process(ref EdgeState edge, int index, in ShapeTransformContext ctx, in ShapeTransformConfig config) {
+        public void Process(ref EdgeState edge, int index, in ShapeTransformContext ctx, in ShapeJobConfig config) {
             // Get heights at the actual node positions (start and end of edge in path order)
             var startHeight = SlopeUtils.GetHeightAtPathRatio(ReferenceBezier, edge.StartPointAbsoluteRatio);
             var endHeight = SlopeUtils.GetHeightAtPathRatio(ReferenceBezier, edge.EndPointAbsoluteRatio);
@@ -68,7 +68,7 @@
                 edge.IsForward);
         }
 
-        public void PostProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeTransformConfig config) {
+        public void PostProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config) {
             // No post-processing needed
         }
 
@@ -78,7 +78,7 @@
         /// </summary>
         public TransformHandleDefinition[] GetHandleDefinitions(
             in ShapeTransformContext ctx,
-            in ShapeTransformConfig config,
+            in ShapeJobConfig config,
             float3 pathStartPos,
             float3 pathEndPos,
             in NativeArray<EdgeState> edgeStates) {
@@ -137,7 +137,7 @@
                     TypeFlags = HandleTypeFlags.SlopeControl | HandleTypeFlags.Parameter | HandleTypeFlags.ParameterRange,
                     Value = config.EaseInLength,
                     MinValue = 0f,
-                    MaxValue = ShapeTransformConfig.EaseInMax,
+                    MaxValue = config.EaseInMax,
                     // Constrain to first edge direction with distance clamping (0 to halfPathLength)
                     Constraints = NT_HandleConstraints.AxisWithBounds(easeInDirection, pathStartPos + elevation, 0f, halfPathLength),
                 },
@@ -147,7 +147,7 @@
                     TypeFlags = HandleTypeFlags.SlopeControl | HandleTypeFlags.Parameter | HandleTypeFlags.ParameterRange,
                     Value = config.EaseOutLength,
                     MinValue = 0f,
-                    MaxValue = ShapeTransformConfig.EaseOutMax,
+                    MaxValue = config.EaseOutMax,
                     // Constrain to last edge direction (reversed) with distance clamping (0 to halfPathLength)
                     Constraints = NT_HandleConstraints.AxisWithBounds(easeOutDirection, pathEndPos + elevation, 0f, halfPathLength),
                 },

@@ -104,13 +104,6 @@ namespace NetworkTools.Systems.UI {
                 m_SelectedViewsBinding.Value = currentSelectedViews;
             }
 
-            // Sync shape config binding when the tool modifies it (e.g., via handles)
-            var currentShapeConfigRevision = m_NtRoadShapeToolSystem.ShapeConfigRevision;
-            if (currentShapeConfigRevision != m_LastShapeConfigRevision) {
-                m_LastShapeConfigRevision   = currentShapeConfigRevision;
-                m_ShapeConfigBinding.Value  = m_NtRoadShapeToolSystem.ShapeTransformConfig;
-            }
-
             if (m_ToggleToolPanelAction.WasPerformedThisFrame()) {
                 m_PanelOpenBinding.Value = true;
             }

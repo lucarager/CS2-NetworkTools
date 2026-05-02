@@ -26,33 +26,6 @@ export type ToolSelectionData = {
     Name: string;
 };
 
-// Shape template types (XZ plane transformations)
-export enum ShapeTransformTemplate {
-    Preserve = 0,
-    SlopeLinear = 1,
-    SlopeEaseInOut = 2,
-    SlopeParabolic = 3,
-    CurveStraighten = 4,
-    CurveSmooth = 5,
-}
-
-export type ShapeConfigData = {
-    template: ShapeTransformTemplate;
-    smoothingFactor: number;
-    easeInLength: number;
-    easeOutLength: number;
-    archHeight: number;
-    archPosition: number;
-};
-export const DEFAULT_SHAPE_CONFIG: ShapeConfigData = {
-    template: ShapeTransformTemplate.Preserve,
-    smoothingFactor: 0,
-    easeInLength: 0,
-    easeOutLength: 0,
-    archHeight: 0,
-    archPosition: 0,
-};
-
 // Snap options (bitflags)
 export enum SnapOption {
     None = 0,
@@ -113,7 +86,6 @@ export const GAME_BINDINGS = {
     SELECTED_ENTITIES: new TwoWayBinding<ToolSelectionData[]>("SELECTED_ENTITIES", []),
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
     PANEL_OPEN: new TwoWayBinding<boolean>("PANEL_OPEN", false),
-    SHAPE_CONFIG: new TwoWayBinding<ShapeConfigData>("SHAPE_CONFIG", DEFAULT_SHAPE_CONFIG),
     SELECTED_NET_PREFAB: new TwoWayBinding<NetPrefabData>(
         "SELECTED_NET_PREFAB",
         EMPTY_NET_PREFAB_DATA,

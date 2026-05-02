@@ -17,7 +17,7 @@
             [ReadOnly] public required NativeList<EdgeState>             EdgeStates;
             [ReadOnly] public required NativeList<NodeState>             NodeStates;
             [ReadOnly] public required ShapeTransformContext             Context;
-            [ReadOnly] public required ShapeTransformConfig              Config;
+            [ReadOnly] public required ShapeJobConfig                     Config;
             [ReadOnly] public required NativeList<Entity>                CurrentPathNodes;
             [ReadOnly] public required ComponentLookup<Node>             NodeLookup;
             [ReadOnly] public required ComponentLookup<PrefabRef>        PrefabRefLookup;

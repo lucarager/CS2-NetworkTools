@@ -10,15 +10,15 @@
     /// at its corresponding path ratio.
     /// </summary>
     public struct CurveStraightenTransform : IPathTransformation {
-        public void InitializeConfig(in ShapeTransformContext ctx, ref ShapeTransformConfig config) {
+        public void InitializeConfig(in ShapeTransformContext ctx, ref ShapeJobConfig config) {
             // No initialization needed - straighten uses path endpoints directly
         }
 
-        public void PreProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeTransformConfig config) {
+        public void PreProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config) {
             // No global pre-processing needed - each edge is independently placed on the line
         }
 
-        public void Process(ref EdgeState edge, int index, in ShapeTransformContext ctx, in ShapeTransformConfig config) {
+        public void Process(ref EdgeState edge, int index, in ShapeTransformContext ctx, in ShapeJobConfig config) {
             // Calculate new 3D positions on the straight line at path ratios
             var pathStartSidePos = math.lerp(ctx.StartPosition, ctx.EndPosition, edge.StartPointAbsoluteRatio);
             var pathEndSidePos   = math.lerp(ctx.StartPosition, ctx.EndPosition, edge.EndPointAbsoluteRatio);
@@ -42,7 +42,7 @@
             edge.Bezier = new Bezier4x3(a, b, c, d);
         }
 
-        public void PostProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeTransformConfig config) {
+        public void PostProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config) {
             // No post-processing needed
         }
     }

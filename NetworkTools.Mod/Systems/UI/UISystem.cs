@@ -40,7 +40,6 @@
         private int                                      m_LastSelectedSnaps;
         private int                                      m_LastSelectedTargets;
         private int                                      m_LastSelectedViews;
-        private int                                      m_LastShapeConfigRevision;
         private int                                      m_LastToolPrefabCount;
         private PrefixedLogger                           m_Log;
         private NameSystem                               m_NameSystem;
@@ -56,7 +55,6 @@
         private ValueBindingHelper<int>                  m_SelectedSnapsBinding;
         private ValueBindingHelper<int>                  m_SelectedTargetsBinding;
         private ValueBindingHelper<int>                  m_SelectedViewsBinding;
-        private ValueBindingHelper<ShapeTransformConfig> m_ShapeConfigBinding;
         private ProxyAction                              m_ToggleToolPanelAction;
         private ProxyAction                              m_OpenTool1Action;
         private ProxyAction                              m_OpenTool2Action;
@@ -93,14 +91,10 @@
             m_PanelOpenBinding        = CreateBinding("PANEL_OPEN",          false, HandlePanelOpen);
             m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES",   new ToolSelectionData[] { });
             m_SelectedNetPrefabBinding = CreateBinding("SELECTED_NET_PREFAB", NetPrefabData.Empty);
-            m_ShapeConfigBinding = CreateBinding("SHAPE_CONFIG",
-                                                 ShapeTransformConfig.Preserve(),
-                                                 HandleUpdateShapeConfig,
-                                                 new ValueWriter<ShapeTransformConfig>(),
-                                                 new ValueReader<ShapeTransformConfig>());
             RegisterToolParameterBindings(m_NtParallelToolSystem);
             RegisterToolParameterBindings(m_NtGenerateToolSystem);
             RegisterToolParameterBindings(m_NtConnectToolSystem);
+            RegisterToolParameterBindings(m_NtRoadShapeToolSystem);
             m_AvailableSnapsBinding   = CreateBinding("AVAILABLE_SNAPS",   (int)SnapOption.None);
             m_SelectedSnapsBinding    = CreateBinding("SELECTED_SNAPS",    (int)SnapOption.None, HandleUpdateSelectedSnaps);
             m_AvailableTargetsBinding = CreateBinding("AVAILABLE_TARGETS", (int)TargetOption.All);

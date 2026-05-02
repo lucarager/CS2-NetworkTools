@@ -1,4 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools.RoadShape {
+namespace NetworkTools.Systems.Tools.RoadShape {
     using System.Collections.Generic;
 
     using Game.Common;
@@ -41,9 +41,9 @@
             m_Prefab = prefab;
 
             if (hasShapeSlope && !wasSlopePrefab) {
-                SetTransformationConfig(ShapeTransformConfig.SlopeLinear());
+                Template.Value = ShapeTransformTemplate.SlopeLinear;
             } else if (hasShapeCurve && !wasCurvePrefab) {
-                SetTransformationConfig(ShapeTransformConfig.CurveStraighten());
+                Template.Value = ShapeTransformTemplate.CurveStraighten;
             }
 
             return true;
@@ -58,6 +58,19 @@
             RenderEligibleNodes      = true;
             RenderHandles            = true;
             DisableVanillaValidation = true;
+
+            // Parameter changes trigger a preview rebuild
+            foreach (var p in Parameters)
+                p.OnChanged += () => m_UpdateNeeded = true;
+
+            // Template change additionally applies presets and reinitializes
+            Template.OnChanged += () => {
+                ApplyTemplatePreset(Template.Value);
+                if (Phase == OperationPhase.Ready) {
+                    InitializeCurrentTransform();
+                    RefreshTransformHandles();
+                }
+            };
 
             // Initialize selection state (base class NativeLists)
             InitializeSelectionState();
@@ -110,46 +123,31 @@
         }
 
         /// <summary>
-        ///     Sets a new transformation.
+        ///     Applies template-specific defaults when the template changes.
         /// </summary>
-        public void SetTransformationConfig(ShapeTransformConfig config) {
-            ShapeTransformConfig = config;
-            ShapeConfigRevision++;
-            m_UpdateNeeded       = true;
+        private void ApplyTemplatePreset(ShapeTransformTemplate template) {
+            var isSlopeTemplate = template == ShapeTransformTemplate.SlopeLinear ||
+                                  template == ShapeTransformTemplate.SlopeEaseInOut ||
+                                  template == ShapeTransformTemplate.SlopeArch;
 
-            // Enable/Disable rendering based on config
-            RenderSlopeTooltips = config.RenderSlopeTooltips;
-            RenderNodeTooltips  = config.RenderSlopeTooltips;
+            RenderSlopeTooltips = isSlopeTemplate;
+            RenderNodeTooltips  = isSlopeTemplate;
 
-            // RE-INITIALIZE: Config changed while in Ready phase
-            if (Phase == OperationPhase.Ready)
-            {
-                // InitializeConfig the transform (computes any needed initial values into config)
-                InitializeCurrentTransform();
-
-                // Re-create handles using the initialized config
-                RefreshTransformHandles();
+            switch (template) {
+                case ShapeTransformTemplate.SlopeEaseInOut:
+                    EaseInLength.ResetToDefault();
+                    EaseOutLength.ResetToDefault();
+                    break;
+                case ShapeTransformTemplate.SlopeArch:
+                    ArchHeight.ResetToDefault();
+                    ArchPosition.ResetToDefault();
+                    break;
+                case ShapeTransformTemplate.CurveSmooth:
+                    SmoothingFactor.ResetToDefault();
+                    break;
             }
 
-            m_Log.Debug(
-                $"Transformation config set: ShapeTemplate={config.Template}");
-        }
-
-        /// <summary>
-        ///     Configures the transformation from the UI.
-        /// </summary>
-        public void UpdateTransformationConfig(ShapeTransformConfig config) {
-            ShapeTransformConfig = config;
-            ShapeConfigRevision++;
-            m_UpdateNeeded       = true;
-
-            // Refresh handle positions to match the new config values
-            if (Phase == OperationPhase.Ready) {
-                RefreshTransformHandles();
-            }
-
-            m_Log.Debug(
-                $"Transformation config updated: ShapeTemplate={config.Template}");
+            m_Log.Debug($"Template preset applied: {template}");
         }
     }
 }

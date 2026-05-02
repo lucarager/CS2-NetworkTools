@@ -3,9 +3,11 @@ import styles from "../toolActionPanel.module.scss";
 import {
     GAME_BINDINGS,
     GAME_TRIGGERS,
-    ShapeConfigData,
-    ShapeTransformTemplate,
 } from "gameBindings";
+import {
+    ShapeTransformTemplate,
+    PARAM_BINDINGS,
+} from "generated/parameters.generated";
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
 import { VC, VF } from "components/vanilla/Components";
@@ -34,19 +36,15 @@ const SLOPE_MODES: { localeKey: string; id: ShapeTransformTemplate; icon: string
 
 export const ShapeSlopeControls: React.FC = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
-    const shapeConfig = useValue(GAME_BINDINGS.SHAPE_CONFIG.binding);
+    const template = useValue(PARAM_BINDINGS.roadShape.template.binding);
+    const easeInLength = useValue(PARAM_BINDINGS.roadShape.easeInLength.binding);
+    const easeOutLength = useValue(PARAM_BINDINGS.roadShape.easeOutLength.binding);
+    const archHeight = useValue(PARAM_BINDINGS.roadShape.archHeight.binding);
+    const archPosition = useValue(PARAM_BINDINGS.roadShape.archPosition.binding);
     const { translate } = useLocalization();
 
-    const handleShapeParameterChange = (param: keyof ShapeConfigData, value: string | number) => {
-        const newConfig: ShapeConfigData = {
-            ...shapeConfig,
-            [param]: value,
-        };
-        GAME_BINDINGS.SHAPE_CONFIG.set(newConfig);
-    };
-
     // Check if any transformation is configured
-    const hasTransform = shapeConfig.template !== ShapeTransformTemplate.Preserve;
+    const hasTransform = template !== ShapeTransformTemplate.Preserve;
 
     return (
         <>
@@ -71,18 +69,15 @@ export const ShapeSlopeControls: React.FC = () => {
                                                 className={c(
                                                     styles.iconButton,
                                                     styles.iconButton__xl,
-                                                    shapeConfig.template === preset.id
+                                                    template === preset.id
                                                         ? styles.iconButton__active
                                                         : null,
                                                 )}
                                                 src={preset.icon}
                                                 onSelect={() =>
-                                                    handleShapeParameterChange(
-                                                        "template",
-                                                        preset.id,
-                                                    )
+                                                    PARAM_BINDINGS.roadShape.template.set(preset.id)
                                                 }
-                                                selected={shapeConfig.template === preset.id}
+                                                selected={template === preset.id}
                                                 multiSelect={false}
                                                 disabled={false}
                                                 focusKey={VF.FOCUS_DISABLED}
@@ -94,7 +89,7 @@ export const ShapeSlopeControls: React.FC = () => {
                         </div>
 
                         {/* EaseInOut Parameters */}
-                        {shapeConfig.template === ShapeTransformTemplate.SlopeEaseInOut && (
+                        {template === ShapeTransformTemplate.SlopeEaseInOut && (
                             <>
                                 <div className={styles.controlRow}>
                                     <div
@@ -102,15 +97,15 @@ export const ShapeSlopeControls: React.FC = () => {
                                             styles.sliderField,
                                             styles.sliderField__withUnit,
                                         )}>
-                                        {/* We mask the internal 0 - 0.5 float range into 0 - 100% for the player */}
+                                        {/* We mask the internal 0 - 0.4 float range into 0 - 80% for the player */}
                                         <VC.FloatSliderField
-                                            value={shapeConfig.easeInLength * 200}
+                                            value={easeInLength * 200}
                                             label={translate("NetworkTools.UI.Slope.StartingFlatness") ?? ""}
                                             min={0}
-                                            max={100}
+                                            max={80}
                                             fractionDigits={0}
                                             onChange={(e: number) => {
-                                                handleShapeParameterChange("easeInLength", e / 200);
+                                                PARAM_BINDINGS.roadShape.easeInLength.set(e / 200);
                                             }}
                                         />
                                         <span className={styles.unitLabel}>%</span>
@@ -122,18 +117,15 @@ export const ShapeSlopeControls: React.FC = () => {
                                             styles.sliderField,
                                             styles.sliderField__withUnit,
                                         )}>
-                                        {/* We mask the internal 0 - 0.5 float range into 0 - 100% for the player */}
+                                        {/* We mask the internal 0 - 0.4 float range into 0 - 80% for the player */}
                                         <VC.FloatSliderField
-                                            value={shapeConfig.easeOutLength * 200}
+                                            value={easeOutLength * 200}
                                             label={translate("NetworkTools.UI.Slope.EndingFlatness") ?? ""}
                                             min={0}
-                                            max={100}
+                                            max={80}
                                             fractionDigits={0}
                                             onChange={(e: number) => {
-                                                handleShapeParameterChange(
-                                                    "easeOutLength",
-                                                    e / 200,
-                                                );
+                                                PARAM_BINDINGS.roadShape.easeOutLength.set(e / 200);
                                             }}
                                         />
                                         <span className={styles.unitLabel}>%</span>
@@ -142,30 +134,30 @@ export const ShapeSlopeControls: React.FC = () => {
                             </>
                         )}
 
-                        {/* Parabolic Parameters */}
-                        {shapeConfig.template === ShapeTransformTemplate.SlopeParabolic && (
+                        {/* Arch Parameters */}
+                        {template === ShapeTransformTemplate.SlopeArch && (
                             <>
                                 <div className={styles.controlRow}>
                                     <VC.FloatSliderField
-                                        value={shapeConfig.archHeight}
+                                        value={archHeight}
                                         label={translate("NetworkTools.UI.Slope.ArchHeight") ?? ""}
                                         min={-1}
                                         max={1}
                                         fractionDigits={3}
                                         onChange={(e: number) => {
-                                            handleShapeParameterChange("archHeight", e);
+                                            PARAM_BINDINGS.roadShape.archHeight.set(e);
                                         }}
                                     />
                                 </div>
                                 <div className={styles.controlRow}>
                                     <VC.FloatSliderField
-                                        value={shapeConfig.archPosition}
+                                        value={archPosition}
                                         label={translate("NetworkTools.UI.Slope.ArchPosition") ?? ""}
                                         min={0.1}
                                         max={0.9}
                                         fractionDigits={3}
                                         onChange={(e: number) => {
-                                            handleShapeParameterChange("archPosition", e);
+                                            PARAM_BINDINGS.roadShape.archPosition.set(e);
                                         }}
                                     />
                                 </div>

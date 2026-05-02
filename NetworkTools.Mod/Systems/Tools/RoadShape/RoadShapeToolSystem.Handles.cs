@@ -1,4 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools.RoadShape {
+namespace NetworkTools.Systems.Tools.RoadShape {
     using Game.Common;
     using Game.Notifications;
     using Game.Net;
@@ -27,9 +27,8 @@
                         m_ShapeTransformContext.StartPosition,
                         m_ShapeTransformContext.EndPosition,
                         easeInAxis);
-                    m_Log.Debug($"EaseInLength: {ShapeTransformConfig.EaseInLength} -> {easeInParam}");
-                    ShapeTransformConfig.EaseInLength = easeInParam;
-                    ShapeConfigRevision++;
+                    m_Log.Debug($"EaseInLength: {EaseInLength.Value} -> {easeInParam}");
+                    EaseInLength.Value = easeInParam;
                     break;
 
                 case HandleKeys.EaseOutLength:
@@ -39,9 +38,8 @@
                         m_ShapeTransformContext.EndPosition,
                         m_ShapeTransformContext.StartPosition,
                         easeOutAxis);
-                    m_Log.Debug($"EaseOutLength: {ShapeTransformConfig.EaseOutLength} -> {easeOutParam}");
-                    ShapeTransformConfig.EaseOutLength = easeOutParam;
-                    ShapeConfigRevision++;
+                    m_Log.Debug($"EaseOutLength: {EaseOutLength.Value} -> {easeOutParam}");
+                    EaseOutLength.Value = easeOutParam;
                     break;
             }
         }

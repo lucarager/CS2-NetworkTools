@@ -15,44 +15,6 @@ namespace NetworkTools.Systems.UI {
             }
         }
 
-        private void HandleUpdateShapeConfig(ShapeTransformConfig configData) {
-            m_Log.Debug($"HandleUpdateShapeConfig(template: {configData.Template})");
-
-            var currentConfig = m_NtRoadShapeToolSystem.ShapeTransformConfig;
-            if (currentConfig.Template == configData.Template) {
-                m_ShapeConfigBinding.Value = configData;
-                m_NtRoadShapeToolSystem.UpdateTransformationConfig(configData);
-            } else {
-                ShapeTransformConfig newConfig;
-
-                // Create new config with default values
-                switch (configData.Template) {
-                    case ShapeTransformTemplate.Preserve:
-                    default:
-                        newConfig = ShapeTransformConfig.Preserve();
-                        break;
-                    case ShapeTransformTemplate.SlopeLinear:
-                        newConfig = ShapeTransformConfig.SlopeLinear();
-                        break;
-                    case ShapeTransformTemplate.SlopeEaseInOut:
-                        newConfig = ShapeTransformConfig.SlopeEaseInOut();
-                        break;
-                    case ShapeTransformTemplate.SlopeArch:
-                        newConfig = ShapeTransformConfig.SlopeArch();
-                        break;
-                    case ShapeTransformTemplate.CurveStraighten:
-                        newConfig = ShapeTransformConfig.CurveStraighten();
-                        break;
-                    case ShapeTransformTemplate.CurveSmooth:
-                        newConfig = ShapeTransformConfig.CurveSmooth();
-                        break;
-                }
-
-                m_NtRoadShapeToolSystem.SetTransformationConfig(newConfig);
-                m_ShapeConfigBinding.Value = newConfig;
-            }
-        }
-
         private void HandleSelectTool(string id) {
             m_Log.Debug($"HandleSelectTool(id: {id})");
 
@@ -61,12 +23,12 @@ namespace NetworkTools.Systems.UI {
                                             out var prefab)) {
                 m_ToolSystem.ActivatePrefabTool(prefab);
 
-                // Sync shape config binding when the road shape tool resets its config
+                // Re-sync per-parameter bindings when a parameterized tool is activated
                 if (m_ToolSystem.activeTool == m_NtRoadShapeToolSystem) {
-                    m_ShapeConfigBinding.Value = m_NtRoadShapeToolSystem.ShapeTransformConfig;
+                    foreach (var p in m_NtRoadShapeToolSystem.Parameters)
+                        p.ForceNotify();
                 }
 
-                // Re-sync per-parameter bindings when a parameterized tool is activated
                 if (m_ToolSystem.activeTool == m_NtGenerateToolSystem) {
                     foreach (var p in m_NtGenerateToolSystem.Parameters)
                         p.ForceNotify();
