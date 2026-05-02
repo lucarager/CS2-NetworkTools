@@ -16,8 +16,8 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// </summary>
         internal GenerateJobConfig BuildJobConfig() {
             return new GenerateJobConfig {
-                StartPosition  = m_StartPosition,
-                StartDirection = m_StartDirection,
+                StartPosition  = StartPosition.Value,
+                StartDirection = StartDirection.Value,
                 GridXSpacing   = GridXSpacing.Value,
                 GridZSpacing   = GridZSpacing.Value,
                 GridXNum       = GridXNum.Value,

@@ -109,8 +109,9 @@ What stays (intentionally):
 
 ```csharp
 public abstract class ParameterBase {
-    public string Key   { get; }
-    public int    Modes { get; }  // bitflag: which modes use this param (0 = all)
+    public string Key      { get; }
+    public int    Modes    { get; }  // bitflag: which modes use this param (0 = all)
+    public bool   Bindable { get; }  // whether to register a UI binding (default: true)
 
     public event Action OnChanged;
 
@@ -136,7 +137,7 @@ public class FloatParameter : Parameter<float> { public float Min, Max; ... }
 public class IntParameter   : Parameter<int>   { public int   Min, Max; ... }
 public class BoolParameter  : Parameter<bool>  { ... }
 public class EnumParameter<TEnum> : Parameter<TEnum>, IEnumParameter where TEnum : struct, Enum { ... }
-public class Float3Parameter : Parameter<float3> { ... }
+public class Float3Parameter : Parameter<float3> { /* Bindable = false by default */ }
 // Add Quaternion, Color, etc. only when needed.
 
 // IEnumParameter — non-generic handle for UISystem binding registration
@@ -145,6 +146,12 @@ public interface IEnumParameter {
     int    IntValue { get; set; }
 }
 ```
+
+### Design principle: everything is a parameter
+
+All tool state that flows into the job snapshot is a parameter, regardless of whether it is UI-driven (sliders, mode selectors) or contextually set (node positions, handle drags). The `Bindable` flag on `ParameterBase` controls whether a UI binding is registered — it does **not** determine whether something is a parameter.
+
+`Float3Parameter` defaults to `Bindable = false` because the Colossal binding bridge has no `ValueWriter<float3>`. This is a transport limitation, not a semantic one. All float3 parameters still participate in `OnChanged` events, `Parameters` discovery, `ResetAll()`, and the TS codegen (`PARAM_KEYS`, `PARAM_META`).
 
 ### Parameter management lives on `NT_BaseToolSystem`
 
@@ -481,7 +488,7 @@ See section 10 for tool-specific gotchas.
 
 ### General
 
-1. **`float3` over the binding bridge.** If `ValueWriter<float3>` doesn't work, decompose into three float bindings under one parameter.
+1. **`float3` over the binding bridge.** ✅ Resolved: `Float3Parameter` sets `Bindable = false` by default. Float3 values are full parameters (OnChanged, discovery, codegen) but skip UI binding registration. If `ValueWriter<float3>` is implemented later, `Bindable` can be flipped to `true`.
 2. **Two-way sync edge cases.** Handle drag updates parameter -> fires `OnChanged` -> pushes to UI binding. UI slider updates binding -> writes to parameter -> fires `OnChanged` -> needs to NOT bounce back. The value-equality short-circuit in `Parameter<T>.Value` setter handles this; verify with a Parallel slider during Phase 1.
 3. **Codegen failure modes.** If the MSBuild task fails, the TS build should fail loudly. Don't let stale `.generated.ts` ship.
 4. **Mode-tag bitflag width.** `int` modes field assumes <32 modes per tool. True for current and foreseeable scope.
@@ -493,7 +500,7 @@ See section 10 for tool-specific gotchas.
    - Mode-conditional defaults baked into each parameter via the `modes` tag plus a `ResetForMode(mode)` helper.
    The first is closer to current behavior; pick during Phase 3 RoadShape migration.
 
-9. **`ConnectConfig` / `GenerateConfig` contextual init.** These configs have `float3` fields (positions, directions) that get populated from selected nodes at `SetMode()` time, not from declared defaults. Mirror this with a `ResetWith(args)` method on the tool that resets parameters AND seeds runtime context (start/end positions). Don't try to encode contextual defaults as attribute metadata.
+9. **`ConnectConfig` / `GenerateConfig` contextual init.** ✅ Resolved for Connect: float3 positions/directions are `Float3Parameter` instances with `default(float3)` as their declared default. `InitializeConfig()` builds a temporary `ConnectJobConfig`, passes it to generators to populate mode-specific fields, then copies all values back to parameters via `.Value` setters. No `ResetWith(args)` needed — the generator pattern handles contextual seeding naturally.
 
 ### Migration-window concerns (during Phase 3)
 

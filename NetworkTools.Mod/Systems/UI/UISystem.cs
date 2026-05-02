@@ -31,11 +31,9 @@
         private ValueBindingHelper<int>                  m_AvailableSnapsBinding;
         private ValueBindingHelper<int>                  m_AvailableTargetsBinding;
         private ValueBindingHelper<int>                  m_AvailableViewsBinding;
-        private ValueBindingHelper<int>                  m_ConnectModeBinding;
         private int                                      m_LastAvailableSnaps;
         private int                                      m_LastAvailableTargets;
         private int                                      m_LastAvailableViews;
-        private int                                      m_LastConnectMode;
         private Entity                                   m_LastNetPrefabEntity;
         private int                                      m_LastSelectedNodesHash;
         private string                                   m_LastSelectedPrefab;
@@ -102,7 +100,7 @@
                                                  new ValueReader<ShapeTransformConfig>());
             RegisterToolParameterBindings(m_NtParallelToolSystem);
             RegisterToolParameterBindings(m_NtGenerateToolSystem);
-            m_ConnectModeBinding      = CreateBinding("CONNECT_MODE", (int)ConnectMode.None, HandleUpdateConnectMode);
+            RegisterToolParameterBindings(m_NtConnectToolSystem);
             m_AvailableSnapsBinding   = CreateBinding("AVAILABLE_SNAPS",   (int)SnapOption.None);
             m_SelectedSnapsBinding    = CreateBinding("SELECTED_SNAPS",    (int)SnapOption.None, HandleUpdateSelectedSnaps);
             m_AvailableTargetsBinding = CreateBinding("AVAILABLE_TARGETS", (int)TargetOption.All);
@@ -166,7 +164,8 @@
 
         private void RegisterToolParameterBindings(NT_BaseToolSystem tool) {
             foreach (var param in tool.Parameters)
-                RegisterParameterBinding(param);
+                if (param.Bindable)
+                    RegisterParameterBinding(param);
         }
 
         private void RegisterParameterBinding(ParameterBase param) {

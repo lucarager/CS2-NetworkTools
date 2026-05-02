@@ -1,4 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools.Connect {
+namespace NetworkTools.Systems.Tools.Connect {
     using Colossal.Entities;
     using Colossal.Mathematics;
 
@@ -10,7 +10,7 @@
     using Unity.Mathematics;
 
     /// <summary>
-    ///     Tool system for
+    ///     Lifecycle and config initialization for <see cref="NT_ConnectToolSystem"/>.
     /// </summary>
     public partial class NT_ConnectToolSystem {
         /// <inheritdoc />
@@ -19,24 +19,10 @@
         }
 
         /// <summary>
-        ///     Sets a new transformation.
-        /// </summary>
-        public void SetMode(ConnectMode mode) {
-            CurrentMode    = mode;
-            m_UpdateNeeded = true;
-
-            // Re-initialize configs
-            InitializeConfig();
-
-            m_Log.Debug($"Mode set: mode={mode}");
-        }
-
-
-        /// <summary>
         ///     Calls InitializeConfig on the current generator to compute initial values.
         /// </summary>
         private void InitializeConfig() {
-            m_Log.Debug($"InitializeConfig: Initializing {CurrentMode}");
+            m_Log.Debug($"InitializeConfig: Initializing {Mode.Value}");
 
             // Only initialize config when we have 2 valid nodes selected (Ready phase)
             if (Phase != OperationPhase.Ready) {
@@ -55,20 +41,33 @@
             var startDirection = ComputeNodeDirection(startNodeEntity, startConnectedEdges, startPosition, endPosition);
             var endDirection   = ComputeNodeDirection(endNodeEntity, endConnectedEdges, endPosition, startPosition);
 
-            var config = new ConnectConfig(startPosition, endPosition, startDirection, endDirection);
+            var config = new ConnectJobConfig {
+                StartPosition  = startPosition,
+                EndPosition    = endPosition,
+                StartDirection = startDirection,
+                EndDirection   = endDirection,
+            };
 
-            // Each transform's InitializeConfig method may modify ShapeTransformConfig
-            // to store computed values needed for handles and transformation.
-            switch (CurrentMode) {
+            switch (Mode.Value) {
                 case ConnectMode.SimpleCurve:
-                    new SimpleCurveGenerator().InitializeConfig(in CurrentMode, ref config);
+                    new SimpleCurveGenerator().InitializeConfig(ref config);
                     break;
                 case ConnectMode.Loop:
-                    new LoopGenerator().InitializeConfig(in CurrentMode, ref config);
+                    new LoopGenerator().InitializeConfig(ref config);
                     break;
             }
 
-            CurrentConfig = config;
+            // Copy snapshot back to parameters
+            StartPosition.Value                  = config.StartPosition;
+            EndPosition.Value                    = config.EndPosition;
+            StartDirection.Value                 = config.StartDirection;
+            EndDirection.Value                   = config.EndDirection;
+            CurveStartPointPosition.Value        = config.CurveStartPointPosition;
+            CurveStartControlPointPosition.Value = config.CurveStartControlPointPosition;
+            CurveEndControlPointPosition.Value   = config.CurveEndControlPointPosition;
+            CurveEndPointPosition.Value          = config.CurveEndPointPosition;
+            LoopControlPointPosition.Value       = config.LoopControlPointPosition;
+            LoopRadius.Value                     = config.LoopRadius;
 
             RefreshTransformHandles();
         }
@@ -175,6 +174,16 @@
             RenderEligibleNodes      = true;
             RenderHandles            = true;
             DisableVanillaValidation = true;
+
+            // Parameter changes trigger a preview rebuild
+            foreach (var p in Parameters)
+                p.OnChanged += () => m_UpdateNeeded = true;
+
+            // Mode change additionally reinitializes context and handles
+            Mode.OnChanged += () => {
+                if (Phase == OperationPhase.Ready)
+                    InitializeConfig();
+            };
 
             // Data
             m_SelectedNodes = new NativeList<Entity>(32, Allocator.Persistent);

@@ -53,13 +53,6 @@ export const DEFAULT_SHAPE_CONFIG: ShapeConfigData = {
     archPosition: 0,
 };
 
-export enum ConnectMode {
-    None = 0,
-    SimpleCurve = 1,
-    ComplexCurve = 2,
-    Loop = 3,
-}
-
 // Snap options (bitflags)
 export enum SnapOption {
     None = 0,
@@ -121,7 +114,6 @@ export const GAME_BINDINGS = {
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
     PANEL_OPEN: new TwoWayBinding<boolean>("PANEL_OPEN", false),
     SHAPE_CONFIG: new TwoWayBinding<ShapeConfigData>("SHAPE_CONFIG", DEFAULT_SHAPE_CONFIG),
-    CONNECT_MODE: new TwoWayBinding<number>("CONNECT_MODE", ConnectMode.None),
     SELECTED_NET_PREFAB: new TwoWayBinding<NetPrefabData>(
         "SELECTED_NET_PREFAB",
         EMPTY_NET_PREFAB_DATA,

@@ -1,4 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools.Connect {
+namespace NetworkTools.Systems.Tools.Connect {
     using Colossal.Mathematics;
     using NetworkTools.Components.Handles;
     using NetworkTools.Systems.Tools.Base;
@@ -6,7 +6,7 @@
     using Unity.Mathematics;
 
     public struct SimpleCurveGenerator : IConnectionGenerator, IHandleableConnectionGenerator {
-        public void InitializeConfig(in ConnectMode mode, ref ConnectConfig config) {
+        public void InitializeConfig(ref ConnectJobConfig config) {
             // Place curve and control points along each node's outgoing direction
             var distance = 10f;
             config.CurveStartPointPosition        = config.StartPosition + config.StartDirection * distance;
@@ -16,8 +16,7 @@
         }
 
         public void GenerateConnection(
-            in  ConnectMode          mode,
-            in  ConnectConfig        config,
+            in  ConnectJobConfig     config,
             ref NativeList<CurveDef> curves) {
             // We have 3 segments: start node to curve start point, curve start point to curve end point, curve end point to end node
 
@@ -59,8 +58,7 @@
         }
 
         public TransformHandleDefinition[] GetHandleDefinitions(
-            in ConnectMode mode,
-            in ConnectConfig config) {
+            in ConnectJobConfig config) {
             return new[] {
                 new TransformHandleDefinition {
                     Key = HandleKeys.CurveStartPointPosition,

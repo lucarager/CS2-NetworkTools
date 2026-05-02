@@ -1,4 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools.Connect {
+namespace NetworkTools.Systems.Tools.Connect {
     using Colossal.Mathematics;
     using NetworkTools.Components.Handles;
     using NetworkTools.Systems.Tools.Base;
@@ -13,7 +13,7 @@
         /// </summary>
         private const float Kappa = 0.5522847498f;
 
-        public void InitializeConfig(in ConnectMode mode, ref ConnectConfig config) {
+        public void InitializeConfig(ref ConnectJobConfig config) {
             var distance = 100f;
             // Place loop center perpendicular to start direction (to the right)
             var right = new float3(config.StartDirection.z, 0f, -config.StartDirection.x);
@@ -22,8 +22,7 @@
         }
 
         public void GenerateConnection(
-            in  ConnectMode          mode,
-            in  ConnectConfig        config,
+            in  ConnectJobConfig     config,
             ref NativeList<CurveDef> curves) {
             // We have the following segments:
             // 1: Start node to loop start point, straight segment
@@ -148,8 +147,7 @@
         }
 
         public TransformHandleDefinition[] GetHandleDefinitions(
-            in ConnectMode mode,
-            in ConnectConfig config) {
+            in ConnectJobConfig config) {
             return new[] {
                 new TransformHandleDefinition {
                     Key = HandleKeys.LoopControlPointPosition,

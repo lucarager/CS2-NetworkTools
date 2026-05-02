@@ -2,17 +2,33 @@
 
 import { TwoWayBinding } from "utils/bidirectionalBinding";
 
+export enum ConnectMode { None = 0, SimpleCurve = 1, ComplexCurve = 2, Loop = 3 }
 export enum GenerateMode { None = 0, Grid = 1, Circle = 2 }
 export enum ParallelSide { Left = 0, Right = 1 }
 export enum VerticalSide { Up = 0, Down = 1 }
 
 export const PARAM_KEYS = {
+    connect: {
+        mode: "connect.mode",
+        loopRadius: "connect.loopRadius",
+        startPosition: "connect.startPosition",
+        endPosition: "connect.endPosition",
+        startDirection: "connect.startDirection",
+        endDirection: "connect.endDirection",
+        curveStartPointPosition: "connect.curveStartPointPosition",
+        curveStartControlPointPosition: "connect.curveStartControlPointPosition",
+        curveEndControlPointPosition: "connect.curveEndControlPointPosition",
+        curveEndPointPosition: "connect.curveEndPointPosition",
+        loopControlPointPosition: "connect.loopControlPointPosition",
+    },
     generate: {
         mode: "generate.mode",
         gridXSpacing: "generate.gridXSpacing",
         gridZSpacing: "generate.gridZSpacing",
         gridXNum: "generate.gridXNum",
         gridZNum: "generate.gridZNum",
+        startPosition: "generate.startPosition",
+        startDirection: "generate.startDirection",
     },
     parallel: {
         horizontalOffset: "parallel.horizontalOffset",
@@ -24,11 +40,24 @@ export const PARAM_KEYS = {
 } as const;
 
 export const PARAM_META = {
+    "connect.mode": { type: "enum", enumType: "ConnectMode", default: 0, modes: 0 },
+    "connect.loopRadius": { type: "float", default: 50, min: 1, max: 500, modes: 3 },
+    "connect.startPosition": { type: "float3", modes: 0 },
+    "connect.endPosition": { type: "float3", modes: 0 },
+    "connect.startDirection": { type: "float3", modes: 0 },
+    "connect.endDirection": { type: "float3", modes: 0 },
+    "connect.curveStartPointPosition": { type: "float3", modes: 3 },
+    "connect.curveStartControlPointPosition": { type: "float3", modes: 3 },
+    "connect.curveEndControlPointPosition": { type: "float3", modes: 3 },
+    "connect.curveEndPointPosition": { type: "float3", modes: 3 },
+    "connect.loopControlPointPosition": { type: "float3", modes: 3 },
     "generate.mode": { type: "enum", enumType: "GenerateMode", default: 1, modes: 0 },
     "generate.gridXSpacing": { type: "float", default: 80, min: 4, max: 500, modes: 0 },
     "generate.gridZSpacing": { type: "float", default: 80, min: 4, max: 500, modes: 0 },
     "generate.gridXNum": { type: "int", default: 2, min: 1, max: 20, modes: 0 },
     "generate.gridZNum": { type: "int", default: 2, min: 1, max: 20, modes: 0 },
+    "generate.startPosition": { type: "float3", modes: 0 },
+    "generate.startDirection": { type: "quaternion", modes: 0 },
     "parallel.horizontalOffset": { type: "float", default: 20, min: 0, max: 80, modes: 0 },
     "parallel.verticalOffset": { type: "float", default: 0, min: 0, max: 80, modes: 0 },
     "parallel.horizontalDirection": { type: "enum", enumType: "ParallelSide", default: 1, modes: 0 },
@@ -37,6 +66,10 @@ export const PARAM_META = {
 } as const;
 
 export const PARAM_BINDINGS = {
+    connect: {
+        mode: new TwoWayBinding<number>("connect.mode", 0),
+        loopRadius: new TwoWayBinding<number>("connect.loopRadius", 50),
+    },
     generate: {
         mode: new TwoWayBinding<number>("generate.mode", 1),
         gridXSpacing: new TwoWayBinding<number>("generate.gridXSpacing", 80),

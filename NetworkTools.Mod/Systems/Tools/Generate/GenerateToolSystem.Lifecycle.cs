@@ -27,8 +27,8 @@ namespace NetworkTools.Systems.Tools.Generate {
 
             var point = m_SelectedControlPoint.value;
 
-            m_StartPosition  = point.m_Position;
-            m_StartDirection = point.m_Rotation;
+            StartPosition.Value  = point.m_Position;
+            StartDirection.Value = point.m_Rotation;
 
             GridXSpacing.ResetToDefault();
             GridZSpacing.ResetToDefault();

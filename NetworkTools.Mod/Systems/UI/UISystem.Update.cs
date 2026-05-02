@@ -51,14 +51,6 @@ namespace NetworkTools.Systems.UI {
                 m_SelectedEntitiesBinding.Value = selectedEntitiesData;
             }
 
-            // Update connect mode binding when the tool changes it
-            var currentConnectMode = (int)m_NtConnectToolSystem.CurrentMode;
-            if (currentConnectMode != m_LastConnectMode) {
-                m_LastConnectMode          = currentConnectMode;
-                m_ConnectModeBinding.Value = currentConnectMode;
-            }
-
-
             // Update net prefab binding when the active tool's selection changes
             if (m_ToolSystem.activeTool is NT_BaseToolSystem prefabSelectionProvider and INetPrefabSelectionProvider) {
                 var currentNetPrefabEntity = prefabSelectionProvider.SelectedNetPrefabEntity;

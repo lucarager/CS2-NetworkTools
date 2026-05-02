@@ -73,7 +73,7 @@ void ParseParameters(string source) {
     source = Regex.Replace(source, @"\s+", " ");
 
     var regex = new Regex(
-        @"public\s+(FloatParameter|IntParameter|BoolParameter|Float3Parameter|EnumParameter<(\w+)>)\s+(\w+)\s*=\s*new\s*\(");
+        @"public\s+(FloatParameter|IntParameter|BoolParameter|Float3Parameter|QuaternionParameter|EnumParameter<(\w+)>)\s+(\w+)\s*=\s*new\s*\(");
 
     var matches = regex.Matches(source).Cast<Match>().OrderBy(m => m.Index);
     foreach (var m in matches) {
@@ -90,6 +90,8 @@ void ParseParameters(string source) {
             ParseBoolParam(fieldName, ctorArgs);
         else if (typeName == "Float3Parameter")
             ParseFloat3Param(fieldName, ctorArgs);
+        else if (typeName == "QuaternionParameter")
+            ParseQuaternionParam(fieldName, ctorArgs);
         else if (typeName.StartsWith("EnumParameter<")) {
             var enumType = m.Groups[2].Value;
             var key = StripQuotes(ctorArgs.GetValueOrDefault("key") ?? ctorArgs.GetValueOrDefault("0") ?? "");
@@ -130,6 +132,12 @@ void ParseFloat3Param(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("2") ?? "0");
     parameters.Add(new Float3ParamDef(key, fieldName, modes));
+}
+
+void ParseQuaternionParam(string fieldName, Dictionary<string, string> args) {
+    var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
+    var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("2") ?? "0");
+    parameters.Add(new QuaternionParamDef(key, fieldName, modes));
 }
 
 // ── Constructor argument parsing ───────────────────────────────────────────────
@@ -264,8 +272,8 @@ string EmitTypeScript() {
         .OrderBy(g => g.Key)
         .ToList();
 
-    // Bindable parameter types (skip float3 — handle-driven, not UI-driven)
-    var bindable = parameters.Where(p => p is not Float3ParamDef).ToList();
+    // Bindable parameter types (skip types without Colossal ValueWriter support)
+    var bindable = parameters.Where(p => p is not Float3ParamDef and not QuaternionParamDef).ToList();
 
     sb.AppendLine("export const PARAM_KEYS = {");
     foreach (var group in groups) {
@@ -293,6 +301,8 @@ string EmitTypeScript() {
                 $"type: \"enum\", enumType: \"{e.EnumType}\", default: {e.DefaultValue}, modes: {e.Modes}",
             Float3ParamDef f3 =>
                 $"type: \"float3\", modes: {f3.Modes}",
+            QuaternionParamDef q =>
+                $"type: \"quaternion\", modes: {q.Modes}",
             _ => ""
         });
         sb.AppendLine(" },");
@@ -352,4 +362,6 @@ record BoolParamDef(string Key, string FieldName, bool Default, int Modes)
 record EnumParamDef(string Key, string FieldName, string EnumType, int DefaultValue, int Modes)
     : ParamDef(Key, FieldName, Modes);
 record Float3ParamDef(string Key, string FieldName, int Modes)
+    : ParamDef(Key, FieldName, Modes);
+record QuaternionParamDef(string Key, string FieldName, int Modes)
     : ParamDef(Key, FieldName, Modes);

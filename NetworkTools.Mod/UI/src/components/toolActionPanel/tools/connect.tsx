@@ -1,11 +1,14 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
-import { ConnectMode, GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
+import { GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
+import { ConnectMode, PARAM_BINDINGS } from "generated/parameters.generated";
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
 import { PrefabSelection } from "../shared/prefabSelection";
 import { c } from "utils/classes";
 import { useLocalization } from "cs2/l10n";
+
+const C = PARAM_BINDINGS.connect;
 
 const CONNECT_MODES: { localeKey: string; id: ConnectMode; icon: string }[] = [
     {
@@ -32,10 +35,8 @@ const CONNECT_MODES: { localeKey: string; id: ConnectMode; icon: string }[] = [
 
 export const ConnectControls: React.FC = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
-    const activeConnectMode = useValue(GAME_BINDINGS.CONNECT_MODE.binding);
+    const activeConnectMode = useValue(C.mode.binding) as ConnectMode;
     const { translate } = useLocalization();
-
-    console.log("Selected Entities in ConnectControls:", selectedEntitiesBinding);
 
     return (
         <>
@@ -63,7 +64,7 @@ export const ConnectControls: React.FC = () => {
                                                         : null,
                                                 )}
                                                 onSelect={() =>
-                                                    GAME_BINDINGS.CONNECT_MODE.set(mode.id)
+                                                    C.mode.set(mode.id)
                                                 }>
                                                 <img src={mode.icon} className={styles.icon} />
                                             </Button>

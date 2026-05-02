@@ -1,7 +1,6 @@
 namespace NetworkTools.Systems.UI {
     using Game.Prefabs;
     using NetworkTools.Systems.Tools;
-    using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools.Generate;
     using NetworkTools.Systems.Tools.RoadShape;
 
@@ -67,27 +66,23 @@ namespace NetworkTools.Systems.UI {
                     m_ShapeConfigBinding.Value = m_NtRoadShapeToolSystem.ShapeTransformConfig;
                 }
 
-                // Re-sync per-parameter bindings when the generate tool is activated
+                // Re-sync per-parameter bindings when a parameterized tool is activated
                 if (m_ToolSystem.activeTool == m_NtGenerateToolSystem) {
                     foreach (var p in m_NtGenerateToolSystem.Parameters)
                         p.ForceNotify();
                 }
 
-                // Re-sync per-parameter bindings when the parallel tool is activated
+                if (m_ToolSystem.activeTool == m_NtConnectToolSystem) {
+                    foreach (var p in m_NtConnectToolSystem.Parameters)
+                        p.ForceNotify();
+                }
+
                 if (m_ToolSystem.activeTool == m_NtParallelToolSystem) {
                     foreach (var p in m_NtParallelToolSystem.Parameters)
                         p.ForceNotify();
                 }
             }
         }
-
-        private void HandleUpdateConnectMode(int mode) {
-            m_Log.Debug($"HandleUpdateConnectMode(mode: {mode})");
-            var connectMode = (ConnectMode)mode;
-            m_NtConnectToolSystem.SetMode(connectMode);
-            m_ConnectModeBinding.Value = mode;
-        }
-
 
         private void HandleRequestApply() {
             m_Log.Debug($"HandleRequestApply() -- validRequest={m_ToolSystem.activeTool is IManualApplyProvider}");

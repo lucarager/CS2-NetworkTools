@@ -45,14 +45,14 @@ namespace NetworkTools.Systems.Tools.Generate {
             m_Log.Debug($"OnPositionHandleDragged: key={key}, position={position}");
 
             if (key == HandleKeys.StartPosition) {
-                m_StartPosition = position;
+                StartPosition.Value = position;
             }
         }
 
         /// <inheritdoc />
         protected override float3 GetHandleConfigPosition(int key) {
             if (key == HandleKeys.StartPosition)
-                return m_StartPosition;
+                return StartPosition.Value;
 
             return float3.zero;
         }
@@ -60,7 +60,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// <inheritdoc />
         protected override void ApplyHandleConfigPosition(int key, float3 position) {
             if (key == HandleKeys.StartPosition) {
-                m_StartPosition = position;
+                StartPosition.Value = position;
             }
         }
     }

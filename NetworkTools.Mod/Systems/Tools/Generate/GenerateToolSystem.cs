@@ -24,7 +24,11 @@ namespace NetworkTools.Systems.Tools.Generate {
         public IntParameter                GridXNum     = new("generate.gridXNum", 2, 1, 20);
         public IntParameter                GridZNum     = new("generate.gridZNum", 2, 1, 20);
 
-        // ── Contextual state (set from control point, not UI-driven) ─────────────
+        // Contextual (from control point placement + handle drags)
+        public Float3Parameter      StartPosition  = new("generate.startPosition");
+        public QuaternionParameter  StartDirection = new("generate.startDirection");
+
+        // ── Non-parameter state ──────────────────────────────────────────────────
 
         /// <summary>
         ///     Caches the last hit position for tool-specific use.
@@ -40,15 +44,5 @@ namespace NetworkTools.Systems.Tools.Generate {
         ///     Selected control point
         /// </summary>
         protected NativeValue<ControlPoint> m_SelectedControlPoint;
-
-        /// <summary>
-        ///     Start position derived from the placed control point.
-        /// </summary>
-        internal float3 m_StartPosition;
-
-        /// <summary>
-        ///     Start direction derived from the placed control point.
-        /// </summary>
-        internal quaternion m_StartDirection;
     }
 }

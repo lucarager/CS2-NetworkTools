@@ -1,4 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools.Connect {
+namespace NetworkTools.Systems.Tools.Connect {
     using Colossal.Entities;
 
     using Game;
@@ -15,8 +15,26 @@
     using Unity.Jobs;
 
     public partial class NT_ConnectToolSystem {
+        /// <summary>
+        ///     Builds a Burst-compatible snapshot struct from the current parameter values and contextual state.
+        /// </summary>
+        internal ConnectJobConfig BuildJobConfig() {
+            return new ConnectJobConfig {
+                StartPosition                  = StartPosition.Value,
+                EndPosition                    = EndPosition.Value,
+                StartDirection                 = StartDirection.Value,
+                EndDirection                   = EndDirection.Value,
+                CurveStartPointPosition        = CurveStartPointPosition.Value,
+                CurveStartControlPointPosition = CurveStartControlPointPosition.Value,
+                CurveEndControlPointPosition   = CurveEndControlPointPosition.Value,
+                CurveEndPointPosition          = CurveEndPointPosition.Value,
+                LoopControlPointPosition       = LoopControlPointPosition.Value,
+                LoopRadius                     = LoopRadius.Value,
+            };
+        }
+
         private JobHandle ScheduleDefinitionsJob(JobHandle inputDeps, ToolOutputMode outputMode) {
-            m_Log.Debug($"ScheduleDefinitionsJob: Mode={CurrentMode}");
+            m_Log.Debug($"ScheduleDefinitionsJob: Mode={Mode.Value}");
 
             if (m_SelectedNodes.Length != 2) {
                 return inputDeps;
@@ -33,8 +51,8 @@
             }
 
             var jobHandle = new CreateDefinitionsJob {
-                Mode = CurrentMode,
-                Config = CurrentConfig,
+                Mode = Mode.Value,
+                Config = BuildJobConfig(),
                 SelectedNodeEntities = m_SelectedNodes,
                 PrefabEntity = m_SelectedNetPrefabEntity,
                 NetLanePrefabEntity = m_SelectedNetLanePrefabEntity,
