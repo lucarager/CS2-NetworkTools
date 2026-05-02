@@ -1,12 +1,23 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
-import { GAME_BINDINGS, GAME_TRIGGERS, GenerateConfigData, GenerateMode } from "gameBindings";
+import { GAME_TRIGGERS } from "gameBindings";
+import {
+    GenerateMode,
+    PARAM_META,
+    PARAM_BINDINGS,
+} from "generated/parameters.generated";
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
 import { VC } from "components/vanilla/Components";
 import { PrefabSelection } from "../shared/prefabSelection";
 import { c } from "utils/classes";
 import { useLocalization } from "cs2/l10n";
+
+const G = PARAM_BINDINGS.generate;
+const xSpacingMeta = PARAM_META["generate.gridXSpacing"];
+const zSpacingMeta = PARAM_META["generate.gridZSpacing"];
+const xNumMeta = PARAM_META["generate.gridXNum"];
+const zNumMeta = PARAM_META["generate.gridZNum"];
 
 const GENERATE_MODES: { localeKey: string; id: GenerateMode; icon: string }[] = [
     {
@@ -22,18 +33,12 @@ const GENERATE_MODES: { localeKey: string; id: GenerateMode; icon: string }[] = 
 ];
 
 export const GenerateControls: React.FC = () => {
-    const gridConfig = useValue(GAME_BINDINGS.GENERATE_CONFIG.binding);
-    const activeGenerateMode = useValue(GAME_BINDINGS.GENERATE_MODE.binding);
+    const activeGenerateMode = useValue(G.mode.binding) as GenerateMode;
+    const gridXSpacing = useValue(G.gridXSpacing.binding);
+    const gridZSpacing = useValue(G.gridZSpacing.binding);
+    const gridXNum = useValue(G.gridXNum.binding);
+    const gridZNum = useValue(G.gridZNum.binding);
     const { translate } = useLocalization();
-
-    const handleConfigChange = (param: keyof GenerateConfigData, value: number) => {
-        const newConfig: GenerateConfigData = {
-            ...gridConfig,
-            [param]: value,
-        };
-
-        GAME_BINDINGS.GENERATE_CONFIG.set(newConfig);
-    };
 
     return (
         <>
@@ -60,7 +65,7 @@ export const GenerateControls: React.FC = () => {
                                                 ? styles.iconButton__active
                                                 : null,
                                         )}
-                                        onSelect={() => GAME_BINDINGS.GENERATE_MODE.set(mode.id)}>
+                                        onSelect={() => G.mode.set(mode.id)}>
                                         <img src={mode.icon} className={styles.icon} />
                                     </Button>
                                 </Tooltip>
@@ -74,48 +79,48 @@ export const GenerateControls: React.FC = () => {
                 <div className={styles.controlRow}>
                     <div className={styles.sliderField}>
                         <VC.FloatSliderField
-                            value={gridConfig.gridXSpacing}
+                            value={gridXSpacing}
                             label={translate("NetworkTools.UI.Generate.XSpacing") ?? ""}
-                            min={4}
-                            max={500}
+                            min={xSpacingMeta.min}
+                            max={xSpacingMeta.max}
                             fractionDigits={0}
-                            onChange={(e: number) => handleConfigChange("gridXSpacing", e)}
+                            onChange={(e: number) => G.gridXSpacing.set(e)}
                         />
                     </div>
                 </div>
                 <div className={styles.controlRow}>
                     <div className={styles.sliderField}>
                         <VC.FloatSliderField
-                            value={gridConfig.gridZSpacing}
+                            value={gridZSpacing}
                             label={translate("NetworkTools.UI.Generate.ZSpacing") ?? ""}
-                            min={4}
-                            max={500}
+                            min={zSpacingMeta.min}
+                            max={zSpacingMeta.max}
                             fractionDigits={0}
-                            onChange={(e: number) => handleConfigChange("gridZSpacing", e)}
+                            onChange={(e: number) => G.gridZSpacing.set(e)}
                         />
                     </div>
                 </div>
                 <div className={styles.controlRow}>
                     <div className={styles.sliderField}>
                         <VC.FloatSliderField
-                            value={gridConfig.gridXNum}
+                            value={gridXNum}
                             label={translate("NetworkTools.UI.Generate.XCount") ?? ""}
-                            min={1}
-                            max={20}
+                            min={xNumMeta.min}
+                            max={xNumMeta.max}
                             fractionDigits={0}
-                            onChange={(e: number) => handleConfigChange("gridXNum", Math.round(e))}
+                            onChange={(e: number) => G.gridXNum.set(Math.round(e))}
                         />
                     </div>
                 </div>
                 <div className={styles.controlRow}>
                     <div className={styles.sliderField}>
                         <VC.FloatSliderField
-                            value={gridConfig.gridZNum}
+                            value={gridZNum}
                             label={translate("NetworkTools.UI.Generate.ZCount") ?? ""}
-                            min={1}
-                            max={20}
+                            min={zNumMeta.min}
+                            max={zNumMeta.max}
                             fractionDigits={0}
-                            onChange={(e: number) => handleConfigChange("gridZNum", Math.round(e))}
+                            onChange={(e: number) => G.gridZNum.set(Math.round(e))}
                         />
                     </div>
                 </div>

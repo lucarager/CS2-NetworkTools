@@ -11,8 +11,22 @@ namespace NetworkTools.Systems.Tools.Generate {
     ///     Job scheduling and output methods for <see cref="NT_GenerateToolSystem"/>.
     /// </summary>
     public partial class NT_GenerateToolSystem {
+        /// <summary>
+        ///     Builds a Burst-compatible snapshot struct from the current parameter values.
+        /// </summary>
+        internal GenerateJobConfig BuildJobConfig() {
+            return new GenerateJobConfig {
+                StartPosition  = m_StartPosition,
+                StartDirection = m_StartDirection,
+                GridXSpacing   = GridXSpacing.Value,
+                GridZSpacing   = GridZSpacing.Value,
+                GridXNum       = GridXNum.Value,
+                GridZNum       = GridZNum.Value,
+            };
+        }
+
         private JobHandle ScheduleDefinitionsJob(JobHandle inputDeps, ToolOutputMode outputMode) {
-            m_Log.Debug($"ScheduleDefinitionsJob: Mode={CurrentMode}");
+            m_Log.Debug($"ScheduleDefinitionsJob: Mode={Mode.Value}");
 
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
@@ -26,8 +40,8 @@ namespace NetworkTools.Systems.Tools.Generate {
             }
 
             var jobHandle = new CreateDefinitionsJob {
-                Mode                   = CurrentMode,
-                Config                 = CurrentConfig,
+                Mode                   = Mode.Value,
+                Config                 = BuildJobConfig(),
                 NetPrefabEntity        = m_SelectedNetPrefabEntity,
                 NetLanePrefabEntity    = m_SelectedNetLanePrefabEntity,
                 OutputMode             = outputMode,
@@ -50,19 +64,15 @@ namespace NetworkTools.Systems.Tools.Generate {
         }
 
         private JobHandle Update(JobHandle inputDeps) {
-            // Check if we can reuse existing temp entities
-            // This will be true if the selected nodes and operation config didn't change
             if (!m_UpdateNeeded)
             {
                 applyMode = ApplyMode.None;
                 return inputDeps;
             }
 
-            // Recreate temp entities
             applyMode = ApplyMode.Clear;
             inputDeps = ScheduleDefinitionsJob(inputDeps, ToolOutputMode.Preview);
 
-            // Reset the flag after processing
             m_UpdateNeeded = false;
 
             return inputDeps;

@@ -1,4 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools.Generate {
+namespace NetworkTools.Systems.Tools.Generate {
     using NetworkTools.Systems.Tools.Base;
     using NetworkTools.Systems.Tools.Utils;
     using Unity.Collections;
@@ -10,7 +10,7 @@
         ///     Use to compute initial values that need to be stored in config
         ///     for both handle creation and transform execution.
         /// </summary>
-        void InitializeConfig(ref GenerateConfig config);
+        void InitializeConfig(ref GenerateJobConfig config);
 
         void GeneratePreview(
             in float3 StartPosition,
@@ -18,12 +18,12 @@
             ref NativeList<EdgeConfig> curves);
 
         void GenerateNetwork(
-            in  GenerateConfig       config,
+            in  GenerateJobConfig      config,
             ref NativeList<EdgeConfig> curves);
     }
 
     public interface IHandleableGenerator : IGenerator {
         TransformHandleDefinition[] GetHandleDefinitions(
-            in GenerateConfig config);
+            in GenerateJobConfig config);
     }
 }

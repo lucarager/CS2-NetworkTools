@@ -32,12 +32,10 @@
         private ValueBindingHelper<int>                  m_AvailableTargetsBinding;
         private ValueBindingHelper<int>                  m_AvailableViewsBinding;
         private ValueBindingHelper<int>                  m_ConnectModeBinding;
-        private ValueBindingHelper<int>                  m_GenerateModeBinding;
         private int                                      m_LastAvailableSnaps;
         private int                                      m_LastAvailableTargets;
         private int                                      m_LastAvailableViews;
         private int                                      m_LastConnectMode;
-        private int                                      m_LastGenerateMode;
         private Entity                                   m_LastNetPrefabEntity;
         private int                                      m_LastSelectedNodesHash;
         private string                                   m_LastSelectedPrefab;
@@ -60,7 +58,6 @@
         private ValueBindingHelper<int>                  m_SelectedSnapsBinding;
         private ValueBindingHelper<int>                  m_SelectedTargetsBinding;
         private ValueBindingHelper<int>                  m_SelectedViewsBinding;
-        private ValueBindingHelper<GenerateConfig>       m_GenerateConfigBinding;
         private ValueBindingHelper<ShapeTransformConfig> m_ShapeConfigBinding;
         private ProxyAction                              m_ToggleToolPanelAction;
         private ProxyAction                              m_OpenTool1Action;
@@ -103,12 +100,8 @@
                                                  HandleUpdateShapeConfig,
                                                  new ValueWriter<ShapeTransformConfig>(),
                                                  new ValueReader<ShapeTransformConfig>());
-            m_GenerateConfigBinding = CreateBinding("GENERATE_CONFIG",
-                                                 new GenerateConfig(),
-                                                 HandleUpdateGenerateConfig,
-                                                 new ValueWriter<GenerateConfig>(),
-                                                 new ValueReader<GenerateConfig>());
             RegisterToolParameterBindings(m_NtParallelToolSystem);
+            RegisterToolParameterBindings(m_NtGenerateToolSystem);
             m_ConnectModeBinding      = CreateBinding("CONNECT_MODE", (int)ConnectMode.None, HandleUpdateConnectMode);
             m_AvailableSnapsBinding   = CreateBinding("AVAILABLE_SNAPS",   (int)SnapOption.None);
             m_SelectedSnapsBinding    = CreateBinding("SELECTED_SNAPS",    (int)SnapOption.None, HandleUpdateSelectedSnaps);
@@ -116,7 +109,6 @@
             m_SelectedTargetsBinding  = CreateBinding("SELECTED_TARGETS",  (int)TargetOption.All, HandleUpdateSelectedTargets);
             m_AvailableViewsBinding   = CreateBinding("AVAILABLE_VIEWS",   (int)ViewOption.All);
             m_SelectedViewsBinding    = CreateBinding("SELECTED_VIEWS",    (int)ViewOption.None, HandleUpdateSelectedViews);
-            m_GenerateModeBinding     = CreateBinding("GENERATE_MODE", (int)GenerateMode.None, HandleUpdateGenerateMode);
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
             CreateTrigger("REQUEST_APPLY", HandleRequestApply);
@@ -181,12 +173,15 @@
             if (param is FloatParameter fp) {
                 var b = CreateBinding(fp.Key, fp.Value, (float v) => fp.Value = v);
                 fp.OnChanged += () => b.Value = fp.Value;
+            } else if (param is IntParameter ip) {
+                var b = CreateBinding(ip.Key, ip.Value, (int v) => ip.Value = v);
+                ip.OnChanged += () => b.Value = ip.Value;
             } else if (param is BoolParameter bp) {
                 var b = CreateBinding(bp.Key, bp.Value, (bool v) => bp.Value = v);
                 bp.OnChanged += () => b.Value = bp.Value;
             } else if (param is IEnumParameter ep) {
                 var b = CreateBinding(ep.Key, ep.IntValue, (int v) => ep.IntValue = v);
-                param.OnChanged += () => b.Value = ep.IntValue;   // OnChanged is on ParameterBase, not IEnumParameter
+                param.OnChanged += () => b.Value = ep.IntValue;
             }
         }
 

@@ -19,13 +19,13 @@ namespace NetworkTools.Systems.Tools.Generate {
         [BurstCompile]
 #endif
         internal struct CreateDefinitionsJob : IJob {
-            [ReadOnly] public required GenerateMode   Mode;
-            [ReadOnly] public required GenerateConfig Config;
-            [ReadOnly] public required ToolOutputMode OutputMode;
-            [ReadOnly] public required Entity         NetPrefabEntity;
-            [ReadOnly] public required Entity         NetLanePrefabEntity;
-            [ReadOnly] public required bool           IsHoverPreview;
-            [ReadOnly] public required ControlPoint   ControlPoint;
+            [ReadOnly] public required GenerateMode      Mode;
+            [ReadOnly] public required GenerateJobConfig Config;
+            [ReadOnly] public required ToolOutputMode    OutputMode;
+            [ReadOnly] public required Entity            NetPrefabEntity;
+            [ReadOnly] public required Entity            NetLanePrefabEntity;
+            [ReadOnly] public required bool              IsHoverPreview;
+            [ReadOnly] public required ControlPoint      ControlPoint;
 
             [ReadOnly] public required ComponentLookup<Node> NodeLookup;
             [ReadOnly] public required ComponentLookup<PrefabRef> PrefabRefLookup;
@@ -61,67 +61,9 @@ namespace NetworkTools.Systems.Tools.Generate {
 
                 // Cleanup
                 curves.Dispose();
-
-                //// Derive rotated direction vectors from the config angle.
-                //var angleRad = math.radians(Config.Angle);
-                //var xDir     = new float3(math.cos(angleRad),  0f, math.sin(angleRad));
-                //var zDir     = new float3(-math.sin(angleRad), 0f, math.cos(angleRad));
-
-                //var origin = Config.StartPosition;
-                //var xCount = Config.XNum + 1; // node count along X
-                //var zCount = Config.ZNum + 1; // node count along Z
-
-                //// Precompute all grid node positions once so that every segment
-                //// referencing the same intersection gets a bit-identical float3.
-                //var nodes = new NativeArray<float3>(xCount * zCount, Allocator.Temp);
-                //for (var j = 0; j < zCount; j++) {
-                //    for (var i = 0; i < xCount; i++) {
-                //        nodes[j * xCount + i] = origin
-                //                               + xDir * (i * Config.XSpacing)
-                //                               + zDir * (j * Config.ZSpacing);
-                //    }
-                //}
-
-                //// X-direction segments: for each row j, emit segments (i,j) → (i+1,j).
-                //for (var j = 0; j < zCount; j++) {
-                //    var isParallel = j != 0;
-                //    for (var i = 0; i < Config.XNum; i++) {
-                //        var startPos = nodes[j * xCount + i];
-                //        var endPos   = nodes[j * xCount + i + 1];
-                //        OutputStraightEdge(startPos, endPos, isParallel);
-                //    }
-                //}
-
-                //// Z-direction segments: for each column i, emit segments (i,j) → (i,j+1).
-                //for (var i = 0; i < xCount; i++) {
-                //    var isParallel = i != 0;
-                //    for (var j = 0; j < Config.ZNum; j++) {
-                //        var startPos = nodes[j       * xCount + i];
-                //        var endPos   = nodes[(j + 1) * xCount + i];
-                //        OutputStraightEdge(startPos, endPos, isParallel);
-                //    }
-                //}
-
-                //nodes.Dispose();
             }
 
-            //private void OutputStraightEdge(float3 startPos, float3 endPos, bool isParallel) {
-            //    var length = math.distance(startPos, endPos);
-            //    if (length < math.EPSILON) {
-            //        return;
-            //    }
-
-            //    var bezier = new Bezier4x3(startPos,
-            //                               math.lerp(startPos, endPos, 1f / 3f),
-            //                               math.lerp(startPos, endPos, 2f / 3f),
-            //                               endPos);
-
-            //    OutputPreviewEdge(startPos, endPos, bezier, length, default, isParallel);
-            //}
-
-
             private void Output(NativeList<EdgeConfig> curves) {
-                // Output selected edges
                 for (var i = 0; i < curves.Length; i++)
                 {
                     var curve = curves[i];

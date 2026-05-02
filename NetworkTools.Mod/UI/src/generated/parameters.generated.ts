@@ -2,10 +2,18 @@
 
 import { TwoWayBinding } from "utils/bidirectionalBinding";
 
+export enum GenerateMode { None = 0, Grid = 1, Circle = 2 }
 export enum ParallelSide { Left = 0, Right = 1 }
 export enum VerticalSide { Up = 0, Down = 1 }
 
 export const PARAM_KEYS = {
+    generate: {
+        mode: "generate.mode",
+        gridXSpacing: "generate.gridXSpacing",
+        gridZSpacing: "generate.gridZSpacing",
+        gridXNum: "generate.gridXNum",
+        gridZNum: "generate.gridZNum",
+    },
     parallel: {
         horizontalOffset: "parallel.horizontalOffset",
         verticalOffset: "parallel.verticalOffset",
@@ -16,6 +24,11 @@ export const PARAM_KEYS = {
 } as const;
 
 export const PARAM_META = {
+    "generate.mode": { type: "enum", enumType: "GenerateMode", default: 1, modes: 0 },
+    "generate.gridXSpacing": { type: "float", default: 80, min: 4, max: 500, modes: 0 },
+    "generate.gridZSpacing": { type: "float", default: 80, min: 4, max: 500, modes: 0 },
+    "generate.gridXNum": { type: "int", default: 2, min: 1, max: 20, modes: 0 },
+    "generate.gridZNum": { type: "int", default: 2, min: 1, max: 20, modes: 0 },
     "parallel.horizontalOffset": { type: "float", default: 20, min: 0, max: 80, modes: 0 },
     "parallel.verticalOffset": { type: "float", default: 0, min: 0, max: 80, modes: 0 },
     "parallel.horizontalDirection": { type: "enum", enumType: "ParallelSide", default: 1, modes: 0 },
@@ -24,6 +37,13 @@ export const PARAM_META = {
 } as const;
 
 export const PARAM_BINDINGS = {
+    generate: {
+        mode: new TwoWayBinding<number>("generate.mode", 1),
+        gridXSpacing: new TwoWayBinding<number>("generate.gridXSpacing", 80),
+        gridZSpacing: new TwoWayBinding<number>("generate.gridZSpacing", 80),
+        gridXNum: new TwoWayBinding<number>("generate.gridXNum", 2),
+        gridZNum: new TwoWayBinding<number>("generate.gridZNum", 2),
+    },
     parallel: {
         horizontalOffset: new TwoWayBinding<number>("parallel.horizontalOffset", 20),
         verticalOffset: new TwoWayBinding<number>("parallel.verticalOffset", 0),

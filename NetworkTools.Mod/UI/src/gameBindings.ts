@@ -60,12 +60,6 @@ export enum ConnectMode {
     Loop = 3,
 }
 
-export enum GenerateMode {
-    None = 0,
-    Grid = 1,
-    Circle = 2,
-}
-
 // Snap options (bitflags)
 export enum SnapOption {
     None = 0,
@@ -121,31 +115,12 @@ export const EMPTY_NET_PREFAB_DATA: NetPrefabData = {
     Name: "",
 };
 
-export type GenerateConfigData = {
-    gridXSpacing: number;
-    gridZSpacing: number;
-    gridXNum: number;
-    gridZNum: number;
-};
-
-export const DEFAULT_GENERATE_CONFIG: GenerateConfigData = {
-    gridXSpacing: 80,
-    gridZSpacing: 80,
-    gridXNum: 2,
-    gridZNum: 2,
-};
-
 export const GAME_BINDINGS = {
     UI_DATA: new TwoWayBinding<ToolUIData[]>("UI_DATA", []),
     SELECTED_ENTITIES: new TwoWayBinding<ToolSelectionData[]>("SELECTED_ENTITIES", []),
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
     PANEL_OPEN: new TwoWayBinding<boolean>("PANEL_OPEN", false),
     SHAPE_CONFIG: new TwoWayBinding<ShapeConfigData>("SHAPE_CONFIG", DEFAULT_SHAPE_CONFIG),
-    GENERATE_CONFIG: new TwoWayBinding<GenerateConfigData>(
-        "GENERATE_CONFIG",
-        DEFAULT_GENERATE_CONFIG,
-    ),
-    GENERATE_MODE: new TwoWayBinding<number>("GENERATE_MODE", GenerateMode.Grid),
     CONNECT_MODE: new TwoWayBinding<number>("CONNECT_MODE", ConnectMode.None),
     SELECTED_NET_PREFAB: new TwoWayBinding<NetPrefabData>(
         "SELECTED_NET_PREFAB",

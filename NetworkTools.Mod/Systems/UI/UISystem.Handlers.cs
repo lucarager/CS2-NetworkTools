@@ -67,9 +67,10 @@ namespace NetworkTools.Systems.UI {
                     m_ShapeConfigBinding.Value = m_NtRoadShapeToolSystem.ShapeTransformConfig;
                 }
 
-                // Sync grid config binding when the grid tool is activated
+                // Re-sync per-parameter bindings when the generate tool is activated
                 if (m_ToolSystem.activeTool == m_NtGenerateToolSystem) {
-                    m_GenerateConfigBinding.Value = m_NtGenerateToolSystem.CurrentConfig;
+                    foreach (var p in m_NtGenerateToolSystem.Parameters)
+                        p.ForceNotify();
                 }
 
                 // Re-sync per-parameter bindings when the parallel tool is activated
@@ -87,18 +88,6 @@ namespace NetworkTools.Systems.UI {
             m_ConnectModeBinding.Value = mode;
         }
 
-        private void HandleUpdateGenerateMode(int mode) {
-            m_Log.Debug($"HandleUpdateGenerateMode(mode: {mode})");
-            var generateMode = (GenerateMode)mode;
-            m_NtGenerateToolSystem.SetMode(generateMode);
-            m_GenerateModeBinding.Value = mode;
-        }
-
-        private void HandleUpdateGenerateConfig(GenerateConfig configData) {
-            m_Log.Debug("HandleUpdateGenerateConfig");
-            m_GenerateConfigBinding.Value = configData;
-            m_NtGenerateToolSystem.UpdateConfig(configData);
-        }
 
         private void HandleRequestApply() {
             m_Log.Debug($"HandleRequestApply() -- validRequest={m_ToolSystem.activeTool is IManualApplyProvider}");

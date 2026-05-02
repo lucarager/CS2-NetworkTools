@@ -58,13 +58,6 @@ namespace NetworkTools.Systems.UI {
                 m_ConnectModeBinding.Value = currentConnectMode;
             }
 
-            // Update generate mode binding when the tool changes it
-            var currentGenerateMode = (int)m_NtGenerateToolSystem.CurrentMode;
-            if (currentGenerateMode != m_LastGenerateMode)
-            {
-                m_LastGenerateMode = currentGenerateMode;
-                m_GenerateModeBinding.Value = currentGenerateMode;
-            }
 
             // Update net prefab binding when the active tool's selection changes
             if (m_ToolSystem.activeTool is NT_BaseToolSystem prefabSelectionProvider and INetPrefabSelectionProvider) {

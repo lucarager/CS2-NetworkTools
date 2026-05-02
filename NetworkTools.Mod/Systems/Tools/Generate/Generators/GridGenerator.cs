@@ -1,4 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools.Generate {
+namespace NetworkTools.Systems.Tools.Generate {
     using Colossal.Mathematics;
     using Game.Tools;
     using NetworkTools.Components.Handles;
@@ -10,19 +10,18 @@
     public struct GridGenerator : IGenerator, IHandleableGenerator {
         private const float PreviewDistance = 32f;
 
-        public void InitializeConfig(ref GenerateConfig config) {
+        public void InitializeConfig(ref GenerateJobConfig config) {
         }
 
         public void GeneratePreview(
             in  float3                 StartPosition,
             in  quaternion             StartDirection,
             ref NativeList<EdgeConfig> curves) {
-            // Create a rectangle to preview the grid
             GenerateGrid(StartPosition, StartDirection, PreviewDistance, PreviewDistance, 3, 3, ref curves);
         }
 
         public void GenerateNetwork(
-            in  GenerateConfig         config,
+            in  GenerateJobConfig      config,
             ref NativeList<EdgeConfig> curves) {
             GenerateGrid(config.StartPosition,
                          config.StartDirection,
@@ -42,12 +41,9 @@
             int                        zNum,
             ref NativeList<EdgeConfig> curves
         ) {
-            // Compute rotated direction vectors from the config angle.
             var xDir = math.mul(startDirection, new float3(1, 0, 0));
             var zDir = math.mul(startDirection, new float3(0, 0, 1));
 
-            // Precompute all grid node positions once so that every segment
-            // referencing the same intersection gets a bit - identical float3.
             var nodes = new NativeArray<float3>(xNum * zNum, Allocator.Temp);
             for (var j = 0; j < zNum; j++) {
                 for (var i = 0; i < xNum; i++) {
@@ -109,7 +105,7 @@
         }
 
         public TransformHandleDefinition[] GetHandleDefinitions(
-            in GenerateConfig config) {
+            in GenerateJobConfig config) {
             return new[] {
                 new TransformHandleDefinition {
                     Key       = HandleKeys.StartPosition,
