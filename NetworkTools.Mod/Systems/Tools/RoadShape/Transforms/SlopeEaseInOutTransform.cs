@@ -1,8 +1,10 @@
 ﻿namespace NetworkTools.Systems.Tools.RoadShape {
+    using System.Collections.Generic;
     using Colossal.Json;
     using Colossal.Mathematics;
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools.Base;
     using Unity.Collections;
     using Unity.Mathematics;
@@ -15,7 +17,7 @@
     /// - EaseOutLength: how far from the end the slope starts to level off
     /// Implements IHandleableTransformation to provide draggable control point handles.
     /// </summary>
-    public struct SlopeEaseInOutTransform : IHandleableTransformation {
+    public struct SlopeEaseInOutTransform : IPathTransformation {
         /// <summary>
         /// Reference bezier curve used to sample heights at path ratios.
         /// Built in PreProcess with control points positioned to create the ease-in-out shape.
@@ -76,12 +78,13 @@
         /// Returns handle definitions for ease-in and ease-out control points.
         /// Handles are constrained to move along the direction of their respective edge segments.
         /// </summary>
-        public TransformHandleDefinition[] GetHandleDefinitions(
+        public static TransformHandleDefinition[] BuildHandleDefinitions(
             in ShapeTransformContext ctx,
             in ShapeJobConfig config,
             float3 pathStartPos,
             float3 pathEndPos,
-            in NativeArray<EdgeState> edgeStates) {
+            in NativeArray<EdgeState> edgeStates,
+            IReadOnlyDictionary<string, ParameterBase> parameters) {
 
             if (edgeStates.Length == 0) {
                 return System.Array.Empty<TransformHandleDefinition>();
@@ -132,7 +135,7 @@
 
             return new[] {
                 new TransformHandleDefinition {
-                    Key = HandleKeys.EaseInLength,
+                    Key = 1,
                     Position = easeInPos,
                     TypeFlags = HandleTypeFlags.SlopeControl | HandleTypeFlags.Parameter | HandleTypeFlags.ParameterRange,
                     Value = config.EaseInLength,
@@ -140,9 +143,10 @@
                     MaxValue = config.EaseInMax,
                     // Constrain to first edge direction with distance clamping (0 to halfPathLength)
                     Constraints = NT_HandleConstraints.AxisWithBounds(easeInDirection, pathStartPos + elevation, 0f, halfPathLength),
+                    Parameter = parameters["roadShape.easeInLength"]
                 },
                 new TransformHandleDefinition {
-                    Key = HandleKeys.EaseOutLength,
+                    Key = 2,
                     Position = easeOutPos,
                     TypeFlags = HandleTypeFlags.SlopeControl | HandleTypeFlags.Parameter | HandleTypeFlags.ParameterRange,
                     Value = config.EaseOutLength,
@@ -150,6 +154,7 @@
                     MaxValue = config.EaseOutMax,
                     // Constrain to last edge direction (reversed) with distance clamping (0 to halfPathLength)
                     Constraints = NT_HandleConstraints.AxisWithBounds(easeOutDirection, pathEndPos + elevation, 0f, halfPathLength),
+                    Parameter = parameters["roadShape.easeOutLength"]
                 },
             };
         }

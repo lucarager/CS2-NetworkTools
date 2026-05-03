@@ -187,8 +187,8 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             var config = BuildJobConfig();
             switch (config.Template) {
                 case ShapeTransformTemplate.SlopeEaseInOut:
-                    var easeInOutTransform = new SlopeEaseInOutTransform();
-                    return easeInOutTransform.GetHandleDefinitions(m_ShapeTransformContext, config, pathStartPos, pathEndPos, in edgeStatesArray);
+                    return SlopeEaseInOutTransform.BuildHandleDefinitions(
+                        m_ShapeTransformContext, config, pathStartPos, pathEndPos, in edgeStatesArray, ParametersByKey);
 
                 case ShapeTransformTemplate.SlopeLinear:
                 case ShapeTransformTemplate.CurveStraighten:

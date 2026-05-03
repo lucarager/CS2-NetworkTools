@@ -1,5 +1,4 @@
 namespace NetworkTools.Systems.Tools.Connect {
-    using NetworkTools.Systems.Tools.Base;
     using Unity.Collections;
 
     public interface IConnectionGenerator {
@@ -12,10 +11,5 @@ namespace NetworkTools.Systems.Tools.Connect {
         void GenerateConnection(
             in  ConnectJobConfig     config,
             ref NativeList<CurveDef> curves);
-    }
-
-    public interface IHandleableConnectionGenerator : IConnectionGenerator {
-        TransformHandleDefinition[] GetHandleDefinitions(
-            in ConnectJobConfig config);
     }
 }

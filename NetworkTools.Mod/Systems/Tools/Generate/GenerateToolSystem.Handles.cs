@@ -27,40 +27,11 @@ namespace NetworkTools.Systems.Tools.Generate {
 
             switch (Mode.Value) {
                 case GenerateMode.Grid:
-                    return new GridGenerator().GetHandleDefinitions(jobConfig);
+                    return GridGenerator.BuildHandleDefinitions(jobConfig, ParametersByKey);
                 case GenerateMode.Circle:
                     return null;
                 default:
                     return System.Array.Empty<TransformHandleDefinition>();
-            }
-        }
-
-        /// <inheritdoc />
-        protected override void OnParameterHandleDragged(Entity handle, int key, float3 position, float value) {
-            m_Log.Debug($"OnParameterHandleDragged: key={key}, value={value}");
-        }
-
-        /// <inheritdoc />
-        protected override void OnPositionHandleDragged(Entity handle, int key, float3 position) {
-            m_Log.Debug($"OnPositionHandleDragged: key={key}, position={position}");
-
-            if (key == HandleKeys.StartPosition) {
-                StartPosition.Value = position;
-            }
-        }
-
-        /// <inheritdoc />
-        protected override float3 GetHandleConfigPosition(int key) {
-            if (key == HandleKeys.StartPosition)
-                return StartPosition.Value;
-
-            return float3.zero;
-        }
-
-        /// <inheritdoc />
-        protected override void ApplyHandleConfigPosition(int key, float3 position) {
-            if (key == HandleKeys.StartPosition) {
-                StartPosition.Value = position;
             }
         }
     }

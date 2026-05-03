@@ -18,7 +18,7 @@ namespace NetworkTools.Systems.Tools.Connect {
         /// <inheritdoc />
         public override TargetOption AvailableTargets => TargetOption.Road | TargetOption.Path;
 
-        // ── Parameters (declarative, reflection-driven) ──────────────────────────
+        // ── Parameters 
 
         public EnumParameter<ConnectMode> Mode       = new("connect.mode", ConnectMode.None);
         public FloatParameter             LoopRadius = new("connect.loopRadius", 50f, 1f, 500f, modes: (int)ConnectMode.Loop);
@@ -38,7 +38,7 @@ namespace NetworkTools.Systems.Tools.Connect {
         // Loop (from generator init + handle drags)
         public Float3Parameter LoopControlPointPosition = new("connect.loopControlPointPosition", modes: (int)ConnectMode.Loop);
 
-        // ── Non-parameter state ──────────────────────────────────────────────────
+        // ── Non-parameter state 
 
         /// <summary>
         ///     Caches the last hit position for tool-specific use.

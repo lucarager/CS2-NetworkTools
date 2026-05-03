@@ -1,13 +1,15 @@
 namespace NetworkTools.Systems.Tools.Generate {
+    using System.Collections.Generic;
     using Colossal.Mathematics;
     using Game.Tools;
     using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools.Base;
     using NetworkTools.Systems.Tools.Utils;
     using Unity.Collections;
     using Unity.Mathematics;
 
-    public struct GridGenerator : IGenerator, IHandleableGenerator {
+    public struct GridGenerator : IGenerator {
         private const float PreviewDistance = 32f;
 
         public void InitializeConfig(ref GenerateJobConfig config) {
@@ -104,14 +106,19 @@ namespace NetworkTools.Systems.Tools.Generate {
             return CoursePosFlags.IsParallel;
         }
 
-        public TransformHandleDefinition[] GetHandleDefinitions(
-            in GenerateJobConfig config) {
+        /// <summary>
+        ///     Builds handle definitions for Grid mode with parameter references bound directly.
+        /// </summary>
+        public static TransformHandleDefinition[] BuildHandleDefinitions(
+            in GenerateJobConfig config,
+            IReadOnlyDictionary<string, ParameterBase> parameters) {
             return new[] {
                 new TransformHandleDefinition {
-                    Key       = HandleKeys.StartPosition,
+                    Key       = 1,
                     TypeFlags = HandleTypeFlags.Position,
                     Position  = config.StartPosition,
-                    Radius    = NT_Handle.PrimaryRadius
+                    Radius    = NT_Handle.PrimaryRadius,
+                    Parameter = parameters["generate.startPosition"]
                 }
             };
         }

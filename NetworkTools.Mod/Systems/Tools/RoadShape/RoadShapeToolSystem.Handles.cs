@@ -1,46 +1,39 @@
 namespace NetworkTools.Systems.Tools.RoadShape {
-    using Game.Common;
-    using Game.Notifications;
-    using Game.Net;
-    using Game.Prefabs;
-    using Game.Tools;
-
     using NetworkTools.Components.Handles;
-    using NetworkTools.Components;
-    using NetworkTools.Components.Tools;
+    using NetworkTools.Systems.Parameters;
 
     using Unity.Entities;
-    using Unity.Mathematics;
     using Unity.Jobs;
+    using Unity.Mathematics;
     using Unity.Collections;
 
     public partial class NT_RoadShapeToolSystem {
         /// <inheritdoc />
-        protected override void OnParameterHandleDragged(Entity handle, int key, float3 position, float value) {
-            m_Log.Debug($"OnParameterHandleDragged: key={key}, position={position}, value={value}");
+        protected override void OnParameterHandleDragged(Entity handle, float3 position, float value) {
+            m_Log.Debug($"OnParameterHandleDragged: position={position}, value={value}");
 
-            switch (key) {
-                case HandleKeys.EaseInLength:
-                    var easeInAxis = GetHandleConstraintAxisXZ(handle, m_ShapeTransformContext.StartPosition, m_ShapeTransformContext.EndPosition);
-                    var easeInParam = CalculateEaseParameter(
-                        position,
-                        m_ShapeTransformContext.StartPosition,
-                        m_ShapeTransformContext.EndPosition,
-                        easeInAxis);
-                    m_Log.Debug($"EaseInLength: {EaseInLength.Value} -> {easeInParam}");
-                    EaseInLength.Value = easeInParam;
-                    break;
+            if (!m_HandleParameterMap.TryGetValue(handle, out var param)) {
+                return;
+            }
 
-                case HandleKeys.EaseOutLength:
-                    var easeOutAxis = GetHandleConstraintAxisXZ(handle, m_ShapeTransformContext.EndPosition, m_ShapeTransformContext.StartPosition);
-                    var easeOutParam = CalculateEaseParameter(
-                        position,
-                        m_ShapeTransformContext.EndPosition,
-                        m_ShapeTransformContext.StartPosition,
-                        easeOutAxis);
-                    m_Log.Debug($"EaseOutLength: {EaseOutLength.Value} -> {easeOutParam}");
-                    EaseOutLength.Value = easeOutParam;
-                    break;
+            if (param == EaseInLength) {
+                var axis = GetHandleConstraintAxisXZ(handle, m_ShapeTransformContext.StartPosition, m_ShapeTransformContext.EndPosition);
+                var easeParam = CalculateEaseParameter(
+                    position,
+                    m_ShapeTransformContext.StartPosition,
+                    m_ShapeTransformContext.EndPosition,
+                    axis);
+                m_Log.Debug($"EaseInLength: {EaseInLength.Value} -> {easeParam}");
+                EaseInLength.Value = easeParam;
+            } else if (param == EaseOutLength) {
+                var axis = GetHandleConstraintAxisXZ(handle, m_ShapeTransformContext.EndPosition, m_ShapeTransformContext.StartPosition);
+                var easeParam = CalculateEaseParameter(
+                    position,
+                    m_ShapeTransformContext.EndPosition,
+                    m_ShapeTransformContext.StartPosition,
+                    axis);
+                m_Log.Debug($"EaseOutLength: {EaseOutLength.Value} -> {easeParam}");
+                EaseOutLength.Value = easeParam;
             }
         }
 

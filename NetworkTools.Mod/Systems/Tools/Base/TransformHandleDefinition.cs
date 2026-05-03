@@ -1,11 +1,6 @@
 ﻿namespace NetworkTools.Systems.Tools.Base {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-
     using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Parameters;
 
     using Unity.Mathematics;
 
@@ -21,7 +16,7 @@
         public int Key;
         public float3 Position;
         public HandleTypeFlags TypeFlags;
-        public float Value;        // For parameter handles
+        public float Value;
         public float MinValue;
         public float MaxValue;
         public NT_HandleConstraints? Constraints;
@@ -53,5 +48,12 @@
         /// Set to <see cref="NoParent"/> (default) for root handles.
         /// </summary>
         public int ParentKey;
+
+        /// <summary>
+        /// Direct reference to the parameter this handle controls.
+        /// When set, the base system auto-dispatches drag values to the parameter,
+        /// eliminating the need for key-based dispatch switches.
+        /// </summary>
+        public ParameterBase Parameter;
     }
 }

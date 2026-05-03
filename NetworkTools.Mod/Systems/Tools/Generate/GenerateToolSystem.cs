@@ -16,7 +16,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// <inheritdoc />
         public override TargetOption AvailableTargets => TargetOption.None;
 
-        // ── Parameters (declarative, reflection-driven) ──────────────────────────
+        // ── Parameters 
 
         public EnumParameter<GenerateMode> Mode        = new("generate.mode", GenerateMode.Grid);
         public FloatParameter              GridXSpacing = new("generate.gridXSpacing", 80f, 4f, 500f);
@@ -28,7 +28,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         public Float3Parameter      StartPosition  = new("generate.startPosition");
         public QuaternionParameter  StartDirection = new("generate.startDirection");
 
-        // ── Non-parameter state ──────────────────────────────────────────────────
+        // ── Non-parameter state 
 
         /// <summary>
         ///     Caches the last hit position for tool-specific use.

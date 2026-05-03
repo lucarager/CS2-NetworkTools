@@ -1,12 +1,13 @@
 namespace NetworkTools.Systems.Tools.Connect {
+    using System.Collections.Generic;
     using Colossal.Mathematics;
     using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools.Base;
     using Unity.Collections;
     using Unity.Mathematics;
 
-    public struct LoopGenerator : IConnectionGenerator, IHandleableConnectionGenerator {
-
+    public struct LoopGenerator : IConnectionGenerator {
         /// <summary>
         /// Kappa constant for cubic Bezier approximation of a 90-degree circular arc.
         /// κ = 4(√2 - 1) / 3
@@ -146,38 +147,52 @@ namespace NetworkTools.Systems.Tools.Connect {
             };
         }
 
-        public TransformHandleDefinition[] GetHandleDefinitions(
-            in ConnectJobConfig config) {
+        /// <summary>
+        ///     Builds handle definitions for Loop mode with parameter references bound directly.
+        /// </summary>
+        public static TransformHandleDefinition[] BuildHandleDefinitions(
+            in ConnectJobConfig config,
+            IReadOnlyDictionary<string, ParameterBase> parameters) {
+            // Keys used only for parent-child resolution within this definition set
+            const int keyControlPoint = 1;
+            const int keyRadius       = 2;
+            const int keyStartDir     = 3;
+            const int keyEndDir       = 4;
+
             return new[] {
                 new TransformHandleDefinition {
-                    Key = HandleKeys.LoopControlPointPosition,
+                    Key       = keyControlPoint,
                     TypeFlags = HandleTypeFlags.Position,
-                    Position = config.LoopControlPointPosition,
-                    Radius = NT_Handle.PrimaryRadius
+                    Position  = config.LoopControlPointPosition,
+                    Radius    = NT_Handle.PrimaryRadius,
+                    Parameter = parameters["connect.loopControlPointPosition"]
                 },
                 new TransformHandleDefinition {
-                    Key = HandleKeys.LoopRadius,
+                    Key       = keyRadius,
                     TypeFlags = HandleTypeFlags.Circle,
-                    Position = config.LoopControlPointPosition,
-                    Value = config.LoopRadius,
-                    Radius = NT_Handle.SecondaryRadius,
-                    ParentKey = HandleKeys.LoopControlPointPosition,
+                    Position  = config.LoopControlPointPosition,
+                    Value     = config.LoopRadius,
+                    Radius    = NT_Handle.SecondaryRadius,
+                    ParentKey = keyControlPoint,
+                    Parameter = parameters["connect.loopRadius"]
                 },
                 new TransformHandleDefinition {
-                    Key = HandleKeys.StartDirection,
-                    TypeFlags = HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
-                    Position = config.StartPosition,
-                    Value = 0,
+                    Key                = keyStartDir,
+                    TypeFlags          = HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
+                    Position           = config.StartPosition,
+                    Value              = 0,
                     ReferenceDirection = config.StartDirection,
-                    Angle = 0,
+                    Angle              = 0,
+                    Parameter          = parameters["connect.startDirection"]
                 },
                 new TransformHandleDefinition {
-                    Key = HandleKeys.EndDirection,
-                    TypeFlags = HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
-                    Position = config.EndPosition,
-                    Value = 0,
+                    Key                = keyEndDir,
+                    TypeFlags          = HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
+                    Position           = config.EndPosition,
+                    Value              = 0,
                     ReferenceDirection = config.EndDirection,
-                    Angle = 0,
+                    Angle              = 0,
+                    Parameter          = parameters["connect.endDirection"]
                 },
             };
         }

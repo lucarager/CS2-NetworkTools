@@ -4,6 +4,7 @@ namespace NetworkTools.Systems.Tools {
 
     public abstract partial class NT_BaseToolSystem {
         private ParameterBase[] m_ToolParameters;
+        private Dictionary<string, ParameterBase> m_ParametersByKey;
 
         /// <summary>
         ///     All <see cref="ParameterBase" /> fields declared on the concrete tool class, in declaration order.
@@ -14,6 +15,20 @@ namespace NetworkTools.Systems.Tools {
                 if (m_ToolParameters == null)
                     m_ToolParameters = ParameterSchema.Discover(this);
                 return m_ToolParameters;
+            }
+        }
+
+        /// <summary>
+        ///     All parameters keyed by their <see cref="ParameterBase.Key" />.
+        ///     Use this when handle generators need to resolve parameter references by key.
+        /// </summary>
+        public IReadOnlyDictionary<string, ParameterBase> ParametersByKey {
+            get {
+                if (m_ParametersByKey == null) {
+                    m_ParametersByKey = new Dictionary<string, ParameterBase>(Parameters.Count);
+                    foreach (var p in Parameters) m_ParametersByKey[p.Key] = p;
+                }
+                return m_ParametersByKey;
             }
         }
 

@@ -7,12 +7,15 @@ namespace NetworkTools.Systems.Tools {
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
+
     using NetworkTools.Components;
+    using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Parameters;
+    using NetworkTools.Systems.Tools.Base;
     using NetworkTools.Utils;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
-
 
     /// <summary>
     ///     Represents the phase of the current transformation operation.
@@ -55,6 +58,11 @@ namespace NetworkTools.Systems.Tools {
                                                                 typeof(NT_SelectedLast));
 
         /// <summary>
+        ///     Global debug mode flag.
+        /// </summary>
+        public bool DebugMode;
+
+        /// <summary>
         ///     Tool requests disabling vanilla NodeReductionSystem during lifecycle
         /// </summary>
         public bool DisableVanillaNodeReduction = false;
@@ -63,11 +71,6 @@ namespace NetworkTools.Systems.Tools {
         ///     Tool requests disabling vanilla validation during lifecycle
         /// </summary>
         public bool DisableVanillaValidation = false;
-
-        /// <summary>
-        /// Global debug mode flag. 
-        /// </summary>
-        public bool DebugMode = false;
 
         /// <summary>
         ///     Which entity type this tool marks as eligible (Node or Edge).
@@ -189,6 +192,13 @@ namespace NetworkTools.Systems.Tools {
         protected EntityQuery m_UnselectedNodesWithoutEligibleQuery;
 
         /// <summary>
+        ///     Tracks whether an update/re-render is needed on the next frame.
+        ///     Set to true when something changes that requires regenerating preview entities.
+        ///     Gets reset to false after being processed by the derived tool's update loop.
+        /// </summary>
+        protected bool m_UpdateNeeded;
+
+        /// <summary>
         ///     Vanilla ValidationSystem
         /// </summary>
         protected ValidationSystem m_ValidationSystem;
@@ -197,13 +207,6 @@ namespace NetworkTools.Systems.Tools {
         ///     Phase
         /// </summary>
         public OperationPhase Phase = OperationPhase.Idle;
-
-        /// <summary>
-        ///     Tracks whether an update/re-render is needed on the next frame.
-        ///     Set to true when something changes that requires regenerating preview entities.
-        ///     Gets reset to false after being processed by the derived tool's update loop.
-        /// </summary>
-        protected bool m_UpdateNeeded;
 
         /// <summary>
         ///     Tool requests rendering edges
@@ -221,11 +224,6 @@ namespace NetworkTools.Systems.Tools {
         public bool RenderHandles = false;
 
         /// <summary>
-        ///     Tool requests rendering tooltips of slopes for selected edges
-        /// </summary>
-        public bool RenderSlopeTooltips = false;
-
-        /// <summary>
         ///     Tool requests rendering tooltips of lengths for temp edges
         /// </summary>
         public bool RenderLengthTooltips = false;
@@ -234,6 +232,11 @@ namespace NetworkTools.Systems.Tools {
         ///     Tool requests rendering tooltips for selected start/end nodes
         /// </summary>
         public bool RenderNodeTooltips = true;
+
+        /// <summary>
+        ///     Tool requests rendering tooltips of slopes for selected edges
+        /// </summary>
+        public bool RenderSlopeTooltips = false;
 
         /// <summary>
         ///     Tool requests rendering temp edges
@@ -478,11 +481,11 @@ namespace NetworkTools.Systems.Tools {
             }
 
             // Disable actions
-            m_ApplyAction.shouldBeEnabled = false;
+            m_ApplyAction.shouldBeEnabled          = false;
             m_SecondaryApplyAction.shouldBeEnabled = false;
 
             // Re-enable vanilla systems
-            m_ValidationSystem.Enabled = true;
+            m_ValidationSystem.Enabled    = true;
             m_NodeReductionSystem.Enabled = true;
 
             // Cleanup rendering state
@@ -520,7 +523,8 @@ namespace NetworkTools.Systems.Tools {
         ///     Attempts to cache a net prefab selection.
         /// </summary>
         /// <param name="prefab">The prefab offered by the game.</param>
-        /// <returns> Boolean whether the prefab was recognized and cached as the current selection. 
+        /// <returns>
+        ///     Boolean whether the prefab was recognized and cached as the current selection.
         /// </returns>
         public bool TryCacheNetPrefab(PrefabBase prefab) {
             switch (prefab) {
@@ -570,11 +574,17 @@ namespace NetworkTools.Systems.Tools {
             }
 
             // Restore persisted preferences, masked by what this tool supports
-            var settings    = NetworkToolsMod.Instance?.Settings;
-            SelectedSnaps   = settings != null ? (SnapOption)settings.SavedSelectedSnaps & AvailableSnaps : AvailableSnaps;
-            SelectedTargets = settings != null ? (TargetOption)settings.SavedSelectedTargets & AvailableTargets : AvailableTargets;
-            SelectedViews   = settings != null ? (ViewOption)settings.SavedSelectedViews & AvailableViews : ViewOption.None;
-            DebugMode       = settings?.DebugMode ?? false;
+            var settings = NetworkToolsMod.Instance?.Settings;
+            SelectedSnaps = settings != null
+                                ? (SnapOption)settings.SavedSelectedSnaps & AvailableSnaps
+                                : AvailableSnaps;
+            SelectedTargets = settings != null
+                                  ? (TargetOption)settings.SavedSelectedTargets & AvailableTargets
+                                  : AvailableTargets;
+            SelectedViews = settings != null
+                                ? (ViewOption)settings.SavedSelectedViews & AvailableViews
+                                : ViewOption.None;
+            DebugMode = settings?.DebugMode ?? false;
 
             // Reset tracking
             if (m_LastHoveredEntity.IsCreated) {
@@ -595,9 +605,9 @@ namespace NetworkTools.Systems.Tools {
             m_SecondaryApplyAction.shouldBeEnabled = false;
 
             // Re-enable vanilla systems
-            m_ValidationSystem.Enabled = true;
+            m_ValidationSystem.Enabled    = true;
             m_NodeReductionSystem.Enabled = true;
-            
+
             // Cleanup rendering state
             m_RenderingSystem.markersVisible = false;
 

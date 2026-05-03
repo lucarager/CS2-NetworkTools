@@ -53,26 +53,4 @@
         void PostProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config);
     }
 
-    /// <summary>
-    /// Optional interface for transforms that support in-world handles.
-    /// </summary>
-    public interface IHandleableTransformation : IPathTransformation {
-        /// <summary>
-        /// Gets the handle definitions for this transform.
-        /// Called by the tool system when creating handles.
-        /// Values needed for handle positioning should already be in config (from InitializeConfig).
-        /// </summary>
-        /// <param name="ctx">The transform context (path geometry).</param>
-        /// <param name="config">The transform configuration (contains computed values from InitializeConfig).</param>
-        /// <param name="pathStartPos">World position of path start.</param>
-        /// <param name="pathEndPos">World position of path end.</param>
-        /// <param name="edgeStates">All edge states in the path (for direction calculations).</param>
-        /// <returns>Array of handle definitions.</returns>
-        TransformHandleDefinition[] GetHandleDefinitions(
-            in ShapeTransformContext ctx,
-            in ShapeJobConfig config,
-            float3 pathStartPos,
-            float3 pathEndPos,
-            in NativeArray<EdgeState> edgeStates);
-    }
 }

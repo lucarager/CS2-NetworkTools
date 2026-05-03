@@ -3,6 +3,7 @@ namespace NetworkTools.Systems.Tools {
 
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools.Base;
 
     using Unity.Collections;
@@ -66,12 +67,20 @@ namespace NetworkTools.Systems.Tools {
         protected EntityQuery m_HandleQuery;
 
         /// <summary>
+        ///     Maps handle entities to the parameters they control.
+        ///     Populated during <see cref="CreateHandlesFromDefinitions"/> from
+        ///     <see cref="TransformHandleDefinition.Parameter"/> references.
+        /// </summary>
+        protected Dictionary<Entity, ParameterBase> m_HandleParameterMap;
+
+        /// <summary>
         ///     Initializes handle management. Called from OnCreate().
         /// </summary>
         protected void InitializeHandles() {
-            m_Handles          = new NativeList<Entity>(16, Allocator.Persistent);
-            m_HandleInputState = HandleInputState.Idle;
-            m_DraggedHandle    = Entity.Null;
+            m_Handles             = new NativeList<Entity>(16, Allocator.Persistent);
+            m_HandleParameterMap  = new Dictionary<Entity, ParameterBase>(16);
+            m_HandleInputState    = HandleInputState.Idle;
+            m_DraggedHandle       = Entity.Null;
 
             m_HandleQuery = SystemAPI.QueryBuilder()
                                      .WithAll<NT_Handle, NT_HandlePosition, NT_HandleLink>()
@@ -310,6 +319,7 @@ namespace NetworkTools.Systems.Tools {
         /// <summary>
         ///     Creates handle entities from an array of definitions.
         ///     Two-pass: roots first (ParentKey == NoParent), then children with NT_HandleParent resolved.
+        ///     Populates the handle-to-parameter map from <see cref="TransformHandleDefinition.Parameter"/>.
         /// </summary>
         /// <param name="definitions">Handle definitions describing position, type, and parent relationships.</param>
         protected void CreateHandlesFromDefinitions(TransformHandleDefinition[] definitions) {
@@ -326,6 +336,10 @@ namespace NetworkTools.Systems.Tools {
 
                 var entity = CreateHandleFromDefinition(def);
                 keyToEntity[def.Key] = entity;
+
+                if (def.Parameter != null) {
+                    m_HandleParameterMap[entity] = def.Parameter;
+                }
             }
 
             // Pass 2: create child handles and attach NT_HandleParent
@@ -336,6 +350,10 @@ namespace NetworkTools.Systems.Tools {
 
                 var entity = CreateHandleFromDefinition(def);
                 keyToEntity[def.Key] = entity;
+
+                if (def.Parameter != null) {
+                    m_HandleParameterMap[entity] = def.Parameter;
+                }
 
                 if (keyToEntity.TryGetValue(def.ParentKey, out var parentEntity)) {
                     EntityManager.AddComponentData(entity, new NT_HandleParent { Parent = parentEntity });
@@ -451,6 +469,7 @@ namespace NetworkTools.Systems.Tools {
             }
 
             m_Handles.Clear();
+            m_HandleParameterMap?.Clear();
         }
 
         /// <summary>
@@ -759,31 +778,33 @@ namespace NetworkTools.Systems.Tools {
 
         /// <summary>
         ///     Handles dragging for position-based handles.
-        ///     Computes the delta from the previous config position, updates the config,
-        ///     propagates movement to child handles, and syncs their config positions.
+        ///     Reads the previous position from the mapped parameter, writes the new position,
+        ///     propagates movement to child handles, and syncs their parameters.
         /// </summary>
         /// <param name="handle">The position handle entity being dragged.</param>
-        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
         /// <param name="handlePos">The handle's current world position.</param>
-        protected void HandlePositionDrag(Entity handle, int key, float3 handlePos) {
-            var previousPos = GetHandleConfigPosition(key);
+        protected void HandlePositionDrag(Entity handle, float3 handlePos) {
+            if (!m_HandleParameterMap.TryGetValue(handle, out var param) || !(param is Float3Parameter f3p)) {
+                return;
+            }
+
+            var previousPos = f3p.Value;
             var delta = handlePos - previousPos;
 
-            ApplyHandleConfigPosition(key, handlePos);
+            f3p.Value = handlePos;
 
             if (math.lengthsq(delta) > 0f) {
                 PropagateToChildren(handle, delta);
-                SyncChildConfigPositions(handle);
+                SyncChildParameterPositions(handle);
             }
         }
 
         /// <summary>
-        ///     Syncs config positions for all children of the given parent handle
-        ///     by reading each child's current position and writing it to the config
-        ///     via <see cref="ApplyHandleConfigPosition"/>.
+        ///     Syncs parameter positions for all children of the given parent handle
+        ///     by reading each child's current position and writing it to the mapped parameter.
         /// </summary>
         /// <param name="parentHandle">The parent handle whose children should be synced.</param>
-        protected void SyncChildConfigPositions(Entity parentHandle) {
+        protected void SyncChildParameterPositions(Entity parentHandle) {
             for (var i = 0; i < m_Handles.Length; i++) {
                 var child = m_Handles[i];
                 if (!EntityManager.HasComponent<NT_HandleParent>(child)) {
@@ -795,9 +816,10 @@ namespace NetworkTools.Systems.Tools {
                     continue;
                 }
 
-                var childLink = EntityManager.GetComponentData<NT_HandleLink>(child);
-                var childPos  = EntityManager.GetComponentData<NT_HandlePosition>(child).Position;
-                ApplyHandleConfigPosition(childLink.Key, childPos);
+                var childPos = EntityManager.GetComponentData<NT_HandlePosition>(child).Position;
+                if (m_HandleParameterMap.TryGetValue(child, out var childParam) && childParam is Float3Parameter f3p) {
+                    f3p.Value = childPos;
+                }
             }
         }
 
@@ -927,26 +949,6 @@ namespace NetworkTools.Systems.Tools {
         #region Virtual Hooks
 
         /// <summary>
-        ///     Returns the current config position for a handle key.
-        ///     Override in derived tools to map handle keys to config fields.
-        /// </summary>
-        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
-        /// <returns>The position stored in the tool's config, or <see cref="float3.zero"/> if unmapped.</returns>
-        protected virtual float3 GetHandleConfigPosition(int key) {
-            return float3.zero;
-        }
-
-        /// <summary>
-        ///     Writes a position to the config field identified by the handle key.
-        ///     Override in derived tools to map handle keys to config fields.
-        /// </summary>
-        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
-        /// <param name="position">The new position value.</param>
-        protected virtual void ApplyHandleConfigPosition(int key, float3 position) {
-            // Override in derived tools
-        }
-
-        /// <summary>
         ///     Called when a handle drag operation starts.
         /// </summary>
         /// <param name="handle">The handle entity being dragged.</param>
@@ -972,48 +974,49 @@ namespace NetworkTools.Systems.Tools {
 
         /// <summary>
         ///     Called each frame while dragging a position handle.
-        ///     The handle's ECS position has already been updated before this call.
+        ///     Default implementation auto-dispatches to the mapped <see cref="Float3Parameter"/>
+        ///     via <see cref="HandlePositionDrag"/>.
         /// </summary>
         /// <param name="handle">The handle entity being dragged.</param>
-        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
         /// <param name="position">The handle's updated world position.</param>
-        protected virtual void OnPositionHandleDragged(Entity handle, int key, float3 position) {
-            // Override in derived tools
+        protected virtual void OnPositionHandleDragged(Entity handle, float3 position) {
+            HandlePositionDrag(handle, position);
         }
 
         /// <summary>
         ///     Called each frame while dragging a parameter handle.
-        ///     The handle's ECS position has already been updated before this call.
+        ///     Override for custom computation before setting the parameter value.
         /// </summary>
         /// <param name="handle">The handle entity being dragged.</param>
-        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
         /// <param name="position">The handle's updated world position.</param>
         /// <param name="value">The current <see cref="NT_HandleValue.Value"/>.</param>
-        protected virtual void OnParameterHandleDragged(Entity handle, int key, float3 position, float value) {
-            // Override in derived tools
+        protected virtual void OnParameterHandleDragged(Entity handle, float3 position, float value) {
+            // Override in derived tools for custom computation
         }
 
         /// <summary>
         ///     Called each frame while dragging a circle handle.
-        ///     The circle's radius has already been recomputed from the mouse position.
+        ///     Default implementation auto-dispatches to the mapped <see cref="FloatParameter"/>.
         /// </summary>
         /// <param name="handle">The circle handle entity being dragged.</param>
-        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
         /// <param name="radius">The newly computed radius.</param>
-        protected virtual void OnCircleHandleDragged(Entity handle, int key, float radius) {
-            // Override in derived tools
+        protected virtual void OnCircleHandleDragged(Entity handle, float radius) {
+            if (m_HandleParameterMap.TryGetValue(handle, out var param) && param is FloatParameter fp) {
+                fp.Value = radius;
+            }
         }
 
         /// <summary>
         ///     Called each frame while dragging a rotation handle.
-        ///     The rotation's angle has already been recomputed from the mouse position.
+        ///     Default implementation auto-dispatches the direction to the mapped <see cref="Float3Parameter"/>.
         /// </summary>
         /// <param name="handle">The rotation handle entity being dragged.</param>
-        /// <param name="key">The handle key from <see cref="NT_HandleLink.Key"/>.</param>
         /// <param name="angle">The newly computed angle in radians.</param>
         /// <param name="direction">The unit direction on the rotation plane at the current angle.</param>
-        protected virtual void OnRotationHandleDragged(Entity handle, int key, float angle, float3 direction) {
-            // Override in derived tools
+        protected virtual void OnRotationHandleDragged(Entity handle, float angle, float3 direction) {
+            if (m_HandleParameterMap.TryGetValue(handle, out var param) && param is Float3Parameter f3p) {
+                f3p.Value = direction;
+            }
         }
 
         #endregion
@@ -1130,8 +1133,6 @@ namespace NetworkTools.Systems.Tools {
             // Update position (skipped for circle and rotation handles)
             UpdateHandleDragPosition(m_DraggedHandle);
 
-            // Read common data once and dispatch to typed hook
-            var link      = EntityManager.GetComponentData<NT_HandleLink>(m_DraggedHandle);
             var handleData = EntityManager.GetComponentData<NT_Handle>(m_DraggedHandle);
 
             if (handleData.HasAnyFlag(HandleTypeFlags.Rotation)
@@ -1139,18 +1140,18 @@ namespace NetworkTools.Systems.Tools {
                 var newAngle  = ComputeRotationHandleAngle(m_DraggedHandle);
                 var rotation  = EntityManager.GetComponentData<NT_HandleRotation>(m_DraggedHandle);
                 var circle    = EntityManager.GetComponentData<NT_HandleCircle>(m_DraggedHandle);
-                OnRotationHandleDragged(m_DraggedHandle, link.Key, newAngle, rotation.GetDirection(circle.Normal));
+                OnRotationHandleDragged(m_DraggedHandle, newAngle, rotation.GetDirection(circle.Normal));
             } else if (handleData.HasAnyFlag(HandleTypeFlags.Circle)) {
                 var newRadius = ComputeCircleHandleRadius(m_DraggedHandle);
-                OnCircleHandleDragged(m_DraggedHandle, link.Key, newRadius);
+                OnCircleHandleDragged(m_DraggedHandle, newRadius);
             } else if (handleData.HasAnyFlag(HandleTypeFlags.Parameter)
                     && EntityManager.HasComponent<NT_HandleValue>(m_DraggedHandle)) {
                 var handlePos = EntityManager.GetComponentData<NT_HandlePosition>(m_DraggedHandle).Position;
                 var value     = EntityManager.GetComponentData<NT_HandleValue>(m_DraggedHandle).Value;
-                OnParameterHandleDragged(m_DraggedHandle, link.Key, handlePos, value);
+                OnParameterHandleDragged(m_DraggedHandle, handlePos, value);
             } else {
                 var handlePos = EntityManager.GetComponentData<NT_HandlePosition>(m_DraggedHandle).Position;
-                OnPositionHandleDragged(m_DraggedHandle, link.Key, handlePos);
+                OnPositionHandleDragged(m_DraggedHandle, handlePos);
             }
 
             m_UpdateNeeded = true;

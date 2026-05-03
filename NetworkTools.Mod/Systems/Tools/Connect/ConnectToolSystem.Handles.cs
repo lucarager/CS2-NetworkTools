@@ -24,69 +24,11 @@ namespace NetworkTools.Systems.Tools.Connect {
 
             switch (Mode.Value) {
                 case ConnectMode.SimpleCurve:
-                    return new SimpleCurveGenerator().GetHandleDefinitions(jobConfig);
+                    return SimpleCurveGenerator.BuildHandleDefinitions(jobConfig, ParametersByKey);
                 case ConnectMode.Loop:
-                    return new LoopGenerator().GetHandleDefinitions(jobConfig);
+                    return LoopGenerator.BuildHandleDefinitions(jobConfig, ParametersByKey);
                 default:
                     return System.Array.Empty<TransformHandleDefinition>();
-            }
-        }
-
-        /// <inheritdoc />
-        protected override void OnPositionHandleDragged(Entity handle, int key, float3 position) {
-            m_Log.Debug($"OnPositionHandleDragged: key={key}, position={position}");
-            HandlePositionDrag(handle, key, position);
-        }
-
-        /// <inheritdoc />
-        protected override void OnCircleHandleDragged(Entity handle, int key, float radius) {
-            m_Log.Debug($"OnCircleHandleDragged: key={key}, radius={radius}");
-            LoopRadius.Value = radius;
-        }
-
-        /// <inheritdoc />
-        protected override void OnRotationHandleDragged(Entity handle, int key, float angle, float3 direction) {
-            m_Log.Debug($"OnRotationHandleDragged: key={key}, angle={angle}");
-            switch (key) {
-                case HandleKeys.StartDirection:
-                    StartDirection.Value = direction;
-                    break;
-                case HandleKeys.EndDirection:
-                    EndDirection.Value = direction;
-                    break;
-            }
-        }
-
-        /// <inheritdoc />
-        protected override float3 GetHandleConfigPosition(int key) {
-            return key switch {
-                HandleKeys.CurveStartPointPosition        => CurveStartPointPosition.Value,
-                HandleKeys.CurveStartControlPointPosition => CurveStartControlPointPosition.Value,
-                HandleKeys.CurveEndControlPointPosition   => CurveEndControlPointPosition.Value,
-                HandleKeys.CurveEndPointPosition          => CurveEndPointPosition.Value,
-                HandleKeys.LoopControlPointPosition       => LoopControlPointPosition.Value,
-                _                                         => float3.zero
-            };
-        }
-
-        /// <inheritdoc />
-        protected override void ApplyHandleConfigPosition(int key, float3 position) {
-            switch (key) {
-                case HandleKeys.CurveStartPointPosition:
-                    CurveStartPointPosition.Value = position;
-                    break;
-                case HandleKeys.CurveStartControlPointPosition:
-                    CurveStartControlPointPosition.Value = position;
-                    break;
-                case HandleKeys.CurveEndControlPointPosition:
-                    CurveEndControlPointPosition.Value = position;
-                    break;
-                case HandleKeys.CurveEndPointPosition:
-                    CurveEndPointPosition.Value = position;
-                    break;
-                case HandleKeys.LoopControlPointPosition:
-                    LoopControlPointPosition.Value = position;
-                    break;
             }
         }
     }

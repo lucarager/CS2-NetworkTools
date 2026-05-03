@@ -1,16 +1,18 @@
 namespace NetworkTools.Systems.Tools.Connect {
+    using System.Collections.Generic;
     using Colossal.Mathematics;
     using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools.Base;
     using Unity.Collections;
     using Unity.Mathematics;
 
-    public struct SimpleCurveGenerator : IConnectionGenerator, IHandleableConnectionGenerator {
+    public struct SimpleCurveGenerator : IConnectionGenerator {
         public void InitializeConfig(ref ConnectJobConfig config) {
             // Place curve and control points along each node's outgoing direction
             var distance = 10f;
             config.CurveStartPointPosition        = config.StartPosition + config.StartDirection * distance;
-            config.CurveEndPointPosition           = config.EndPosition  + config.EndDirection   * distance;
+            config.CurveEndPointPosition          = config.EndPosition  + config.EndDirection   * distance;
             config.CurveStartControlPointPosition = config.StartPosition + config.StartDirection * distance * 2;
             config.CurveEndControlPointPosition   = config.EndPosition   + config.EndDirection   * distance * 2;
         }
@@ -57,34 +59,49 @@ namespace NetworkTools.Systems.Tools.Connect {
             });
         }
 
-        public TransformHandleDefinition[] GetHandleDefinitions(
-            in ConnectJobConfig config) {
+        /// <summary>
+        ///     Builds handle definitions for SimpleCurve mode with parameter references bound directly.
+        ///     Resolves parameter refs from the tool's <see cref="NT_BaseToolSystem.ParametersByKey" /> map.
+        /// </summary>
+        public static TransformHandleDefinition[] BuildHandleDefinitions(
+            in ConnectJobConfig config,
+            IReadOnlyDictionary<string, ParameterBase> parameters) {
+            // Keys used only for parent-child resolution within this definition set
+            const int keyStart    = 1;
+            const int keyStartCtl = 2;
+            const int keyEndCtl   = 3;
+            const int keyEnd      = 4;
+
             return new[] {
                 new TransformHandleDefinition {
-                    Key = HandleKeys.CurveStartPointPosition,
+                    Key       = keyStart,
                     TypeFlags = HandleTypeFlags.Position,
-                    Position = config.CurveStartPointPosition,
-                    Radius = NT_Handle.PrimaryRadius
+                    Position  = config.CurveStartPointPosition,
+                    Radius    = NT_Handle.PrimaryRadius,
+                    Parameter = parameters["connect.curveStartPointPosition"]
                 },
                 new TransformHandleDefinition {
-                    Key = HandleKeys.CurveStartControlPointPosition,
+                    Key       = keyStartCtl,
                     TypeFlags = HandleTypeFlags.Position,
-                    Position = config.CurveStartControlPointPosition,
-                    ParentKey = HandleKeys.CurveStartPointPosition,
-                    Radius = NT_Handle.SecondaryRadius
+                    Position  = config.CurveStartControlPointPosition,
+                    ParentKey = keyStart,
+                    Radius    = NT_Handle.SecondaryRadius,
+                    Parameter = parameters["connect.curveStartControlPointPosition"]
                 },
                 new TransformHandleDefinition {
-                    Key = HandleKeys.CurveEndControlPointPosition,
+                    Key       = keyEndCtl,
                     TypeFlags = HandleTypeFlags.Position,
-                    Position = config.CurveEndControlPointPosition,
-                    ParentKey = HandleKeys.CurveEndPointPosition,
-                    Radius = NT_Handle.SecondaryRadius
+                    Position  = config.CurveEndControlPointPosition,
+                    ParentKey = keyEnd,
+                    Radius    = NT_Handle.SecondaryRadius,
+                    Parameter = parameters["connect.curveEndControlPointPosition"]
                 },
                 new TransformHandleDefinition {
-                    Key = HandleKeys.CurveEndPointPosition,
+                    Key       = keyEnd,
                     TypeFlags = HandleTypeFlags.Position,
-                    Position = config.CurveEndPointPosition,
-                    Radius = NT_Handle.PrimaryRadius
+                    Position  = config.CurveEndPointPosition,
+                    Radius    = NT_Handle.PrimaryRadius,
+                    Parameter = parameters["connect.curveEndPointPosition"]
                 }
             };
         }

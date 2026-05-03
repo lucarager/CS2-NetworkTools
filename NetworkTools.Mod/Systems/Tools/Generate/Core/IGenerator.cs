@@ -1,5 +1,4 @@
 namespace NetworkTools.Systems.Tools.Generate {
-    using NetworkTools.Systems.Tools.Base;
     using NetworkTools.Systems.Tools.Utils;
     using Unity.Collections;
     using Unity.Mathematics;
@@ -20,10 +19,5 @@ namespace NetworkTools.Systems.Tools.Generate {
         void GenerateNetwork(
             in  GenerateJobConfig      config,
             ref NativeList<EdgeConfig> curves);
-    }
-
-    public interface IHandleableGenerator : IGenerator {
-        TransformHandleDefinition[] GetHandleDefinitions(
-            in GenerateJobConfig config);
     }
 }
