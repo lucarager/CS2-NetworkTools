@@ -24,8 +24,6 @@ namespace NetworkTools.Systems.Tools.Generate {
             [ReadOnly] public required ToolOutputMode    OutputMode;
             [ReadOnly] public required Entity            NetPrefabEntity;
             [ReadOnly] public required Entity            NetLanePrefabEntity;
-            [ReadOnly] public required bool              IsHoverPreview;
-            [ReadOnly] public required ControlPoint      ControlPoint;
 
             [ReadOnly] public required ComponentLookup<Node> NodeLookup;
             [ReadOnly] public required ComponentLookup<PrefabRef> PrefabRefLookup;
@@ -46,11 +44,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                 switch (Mode)
                 {
                     case GenerateMode.Grid:
-                        if (IsHoverPreview) {
-                            new GridGenerator().GeneratePreview(ControlPoint.m_Position, ControlPoint.m_Rotation, ref curves);
-                        } else {
-                            new GridGenerator().GenerateNetwork(Config, ref curves);
-                        }
+                        new GridGenerator().Generate(Config, ref curves);
                         break;
                     case GenerateMode.Circle:
                         break;

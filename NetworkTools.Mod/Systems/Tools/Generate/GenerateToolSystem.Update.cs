@@ -44,16 +44,16 @@ namespace NetworkTools.Systems.Tools.Generate {
             // ═══════════════════════════════════════════════════════════════════════════
             // CONTROL POINT PLACEMENT: State Mutation
             // ═══════════════════════════════════════════════════════════════════════════
+            // todo handle rotation
 
             if (rightClickPressed) {
-                // todo handle rotation
                 HandleRemoveControlPoint();
                 m_UpdateNeeded = true;
             } else if (raycastHit && !hasSelectedControlPoint) {
                 if (leftClickPressed) {
                     HandleAddControlPoint(controlPoint);
                 } else if (hasNewHoverTarget) {
-                    m_HoveredControlPoint.value = controlPoint;
+                    HandleHoverControlPoint(controlPoint);
                 }
                 m_UpdateNeeded = true;
             } 
@@ -79,11 +79,25 @@ namespace NetworkTools.Systems.Tools.Generate {
             m_SelectedControlPoint.value = controlPoint;
             UpdatePhaseFromSelection();
 
-            // When a point is placed, initialize the config
+            // Update parameters
+            StartPosition.Value = controlPoint.m_Position;
+            StartDirection.Value = controlPoint.m_Rotation;
+
+            // When a point is placed, initialize
             if (Phase == OperationPhase.Ready)
             {
-                InitializeConfig();
+                RefreshTransformHandles();
             }
+
+            return true;
+        }
+
+        protected bool HandleHoverControlPoint(ControlPoint controlPoint) {
+            m_HoveredControlPoint.value = controlPoint;
+
+            // Update parameters
+            StartPosition.Value = controlPoint.m_Position;
+            StartDirection.Value = controlPoint.m_Rotation;
 
             return true;
         }

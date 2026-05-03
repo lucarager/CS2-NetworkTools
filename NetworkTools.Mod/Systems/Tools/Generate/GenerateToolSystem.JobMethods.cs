@@ -45,8 +45,6 @@ namespace NetworkTools.Systems.Tools.Generate {
                 NetPrefabEntity        = m_SelectedNetPrefabEntity,
                 NetLanePrefabEntity    = m_SelectedNetLanePrefabEntity,
                 OutputMode             = outputMode,
-                IsHoverPreview         = isHoverPreview,
-                ControlPoint           = controlPoint,
 
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),

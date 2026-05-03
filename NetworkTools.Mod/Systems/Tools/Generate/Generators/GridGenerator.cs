@@ -1,11 +1,15 @@
 namespace NetworkTools.Systems.Tools.Generate {
     using System.Collections.Generic;
+
     using Colossal.Mathematics;
+
     using Game.Tools;
+
     using NetworkTools.Components.Handles;
-    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools.Base;
+    using NetworkTools.Systems.Tools.Parameters;
     using NetworkTools.Systems.Tools.Utils;
+
     using Unity.Collections;
     using Unity.Mathematics;
 
@@ -15,14 +19,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         public void InitializeConfig(ref GenerateJobConfig config) {
         }
 
-        public void GeneratePreview(
-            in  float3                 StartPosition,
-            in  quaternion             StartDirection,
-            ref NativeList<EdgeConfig> curves) {
-            GenerateGrid(StartPosition, StartDirection, PreviewDistance, PreviewDistance, 3, 3, ref curves);
-        }
-
-        public void GenerateNetwork(
+        public void Generate(
             in  GenerateJobConfig      config,
             ref NativeList<EdgeConfig> curves) {
             GenerateGrid(config.StartPosition,

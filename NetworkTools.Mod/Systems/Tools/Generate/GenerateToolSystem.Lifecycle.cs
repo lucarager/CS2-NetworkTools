@@ -4,6 +4,7 @@ namespace NetworkTools.Systems.Tools.Generate {
     using Game.Tools;
     using NetworkTools.Components.Tools;
     using Unity.Collections;
+    using Unity.Mathematics;
 
     /// <summary>
     ///     Lifecycle methods for <see cref="NT_GenerateToolSystem" />.
@@ -12,30 +13,6 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// <inheritdoc />
         public bool HasToolComponent(PrefabBase prefab) {
             return m_PrefabSystem.HasComponent<NT_GenerateTool>(prefab);
-        }
-
-        /// <summary>
-        ///     Initializes contextual state from the placed control point
-        ///     and resets grid parameters to defaults.
-        /// </summary>
-        private void InitializeConfig() {
-            m_Log.Debug("InitializeConfig");
-
-            if (Phase != OperationPhase.Ready) {
-                return;
-            }
-
-            var point = m_SelectedControlPoint.value;
-
-            StartPosition.Value  = point.m_Position;
-            StartDirection.Value = point.m_Rotation;
-
-            GridXSpacing.ResetToDefault();
-            GridZSpacing.ResetToDefault();
-            GridXNum.ResetToDefault();
-            GridZNum.ResetToDefault();
-
-            RefreshTransformHandles();
         }
 
         /// <inheritdoc />
@@ -52,10 +29,10 @@ namespace NetworkTools.Systems.Tools.Generate {
             foreach (var p in Parameters)
                 p.OnChanged += () => m_UpdateNeeded = true;
 
-            // Mode change additionally reinitializes context and handles
+            // Mode change additionally reinitializes handles
             Mode.OnChanged += () => {
                 if (Phase == OperationPhase.Ready)
-                    InitializeConfig();
+                    RefreshTransformHandles();
             };
 
             // Data
