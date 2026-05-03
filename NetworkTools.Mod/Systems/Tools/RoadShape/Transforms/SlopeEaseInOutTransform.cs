@@ -118,19 +118,19 @@
 
             // Calculate path length in XZ for distance calculations
             var pathLengthXZ = math.distance(pathStartPos.xz, pathEndPos.xz);
-            var halfPathLength = ctx.TotalLength * 0.5f;
+
+            var easeInParam  = (FloatParameter)parameters["roadShape.easeInLength"];
+            var easeOutParam = (FloatParameter)parameters["roadShape.easeOutLength"];
 
             // Elevate handles above the path for visibility
             var elevation = new float3(0, 1f, 0);
 
             // Position handles along their respective edge directions (not the straight start-to-end line)
             // The constraint axis uses the edge direction, so the position must match
-            var easeInDistance = config.EaseInLength * pathLengthXZ;
-            var easeInPos = pathStartPos + easeInDirection * easeInDistance;
+            var easeInPos = pathStartPos + easeInDirection * (config.EaseInLength * pathLengthXZ);
             easeInPos.y = pathStartPos.y + elevation.y;
 
-            var easeOutDistance = config.EaseOutLength * pathLengthXZ;
-            var easeOutPos = pathEndPos + easeOutDirection * easeOutDistance;
+            var easeOutPos = pathEndPos + easeOutDirection * (config.EaseOutLength * pathLengthXZ);
             easeOutPos.y = pathEndPos.y + elevation.y;
 
             return new[] {
@@ -139,22 +139,24 @@
                     Position = easeInPos,
                     TypeFlags = HandleTypeFlags.SlopeControl | HandleTypeFlags.Parameter | HandleTypeFlags.ParameterRange,
                     Value = config.EaseInLength,
-                    MinValue = 0f,
-                    MaxValue = config.EaseInMax,
-                    // Constrain to first edge direction with distance clamping (0 to halfPathLength)
-                    Constraints = NT_HandleConstraints.AxisWithBounds(easeInDirection, pathStartPos + elevation, 0f, halfPathLength),
-                    Parameter = parameters["roadShape.easeInLength"]
+                    MinValue = easeInParam.Min,
+                    MaxValue = easeInParam.Max,
+                    Constraints = NT_HandleConstraints.AxisWithBounds(
+                        easeInDirection, pathStartPos + elevation,
+                        easeInParam.Min * ctx.TotalLength, easeInParam.Max * ctx.TotalLength),
+                    Parameter = easeInParam
                 },
                 new TransformHandleDefinition {
                     Key = 2,
                     Position = easeOutPos,
                     TypeFlags = HandleTypeFlags.SlopeControl | HandleTypeFlags.Parameter | HandleTypeFlags.ParameterRange,
                     Value = config.EaseOutLength,
-                    MinValue = 0f,
-                    MaxValue = config.EaseOutMax,
-                    // Constrain to last edge direction (reversed) with distance clamping (0 to halfPathLength)
-                    Constraints = NT_HandleConstraints.AxisWithBounds(easeOutDirection, pathEndPos + elevation, 0f, halfPathLength),
-                    Parameter = parameters["roadShape.easeOutLength"]
+                    MinValue = easeOutParam.Min,
+                    MaxValue = easeOutParam.Max,
+                    Constraints = NT_HandleConstraints.AxisWithBounds(
+                        easeOutDirection, pathEndPos + elevation,
+                        easeOutParam.Min * ctx.TotalLength, easeOutParam.Max * ctx.TotalLength),
+                    Parameter = easeOutParam
                 },
             };
         }

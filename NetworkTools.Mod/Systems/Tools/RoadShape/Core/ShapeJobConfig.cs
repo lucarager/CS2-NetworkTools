@@ -6,9 +6,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
     public struct ShapeJobConfig {
         public ShapeTransformTemplate Template;
         public float EaseInLength;
-        public float EaseInMax;
         public float EaseOutLength;
-        public float EaseOutMax;
         public float ArchHeight;
         public float ArchPosition;
         public float SmoothingFactor;

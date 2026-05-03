@@ -22,7 +22,9 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                     position,
                     m_ShapeTransformContext.StartPosition,
                     m_ShapeTransformContext.EndPosition,
-                    axis);
+                    axis,
+                    EaseInLength.Min,
+                    EaseInLength.Max);
                 m_Log.Debug($"EaseInLength: {EaseInLength.Value} -> {easeParam}");
                 EaseInLength.Value = easeParam;
             } else if (param == EaseOutLength) {
@@ -31,7 +33,9 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                     position,
                     m_ShapeTransformContext.EndPosition,
                     m_ShapeTransformContext.StartPosition,
-                    axis);
+                    axis,
+                    EaseOutLength.Min,
+                    EaseOutLength.Max);
                 m_Log.Debug($"EaseOutLength: {EaseOutLength.Value} -> {easeParam}");
                 EaseOutLength.Value = easeParam;
             }
@@ -54,26 +58,23 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         }
 
         /// <summary>
-        /// Calculates the ease parameter (0-0.5) from handle world position.
-        /// Projects handle onto the handle's constraint axis and returns the normalized distance from origin.
+        /// Calculates the normalized ease parameter from a handle world position.
+        /// Projects the handle onto its constraint axis and clamps to the parameter's declared range.
         /// </summary>
-        private float CalculateEaseParameter(float3 handlePos, float3 pathOrigin, float3 pathEnd, float2 axisDirectionXZ) {
-            // Use XZ plane for consistent calculations (ignore elevation differences)
+        private float CalculateEaseParameter(float3 handlePos, float3 pathOrigin, float3 pathEnd, float2 axisDirectionXZ, float min, float max) {
             var pathVectorXZ = new float2(pathEnd.x - pathOrigin.x, pathEnd.z - pathOrigin.z);
             var pathLengthXZ = math.length(pathVectorXZ);
 
             if (pathLengthXZ < 0.001f) {
                 m_Log.Debug("CalculateEaseParameter: path too short");
-                return 0f;
+                return min;
             }
 
-            // Project handle position onto the actual constraint axis (not the straight start→end direction)
             var handleOffsetXZ = new float2(handlePos.x - pathOrigin.x, handlePos.z - pathOrigin.z);
             var projectedDistance = math.dot(handleOffsetXZ, axisDirectionXZ);
 
-            // Normalize to 0-1 range, then clamp to 0-0.5
             var normalizedParam = projectedDistance / pathLengthXZ;
-            var result = math.clamp(normalizedParam, 0f, 0.5f);
+            var result = math.clamp(normalizedParam, min, max);
 
             m_Log.Debug($"CalculateEaseParameter: projDist={projectedDistance:F2}, pathLen={pathLengthXZ:F2}, result={result:F3}");
             return result;

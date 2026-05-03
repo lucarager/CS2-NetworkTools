@@ -7,7 +7,10 @@ import {
 import {
     ShapeTransformTemplate,
     PARAM_BINDINGS,
+    PARAM_META,
 } from "generated/parameters.generated";
+
+const smoothingFactorMeta = PARAM_META["roadShape.smoothingFactor"];
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
 import { VC, VF } from "components/vanilla/Components";
@@ -91,8 +94,8 @@ export const ShapeCurveControls: React.FC = () => {
                                 <VC.FloatSliderField
                                     value={smoothingFactor}
                                     label={translate("NetworkTools.UI.Curve.SmoothingFactor") ?? ""}
-                                    min={0}
-                                    max={1}
+                                    min={smoothingFactorMeta.min}
+                                    max={smoothingFactorMeta.max}
                                     fractionDigits={2}
                                     onChange={(e: number) => {
                                         PARAM_BINDINGS.roadShape.smoothingFactor.set(e);

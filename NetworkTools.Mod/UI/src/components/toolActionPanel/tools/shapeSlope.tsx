@@ -7,7 +7,15 @@ import {
 import {
     ShapeTransformTemplate,
     PARAM_BINDINGS,
+    PARAM_META,
 } from "generated/parameters.generated";
+
+// Internal 0-0.5 path-ratio range is presented to the player as 0-100%.
+const EASE_DISPLAY_SCALE = 200;
+const easeInMeta = PARAM_META["roadShape.easeInLength"];
+const easeOutMeta = PARAM_META["roadShape.easeOutLength"];
+const archHeightMeta = PARAM_META["roadShape.archHeight"];
+const archPositionMeta = PARAM_META["roadShape.archPosition"];
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
 import { VC, VF } from "components/vanilla/Components";
@@ -97,15 +105,14 @@ export const ShapeSlopeControls: React.FC = () => {
                                             styles.sliderField,
                                             styles.sliderField__withUnit,
                                         )}>
-                                        {/* We mask the internal 0 - 0.4 float range into 0 - 80% for the player */}
                                         <VC.FloatSliderField
-                                            value={easeInLength * 200}
+                                            value={easeInLength * EASE_DISPLAY_SCALE}
                                             label={translate("NetworkTools.UI.Slope.StartingFlatness") ?? ""}
-                                            min={0}
-                                            max={80}
+                                            min={easeInMeta.min * EASE_DISPLAY_SCALE}
+                                            max={easeInMeta.max * EASE_DISPLAY_SCALE}
                                             fractionDigits={0}
                                             onChange={(e: number) => {
-                                                PARAM_BINDINGS.roadShape.easeInLength.set(e / 200);
+                                                PARAM_BINDINGS.roadShape.easeInLength.set(e / EASE_DISPLAY_SCALE);
                                             }}
                                         />
                                         <span className={styles.unitLabel}>%</span>
@@ -117,15 +124,14 @@ export const ShapeSlopeControls: React.FC = () => {
                                             styles.sliderField,
                                             styles.sliderField__withUnit,
                                         )}>
-                                        {/* We mask the internal 0 - 0.4 float range into 0 - 80% for the player */}
                                         <VC.FloatSliderField
-                                            value={easeOutLength * 200}
+                                            value={easeOutLength * EASE_DISPLAY_SCALE}
                                             label={translate("NetworkTools.UI.Slope.EndingFlatness") ?? ""}
-                                            min={0}
-                                            max={80}
+                                            min={easeOutMeta.min * EASE_DISPLAY_SCALE}
+                                            max={easeOutMeta.max * EASE_DISPLAY_SCALE}
                                             fractionDigits={0}
                                             onChange={(e: number) => {
-                                                PARAM_BINDINGS.roadShape.easeOutLength.set(e / 200);
+                                                PARAM_BINDINGS.roadShape.easeOutLength.set(e / EASE_DISPLAY_SCALE);
                                             }}
                                         />
                                         <span className={styles.unitLabel}>%</span>
@@ -141,8 +147,8 @@ export const ShapeSlopeControls: React.FC = () => {
                                     <VC.FloatSliderField
                                         value={archHeight}
                                         label={translate("NetworkTools.UI.Slope.ArchHeight") ?? ""}
-                                        min={-1}
-                                        max={1}
+                                        min={archHeightMeta.min}
+                                        max={archHeightMeta.max}
                                         fractionDigits={3}
                                         onChange={(e: number) => {
                                             PARAM_BINDINGS.roadShape.archHeight.set(e);
@@ -153,8 +159,8 @@ export const ShapeSlopeControls: React.FC = () => {
                                     <VC.FloatSliderField
                                         value={archPosition}
                                         label={translate("NetworkTools.UI.Slope.ArchPosition") ?? ""}
-                                        min={0.1}
-                                        max={0.9}
+                                        min={archPositionMeta.min}
+                                        max={archPositionMeta.max}
                                         fractionDigits={3}
                                         onChange={(e: number) => {
                                             PARAM_BINDINGS.roadShape.archPosition.set(e);

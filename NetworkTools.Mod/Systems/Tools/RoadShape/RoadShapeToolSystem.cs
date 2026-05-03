@@ -20,8 +20,8 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         // ── Parameters 
 
         public EnumParameter<ShapeTransformTemplate> Template        = new("roadShape.template", ShapeTransformTemplate.Preserve);
-        public FloatParameter                        EaseInLength    = new("roadShape.easeInLength",    0.1f, 0f, 0.4f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut);
-        public FloatParameter                        EaseOutLength   = new("roadShape.easeOutLength",   0.1f, 0f, 0.4f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut);
+        public FloatParameter                        EaseInLength    = new("roadShape.easeInLength",    0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut);
+        public FloatParameter                        EaseOutLength   = new("roadShape.easeOutLength",   0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut);
         public FloatParameter                        ArchHeight      = new("roadShape.archHeight",      0.5f, -1f, 1f,  modes: (int)ShapeTransformTemplate.SlopeArch);
         public FloatParameter                        ArchPosition    = new("roadShape.archPosition",    0.5f, 0.1f, 0.9f, modes: (int)ShapeTransformTemplate.SlopeArch);
         public FloatParameter                        SmoothingFactor = new("roadShape.smoothingFactor", 0.5f, 0f, 1f,   modes: (int)ShapeTransformTemplate.CurveSmooth);
@@ -68,9 +68,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             return new ShapeJobConfig {
                 Template        = Template.Value,
                 EaseInLength    = EaseInLength.Value,
-                EaseInMax       = EaseInLength.Max,
                 EaseOutLength   = EaseOutLength.Value,
-                EaseOutMax      = EaseOutLength.Max,
                 ArchHeight      = ArchHeight.Value,
                 ArchPosition    = ArchPosition.Value,
                 SmoothingFactor = SmoothingFactor.Value,
