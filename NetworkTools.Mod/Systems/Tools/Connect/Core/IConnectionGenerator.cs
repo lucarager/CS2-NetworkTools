@@ -1,24 +1,15 @@
-﻿namespace NetworkTools.Systems.Tools.Connect {
-    using NetworkTools.Systems.Tools.Base;
+namespace NetworkTools.Systems.Tools.Connect {
     using Unity.Collections;
 
     public interface IConnectionGenerator {
         /// <summary>
-        ///     Called once when the template is selected or path changes.
-        ///     Use to compute initial values that need to be stored in config
-        ///     for both handle creation and transform execution.
+        ///     Called once when the mode is selected or path changes.
+        ///     Populates mode-specific fields in the config snapshot.
         /// </summary>
-        void InitializeConfig(in ConnectMode mode, ref ConnectConfig config);
+        void InitializeConfig(ref ConnectJobConfig config);
 
         void GenerateConnection(
-            in  ConnectMode          mode,
-            in  ConnectConfig        config,
+            in  ConnectJobConfig     config,
             ref NativeList<CurveDef> curves);
-    }
-
-    public interface IHandleableConnectionGenerator : IConnectionGenerator {
-        TransformHandleDefinition[] GetHandleDefinitions(
-            in ConnectMode          mode,
-            in ConnectConfig        config);
     }
 }

@@ -123,27 +123,33 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 return;
             }
 
-            m_Log.Debug($"InitializeCurrentTransform: Initializing {ShapeTransformConfig.Template}");
+            var config = BuildJobConfig();
+            m_Log.Debug($"InitializeCurrentTransform: Initializing {config.Template}");
 
-            // Each transform's InitializeConfig method may modify ShapeTransformConfig
-            // to store computed values needed for handles and transformation.
-            switch (ShapeTransformConfig.Template) {
+            switch (config.Template) {
                 case ShapeTransformTemplate.SlopeLinear:
-                    new SlopeLinearTransform().InitializeConfig(in m_ShapeTransformContext, ref ShapeTransformConfig);
+                    new SlopeLinearTransform().InitializeConfig(in m_ShapeTransformContext, ref config);
                     break;
                 case ShapeTransformTemplate.SlopeEaseInOut:
-                    new SlopeEaseInOutTransform().InitializeConfig(in m_ShapeTransformContext, ref ShapeTransformConfig);
+                    new SlopeEaseInOutTransform().InitializeConfig(in m_ShapeTransformContext, ref config);
                     break;
                 case ShapeTransformTemplate.SlopeArch:
                     // TODO: Add when implemented
                     break;
                 case ShapeTransformTemplate.CurveStraighten:
-                    new CurveStraightenTransform().InitializeConfig(in m_ShapeTransformContext, ref ShapeTransformConfig);
+                    new CurveStraightenTransform().InitializeConfig(in m_ShapeTransformContext, ref config);
                     break;
                 case ShapeTransformTemplate.CurveSmooth:
-                    new CurveSmoothTransform().InitializeConfig(in m_ShapeTransformContext, ref ShapeTransformConfig);
+                    new CurveSmoothTransform().InitializeConfig(in m_ShapeTransformContext, ref config);
                     break;
             }
+
+            // Copy any values computed by InitializeConfig back to parameters
+            EaseInLength.Value    = config.EaseInLength;
+            EaseOutLength.Value   = config.EaseOutLength;
+            ArchHeight.Value      = config.ArchHeight;
+            ArchPosition.Value    = config.ArchPosition;
+            SmoothingFactor.Value = config.SmoothingFactor;
         }
 
         #endregion
@@ -165,7 +171,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             var pathStartPos = m_ShapeTransformContext.StartPosition;
             var pathEndPos = m_ShapeTransformContext.EndPosition;
 
-            m_Log.Debug($"RefreshTransformHandles: Creating handles for template {ShapeTransformConfig.Template}");
+            m_Log.Debug($"RefreshTransformHandles: Creating handles for template {Template.Value}");
 
             // Get handle definitions for current template
             var handleDefs = GetTransformHandleDefinitions(pathStartPos, pathEndPos);
@@ -178,17 +184,17 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         /// </summary>
         private TransformHandleDefinition[] GetTransformHandleDefinitions(float3 pathStartPos, float3 pathEndPos) {
             var edgeStatesArray = m_EdgeStates.AsArray();
-            switch (ShapeTransformConfig.Template) {
+            var config = BuildJobConfig();
+            switch (config.Template) {
                 case ShapeTransformTemplate.SlopeEaseInOut:
-                    var easeInOutTransform = new SlopeEaseInOutTransform();
-                    return easeInOutTransform.GetHandleDefinitions(m_ShapeTransformContext, ShapeTransformConfig, pathStartPos, pathEndPos, in edgeStatesArray);
+                    return SlopeEaseInOutTransform.BuildHandleDefinitions(
+                        m_ShapeTransformContext, config, pathStartPos, pathEndPos, in edgeStatesArray, ParametersByKey);
 
                 case ShapeTransformTemplate.SlopeLinear:
                 case ShapeTransformTemplate.CurveStraighten:
                 case ShapeTransformTemplate.CurveSmooth:
                 case ShapeTransformTemplate.Preserve:
                 default:
-                    // These templates don't have handles (don't implement IHandleableTransformation)
                     return System.Array.Empty<TransformHandleDefinition>();
             }
         }

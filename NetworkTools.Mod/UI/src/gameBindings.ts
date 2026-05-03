@@ -26,71 +26,6 @@ export type ToolSelectionData = {
     Name: string;
 };
 
-// Shape template types (XZ plane transformations)
-export enum ShapeTransformTemplate {
-    Preserve = 0,
-    SlopeLinear = 1,
-    SlopeEaseInOut = 2,
-    SlopeParabolic = 3,
-    CurveStraighten = 4,
-    CurveSmooth = 5,
-}
-
-export type ShapeConfigData = {
-    template: ShapeTransformTemplate;
-    smoothingFactor: number;
-    easeInLength: number;
-    easeOutLength: number;
-    archHeight: number;
-    archPosition: number;
-};
-export const DEFAULT_SHAPE_CONFIG: ShapeConfigData = {
-    template: ShapeTransformTemplate.Preserve,
-    smoothingFactor: 0,
-    easeInLength: 0,
-    easeOutLength: 0,
-    archHeight: 0,
-    archPosition: 0,
-};
-
-export enum ConnectMode {
-    None = 0,
-    SimpleCurve = 1,
-    ComplexCurve = 2,
-    Loop = 3,
-}
-
-export enum GenerateMode {
-    None = 0,
-    Grid = 1,
-    Circle = 2,
-}
-
-export enum ParallelSide {
-    Left = 0,
-    Right = 1,
-}
-
-export enum VerticalSide {
-    Up = 0,
-    Down = 1,
-}
-
-export type ParallelConfigData = {
-    horizontalOffset: number;
-    verticalOffset: number;
-    horizontalDirection: ParallelSide;
-    verticalDirection: VerticalSide;
-    reverseDirection: boolean;
-};
-export const DEFAULT_PARALLEL_CONFIG: ParallelConfigData = {
-    horizontalOffset: 20,
-    verticalOffset: 0,
-    horizontalDirection: ParallelSide.Right,
-    verticalDirection: VerticalSide.Up,
-    reverseDirection: false,
-};
-
 // Snap options (bitflags)
 export enum SnapOption {
     None = 0,
@@ -146,36 +81,11 @@ export const EMPTY_NET_PREFAB_DATA: NetPrefabData = {
     Name: "",
 };
 
-export type GenerateConfigData = {
-    gridXSpacing: number;
-    gridZSpacing: number;
-    gridXNum: number;
-    gridZNum: number;
-};
-
-export const DEFAULT_GENERATE_CONFIG: GenerateConfigData = {
-    gridXSpacing: 80,
-    gridZSpacing: 80,
-    gridXNum: 2,
-    gridZNum: 2,
-};
-
 export const GAME_BINDINGS = {
     UI_DATA: new TwoWayBinding<ToolUIData[]>("UI_DATA", []),
     SELECTED_ENTITIES: new TwoWayBinding<ToolSelectionData[]>("SELECTED_ENTITIES", []),
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
     PANEL_OPEN: new TwoWayBinding<boolean>("PANEL_OPEN", false),
-    SHAPE_CONFIG: new TwoWayBinding<ShapeConfigData>("SHAPE_CONFIG", DEFAULT_SHAPE_CONFIG),
-    PARALLEL_CONFIG: new TwoWayBinding<ParallelConfigData>(
-        "PARALLEL_CONFIG",
-        DEFAULT_PARALLEL_CONFIG,
-    ),
-    GENERATE_CONFIG: new TwoWayBinding<GenerateConfigData>(
-        "GENERATE_CONFIG",
-        DEFAULT_GENERATE_CONFIG,
-    ),
-    GENERATE_MODE: new TwoWayBinding<number>("GENERATE_MODE", GenerateMode.Grid),
-    CONNECT_MODE: new TwoWayBinding<number>("CONNECT_MODE", ConnectMode.None),
     SELECTED_NET_PREFAB: new TwoWayBinding<NetPrefabData>(
         "SELECTED_NET_PREFAB",
         EMPTY_NET_PREFAB_DATA,
@@ -199,5 +109,11 @@ export const GAME_TRIGGERS = {
     },
     PS_SELECT: (entity: Entity) => {
         trigger(mod.id, "TRIGGER:PS:SELECT", entity);
+    },
+    RESET_PARAM: (key: string) => {
+        trigger(mod.id, "TRIGGER:RESET_PARAM", key);
+    },
+    RESET_TOOL: () => {
+        trigger(mod.id, "TRIGGER:RESET_TOOL");
     },
 };

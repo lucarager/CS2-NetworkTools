@@ -15,7 +15,8 @@ namespace NetworkTools.Systems.Tools.Generate {
         }
 
         /// <summary>
-        ///     Initializes the grid config from the two control points.
+        ///     Initializes contextual state from the placed control point
+        ///     and resets grid parameters to defaults.
         /// </summary>
         private void InitializeConfig() {
             m_Log.Debug("InitializeConfig");
@@ -26,35 +27,15 @@ namespace NetworkTools.Systems.Tools.Generate {
 
             var point = m_SelectedControlPoint.value;
 
-            CurrentConfig = new GenerateConfig(point.m_Position, point.m_Rotation);
+            StartPosition.Value  = point.m_Position;
+            StartDirection.Value = point.m_Rotation;
+
+            GridXSpacing.ResetToDefault();
+            GridZSpacing.ResetToDefault();
+            GridXNum.ResetToDefault();
+            GridZNum.ResetToDefault();
+
             RefreshTransformHandles();
-        }
-
-
-        /// <summary>
-        ///     Sets a new transformation.
-        /// </summary>
-        public void SetMode(GenerateMode mode) {
-            CurrentMode    = mode;
-            m_UpdateNeeded = true;
-
-            // Re-initialize configs
-            InitializeConfig();
-
-            m_Log.Debug($"Mode set: mode={mode}");
-        }
-
-
-        /// <summary>
-        ///     Updates the grid configuration from the UI without reinitializing handles.
-        /// </summary>
-        /// <param name="config">The updated config from the UI.</param>
-        public void UpdateConfig(GenerateConfig config) {
-            CurrentConfig.GridXSpacing = config.GridXSpacing;
-            CurrentConfig.GridZSpacing = config.GridZSpacing;
-            CurrentConfig.GridXNum     = config.GridXNum;
-            CurrentConfig.GridZNum     = config.GridZNum;
-            m_UpdateNeeded             = true;
         }
 
         /// <inheritdoc />
@@ -66,6 +47,16 @@ namespace NetworkTools.Systems.Tools.Generate {
             // Configuration
             RenderHandles            = true;
             DisableVanillaValidation = true;
+
+            // Parameter changes trigger a preview rebuild
+            foreach (var p in Parameters)
+                p.OnChanged += () => m_UpdateNeeded = true;
+
+            // Mode change additionally reinitializes context and handles
+            Mode.OnChanged += () => {
+                if (Phase == OperationPhase.Ready)
+                    InitializeConfig();
+            };
 
             // Data
             m_SelectedControlPoint = new NativeValue<ControlPoint>(Allocator.Persistent);

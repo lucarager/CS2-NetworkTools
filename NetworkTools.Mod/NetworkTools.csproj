@@ -151,8 +151,14 @@
 		<EmbeddedResource Include="L10N\lang\zh-HANT.json" />
 	</ItemGroup>
 
+	<!--Generate TypeScript parameter definitions from C# source-->
+	<Target Name="GenerateParametersTS" BeforeTargets="BuildUI">
+		<Message Text="[GenerateParametersTS]" Importance="high" />
+		<Exec Command="dotnet run --project &quot;$(SolutionDir)NetworkTools.Codegen&quot; -- &quot;$(ProjectDir)Systems&quot; &quot;$(ProjectDir)UI/src/generated/parameters.generated.ts&quot;" />
+	</Target>
+
 	<!--Build UI-->
-	<Target Name="BuildUI" AfterTargets="DeployWIP">
+	<Target Name="BuildUI" AfterTargets="DeployWIP" DependsOnTargets="GenerateParametersTS">
 		<Message Text="[BuildUI]" Importance="high" />
 		<Exec Command="npm run build" WorkingDirectory="$(ProjectDir)/UI" />
 	</Target>

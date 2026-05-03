@@ -25,9 +25,17 @@
                 m_SelectedNetPrefabEntity = prefabRef.m_Prefab;
             }
 
+            var jobConfig = new ParallelJobConfig {
+                HorizontalOffset    = HorizontalOffset.Value,
+                VerticalOffset      = VerticalOffset.Value,
+                HorizontalDirection = HorizontalDirection.Value,
+                VerticalDirection   = VerticalDirection.Value,
+                ReverseDirection    = ReverseDirection.Value,
+            };
+
             var jobHandle = new CreateDefinitionsJob {
                 OutputMode             = outputMode,
-                Config                 = CurrentConfig,
+                Config                 = jobConfig,
                 CurrentPathNodes       = m_CurrentPathNodes,
                 CurrentPathEdges       = m_CurrentPathEdges,
                 NetPrefabEntity        = m_SelectedNetPrefabEntity,

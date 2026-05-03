@@ -27,7 +27,8 @@
                 return inputDeps;
             }
 
-            m_Log.Debug($"SchedulePathTransformJob: Template={ShapeTransformConfig.Template}, EaseIn={ShapeTransformConfig.EaseInLength:F3}, EaseOut={ShapeTransformConfig.EaseOutLength:F3}");
+            var config = BuildJobConfig();
+            m_Log.Debug($"SchedulePathTransformJob: Template={config.Template}, EaseIn={config.EaseInLength:F3}, EaseOut={config.EaseOutLength:F3}");
             m_Log.Debug($"  Path: Start={m_ShapeTransformContext.StartPosition}, End={m_ShapeTransformContext.EndPosition}, DeltaHeight={m_ShapeTransformContext.DeltaHeight:F2}");
 
             var jobHandle = new ShapeTransformJob {
@@ -35,7 +36,7 @@
                 EdgeStates = m_EdgeStates,
                 NodeStates = m_NodeStates,
                 Context = m_ShapeTransformContext,
-                Config = ShapeTransformConfig,
+                Config = config,
 
                 // Lookups needed for output and intersection adjustments
                 CurrentPathNodes = m_CurrentPathNodes,

@@ -1,28 +1,29 @@
-﻿namespace NetworkTools.Systems.Tools.Generate {
+namespace NetworkTools.Systems.Tools.Generate {
+    using System.Collections.Generic;
     using Colossal.Mathematics;
     using Game.Tools;
     using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools.Base;
     using NetworkTools.Systems.Tools.Utils;
     using Unity.Collections;
     using Unity.Mathematics;
 
-    public struct GridGenerator : IGenerator, IHandleableGenerator {
+    public struct GridGenerator : IGenerator {
         private const float PreviewDistance = 32f;
 
-        public void InitializeConfig(ref GenerateConfig config) {
+        public void InitializeConfig(ref GenerateJobConfig config) {
         }
 
         public void GeneratePreview(
             in  float3                 StartPosition,
             in  quaternion             StartDirection,
             ref NativeList<EdgeConfig> curves) {
-            // Create a rectangle to preview the grid
             GenerateGrid(StartPosition, StartDirection, PreviewDistance, PreviewDistance, 3, 3, ref curves);
         }
 
         public void GenerateNetwork(
-            in  GenerateConfig         config,
+            in  GenerateJobConfig      config,
             ref NativeList<EdgeConfig> curves) {
             GenerateGrid(config.StartPosition,
                          config.StartDirection,
@@ -42,12 +43,9 @@
             int                        zNum,
             ref NativeList<EdgeConfig> curves
         ) {
-            // Compute rotated direction vectors from the config angle.
             var xDir = math.mul(startDirection, new float3(1, 0, 0));
             var zDir = math.mul(startDirection, new float3(0, 0, 1));
 
-            // Precompute all grid node positions once so that every segment
-            // referencing the same intersection gets a bit - identical float3.
             var nodes = new NativeArray<float3>(xNum * zNum, Allocator.Temp);
             for (var j = 0; j < zNum; j++) {
                 for (var i = 0; i < xNum; i++) {
@@ -108,14 +106,19 @@
             return CoursePosFlags.IsParallel;
         }
 
-        public TransformHandleDefinition[] GetHandleDefinitions(
-            in GenerateConfig config) {
+        /// <summary>
+        ///     Builds handle definitions for Grid mode with parameter references bound directly.
+        /// </summary>
+        public static TransformHandleDefinition[] BuildHandleDefinitions(
+            in GenerateJobConfig config,
+            IReadOnlyDictionary<string, ParameterBase> parameters) {
             return new[] {
                 new TransformHandleDefinition {
-                    Key       = HandleKeys.StartPosition,
+                    Key       = 1,
                     TypeFlags = HandleTypeFlags.Position,
                     Position  = config.StartPosition,
-                    Radius    = NT_Handle.PrimaryRadius
+                    Radius    = NT_Handle.PrimaryRadius,
+                    Parameter = parameters["generate.startPosition"]
                 }
             };
         }

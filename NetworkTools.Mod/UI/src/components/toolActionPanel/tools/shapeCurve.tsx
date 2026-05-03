@@ -3,9 +3,14 @@ import styles from "../toolActionPanel.module.scss";
 import {
     GAME_BINDINGS,
     GAME_TRIGGERS,
-    ShapeConfigData,
-    ShapeTransformTemplate,
 } from "gameBindings";
+import {
+    ShapeTransformTemplate,
+    PARAM_BINDINGS,
+    PARAM_META,
+} from "generated/parameters.generated";
+
+const smoothingFactorMeta = PARAM_META["roadShape.smoothingFactor"];
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
 import { VC, VF } from "components/vanilla/Components";
@@ -34,19 +39,12 @@ const CURVE_MODES: { localeKey: string; id: ShapeTransformTemplate; icon: string
 
 export const ShapeCurveControls: React.FC = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
-    const shapeConfig = useValue(GAME_BINDINGS.SHAPE_CONFIG.binding);
+    const template = useValue(PARAM_BINDINGS.roadShape.template.binding);
+    const smoothingFactor = useValue(PARAM_BINDINGS.roadShape.smoothingFactor.binding);
     const { translate } = useLocalization();
 
-    const handleShapeParameterChange = (param: keyof ShapeConfigData, value: string | number) => {
-        const newConfig: ShapeConfigData = {
-            ...shapeConfig,
-            [param]: value,
-        };
-        GAME_BINDINGS.SHAPE_CONFIG.set(newConfig);
-    };
-
     // Check if any transformation is configured
-    const hasTransform = shapeConfig.template !== ShapeTransformTemplate.Preserve;
+    const hasTransform = template !== ShapeTransformTemplate.Preserve;
 
     return (
         <>
@@ -71,39 +69,19 @@ export const ShapeCurveControls: React.FC = () => {
                                                 className={c(
                                                     styles.iconButton,
                                                     styles.iconButton__xl,
-                                                    shapeConfig.template === preset.id
+                                                    template === preset.id
                                                         ? styles.iconButton__active
                                                         : null,
                                                 )}
                                                 src={preset.icon}
                                                 onSelect={() =>
-                                                    handleShapeParameterChange(
-                                                        "template",
-                                                        preset.id,
-                                                    )
+                                                    PARAM_BINDINGS.roadShape.template.set(preset.id)
                                                 }
-                                                selected={shapeConfig.template === preset.id}
+                                                selected={template === preset.id}
                                                 multiSelect={false}
                                                 disabled={false}
                                                 focusKey={VF.FOCUS_DISABLED}
                                             />
-                                            {/* <Button
-                                                key={preset.id}
-                                                variant="primary"
-                                                className={c(
-                                                    styles.iconButton,
-                                                    shapeConfig.template === preset.id
-                                                        ? styles.iconButton__active
-                                                        : null,
-                                                )}
-                                                onSelect={() =>
-                                                    handleShapeParameterChange(
-                                                        "template",
-                                                        preset.id,
-                                                    )
-                                                }>
-                                                <img src={preset.icon} className={styles.icon} />
-                                            </Button> */}
                                         </Tooltip>
                                     ))}
                                 </div>
@@ -111,16 +89,16 @@ export const ShapeCurveControls: React.FC = () => {
                         </div>
 
                         {/* Smooth Parameters */}
-                        {shapeConfig.template === ShapeTransformTemplate.CurveSmooth && (
+                        {template === ShapeTransformTemplate.CurveSmooth && (
                             <div className={styles.sliderField}>
                                 <VC.FloatSliderField
-                                    value={shapeConfig.smoothingFactor}
+                                    value={smoothingFactor}
                                     label={translate("NetworkTools.UI.Curve.SmoothingFactor") ?? ""}
-                                    min={0}
-                                    max={1}
+                                    min={smoothingFactorMeta.min}
+                                    max={smoothingFactorMeta.max}
                                     fractionDigits={2}
                                     onChange={(e: number) => {
-                                        handleShapeParameterChange("smoothingFactor", e);
+                                        PARAM_BINDINGS.roadShape.smoothingFactor.set(e);
                                     }}
                                 />
                             </div>

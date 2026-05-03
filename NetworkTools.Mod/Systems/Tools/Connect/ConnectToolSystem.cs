@@ -1,6 +1,7 @@
-﻿namespace NetworkTools.Systems.Tools.Connect {
+namespace NetworkTools.Systems.Tools.Connect {
     using Game.Prefabs;
 
+    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools;
 
     using Unity.Collections;
@@ -8,7 +9,7 @@
     using Unity.Mathematics;
 
     /// <summary>
-    ///     Tool system for
+    ///     Tool system for connecting two nodes with a curve or loop.
     /// </summary>
     public partial class NT_ConnectToolSystem : NT_BaseToolSystem, IToolPrefabProvider, INetPrefabCachingProvider, INodeSelectionProvider, INetPrefabSelectionProvider, IManualApplyProvider {
         /// <inheritdoc />
@@ -16,6 +17,28 @@
 
         /// <inheritdoc />
         public override TargetOption AvailableTargets => TargetOption.Road | TargetOption.Path;
+
+        // ── Parameters 
+
+        public EnumParameter<ConnectMode> Mode       = new("connect.mode", ConnectMode.None);
+        public FloatParameter             LoopRadius = new("connect.loopRadius", 50f, 1f, 500f, modes: (int)ConnectMode.Loop);
+
+        // Shared (from node selection)
+        public Float3Parameter StartPosition  = new("connect.startPosition");
+        public Float3Parameter EndPosition    = new("connect.endPosition");
+        public Float3Parameter StartDirection = new("connect.startDirection");
+        public Float3Parameter EndDirection   = new("connect.endDirection");
+
+        // Curve (from generator init + handle drags)
+        public Float3Parameter CurveStartPointPosition        = new("connect.curveStartPointPosition",        modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve);
+        public Float3Parameter CurveStartControlPointPosition = new("connect.curveStartControlPointPosition", modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve);
+        public Float3Parameter CurveEndControlPointPosition   = new("connect.curveEndControlPointPosition",   modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve);
+        public Float3Parameter CurveEndPointPosition          = new("connect.curveEndPointPosition",          modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve);
+
+        // Loop (from generator init + handle drags)
+        public Float3Parameter LoopControlPointPosition = new("connect.loopControlPointPosition", modes: (int)ConnectMode.Loop);
+
+        // ── Non-parameter state 
 
         /// <summary>
         ///     Caches the last hit position for tool-specific use.
@@ -58,15 +81,5 @@
                        ? m_SelectedNodes.ToArray(Allocator.Temp).ToArray()
                        : System.Array.Empty<Entity>();
         }
-
-        /// <summary>
-        ///     Currently selected ConnectMode.
-        /// </summary>
-        public ConnectMode CurrentMode = ConnectMode.None;
-
-        /// <summary>
-        ///     Current config.
-        /// </summary>
-        internal ConnectConfig CurrentConfig = new ConnectConfig();
     }
 }

@@ -51,21 +51,6 @@ namespace NetworkTools.Systems.UI {
                 m_SelectedEntitiesBinding.Value = selectedEntitiesData;
             }
 
-            // Update connect mode binding when the tool changes it
-            var currentConnectMode = (int)m_NtConnectToolSystem.CurrentMode;
-            if (currentConnectMode != m_LastConnectMode) {
-                m_LastConnectMode          = currentConnectMode;
-                m_ConnectModeBinding.Value = currentConnectMode;
-            }
-
-            // Update generate mode binding when the tool changes it
-            var currentGenerateMode = (int)m_NtGenerateToolSystem.CurrentMode;
-            if (currentGenerateMode != m_LastGenerateMode)
-            {
-                m_LastGenerateMode = currentGenerateMode;
-                m_GenerateModeBinding.Value = currentGenerateMode;
-            }
-
             // Update net prefab binding when the active tool's selection changes
             if (m_ToolSystem.activeTool is NT_BaseToolSystem prefabSelectionProvider and INetPrefabSelectionProvider) {
                 var currentNetPrefabEntity = prefabSelectionProvider.SelectedNetPrefabEntity;
@@ -117,13 +102,6 @@ namespace NetworkTools.Systems.UI {
             if (currentSelectedViews != m_LastSelectedViews) {
                 m_LastSelectedViews          = currentSelectedViews;
                 m_SelectedViewsBinding.Value = currentSelectedViews;
-            }
-
-            // Sync shape config binding when the tool modifies it (e.g., via handles)
-            var currentShapeConfigRevision = m_NtRoadShapeToolSystem.ShapeConfigRevision;
-            if (currentShapeConfigRevision != m_LastShapeConfigRevision) {
-                m_LastShapeConfigRevision   = currentShapeConfigRevision;
-                m_ShapeConfigBinding.Value  = m_NtRoadShapeToolSystem.ShapeTransformConfig;
             }
 
             if (m_ToggleToolPanelAction.WasPerformedThisFrame()) {

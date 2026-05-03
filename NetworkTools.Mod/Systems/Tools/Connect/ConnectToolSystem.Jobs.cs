@@ -1,4 +1,4 @@
-﻿namespace NetworkTools.Systems.Tools.Connect {
+namespace NetworkTools.Systems.Tools.Connect {
     using Colossal.Mathematics;
 
     using Game.Common;
@@ -17,7 +17,7 @@
 #endif
         internal struct CreateDefinitionsJob : IJob {
             [ReadOnly] public required ConnectMode        Mode;
-            [ReadOnly] public required ConnectConfig      Config;
+            [ReadOnly] public required ConnectJobConfig   Config;
             [ReadOnly] public required ToolOutputMode     OutputMode;
             [ReadOnly] public required NativeList<Entity> SelectedNodeEntities;
             [ReadOnly] public required Entity             PrefabEntity;
@@ -41,10 +41,10 @@
                 // 2. Create definitions
                 switch (Mode) {
                     case ConnectMode.SimpleCurve:
-                        new SimpleCurveGenerator().GenerateConnection(Mode, Config, ref curves);
+                        new SimpleCurveGenerator().GenerateConnection(Config, ref curves);
                         break;
                     case ConnectMode.Loop:
-                        new LoopGenerator().GenerateConnection(Mode, Config, ref curves);
+                        new LoopGenerator().GenerateConnection(Config, ref curves);
                         break;
                 }
 

@@ -13,7 +13,7 @@
             ref NativeArray<EdgeState> edges,
             ref NativeArray<NodeState> nodes,
             in ShapeTransformContext ctx,
-            in ShapeTransformConfig config)
+            in ShapeJobConfig config)
             where T : struct, IPathTransformation {
 
             // 1. PreProcess (global calculations - may set instance fields like ReferenceBezier)
