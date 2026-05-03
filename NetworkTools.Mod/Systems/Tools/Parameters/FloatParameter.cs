@@ -1,4 +1,4 @@
-namespace NetworkTools.Systems.Parameters {
+namespace NetworkTools.Systems.Tools.Parameters {
     public class FloatParameter : Parameter<float> {
         public float Min { get; }
         public float Max { get; }

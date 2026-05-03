@@ -1,4 +1,4 @@
-namespace NetworkTools.Systems.Parameters {
+namespace NetworkTools.Systems.Tools.Parameters {
     using System.Collections.Generic;
 
     /// <summary>

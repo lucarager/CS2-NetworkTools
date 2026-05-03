@@ -1,18 +1,21 @@
 ﻿namespace NetworkTools.Systems.UI {
     using Colossal.UI.Binding;
+
     using Game.Input;
     using Game.Prefabs;
     using Game.Tools;
     using Game.UI;
+
     using NetworkTools.Extensions;
     using NetworkTools.Settings;
-    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools.Generate;
     using NetworkTools.Systems.Tools.Parallel;
+    using NetworkTools.Systems.Tools.Parameters;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Utils;
+
     using Unity.Entities;
 
     /// <summary>

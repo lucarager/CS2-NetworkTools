@@ -11,12 +11,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// </summary>
         void InitializeConfig(ref GenerateJobConfig config);
 
-        void GeneratePreview(
-            in float3 StartPosition,
-            in quaternion StartDirection,
-            ref NativeList<EdgeConfig> curves);
-
-        void GenerateNetwork(
+        void Generate(
             in  GenerateJobConfig      config,
             ref NativeList<EdgeConfig> curves);
     }

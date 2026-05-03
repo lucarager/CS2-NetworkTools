@@ -1,8 +1,10 @@
 namespace NetworkTools.Systems.Tools.RoadShape {
     using System.Collections.Generic;
+
     using Game.Input;
-    using NetworkTools.Systems.Parameters;
+
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Burst;
     using Unity.Collections;

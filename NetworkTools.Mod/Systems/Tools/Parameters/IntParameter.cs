@@ -1,4 +1,4 @@
-namespace NetworkTools.Systems.Parameters {
+namespace NetworkTools.Systems.Tools.Parameters {
     public class IntParameter : Parameter<int> {
         public int Min { get; }
         public int Max { get; }

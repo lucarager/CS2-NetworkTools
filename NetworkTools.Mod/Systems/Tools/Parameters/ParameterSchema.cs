@@ -1,10 +1,10 @@
-namespace NetworkTools.Systems.Parameters {
+namespace NetworkTools.Systems.Tools.Parameters {
     using System;
     using System.Collections.Generic;
     using System.Reflection;
 
     /// <summary>
-    ///     Discovers public <see cref="ParameterBase" /> fields on any object (typically an <see cref="NetworkTools.Systems.Tools.NT_BaseToolSystem" /> subclass).
+    ///     Discovers public <see cref="ParameterBase" /> fields on any object (typically an <see cref="NT_BaseToolSystem" /> subclass).
     ///     Per-type field lists are cached; per-instance parameter arrays are built on first access.
     /// </summary>
     public static class ParameterSchema {

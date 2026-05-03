@@ -1,8 +1,8 @@
 namespace NetworkTools.Systems.Tools.Connect {
     using Game.Prefabs;
 
-    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Collections;
     using Unity.Entities;

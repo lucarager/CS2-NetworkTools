@@ -6,9 +6,9 @@
 namespace NetworkTools.Systems.Tools.Parallel {
     using Game.Prefabs;
 
-    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Parallel;
+    using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Entities;
 

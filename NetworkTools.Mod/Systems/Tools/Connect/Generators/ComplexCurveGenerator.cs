@@ -1,9 +1,12 @@
 namespace NetworkTools.Systems.Tools.Connect {
     using System.Collections.Generic;
+
     using Colossal.Mathematics;
+
     using NetworkTools.Components.Handles;
-    using NetworkTools.Systems.Parameters;
     using NetworkTools.Systems.Tools.Base;
+    using NetworkTools.Systems.Tools.Parameters;
+
     using Unity.Collections;
     using Unity.Mathematics;
 

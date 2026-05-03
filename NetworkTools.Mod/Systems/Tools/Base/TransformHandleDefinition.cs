@@ -1,6 +1,6 @@
 ﻿namespace NetworkTools.Systems.Tools.Base {
     using NetworkTools.Components.Handles;
-    using NetworkTools.Systems.Parameters;
+    using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Mathematics;
 

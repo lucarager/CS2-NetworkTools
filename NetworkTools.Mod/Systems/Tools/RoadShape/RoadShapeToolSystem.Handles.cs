@@ -1,6 +1,6 @@
 namespace NetworkTools.Systems.Tools.RoadShape {
     using NetworkTools.Components.Handles;
-    using NetworkTools.Systems.Parameters;
+    using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Entities;
     using Unity.Jobs;

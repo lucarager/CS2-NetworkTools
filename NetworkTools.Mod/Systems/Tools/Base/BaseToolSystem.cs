@@ -10,7 +10,7 @@ namespace NetworkTools.Systems.Tools {
 
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
-    using NetworkTools.Systems.Parameters;
+    using NetworkTools.Systems.Tools.Parameters;
     using NetworkTools.Systems.Tools.Base;
     using NetworkTools.Utils;
     using Unity.Collections;

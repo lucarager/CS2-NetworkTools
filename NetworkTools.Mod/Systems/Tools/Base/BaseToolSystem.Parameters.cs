@@ -1,6 +1,7 @@
 namespace NetworkTools.Systems.Tools {
     using System.Collections.Generic;
-    using NetworkTools.Systems.Parameters;
+
+    using NetworkTools.Systems.Tools.Parameters;
 
     public abstract partial class NT_BaseToolSystem {
         private ParameterBase[] m_ToolParameters;
