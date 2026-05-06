@@ -1,20 +1,46 @@
 namespace NetworkTools.Systems.Tools {
     using System.Collections.Generic;
 
+    using NetworkTools.Systems.Handles;
     using NetworkTools.Systems.Tools.Parameters;
+
+    using Unity.Entities;
+    using Unity.Mathematics;
 
     public abstract partial class NT_BaseToolSystem {
         private ParameterBase[] m_ToolParameters;
         private Dictionary<string, ParameterBase> m_ParametersByKey;
 
+        protected readonly struct HandleEntry {
+            public ParameterBase Parameter { get; }
+            public IHandleSpec   Spec      { get; }
+
+            public HandleEntry(ParameterBase parameter, IHandleSpec spec) {
+                Parameter = parameter;
+                Spec      = spec;
+            }
+        }
+
+        protected class ParentChildLink {
+            public Float3Parameter Child;
+            public float3          LastParentPos;
+        }
+
+        protected Dictionary<Entity, HandleEntry>                m_HandleEntries;
+        protected Dictionary<ParameterBase, List<Entity>>        m_ParameterHandles;
+        protected Dictionary<Float3Parameter, ParentChildLink[]> m_ParentChildLinks;
+
         /// <summary>
         ///     All <see cref="ParameterBase" /> fields declared on the concrete tool class, in declaration order.
         ///     Lazily discovered via reflection and cached per instance.
+        ///     On first access, permanent subscribers are wired for every parameter.
         /// </summary>
         public IReadOnlyList<ParameterBase> Parameters {
             get {
-                if (m_ToolParameters == null)
+                if (m_ToolParameters == null) {
                     m_ToolParameters = ParameterSchema.Discover(this);
+                    WireParameterSubscribers();
+                }
                 return m_ToolParameters;
             }
         }
@@ -48,5 +74,43 @@ namespace NetworkTools.Systems.Tools {
             }
             return false;
         }
+
+        private void WireParameterSubscribers() {
+            m_HandleEntries    = new Dictionary<Entity, HandleEntry>();
+            m_ParameterHandles = new Dictionary<ParameterBase, List<Entity>>();
+            m_ParentChildLinks = new Dictionary<Float3Parameter, ParentChildLink[]>();
+
+            foreach (var p in m_ToolParameters) {
+                p.OnChanged += MarkUpdateNeeded;
+
+                // Reverse-sync: when a parameter changes via code, update its active handle entities.
+                // Skips Handle origin (the handle is already positioned by the drag).
+                // No-op when m_ParameterHandles is empty (before RebuildHandlesForActiveMode).
+                var param = p;
+                param.OnChanged += origin => {
+                    if (origin == ChangeOrigin.Handle) return;
+                    if (!m_ParameterHandles.TryGetValue(param, out var entities)) return;
+                    foreach (var entity in entities)
+                        m_HandleEntries[entity].Spec.SyncToEntity(this, entity, param);
+                };
+
+                // Parent → child propagation: when a Float3Parameter moves, shift its children by delta.
+                // Does not filter by origin — children follow regardless of how the parent changed.
+                // No-op when m_ParentChildLinks is empty (before RebuildHandlesForActiveMode).
+                param.OnChanged += _ => {
+                    if (param is not Float3Parameter pp) return;
+                    if (!m_ParentChildLinks.TryGetValue(pp, out var links)) return;
+
+                    foreach (var link in links) {
+                        var delta = pp.Value - link.LastParentPos;
+                        link.LastParentPos = pp.Value;
+                        if (math.lengthsq(delta) < 1e-8f) continue;
+                        link.Child.Value += delta;
+                    }
+                };
+            }
+        }
+
+        private void MarkUpdateNeeded(ChangeOrigin _) => m_UpdateNeeded = true;
     }
 }

@@ -25,12 +25,8 @@ namespace NetworkTools.Systems.Tools.Generate {
             RenderHandles            = true;
             DisableVanillaValidation = true;
 
-            // Parameter changes trigger a preview rebuild
-            foreach (var p in Parameters)
-                p.OnChanged += () => m_UpdateNeeded = true;
-
             // Mode change additionally reinitializes handles
-            Mode.OnChanged += () => {
+            Mode.OnChanged += _ => {
                 if (Phase == OperationPhase.Ready)
                     RefreshTransformHandles();
             };

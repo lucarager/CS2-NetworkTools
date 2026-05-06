@@ -22,7 +22,7 @@ namespace NetworkTools.Systems.Tools.Parameters {
         public bool   Bindable { get; }
 
         /// <summary>Fired whenever <see cref="Value" /> changes or <see cref="ForceNotify" /> is called.</summary>
-        public event Action OnChanged;
+        public event Action<ChangeOrigin> OnChanged;
 
         protected ParameterBase(string key, int modes = 0, bool bindable = true) {
             Key      = key;
@@ -34,8 +34,8 @@ namespace NetworkTools.Systems.Tools.Parameters {
         public abstract void ResetToDefault();
 
         /// <summary>Fire <see cref="OnChanged" /> unconditionally (e.g., to re-sync UI on tool activation).</summary>
-        public void ForceNotify() => OnChanged?.Invoke();
+        public void ForceNotify() => OnChanged?.Invoke(ChangeOrigin.Code);
 
-        protected void RaiseChanged() => OnChanged?.Invoke();
+        protected void RaiseChanged(ChangeOrigin origin = ChangeOrigin.Code) => OnChanged?.Invoke(origin);
     }
 }

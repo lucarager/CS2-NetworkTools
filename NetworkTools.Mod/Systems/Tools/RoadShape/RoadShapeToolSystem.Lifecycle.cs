@@ -2,6 +2,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
     using System.Collections.Generic;
 
     using Game.Common;
+    using NetworkTools.Systems.Tools.Parameters;
     using Game.Input;
     using Game.Notifications;
     using Game.Net;
@@ -59,12 +60,8 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             RenderHandles            = true;
             DisableVanillaValidation = true;
 
-            // Parameter changes trigger a preview rebuild
-            foreach (var p in Parameters)
-                p.OnChanged += () => m_UpdateNeeded = true;
-
             // Template change additionally applies presets and reinitializes
-            Template.OnChanged += () => {
+            Template.OnChanged += _ => {
                 ApplyTemplatePreset(Template.Value);
                 if (Phase == OperationPhase.Ready) {
                     InitializeCurrentTransform();
@@ -75,7 +72,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             // EaseInOut handle positions are derived from these parameters; refresh handles
             // when changed externally (UI slider, reset). Skip while dragging — the drag
             // itself is the source of truth and rebuilding would destroy the active handle.
-            System.Action refreshEaseHandles = () => {
+            System.Action<ChangeOrigin> refreshEaseHandles = _ => {
                 if (Phase == OperationPhase.Ready
                     && Template.Value == ShapeTransformTemplate.SlopeEaseInOut
                     && m_HandleInputState != HandleInputState.Dragging) {

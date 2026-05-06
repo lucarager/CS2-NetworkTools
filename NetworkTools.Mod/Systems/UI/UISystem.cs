@@ -168,16 +168,16 @@
         private void RegisterParameterBinding(ParameterBase param) {
             if (param is FloatParameter fp) {
                 var b = CreateBinding(fp.Key, fp.Value, (float v) => fp.Value = v);
-                fp.OnChanged += () => b.Value = fp.Value;
+                fp.OnChanged += _ => b.Value = fp.Value;
             } else if (param is IntParameter ip) {
                 var b = CreateBinding(ip.Key, ip.Value, (int v) => ip.Value = v);
-                ip.OnChanged += () => b.Value = ip.Value;
+                ip.OnChanged += _ => b.Value = ip.Value;
             } else if (param is BoolParameter bp) {
                 var b = CreateBinding(bp.Key, bp.Value, (bool v) => bp.Value = v);
-                bp.OnChanged += () => b.Value = bp.Value;
+                bp.OnChanged += _ => b.Value = bp.Value;
             } else if (param is IEnumParameter ep) {
                 var b = CreateBinding(ep.Key, ep.IntValue, (int v) => ep.IntValue = v);
-                param.OnChanged += () => b.Value = ep.IntValue;
+                param.OnChanged += _ => b.Value = ep.IntValue;
             }
         }
 
