@@ -45,24 +45,42 @@ namespace NetworkTools.Systems.Tools.Connect {
             in ConnectJobConfig config,
             IReadOnlyDictionary<string, ParameterBase> parameters) {
             // Keys used only for parent-child resolution within this definition set
+            const int keyStart = 1;
             const int keyStartCtl = 2;
-            const int keyEndCtl   = 3;
+            const int keyEndCtl = 3;
+            const int keyEnd = 4;
 
             return new[] {
                 new TransformHandleDefinition {
+                    Key       = keyStart,
+                    TypeFlags = HandleTypeFlags.Position,
+                    Position  = config.CurveStartPointPosition,
+                    Radius    = NT_Handle.PrimaryRadius,
+                    Parameter = parameters["connect.curveStartPointPosition"]
+                },
+                new TransformHandleDefinition {
                     Key       = keyStartCtl,
-                    TypeFlags = HandleTypeFlags.BezierControlPoint,
+                    TypeFlags = HandleTypeFlags.Position,
                     Position  = config.CurveStartControlPointPosition,
+                    ParentKey = keyStart,
                     Radius    = NT_Handle.SecondaryRadius,
                     Parameter = parameters["connect.curveStartControlPointPosition"]
                 },
                 new TransformHandleDefinition {
                     Key       = keyEndCtl,
-                    TypeFlags = HandleTypeFlags.BezierControlPoint,
+                    TypeFlags = HandleTypeFlags.Position,
                     Position  = config.CurveEndControlPointPosition,
+                    ParentKey = keyEnd,
                     Radius    = NT_Handle.SecondaryRadius,
                     Parameter = parameters["connect.curveEndControlPointPosition"]
                 },
+                new TransformHandleDefinition {
+                    Key       = keyEnd,
+                    TypeFlags = HandleTypeFlags.Position,
+                    Position  = config.CurveEndPointPosition,
+                    Radius    = NT_Handle.PrimaryRadius,
+                    Parameter = parameters["connect.curveEndPointPosition"]
+                }
             };
         }
     }

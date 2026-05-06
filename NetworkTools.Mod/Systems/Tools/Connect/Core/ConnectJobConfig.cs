@@ -12,7 +12,7 @@ namespace NetworkTools.Systems.Tools.Connect {
         public float3 StartDirection;
         public float3 EndDirection;
 
-        // Curve
+        // Simple Curve
         public float3 CurveStartPointPosition;
         public float3 CurveStartControlPointPosition;
         public float3 CurveEndControlPointPosition;
