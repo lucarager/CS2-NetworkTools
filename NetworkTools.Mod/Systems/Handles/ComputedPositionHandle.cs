@@ -8,12 +8,12 @@ namespace NetworkTools.Systems.Handles {
 
     public class ComputedPositionHandle : IHandleSpec<float> {
         public string                Parent          { get; init; }
-        public NT_HandleConstraints? Constraints     { get; init; }
+        public NT_HandleConstraints? Constraints     { get; set; }
         public float                 Radius          { get; init; } = NT_Handle.PrimaryRadius;
         public ComputePositionDelegate<float>     ComputePosition     { get; init; }
         public ComputeFromPositionDelegate<float> ComputeFromPosition { get; init; }
 
-        HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Position;
+        HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Position | HandleTypeFlags.ParameterRange;
 
         internal Float3Parameter ResolvedParent;
 

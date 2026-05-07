@@ -108,6 +108,14 @@ namespace NetworkTools.Systems.Tools {
                         link.Child.Value += delta;
                     }
                 };
+
+                // Parent → child handle center sync: when a Float3Parameter changes, update the
+                // NT_HandleCircle.Center and NT_HandlePosition on any circle/rotation handles that
+                // reference it as their parent. This keeps the visual in sync during drag.
+                param.OnChanged += _ => {
+                    if (param is not Float3Parameter pp) return;
+                    SyncParentPositionToChildHandles(pp);
+                };
             }
         }
 

@@ -406,6 +406,34 @@ namespace NetworkTools.Systems.Tools {
             }
         }
 
+        /// <summary>
+        ///     When a Float3Parameter that is a parent changes, update the center position
+        ///     on any child circle or rotation handle entities that reference it.
+        /// </summary>
+        private void SyncParentPositionToChildHandles(Float3Parameter parent) {
+            if (m_HandleEntries == null || m_HandleEntries.Count == 0) return;
+
+            var pos = parent.Value;
+            foreach (var (entity, entry) in m_HandleEntries) {
+                Float3Parameter resolvedParent = entry.Spec switch {
+                    CircleHandle ch         => ch.ResolvedParent,
+                    RotationHandle rh       => rh.ResolvedParent,
+                    _                       => null
+                };
+                if (resolvedParent != parent) continue;
+                if (!EntityManager.Exists(entity)) continue;
+
+                EntityManager.SetComponentData(entity,
+                    new NT_HandlePosition { Position = pos, Rotation = quaternion.identity });
+
+                if (EntityManager.HasComponent<NT_HandleCircle>(entity)) {
+                    var circle = EntityManager.GetComponentData<NT_HandleCircle>(entity);
+                    circle.Center = pos;
+                    EntityManager.SetComponentData(entity, circle);
+                }
+            }
+        }
+
         #endregion
 
         /// <summary>
