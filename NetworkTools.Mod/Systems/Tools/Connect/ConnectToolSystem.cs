@@ -1,6 +1,8 @@
 namespace NetworkTools.Systems.Tools.Connect {
     using Game.Prefabs;
 
+    using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Handles;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Parameters;
 
@@ -18,27 +20,83 @@ namespace NetworkTools.Systems.Tools.Connect {
         /// <inheritdoc />
         public override TargetOption AvailableTargets => TargetOption.Road | TargetOption.Path;
 
-        // ── Parameters 
+        // ── Parameters
 
         public EnumParameter<ConnectMode> Mode       = new("connect.mode", ConnectMode.None);
-        public FloatParameter             LoopRadius = new("connect.loopRadius", 50f, 1f, 500f, modes: (int)ConnectMode.Loop);
+        public FloatParameter             LoopRadius = new("connect.loopRadius", 50f, 1f, 500f, modes: (int)ConnectMode.Loop) {
+            Handles = new IHandleSpec<float>[] {
+                new CircleHandle {
+                    Parent = nameof(LoopControlPointPosition),
+                    Radius = NT_Handle.SecondaryRadius
+                }
+            }
+        };
 
         // Shared (from node selection)
         public Float3Parameter StartPosition  = new("connect.startPosition");
         public Float3Parameter EndPosition    = new("connect.endPosition");
-        public Float3Parameter StartDirection = new("connect.startDirection");
-        public Float3Parameter EndDirection   = new("connect.endDirection");
+        public Float3Parameter StartDirection = new("connect.startDirection", modes: (int)ConnectMode.Loop) {
+            Handles = new IHandleSpec<float3>[] {
+                new RotationHandle {
+                    Parent = nameof(StartPosition),
+                    Style = HandleTypeFlags.Primary,
+                    ReferenceDirectionFrom = nameof(StartDirection)
+                }
+            }
+        };
+        public Float3Parameter EndDirection = new("connect.endDirection", modes: (int)ConnectMode.Loop) {
+            Handles = new IHandleSpec<float3>[] {
+                new RotationHandle {
+                    Parent = nameof(EndPosition),
+                    Style = HandleTypeFlags.Primary,
+                    ReferenceDirectionFrom = nameof(EndDirection)
+                }
+            }
+        };
 
         // Curve (from generator init + handle drags)
-        public Float3Parameter CurveStartPointPosition        = new("connect.curveStartPointPosition",        modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve);
-        public Float3Parameter CurveStartControlPointPosition = new("connect.curveStartControlPointPosition", modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve);
-        public Float3Parameter CurveEndControlPointPosition   = new("connect.curveEndControlPointPosition",   modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve);
-        public Float3Parameter CurveEndPointPosition          = new("connect.curveEndPointPosition",          modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve);
+        public Float3Parameter CurveStartPointPosition = new(
+            "connect.curveStartPointPosition",
+            modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve) {
+            Handles = new IHandleSpec<float3>[] { new PositionHandle() }
+        };
+        public Float3Parameter CurveStartControlPointPosition = new(
+            "connect.curveStartControlPointPosition",
+            modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve) {
+            Handles = new IHandleSpec<float3>[] {
+                new PositionHandle {
+                    Style  = HandleTypeFlags.BezierControlPoint,
+                    Parent = nameof(CurveStartPointPosition),
+                    Radius = NT_Handle.SecondaryRadius
+                }
+            }
+        };
+        public Float3Parameter CurveEndControlPointPosition = new(
+            "connect.curveEndControlPointPosition",
+            modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve) {
+            Handles = new IHandleSpec<float3>[] {
+                new PositionHandle {
+                    Style  = HandleTypeFlags.BezierControlPoint,
+                    Parent = nameof(CurveEndPointPosition),
+                    Radius = NT_Handle.SecondaryRadius
+                }
+            }
+        };
+        public Float3Parameter CurveEndPointPosition = new(
+            "connect.curveEndPointPosition",
+            modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve) {
+            Handles = new IHandleSpec<float3>[] { new PositionHandle() }
+        };
 
         // Loop (from generator init + handle drags)
-        public Float3Parameter LoopControlPointPosition = new("connect.loopControlPointPosition", modes: (int)ConnectMode.Loop);
+        public Float3Parameter LoopControlPointPosition = new("connect.loopControlPointPosition", modes: (int)ConnectMode.Loop) {
+            Handles = new IHandleSpec<float3>[] { new PositionHandle() }
+        };
 
-        // ── Non-parameter state 
+        /// <inheritdoc />
+        protected override int GetActiveModeFlag() => (int)Mode.Value;
+
+        // ── Non-parameter state
 
         /// <summary>
         ///     Caches the last hit position for tool-specific use.

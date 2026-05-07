@@ -1,11 +1,5 @@
 namespace NetworkTools.Systems.Tools.Connect {
-    using System.Collections.Generic;
-
     using Colossal.Mathematics;
-
-    using NetworkTools.Components.Handles;
-    using NetworkTools.Systems.Tools.Base;
-    using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Collections;
     using Unity.Mathematics;
@@ -150,54 +144,5 @@ namespace NetworkTools.Systems.Tools.Connect {
             };
         }
 
-        /// <summary>
-        ///     Builds handle definitions for Loop mode with parameter references bound directly.
-        /// </summary>
-        public static TransformHandleDefinition[] BuildHandleDefinitions(
-            in ConnectJobConfig config,
-            IReadOnlyDictionary<string, ParameterBase> parameters) {
-            // Keys used only for parent-child resolution within this definition set
-            const int keyControlPoint = 1;
-            const int keyRadius       = 2;
-            const int keyStartDir     = 3;
-            const int keyEndDir       = 4;
-
-            return new[] {
-                new TransformHandleDefinition {
-                    Key       = keyControlPoint,
-                    TypeFlags = HandleTypeFlags.Position,
-                    Position  = config.LoopControlPointPosition,
-                    Radius    = NT_Handle.PrimaryRadius,
-                    Parameter = parameters["connect.loopControlPointPosition"]
-                },
-                new TransformHandleDefinition {
-                    Key       = keyRadius,
-                    TypeFlags = HandleTypeFlags.Circle,
-                    Position  = config.LoopControlPointPosition,
-                    Value     = config.LoopRadius,
-                    Radius    = NT_Handle.SecondaryRadius,
-                    ParentKey = keyControlPoint,
-                    Parameter = parameters["connect.loopRadius"]
-                },
-                new TransformHandleDefinition {
-                    Key                = keyStartDir,
-                    TypeFlags          = HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
-                    Position           = config.StartPosition,
-                    Value              = 0,
-                    ReferenceDirection = config.StartDirection,
-                    Angle              = 0,
-                    Parameter          = parameters["connect.startDirection"]
-                },
-                new TransformHandleDefinition {
-                    Key                = keyEndDir,
-                    TypeFlags          = HandleTypeFlags.Rotation | HandleTypeFlags.Primary,
-                    Position           = config.EndPosition,
-                    Value              = 0,
-                    ReferenceDirection = config.EndDirection,
-                    Angle              = 0,
-                    Parameter          = parameters["connect.endDirection"]
-                },
-            };
-        }
     }
 }

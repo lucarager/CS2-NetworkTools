@@ -69,7 +69,7 @@ namespace NetworkTools.Systems.Tools.Connect {
             LoopControlPointPosition.Value       = config.LoopControlPointPosition;
             LoopRadius.Value                     = config.LoopRadius;
 
-            RefreshTransformHandles();
+            RebuildHandlesForActiveMode();
         }
 
         /// <summary>
@@ -175,7 +175,7 @@ namespace NetworkTools.Systems.Tools.Connect {
             RenderHandles            = true;
             DisableVanillaValidation = true;
 
-            // Mode change additionally reinitializes context and handles
+            // Mode change reinitializes context and handles
             Mode.OnChanged += _ => {
                 if (Phase == OperationPhase.Ready)
                     InitializeConfig();

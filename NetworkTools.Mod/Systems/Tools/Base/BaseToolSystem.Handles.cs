@@ -3,6 +3,7 @@ namespace NetworkTools.Systems.Tools {
 
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Handles;
     using NetworkTools.Systems.Tools.Base;
     using NetworkTools.Systems.Tools.Parameters;
 
@@ -87,6 +88,334 @@ namespace NetworkTools.Systems.Tools {
                                      .WithAll<NT_Handle, NT_HandlePosition, NT_HandleLink>()
                                      .Build();
         }
+
+        #region Spec-Driven Dispatch
+
+        /// <summary>
+        ///     Returns the mode flag for the tool's current mode.
+        ///     Override in concrete tools that use an enum mode parameter.
+        /// </summary>
+        protected virtual int GetActiveModeFlag() => 0;
+
+        /// <summary>
+        ///     Returns true when the parameter is visible in the given mode.
+        ///     A parameter with Modes == 0 is visible in all modes.
+        /// </summary>
+        private static bool IsModeVisible(int paramModes, int activeMode) {
+            return paramModes == 0 || (paramModes & activeMode) != 0;
+        }
+
+        /// <summary>
+        ///     Walks <see cref="Parameters"/>.<see cref="ParameterBase.Handles"/>,
+        ///     creates ECS handle entities for the active mode, and populates
+        ///     <see cref="m_HandleEntries"/>, <see cref="m_ParameterHandles"/>, and <see cref="m_ParentChildLinks"/>.
+        /// </summary>
+        protected void RebuildHandlesForActiveMode() {
+            CancelHandleInteraction();
+            DestroyAllHandles();
+
+            var active = GetActiveModeFlag();
+            foreach (var param in Parameters) {
+                var specs = GetHandleSpecs(param);
+                if (specs == null) continue;
+                if (!IsModeVisible(param.Modes, active)) continue;
+
+                foreach (IHandleSpec spec in specs) {
+                    var pos    = ResolveInitialPosition(param, spec);
+                    var entity = CreateHandleFromSpec(spec, pos, param);
+                    m_HandleEntries[entity] = new HandleEntry(param, spec);
+
+                    if (!m_ParameterHandles.TryGetValue(param, out var list)) {
+                        list = new List<Entity>(2);
+                        m_ParameterHandles[param] = list;
+                    }
+                    list.Add(entity);
+                }
+            }
+
+            ResolveParentLinks();
+            BuildParentChildLinks();
+        }
+
+        /// <summary>
+        ///     Extracts the <see cref="IHandleSpec"/> array from a parameter, regardless of its generic type.
+        /// </summary>
+        private static IHandleSpec[] GetHandleSpecs(ParameterBase param) {
+            return param switch {
+                Float3Parameter f3p => f3p.Handles,
+                FloatParameter  fp  => fp.Handles,
+                _                   => null
+            };
+        }
+
+        /// <summary>
+        ///     Computes the initial world position for a handle being created.
+        /// </summary>
+        private float3 ResolveInitialPosition(ParameterBase param, IHandleSpec spec) {
+            switch (param) {
+                case Float3Parameter f3p: {
+                    var s = (IHandleSpec<float3>)spec;
+                    return s.ComputePosition != null ? s.ComputePosition(this, f3p.Value) : f3p.Value;
+                }
+                case FloatParameter fp: {
+                    var s = (IHandleSpec<float>)spec;
+                    if (s.ComputePosition != null) return s.ComputePosition(this, fp.Value);
+
+                    // Circle/rotation handles position at the parent; position will be set after parent resolution
+                    return float3.zero;
+                }
+                default:
+                    return float3.zero;
+            }
+        }
+
+        /// <summary>
+        ///     Creates a single ECS handle entity from a spec, dispatching by type.
+        /// </summary>
+        private Entity CreateHandleFromSpec(IHandleSpec spec, float3 position, ParameterBase param) {
+            var typeFlags = spec.TypeFlags;
+            var radius    = spec.Radius > 0f ? spec.Radius : NT_Handle.PrimaryRadius;
+
+            if ((typeFlags & HandleTypeFlags.Rotation) != 0 && spec is RotationHandle rot) {
+                var normal = math.lengthsq(rot.Normal) > 0f
+                    ? math.normalizesafe(rot.Normal)
+                    : new float3(0f, 1f, 0f);
+                var refDir = math.lengthsq(rot.ReferenceDirection) > 0f
+                    ? math.normalizesafe(rot.ReferenceDirection)
+                    : new float3(1f, 0f, 0f);
+
+                float angle = 0f;
+                if (param is Float3Parameter f3p) {
+                    var direction = f3p.Value;
+                    if (math.lengthsq(direction) > 0.0001f) {
+                        var perp = math.cross(normal, refDir);
+                        angle = math.atan2(math.dot(direction, perp), math.dot(direction, refDir));
+                    }
+                }
+
+                return CreateRotationHandle(Entity.Null, 0, position, radius, normal, refDir, angle, typeFlags);
+            }
+
+            if ((typeFlags & HandleTypeFlags.Circle) != 0 && spec is CircleHandle circ) {
+                var circleRadius = param is FloatParameter fp ? fp.Value : 0f;
+                var normal = math.lengthsq(circ.Normal) > 0f
+                    ? math.normalizesafe(circ.Normal)
+                    : new float3(0f, 1f, 0f);
+                return CreateCircleHandle(Entity.Null, 0, position, circleRadius, normal, typeFlags);
+            }
+
+            // Position or ComputedPosition
+            return CreatePositionHandle(Entity.Null, Entity.Null, 0, position, typeFlags, spec.Constraints, radius);
+        }
+
+        /// <summary>
+        ///     Resolves <see cref="IHandleSpec.Parent"/>, <c>ReferenceDirectionFrom</c>, and <c>NormalFrom</c>
+        ///     name references to parameter values and entities.
+        /// </summary>
+        private void ResolveParentLinks() {
+            var nameToParam = new Dictionary<string, ParameterBase>();
+            foreach (var field in GetType().GetFields(
+                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)) {
+                if (typeof(ParameterBase).IsAssignableFrom(field.FieldType)) {
+                    nameToParam[field.Name] = (ParameterBase)field.GetValue(this);
+                }
+            }
+
+            foreach (var (entity, entry) in m_HandleEntries) {
+                // Resolve ReferenceDirectionFrom / NormalFrom on rotation and circle handles
+                if (entry.Spec is RotationHandle rot) {
+                    ResolveRotationFields(entity, rot, nameToParam);
+                } else if (entry.Spec is CircleHandle circ) {
+                    ResolveCircleFields(entity, circ, nameToParam);
+                }
+
+                // Resolve Parent
+                var parentName = entry.Spec.Parent;
+                if (string.IsNullOrEmpty(parentName)) continue;
+
+                if (!nameToParam.TryGetValue(parentName, out var parentParam)) continue;
+                if (parentParam is not Float3Parameter parentF3) continue;
+
+                switch (entry.Spec) {
+                    case PositionHandle ph:        ph.ResolvedParent = parentF3; break;
+                    case CircleHandle ch:          ch.ResolvedParent = parentF3; break;
+                    case RotationHandle rh:        rh.ResolvedParent = parentF3; break;
+                    case ComputedPositionHandle c: c.ResolvedParent  = parentF3; break;
+                }
+
+                if (m_ParameterHandles.TryGetValue(parentParam, out var parentEntities) && parentEntities.Count > 0) {
+                    var parentEntity = parentEntities[0];
+                    EntityManager.AddComponentData(entity, new NT_HandleParent { Parent = parentEntity });
+
+                    if (entry.Spec is CircleHandle || entry.Spec is RotationHandle) {
+                        var parentPos = parentF3.Value;
+                        EntityManager.SetComponentData(entity, new NT_HandlePosition {
+                            Position = parentPos, Rotation = quaternion.identity
+                        });
+                        if (EntityManager.HasComponent<NT_HandleCircle>(entity)) {
+                            var circle = EntityManager.GetComponentData<NT_HandleCircle>(entity);
+                            circle.Center = parentPos;
+                            EntityManager.SetComponentData(entity, circle);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Resolves <c>ReferenceDirectionFrom</c> and <c>NormalFrom</c> on a rotation handle.
+        ///     Reads the referenced parameter's current value and updates the ECS components.
+        /// </summary>
+        private void ResolveRotationFields(Entity entity, RotationHandle rot, Dictionary<string, ParameterBase> nameToParam) {
+            var refDir = rot.ReferenceDirection;
+            var normal = rot.Normal;
+
+            if (!string.IsNullOrEmpty(rot.ReferenceDirectionFrom)
+                && nameToParam.TryGetValue(rot.ReferenceDirectionFrom, out var refParam)
+                && refParam is Float3Parameter refF3) {
+                var v = refF3.Value;
+                if (math.lengthsq(v) > 0.0001f) refDir = math.normalizesafe(v);
+            }
+
+            if (!string.IsNullOrEmpty(rot.NormalFrom)
+                && nameToParam.TryGetValue(rot.NormalFrom, out var normParam)
+                && normParam is Float3Parameter normF3) {
+                var v = normF3.Value;
+                if (math.lengthsq(v) > 0.0001f) normal = math.normalizesafe(v);
+            }
+
+            refDir = math.lengthsq(refDir) > 0f ? math.normalizesafe(refDir) : new float3(1f, 0f, 0f);
+            normal = math.lengthsq(normal) > 0f ? math.normalizesafe(normal) : new float3(0f, 1f, 0f);
+
+            // Recompute initial angle from the owning parameter's current value
+            float angle = 0f;
+            if (m_HandleEntries.TryGetValue(entity, out var he) && he.Parameter is Float3Parameter f3p) {
+                var direction = f3p.Value;
+                if (math.lengthsq(direction) > 0.0001f) {
+                    var perp = math.cross(normal, refDir);
+                    angle = math.atan2(math.dot(direction, perp), math.dot(direction, refDir));
+                }
+            }
+
+            // Update ECS components with resolved values
+            if (EntityManager.HasComponent<NT_HandleCircle>(entity)) {
+                var circle = EntityManager.GetComponentData<NT_HandleCircle>(entity);
+                circle.Normal = normal;
+                EntityManager.SetComponentData(entity, circle);
+            }
+            EntityManager.SetComponentData(entity, NT_HandleRotation.Create(refDir, angle));
+        }
+
+        /// <summary>
+        ///     Resolves <c>NormalFrom</c> on a circle handle.
+        /// </summary>
+        private void ResolveCircleFields(Entity entity, CircleHandle circ, Dictionary<string, ParameterBase> nameToParam) {
+            if (string.IsNullOrEmpty(circ.NormalFrom)) return;
+
+            if (nameToParam.TryGetValue(circ.NormalFrom, out var normParam)
+                && normParam is Float3Parameter normF3) {
+                var v = normF3.Value;
+                if (math.lengthsq(v) > 0.0001f && EntityManager.HasComponent<NT_HandleCircle>(entity)) {
+                    var circle = EntityManager.GetComponentData<NT_HandleCircle>(entity);
+                    circle.Normal = math.normalizesafe(v);
+                    EntityManager.SetComponentData(entity, circle);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Populates <see cref="m_ParentChildLinks"/> from resolved parent references.
+        ///     Each Float3Parameter that is referenced as a Parent gets an entry mapping to its child Float3Parameters.
+        /// </summary>
+        private void BuildParentChildLinks() {
+            m_ParentChildLinks.Clear();
+            var parentToChildren = new Dictionary<Float3Parameter, List<ParentChildLink>>();
+
+            foreach (var (_, entry) in m_HandleEntries) {
+                var parentName = entry.Spec.Parent;
+                if (string.IsNullOrEmpty(parentName)) continue;
+                if (entry.Parameter is not Float3Parameter childF3) continue;
+
+                // Find the resolved parent from the spec
+                Float3Parameter parentF3 = entry.Spec switch {
+                    PositionHandle ph       => ph.ResolvedParent,
+                    CircleHandle ch         => ch.ResolvedParent,
+                    RotationHandle rh       => rh.ResolvedParent,
+                    ComputedPositionHandle c => c.ResolvedParent,
+                    _                       => null
+                };
+
+                if (parentF3 == null) continue;
+
+                if (!parentToChildren.TryGetValue(parentF3, out var list)) {
+                    list = new List<ParentChildLink>();
+                    parentToChildren[parentF3] = list;
+                }
+
+                // Avoid duplicate entries for the same child
+                var alreadyLinked = false;
+                foreach (var existing in list) {
+                    if (existing.Child == childF3) { alreadyLinked = true; break; }
+                }
+                if (!alreadyLinked) {
+                    list.Add(new ParentChildLink { Child = childF3, LastParentPos = parentF3.Value });
+                }
+            }
+
+            foreach (var (parent, list) in parentToChildren) {
+                m_ParentChildLinks[parent] = list.ToArray();
+            }
+        }
+
+        /// <summary>
+        ///     Generic drag dispatch for spec-driven handles.
+        ///     Routes to the correct <see cref="Parameter{T}.SetValue"/> via <see cref="IHandleSpec{T}.ComputeFromPosition"/>.
+        /// </summary>
+        private void DispatchDrag(Entity handle, float3 position) {
+            if (!m_HandleEntries.TryGetValue(handle, out var entry)) return;
+
+            switch (entry.Parameter) {
+                case Float3Parameter f3p: {
+                    var s = (IHandleSpec<float3>)entry.Spec;
+                    var v = s.ComputeFromPosition != null ? s.ComputeFromPosition(this, position) : position;
+                    f3p.SetValue(v, ChangeOrigin.Handle);
+                    break;
+                }
+                case FloatParameter fp: {
+                    var s = (IHandleSpec<float>)entry.Spec;
+                    System.Diagnostics.Debug.Assert(s.ComputeFromPosition != null,
+                        $"FloatParameter handle for '{fp.Key}' has no ComputeFromPosition delegate");
+                    fp.SetValue(s.ComputeFromPosition(this, position), ChangeOrigin.Handle);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Dispatch for circle handle drag (radius change) using spec-driven path.
+        /// </summary>
+        private void DispatchCircleDrag(Entity handle, float radius) {
+            if (!m_HandleEntries.TryGetValue(handle, out var entry)) return;
+
+            if (entry.Parameter is FloatParameter fp) {
+                fp.SetValue(radius, ChangeOrigin.Handle);
+            }
+        }
+
+        /// <summary>
+        ///     Dispatch for rotation handle drag using spec-driven path.
+        /// </summary>
+        private void DispatchRotationDrag(Entity handle, float angle, float3 direction) {
+            if (!m_HandleEntries.TryGetValue(handle, out var entry)) return;
+
+            if (entry.Parameter is Float3Parameter f3p) {
+                var s = (IHandleSpec<float3>)entry.Spec;
+                var v = s.ComputeFromPosition != null ? s.ComputeFromPosition(this, direction) : direction;
+                f3p.SetValue(v, ChangeOrigin.Handle);
+            }
+        }
+
+        #endregion
 
         /// <summary>
         ///     Disposes handle management resources. Called from OnDestroy().
@@ -471,6 +800,9 @@ namespace NetworkTools.Systems.Tools {
 
             m_Handles.Clear();
             m_HandleParameterMap?.Clear();
+            m_HandleEntries?.Clear();
+            m_ParameterHandles?.Clear();
+            m_ParentChildLinks?.Clear();
         }
 
         /// <summary>
@@ -1136,7 +1468,24 @@ namespace NetworkTools.Systems.Tools {
 
             var handleData = EntityManager.GetComponentData<NT_Handle>(m_DraggedHandle);
 
-            if (handleData.HasAnyFlag(HandleTypeFlags.Rotation)
+            // Spec-driven dispatch: if this handle is in m_HandleEntries, use DispatchDrag
+            if (m_HandleEntries != null && m_HandleEntries.ContainsKey(m_DraggedHandle)) {
+                if (handleData.HasAnyFlag(HandleTypeFlags.Rotation)
+                        && EntityManager.HasComponent<NT_HandleRotation>(m_DraggedHandle)) {
+                    var newAngle  = ComputeRotationHandleAngle(m_DraggedHandle);
+                    var rotation  = EntityManager.GetComponentData<NT_HandleRotation>(m_DraggedHandle);
+                    var circle    = EntityManager.GetComponentData<NT_HandleCircle>(m_DraggedHandle);
+                    DispatchRotationDrag(m_DraggedHandle, newAngle, rotation.GetDirection(circle.Normal));
+                } else if (handleData.HasAnyFlag(HandleTypeFlags.Circle)) {
+                    var newRadius = ComputeCircleHandleRadius(m_DraggedHandle);
+                    DispatchCircleDrag(m_DraggedHandle, newRadius);
+                } else {
+                    var handlePos = EntityManager.GetComponentData<NT_HandlePosition>(m_DraggedHandle).Position;
+                    DispatchDrag(m_DraggedHandle, handlePos);
+                }
+            }
+            // Fallthrough: old virtual dispatch for non-migrated tools
+            else if (handleData.HasAnyFlag(HandleTypeFlags.Rotation)
                     && EntityManager.HasComponent<NT_HandleRotation>(m_DraggedHandle)) {
                 var newAngle  = ComputeRotationHandleAngle(m_DraggedHandle);
                 var rotation  = EntityManager.GetComponentData<NT_HandleRotation>(m_DraggedHandle);

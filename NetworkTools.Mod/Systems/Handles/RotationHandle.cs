@@ -7,6 +7,7 @@ namespace NetworkTools.Systems.Handles {
     using Unity.Mathematics;
 
     public class RotationHandle : IHandleSpec<float3> {
+        public HandleTypeFlags       Style               { get; init; }
         public string                Parent              { get; init; }
         public float3                Normal              { get; init; } = new(0, 1, 0);
         public string                NormalFrom          { get; init; }
@@ -17,7 +18,7 @@ namespace NetworkTools.Systems.Handles {
         public ComputePositionDelegate<float3>     ComputePosition     { get; init; }
         public ComputeFromPositionDelegate<float3> ComputeFromPosition { get; init; }
 
-        HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Rotation;
+        HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Rotation | Style;
 
         internal Float3Parameter ResolvedParent;
 
