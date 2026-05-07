@@ -15,31 +15,26 @@ namespace NetworkTools.Components.Handles {
         IEquatable<NT_HandlePosition>,
         ISerializable {
         public float3 Position;
-        public quaternion Rotation;
 
         public bool Equals(NT_HandlePosition other) {
-            return Position.Equals(other.Position) && Rotation.Equals(other.Rotation);
+            return Position.Equals(other.Position);
         }
 
         public override int GetHashCode() {
-            return (17 * 31 + Position.GetHashCode()) * 31 + Rotation.GetHashCode();
+            return Position.GetHashCode();
         }
 
         public void Serialize<TWriter>(TWriter writer) where TWriter : IWriter {
             writer.Write(Position);
-            writer.Write(Rotation);
         }
 
         public void Deserialize<TReader>(TReader reader) where TReader : IReader {
             reader.Read(out Position);
-            reader.Read(out Rotation);
-            if (math.all(Position >= -100000f) && math.all(Position <= 100000f) &&
-                math.all(math.isfinite(Rotation.value)) && !math.all(Rotation.value == 0.0f)) {
+            if (math.all(Position >= -100000f) && math.all(Position <= 100000f)) {
                 return;
             }
 
             Position = new float3();
-            Rotation = quaternion.identity;
         }
     }
 }

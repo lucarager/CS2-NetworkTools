@@ -22,7 +22,7 @@ namespace NetworkTools.Systems.Handles {
             var value = ((Float3Parameter)param).Value;
             var pos   = ComputePosition != null ? ComputePosition(tool, value) : value;
             tool.EntityManager.SetComponentData(entity,
-                new NT_HandlePosition { Position = pos, Rotation = quaternion.identity });
+                new NT_HandlePosition { Position = pos });
         }
     }
 }

@@ -239,15 +239,8 @@ namespace NetworkTools.Systems.Tools {
                     EntityManager.AddComponentData(entity, new NT_HandleParent { Parent = parentEntity });
 
                     if (entry.Spec is CircleHandle || entry.Spec is RotationHandle) {
-                        var parentPos = parentF3.Value;
-                        EntityManager.SetComponentData(entity, new NT_HandlePosition {
-                            Position = parentPos, Rotation = quaternion.identity
-                        });
-                        if (EntityManager.HasComponent<NT_HandleCircle>(entity)) {
-                            var circle = EntityManager.GetComponentData<NT_HandleCircle>(entity);
-                            circle.Center = parentPos;
-                            EntityManager.SetComponentData(entity, circle);
-                        }
+                        EntityManager.SetComponentData(entity,
+                            new NT_HandlePosition { Position = parentF3.Value });
                     }
                 }
             }
@@ -424,13 +417,7 @@ namespace NetworkTools.Systems.Tools {
                 if (!EntityManager.Exists(entity)) continue;
 
                 EntityManager.SetComponentData(entity,
-                    new NT_HandlePosition { Position = pos, Rotation = quaternion.identity });
-
-                if (EntityManager.HasComponent<NT_HandleCircle>(entity)) {
-                    var circle = EntityManager.GetComponentData<NT_HandleCircle>(entity);
-                    circle.Center = pos;
-                    EntityManager.SetComponentData(entity, circle);
-                }
+                    new NT_HandlePosition { Position = pos });
             }
         }
 
@@ -484,10 +471,7 @@ namespace NetworkTools.Systems.Tools {
                                                Key          = key
                                            });
             EntityManager.AddComponentData(handle,
-                                           new NT_HandlePosition {
-                                               Position = position,
-                                               Rotation = quaternion.identity
-                                           });
+                                           new NT_HandlePosition { Position = position });
 
             if (constraints.HasValue) {
                 EntityManager.AddComponentData(handle, constraints.Value);
@@ -523,10 +507,7 @@ namespace NetworkTools.Systems.Tools {
                                            });
             // Position is at midpoint for hit detection
             EntityManager.AddComponentData(handle,
-                                           new NT_HandlePosition {
-                                               Position = (pointA + pointB) * 0.5f,
-                                               Rotation = quaternion.identity
-                                           });
+                                           new NT_HandlePosition { Position = (pointA + pointB) * 0.5f });
             EntityManager.AddComponentData(handle, NT_HandleLine.Create(pointA, pointB));
 
             m_Handles.Add(handle);
@@ -559,13 +540,8 @@ namespace NetworkTools.Systems.Tools {
                                                LinkedEdge   = Entity.Null,
                                                Key          = key
                                            });
-            // Position is at center for reference
-            EntityManager.AddComponentData(handle,
-                                           new NT_HandlePosition {
-                                               Position = center,
-                                               Rotation = quaternion.identity
-                                           });
-            EntityManager.AddComponentData(handle, NT_HandleCircle.Create(center, radius, normal));
+            EntityManager.AddComponentData(handle, new NT_HandlePosition { Position = center });
+            EntityManager.AddComponentData(handle, NT_HandleCircle.Create(radius, normal));
 
             m_Handles.Add(handle);
             return handle;
@@ -603,15 +579,8 @@ namespace NetworkTools.Systems.Tools {
                                                LinkedEdge   = Entity.Null,
                                                Key          = key
                                            });
-            // Position is at center for reference
-            EntityManager.AddComponentData(handle,
-                                           new NT_HandlePosition {
-                                               Position = center,
-                                               Rotation = quaternion.identity
-                                           });
-            // Shared circle geometry for hit detection and rendering
-            EntityManager.AddComponentData(handle, NT_HandleCircle.Create(center, radius, normal));
-            // Rotation-specific data
+            EntityManager.AddComponentData(handle, new NT_HandlePosition { Position = center });
+            EntityManager.AddComponentData(handle, NT_HandleCircle.Create(radius, normal));
             EntityManager.AddComponentData(handle, NT_HandleRotation.Create(referenceDirection, angle));
 
             m_Handles.Add(handle);
@@ -717,11 +686,11 @@ namespace NetworkTools.Systems.Tools {
                         }
                     }
                 } else if (handleData.HasAnyFlag(HandleTypeFlags.Circle | HandleTypeFlags.Rotation)) {
-                    // Both circle and rotation handles share NT_HandleCircle for geometry
-                    var circle = EntityManager.GetComponentData<NT_HandleCircle>(handleEntity);
+                    var circlePos = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
+                    var circle    = EntityManager.GetComponentData<NT_HandleCircle>(handleEntity);
                     if (TryRayCircleIntersection(rayOrigin,
                                                  rayDir,
-                                                 circle.Center,
+                                                 circlePos,
                                                  circle.Radius,
                                                  circle.Normal,
                                                  radius,
@@ -867,10 +836,7 @@ namespace NetworkTools.Systems.Tools {
             }
 
             EntityManager.SetComponentData(handleEntity,
-                                           new NT_HandlePosition {
-                                               Position = newPos,
-                                               Rotation = quaternion.identity
-                                           });
+                                           new NT_HandlePosition { Position = newPos });
 
             // Update line handle endpoints if applicable
             if (EntityManager.HasComponent<NT_HandleLine>(handleEntity)) {
@@ -890,13 +856,14 @@ namespace NetworkTools.Systems.Tools {
         /// <param name="handleEntity">The circle handle entity being dragged.</param>
         /// <returns>The newly computed radius, or the current radius if projection fails.</returns>
         private float ComputeCircleHandleRadius(Entity handleEntity) {
+            var center = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
             var circle = EntityManager.GetComponentData<NT_HandleCircle>(handleEntity);
 
-            if (!TryGetXZPlaneIntersection(circle.Center.y, out var dragPos)) {
+            if (!TryGetXZPlaneIntersection(center.y, out var dragPos)) {
                 return circle.Radius;
             }
 
-            var newRadius = math.distance(circle.Center.xz, dragPos.xz);
+            var newRadius = math.distance(center.xz, dragPos.xz);
 
             circle.Radius = newRadius;
             EntityManager.SetComponentData(handleEntity, circle);
@@ -912,10 +879,10 @@ namespace NetworkTools.Systems.Tools {
         /// <param name="handleEntity">The rotation handle entity being dragged.</param>
         /// <returns>The newly computed angle in radians, or the current angle if projection fails.</returns>
         private float ComputeRotationHandleAngle(Entity handleEntity) {
+            var center   = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
             var rotation = EntityManager.GetComponentData<NT_HandleRotation>(handleEntity);
             var circle   = EntityManager.GetComponentData<NT_HandleCircle>(handleEntity);
 
-            // Intersect mouse ray with the rotation plane
             if (!TryGetCurrentMouseRay(out var rayOrigin, out var rayDir)) {
                 return rotation.Angle;
             }
@@ -925,15 +892,14 @@ namespace NetworkTools.Systems.Tools {
                 return rotation.Angle;
             }
 
-            var planeT = math.dot(circle.Center - rayOrigin, circle.Normal) / denom;
+            var planeT = math.dot(center - rayOrigin, circle.Normal) / denom;
             if (planeT < 0) {
                 return rotation.Angle;
             }
 
             var planeHit = rayOrigin + rayDir * planeT;
-            var toHit    = planeHit - circle.Center;
+            var toHit    = planeHit - center;
 
-            // Project onto the plane's local 2D axes
             var perpendicular = math.cross(circle.Normal, rotation.ReferenceDirection);
             var x             = math.dot(toHit, rotation.ReferenceDirection);
             var y             = math.dot(toHit, perpendicular);

@@ -21,7 +21,7 @@ namespace NetworkTools.Systems.Handles {
             var value = ((FloatParameter)param).Value;
             var pos   = ComputePosition(tool, value);
             tool.EntityManager.SetComponentData(entity,
-                new NT_HandlePosition { Position = pos, Rotation = quaternion.identity });
+                new NT_HandlePosition { Position = pos });
         }
     }
 }

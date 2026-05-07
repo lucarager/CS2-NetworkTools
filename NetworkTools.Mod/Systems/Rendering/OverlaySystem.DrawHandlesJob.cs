@@ -239,8 +239,9 @@ namespace NetworkTools.Systems {
                 buffer.DrawCircle(fillColor, position.Position, 1f);
 
                 // Draw angle indicator: arrow from center toward the angle point
+                var center      = position.Position;
                 var direction   = rotation.GetDirection(circle.Normal);
-                var anglePoint  = circle.Center + direction * circle.Radius;
+                var anglePoint  = center + direction * circle.Radius;
                 var arrowHeight = circle.Radius / 3f;
                 var arrowWidth  = 1f;
 
@@ -249,7 +250,7 @@ namespace NetworkTools.Systems {
                 // LookRotation points +Z along direction; rotate -90° around X to align +Y with direction instead
                 arrowRotation = math.mul(arrowRotation, quaternion.RotateX(math.PI * 0.5f));
 
-                buffer.DrawCustomMesh(outlineColor, circle.Center, arrowHeight, arrowWidth,
+                buffer.DrawCustomMesh(outlineColor, center, arrowHeight, arrowWidth,
                                       CustomOverlayRenderSystem.CustomMeshType.Arrow, arrowRotation);
 
                 // Draw a small handle dot at the angle point

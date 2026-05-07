@@ -10,14 +10,9 @@ namespace NetworkTools.Components.Handles {
     /// <summary>
     /// Data for a circle handle representing a radius/dimension.
     /// Dragging changes the radius based on distance from center.
-    /// Useful for controlling influence radius, curve radius, etc.
+    /// The circle's center position is stored in <see cref="NT_HandlePosition"/>.
     /// </summary>
     public struct NT_HandleCircle : IComponentData {
-        /// <summary>
-        /// Center point of the circle.
-        /// </summary>
-        public float3 Center;
-
         /// <summary>
         /// Radius of the circle.
         /// </summary>
@@ -31,9 +26,8 @@ namespace NetworkTools.Components.Handles {
         /// <summary>
         /// Creates a horizontal circle handle (normal pointing up).
         /// </summary>
-        public static NT_HandleCircle CreateHorizontal(float3 center, float radius) {
+        public static NT_HandleCircle CreateHorizontal(float radius) {
             return new NT_HandleCircle {
-                Center = center,
                 Radius = radius,
                 Normal = new float3(0, 1, 0),
             };
@@ -42,9 +36,8 @@ namespace NetworkTools.Components.Handles {
         /// <summary>
         /// Creates a circle handle with a custom normal.
         /// </summary>
-        public static NT_HandleCircle Create(float3 center, float radius, float3 normal) {
+        public static NT_HandleCircle Create(float radius, float3 normal) {
             return new NT_HandleCircle {
-                Center = center,
                 Radius = radius,
                 Normal = math.normalizesafe(normal),
             };
