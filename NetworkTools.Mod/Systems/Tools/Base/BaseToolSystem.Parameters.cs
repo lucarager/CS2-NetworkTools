@@ -94,26 +94,22 @@ namespace NetworkTools.Systems.Tools {
                         m_HandleEntries[entity].Spec.SyncToEntity(this, entity, param);
                 };
 
-                // Parent → child propagation: when a Float3Parameter moves, shift its children by delta.
+                // Parent → child propagation: when a Float3Parameter moves, propagate to children.
+                // Two concerns: (1) shift Float3Parameter child values by delta, and
+                // (2) update circle/rotation handle entity centers that reference this parent.
                 // Does not filter by origin — children follow regardless of how the parent changed.
-                // No-op when m_ParentChildLinks is empty (before RebuildHandlesForActiveMode).
                 param.OnChanged += _ => {
                     if (param is not Float3Parameter pp) return;
-                    if (!m_ParentChildLinks.TryGetValue(pp, out var links)) return;
 
-                    foreach (var link in links) {
-                        var delta = pp.Value - link.LastParentPos;
-                        link.LastParentPos = pp.Value;
-                        if (math.lengthsq(delta) < 1e-8f) continue;
-                        link.Child.Value += delta;
+                    if (m_ParentChildLinks.TryGetValue(pp, out var links)) {
+                        foreach (var link in links) {
+                            var delta = pp.Value - link.LastParentPos;
+                            link.LastParentPos = pp.Value;
+                            if (math.lengthsq(delta) < 1e-8f) continue;
+                            link.Child.Value += delta;
+                        }
                     }
-                };
 
-                // Parent → child handle center sync: when a Float3Parameter changes, update the
-                // NT_HandleCircle.Center and NT_HandlePosition on any circle/rotation handles that
-                // reference it as their parent. This keeps the visual in sync during drag.
-                param.OnChanged += _ => {
-                    if (param is not Float3Parameter pp) return;
                     SyncParentPositionToChildHandles(pp);
                 };
             }
