@@ -3,6 +3,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
 
     using Game.Input;
 
+    using NetworkTools.Systems.Handles;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Parameters;
 
@@ -22,13 +23,64 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         // ── Parameters 
 
         public EnumParameter<ShapeTransformTemplate> Template        = new("roadShape.template", ShapeTransformTemplate.Preserve);
-        public FloatParameter                        EaseInLength    = new("roadShape.easeInLength",    0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut);
-        public FloatParameter                        EaseOutLength   = new("roadShape.easeOutLength",   0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut);
+        public FloatParameter                        EaseInLength    = new("roadShape.easeInLength",    0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut) {
+            Handles = new IHandleSpec<float>[] {
+                new ComputedPositionHandle {
+                    ComputePosition = (tool, value) => {
+                        var t = (NT_RoadShapeToolSystem)tool;
+                        var start = t.m_ShapeTransformContext.StartPosition;
+                        var end   = t.m_ShapeTransformContext.EndPosition;
+                        var pos   = math.lerp(start, end, value);
+                        pos.y = start.y + 1f;
+                        return pos;
+                    },
+                    ComputeFromPosition = (tool, pos) => {
+                        var t    = (NT_RoadShapeToolSystem)tool;
+                        var start = t.m_ShapeTransformContext.StartPosition;
+                        var end   = t.m_ShapeTransformContext.EndPosition;
+                        var path  = end.xz - start.xz;
+                        var len   = math.length(path);
+                        if (len < 0.001f) return t.EaseInLength.Min;
+                        var axis   = path / len;
+                        var offset = pos.xz - start.xz;
+                        return math.clamp(math.dot(offset, axis) / len, t.EaseInLength.Min, t.EaseInLength.Max);
+                    }
+                }
+            }
+        };
+        public FloatParameter                        EaseOutLength   = new("roadShape.easeOutLength",   0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut) {
+            Handles = new IHandleSpec<float>[] {
+                new ComputedPositionHandle {
+                    ComputePosition = (tool, value) => {
+                        var t   = (NT_RoadShapeToolSystem)tool;
+                        var start = t.m_ShapeTransformContext.StartPosition;
+                        var end   = t.m_ShapeTransformContext.EndPosition;
+                        var pos   = math.lerp(end, start, value);
+                        pos.y = end.y + 1f;
+                        return pos;
+                    },
+                    ComputeFromPosition = (tool, pos) => {
+                        var t    = (NT_RoadShapeToolSystem)tool;
+                        var start = t.m_ShapeTransformContext.StartPosition;
+                        var end   = t.m_ShapeTransformContext.EndPosition;
+                        var path  = start.xz - end.xz;
+                        var len   = math.length(path);
+                        if (len < 0.001f) return t.EaseOutLength.Min;
+                        var axis   = path / len;
+                        var offset = pos.xz - end.xz;
+                        return math.clamp(math.dot(offset, axis) / len, t.EaseOutLength.Min, t.EaseOutLength.Max);
+                    }
+                }
+            }
+        };
         public FloatParameter                        ArchHeight      = new("roadShape.archHeight",      0.5f, -1f, 1f,  modes: (int)ShapeTransformTemplate.SlopeArch);
         public FloatParameter                        ArchPosition    = new("roadShape.archPosition",    0.5f, 0.1f, 0.9f, modes: (int)ShapeTransformTemplate.SlopeArch);
         public FloatParameter                        SmoothingFactor = new("roadShape.smoothingFactor", 0.5f, 0f, 1f,   modes: (int)ShapeTransformTemplate.CurveSmooth);
 
-        // ── Non-parameter state 
+        /// <inheritdoc />
+        protected override int GetActiveModeFlag() => (int)Template.Value;
+
+        // ── Non-parameter state
 
         /// <summary>
         ///     Caches the last hit position for tool-specific use.

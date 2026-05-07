@@ -69,19 +69,6 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 }
             };
 
-            // EaseInOut handle positions are derived from these parameters; refresh handles
-            // when changed externally (UI slider, reset). Skip while dragging — the drag
-            // itself is the source of truth and rebuilding would destroy the active handle.
-            System.Action<ChangeOrigin> refreshEaseHandles = _ => {
-                if (Phase == OperationPhase.Ready
-                    && Template.Value == ShapeTransformTemplate.SlopeEaseInOut
-                    && m_HandleInputState != HandleInputState.Dragging) {
-                    RefreshTransformHandles();
-                }
-            };
-            EaseInLength.OnChanged  += refreshEaseHandles;
-            EaseOutLength.OnChanged += refreshEaseHandles;
-
             // Initialize selection state (base class NativeLists)
             InitializeSelectionState();
 

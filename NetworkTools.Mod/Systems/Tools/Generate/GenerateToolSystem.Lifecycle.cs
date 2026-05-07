@@ -28,7 +28,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             // Mode change additionally reinitializes handles
             Mode.OnChanged += _ => {
                 if (Phase == OperationPhase.Ready)
-                    RefreshTransformHandles();
+                    RebuildHandlesForActiveMode();
             };
 
             // Data

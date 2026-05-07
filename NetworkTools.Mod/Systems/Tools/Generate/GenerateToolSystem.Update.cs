@@ -86,7 +86,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             // When a point is placed, initialize
             if (Phase == OperationPhase.Ready)
             {
-                RefreshTransformHandles();
+                RebuildHandlesForActiveMode();
             }
 
             return true;

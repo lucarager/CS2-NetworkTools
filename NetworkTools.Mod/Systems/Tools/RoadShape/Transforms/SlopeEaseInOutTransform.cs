@@ -1,13 +1,5 @@
 ﻿namespace NetworkTools.Systems.Tools.RoadShape {
-    using System.Collections.Generic;
-
-    using Colossal.Json;
     using Colossal.Mathematics;
-
-    using NetworkTools.Components;
-    using NetworkTools.Components.Handles;
-    using NetworkTools.Systems.Tools.Base;
-    using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Collections;
     using Unity.Mathematics;
@@ -18,7 +10,6 @@
     /// Control points determine the transition zones:
     /// - EaseInLength: how far along the path the slope starts to increase
     /// - EaseOutLength: how far from the end the slope starts to level off
-    /// Implements IHandleableTransformation to provide draggable control point handles.
     /// </summary>
     public struct SlopeEaseInOutTransform : IPathTransformation {
         /// <summary>
@@ -75,93 +66,6 @@
 
         public void PostProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config) {
             // No post-processing needed
-        }
-
-        /// <summary>
-        /// Returns handle definitions for ease-in and ease-out control points.
-        /// Handles are constrained to move along the direction of their respective edge segments.
-        /// </summary>
-        public static TransformHandleDefinition[] BuildHandleDefinitions(
-            in ShapeTransformContext ctx,
-            in ShapeJobConfig config,
-            float3 pathStartPos,
-            float3 pathEndPos,
-            in NativeArray<EdgeState> edgeStates,
-            IReadOnlyDictionary<string, ParameterBase> parameters) {
-
-            if (edgeStates.Length == 0) {
-                return System.Array.Empty<TransformHandleDefinition>();
-            }
-
-            // Get the first and last edge for direction calculation
-            var firstEdge = edgeStates[0];
-            var lastEdge = edgeStates[^1];
-
-            // Calculate ease-in direction from first edge's bezier (flattened to XZ plane)
-            // For forward edges: direction is a->b, for reversed: direction is d->c
-            float3 easeInDirection;
-            if (firstEdge.IsForward) {
-                easeInDirection = firstEdge.Bezier.b - firstEdge.Bezier.a;
-            } else {
-                easeInDirection = firstEdge.Bezier.c - firstEdge.Bezier.d;
-            }
-            easeInDirection.y = 0f;
-            easeInDirection = math.normalizesafe(easeInDirection);
-
-            // Calculate ease-out direction from last edge's bezier (flattened to XZ plane, pointing backwards from end)
-            // For forward edges: direction is d->c, for reversed: direction is a->b
-            float3 easeOutDirection;
-            if (lastEdge.IsForward) {
-                easeOutDirection = lastEdge.Bezier.c - lastEdge.Bezier.d;
-            } else {
-                easeOutDirection = lastEdge.Bezier.b - lastEdge.Bezier.a;
-            }
-            easeOutDirection.y = 0f;
-            easeOutDirection = math.normalizesafe(easeOutDirection);
-
-            // Calculate path length in XZ for distance calculations
-            var pathLengthXZ = math.distance(pathStartPos.xz, pathEndPos.xz);
-
-            var easeInParam  = (FloatParameter)parameters["roadShape.easeInLength"];
-            var easeOutParam = (FloatParameter)parameters["roadShape.easeOutLength"];
-
-            // Elevate handles above the path for visibility
-            var elevation = new float3(0, 1f, 0);
-
-            // Position handles along their respective edge directions (not the straight start-to-end line)
-            // The constraint axis uses the edge direction, so the position must match
-            var easeInPos = pathStartPos + easeInDirection * (config.EaseInLength * pathLengthXZ);
-            easeInPos.y = pathStartPos.y + elevation.y;
-
-            var easeOutPos = pathEndPos + easeOutDirection * (config.EaseOutLength * pathLengthXZ);
-            easeOutPos.y = pathEndPos.y + elevation.y;
-
-            return new[] {
-                new TransformHandleDefinition {
-                    Key = 1,
-                    Position = easeInPos,
-                    TypeFlags = HandleTypeFlags.SlopeControl | HandleTypeFlags.Parameter | HandleTypeFlags.ParameterRange,
-                    Value = config.EaseInLength,
-                    MinValue = easeInParam.Min,
-                    MaxValue = easeInParam.Max,
-                    Constraints = NT_HandleConstraints.AxisWithBounds(
-                        easeInDirection, pathStartPos + elevation,
-                        easeInParam.Min * ctx.TotalLength, easeInParam.Max * ctx.TotalLength),
-                    Parameter = easeInParam
-                },
-                new TransformHandleDefinition {
-                    Key = 2,
-                    Position = easeOutPos,
-                    TypeFlags = HandleTypeFlags.SlopeControl | HandleTypeFlags.Parameter | HandleTypeFlags.ParameterRange,
-                    Value = config.EaseOutLength,
-                    MinValue = easeOutParam.Min,
-                    MaxValue = easeOutParam.Max,
-                    Constraints = NT_HandleConstraints.AxisWithBounds(
-                        easeOutDirection, pathEndPos + elevation,
-                        easeOutParam.Min * ctx.TotalLength, easeOutParam.Max * ctx.TotalLength),
-                    Parameter = easeOutParam
-                },
-            };
         }
     }
 }

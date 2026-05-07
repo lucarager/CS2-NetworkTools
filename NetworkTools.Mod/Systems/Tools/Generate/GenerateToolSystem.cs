@@ -3,6 +3,7 @@ namespace NetworkTools.Systems.Tools.Generate {
 
     using Game.Tools;
 
+    using NetworkTools.Systems.Handles;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Parameters;
 
@@ -28,8 +29,13 @@ namespace NetworkTools.Systems.Tools.Generate {
         public IntParameter                GridZNum     = new("generate.gridZNum", 2, 1, 20);
 
         // Contextual (from control point placement + handle drags)
-        public Float3Parameter      StartPosition  = new("generate.startPosition");
+        public Float3Parameter      StartPosition  = new("generate.startPosition", modes: (int)GenerateMode.Grid) {
+            Handles = new IHandleSpec<float3>[] { new PositionHandle() }
+        };
         public QuaternionParameter  StartDirection = new("generate.startDirection");
+
+        /// <inheritdoc />
+        protected override int GetActiveModeFlag() => (int)Mode.Value;
 
         // ── Non-parameter state 
 

@@ -4,8 +4,6 @@ namespace NetworkTools.Systems.Tools.RoadShape {
     using Game.Net;
     using Game.Prefabs;
 
-    using NetworkTools.Components.Handles;
-    using NetworkTools.Systems.Tools.Base;
     using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
@@ -166,37 +164,8 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 return;
             }
 
-            DestroyAllHandles();
-
-            var pathStartPos = m_ShapeTransformContext.StartPosition;
-            var pathEndPos = m_ShapeTransformContext.EndPosition;
-
             m_Log.Debug($"RefreshTransformHandles: Creating handles for template {Template.Value}");
-
-            // Get handle definitions for current template
-            var handleDefs = GetTransformHandleDefinitions(pathStartPos, pathEndPos);
-            CreateHandlesFromDefinitions(handleDefs);
-        }
-
-        /// <summary>
-        /// Gets handle definitions for the current transform template.
-        /// Creates a transform struct and calls GetHandleDefinitions if it implements IHandleableTransformation.
-        /// </summary>
-        private TransformHandleDefinition[] GetTransformHandleDefinitions(float3 pathStartPos, float3 pathEndPos) {
-            var edgeStatesArray = m_EdgeStates.AsArray();
-            var config = BuildJobConfig();
-            switch (config.Template) {
-                case ShapeTransformTemplate.SlopeEaseInOut:
-                    return SlopeEaseInOutTransform.BuildHandleDefinitions(
-                        m_ShapeTransformContext, config, pathStartPos, pathEndPos, in edgeStatesArray, ParametersByKey);
-
-                case ShapeTransformTemplate.SlopeLinear:
-                case ShapeTransformTemplate.CurveStraighten:
-                case ShapeTransformTemplate.CurveSmooth:
-                case ShapeTransformTemplate.Preserve:
-                default:
-                    return System.Array.Empty<TransformHandleDefinition>();
-            }
+            RebuildHandlesForActiveMode();
         }
 
         #endregion
