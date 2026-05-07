@@ -170,15 +170,21 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             m_Log.Debug($"RefreshTransformHandles: Creating handles for template {Template.Value}");
 
             // Update axis constraints from current path direction so handles snap to the path
-            var start = m_ShapeTransformContext.StartPosition;
-            var end   = m_ShapeTransformContext.EndPosition;
-            var dir   = math.normalizesafe(end - start);
+            // and are clamped to the parameter's min/max range in world space
+            var start   = m_ShapeTransformContext.StartPosition;
+            var end     = m_ShapeTransformContext.EndPosition;
+            var dir     = math.normalizesafe(end - start);
+            var pathLen = math.distance(start, end);
 
             if (EaseInLength.Handles[0] is ComputedPositionHandle easeIn) {
-                easeIn.Constraints = NT_HandleConstraints.AxisOnly(dir, new float3(start.x, start.y + 1f, start.z));
+                var origin = new float3(start.x, start.y + 1f, start.z);
+                easeIn.Constraints = NT_HandleConstraints.AxisWithBounds(
+                    dir, origin, EaseInLength.Min * pathLen, EaseInLength.Max * pathLen);
             }
             if (EaseOutLength.Handles[0] is ComputedPositionHandle easeOut) {
-                easeOut.Constraints = NT_HandleConstraints.AxisOnly(-dir, new float3(end.x, end.y + 1f, end.z));
+                var origin = new float3(end.x, end.y + 1f, end.z);
+                easeOut.Constraints = NT_HandleConstraints.AxisWithBounds(
+                    -dir, origin, EaseOutLength.Min * pathLen, EaseOutLength.Max * pathLen);
             }
 
             RebuildHandlesForActiveMode();
