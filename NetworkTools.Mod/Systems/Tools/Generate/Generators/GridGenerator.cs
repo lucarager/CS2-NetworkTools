@@ -21,8 +21,8 @@ namespace NetworkTools.Systems.Tools.Generate {
                          config.StartDirection,
                          config.GridXSpacing,
                          config.GridZSpacing,
-                         config.GridXNum,
-                         config.GridZNum,
+                         config.GridXNum + 1,
+                         config.GridZNum + 1,
                          ref curves);
         }
 

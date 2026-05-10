@@ -47,6 +47,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                         new GridGenerator().Generate(Config, ref curves);
                         break;
                     case GenerateMode.Circle:
+                        new CircleGenerator().Generate(Config, ref curves);
                         break;
                 }
 

@@ -12,5 +12,6 @@ namespace NetworkTools.Systems.Tools.Generate {
         public float      GridZSpacing;
         public int        GridXNum;
         public int        GridZNum;
+        public float      CircleRadius;
     }
 }

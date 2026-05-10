@@ -22,6 +22,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                 GridZSpacing   = GridZSpacing.Value,
                 GridXNum       = GridXNum.Value,
                 GridZNum       = GridZNum.Value,
+                CircleRadius   = CircleRadius.Value,
             };
         }
 
