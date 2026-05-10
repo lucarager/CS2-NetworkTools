@@ -1,6 +1,8 @@
 namespace NetworkTools.Systems.Tools.Connect {
     using Colossal.Mathematics;
 
+    using NetworkTools.Systems.Tools.Utils;
+
     using Unity.Collections;
     using Unity.Mathematics;
 
@@ -20,8 +22,8 @@ namespace NetworkTools.Systems.Tools.Connect {
         }
 
         public void GenerateConnection(
-            in  ConnectJobConfig     config,
-            ref NativeList<CurveDef> curves) {
+            in  ConnectJobConfig      config,
+            ref NativeList<EdgeConfig> curves) {
             // We have the following segments:
             // 1: Start node to loop start point, straight segment
             // 2: 3 × 90 degree turn segments forming the loop (270° total)
@@ -77,24 +79,24 @@ namespace NetworkTools.Systems.Tools.Connect {
                 c = loopStartPointPosition - entryTangent * startTangentLen,
                 d = loopStartPointPosition
             };
-            curves.Add(new CurveDef {
+            curves.Add(new EdgeConfig {
                 Bezier = firstBezier,
                 Length = MathUtils.Length(firstBezier)
             });
 
             // 2: The loop itself (3 × 90° arcs)
             var loopBezier1 = Calculate90DegreeCurve(C, loopStartPointPosition, loopMidPoint1Position);
-            curves.Add(new CurveDef {
+            curves.Add(new EdgeConfig {
                 Bezier = loopBezier1,
                 Length = MathUtils.Length(loopBezier1)
             });
             var loopBezier2 = Calculate90DegreeCurve(C, loopMidPoint1Position, loopMidPoint2Position);
-            curves.Add(new CurveDef {
+            curves.Add(new EdgeConfig {
                 Bezier = loopBezier2,
                 Length = MathUtils.Length(loopBezier2)
             });
             var loopBezier3 = Calculate90DegreeCurve(C, loopMidPoint2Position, loopEndPointPosition);
-            curves.Add(new CurveDef {
+            curves.Add(new EdgeConfig {
                 Bezier = loopBezier3,
                 Length = MathUtils.Length(loopBezier3)
             });
@@ -108,7 +110,7 @@ namespace NetworkTools.Systems.Tools.Connect {
                 c = config.EndPosition     + config.EndDirection  * endTangentLen,
                 d = config.EndPosition
             };
-            curves.Add(new CurveDef {
+            curves.Add(new EdgeConfig {
                 Bezier = endBezier,
                 Length = MathUtils.Length(endBezier)
             });

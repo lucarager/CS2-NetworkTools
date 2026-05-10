@@ -4,6 +4,7 @@
     using Game.Net;
     using Game.Prefabs;
     using Game.Tools;
+    using NetworkTools.Systems.Tools.Utils;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -52,28 +53,28 @@
                 }
 
                 // --- Phase 1: Collect path-ordered edge state ---
-                var edges = new NativeArray<ParallelEdgeState>(edgeCount, Allocator.Temp);
+                var edges = new NativeArray<EdgeConfig>(edgeCount, Allocator.Temp);
 
                 for (var i = 0; i < edgeCount; i++) {
                     var edgeEntity = CurrentPathEdges[i];
                     var edge       = EdgeLookup[edgeEntity];
 
                     if (!CurveLookup.TryGetComponent(edgeEntity, out var curve)) {
-                        edges[i] = new ParallelEdgeState { IsValid = false };
+                        edges[i] = new EdgeConfig { IsValid = false };
                         continue;
                     }
 
                     var isForward = edge.m_Start == CurrentPathNodes[i];
                     var bezier    = isForward ? curve.m_Bezier : MathUtils.Invert(curve.m_Bezier);
 
-                    edges[i] = new ParallelEdgeState {
-                        EdgeEntity    = edgeEntity,
-                        PathStartNode = isForward ? edge.m_Start : edge.m_End,
-                        PathEndNode   = isForward ? edge.m_End : edge.m_Start,
-                        IsForward     = isForward,
-                        IsValid       = true,
-                        Bezier        = bezier,
-                        Length        = MathUtils.Length(bezier)
+                    edges[i] = new EdgeConfig {
+                        EdgeEntity      = edgeEntity,
+                        StartNodeEntity = isForward ? edge.m_Start : edge.m_End,
+                        EndNodeEntity   = isForward ? edge.m_End : edge.m_Start,
+                        IsForward       = isForward,
+                        IsValid         = true,
+                        Bezier          = bezier,
+                        Length          = MathUtils.Length(bezier)
                     };
                 }
 
@@ -121,8 +122,8 @@
                         continue;
                     }
 
-                    var offsetStartPos = cachedNodePositions[state.PathStartNode];
-                    var offsetEndPos   = cachedNodePositions[state.PathEndNode];
+                    var offsetStartPos = cachedNodePositions[state.StartNodeEntity];
+                    var offsetEndPos   = cachedNodePositions[state.EndNodeEntity];
 
                     // Tangent handles are invariant under uniform perpendicular translation,
                     // so (b − a) and (c − d) from the original bezier carry over directly.

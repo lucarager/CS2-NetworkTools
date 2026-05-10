@@ -1,6 +1,8 @@
 namespace NetworkTools.Systems.Tools.Connect {
     using Colossal.Mathematics;
 
+    using NetworkTools.Systems.Tools.Utils;
+
     using Unity.Collections;
     using Unity.Mathematics;
 
@@ -15,15 +17,15 @@ namespace NetworkTools.Systems.Tools.Connect {
         }
 
         public void GenerateConnection(
-            in  ConnectJobConfig     config,
-            ref NativeList<CurveDef> curves) {
+            in  ConnectJobConfig      config,
+            ref NativeList<EdgeConfig> curves) {
             var curveBezier = new Bezier4x3 {
                 a = config.CurveStartPointPosition,
                 b = config.CurveStartControlPointPosition,
                 c = config.CurveEndControlPointPosition,
                 d = config.CurveEndPointPosition
             };
-            curves.Add(new CurveDef {
+            curves.Add(new EdgeConfig {
                 Bezier = curveBezier,
                 Length = MathUtils.Length(curveBezier)
             });
