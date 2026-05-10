@@ -1,8 +1,6 @@
-namespace NetworkTools.Systems.Handles {
+namespace NetworkTools.Systems.Tools.Handles {
     using NetworkTools.Components.Handles;
-    using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Parameters;
-
     using Unity.Entities;
     using Unity.Mathematics;
 

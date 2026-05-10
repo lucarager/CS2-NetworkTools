@@ -2,9 +2,8 @@ namespace NetworkTools.Systems.Tools.Generate {
     using Colossal.Collections;
 
     using Game.Tools;
-
-    using NetworkTools.Systems.Handles;
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Handles;
     using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Collections;

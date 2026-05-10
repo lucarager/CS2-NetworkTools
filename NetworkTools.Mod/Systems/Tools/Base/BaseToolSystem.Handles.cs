@@ -3,7 +3,7 @@ namespace NetworkTools.Systems.Tools {
 
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
-    using NetworkTools.Systems.Handles;
+    using NetworkTools.Systems.Tools.Handles;
     using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Collections;
@@ -195,6 +195,15 @@ namespace NetworkTools.Systems.Tools {
                 return CreateCircleHandle(Entity.Null, 0, position, circleRadius, normal, typeFlags);
             }
 
+            // Axis handle: compute constraints dynamically from endpoint delegates
+            if (spec is AxisHandle axis) {
+                axis.GetAxisInfo(this, out var origin, out var axisDir, out var pathLen);
+                var constraints = param is FloatParameter axFp
+                    ? NT_HandleConstraints.AxisWithBounds(axisDir, origin, axFp.Min * pathLen, axFp.Max * pathLen)
+                    : NT_HandleConstraints.AxisOnly(axisDir, origin);
+                return CreatePositionHandle(Entity.Null, Entity.Null, 0, position, typeFlags, constraints, radius);
+            }
+
             // Position or ComputedPosition
             return CreatePositionHandle(Entity.Null, Entity.Null, 0, position, typeFlags, spec.Constraints, radius);
         }
@@ -232,6 +241,7 @@ namespace NetworkTools.Systems.Tools {
                     case CircleHandle ch:          ch.ResolvedParent = parentF3; break;
                     case RotationHandle rh:        rh.ResolvedParent = parentF3; break;
                     case ComputedPositionHandle c: c.ResolvedParent  = parentF3; break;
+                    case AxisHandle ax:            ax.ResolvedParent = parentF3; break;
                 }
 
                 if (m_ParameterHandles.TryGetValue(parentParam, out var parentEntities) && parentEntities.Count > 0) {
@@ -322,11 +332,12 @@ namespace NetworkTools.Systems.Tools {
 
                 // Find the resolved parent from the spec
                 Float3Parameter parentF3 = entry.Spec switch {
-                    PositionHandle ph       => ph.ResolvedParent,
-                    CircleHandle ch         => ch.ResolvedParent,
-                    RotationHandle rh       => rh.ResolvedParent,
+                    PositionHandle ph        => ph.ResolvedParent,
+                    CircleHandle ch          => ch.ResolvedParent,
+                    RotationHandle rh        => rh.ResolvedParent,
                     ComputedPositionHandle c => c.ResolvedParent,
-                    _                       => null
+                    AxisHandle ax            => ax.ResolvedParent,
+                    _                        => null
                 };
 
                 if (parentF3 == null) continue;

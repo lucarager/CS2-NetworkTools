@@ -4,9 +4,6 @@ namespace NetworkTools.Systems.Tools.RoadShape {
     using Game.Net;
     using Game.Prefabs;
 
-    using NetworkTools.Components.Handles;
-    using NetworkTools.Systems.Handles;
-
     using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
@@ -168,26 +165,6 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             }
 
             m_Log.Debug($"RefreshTransformHandles: Creating handles for template {Template.Value}");
-
-            // Update axis constraints from current path direction so handles snap to the path
-            // and are clamped to the parameter's min/max range in world space.
-            // Use XZ-only direction so the constraint stays flat regardless of elevation difference.
-            var start   = m_ShapeTransformContext.StartPosition;
-            var end     = m_ShapeTransformContext.EndPosition;
-            var xzDir   = math.normalizesafe(new float3(end.x - start.x, 0f, end.z - start.z));
-            var pathLen = math.distance(start.xz, end.xz);
-
-            if (EaseInLength.Handles[0] is ComputedPositionHandle easeIn) {
-                var origin = new float3(start.x, start.y + 1f, start.z);
-                easeIn.Constraints = NT_HandleConstraints.AxisWithBounds(
-                    xzDir, origin, EaseInLength.Min * pathLen, EaseInLength.Max * pathLen);
-            }
-            if (EaseOutLength.Handles[0] is ComputedPositionHandle easeOut) {
-                var origin = new float3(end.x, end.y + 1f, end.z);
-                easeOut.Constraints = NT_HandleConstraints.AxisWithBounds(
-                    -xzDir, origin, EaseOutLength.Min * pathLen, EaseOutLength.Max * pathLen);
-            }
-
             RebuildHandlesForActiveMode();
         }
 

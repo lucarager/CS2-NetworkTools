@@ -2,9 +2,8 @@ namespace NetworkTools.Systems.Tools.RoadShape {
     using System.Collections.Generic;
 
     using Game.Input;
-
-    using NetworkTools.Systems.Handles;
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Handles;
     using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Burst;
@@ -25,51 +24,20 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         public EnumParameter<ShapeTransformTemplate> Template        = new("roadShape.template", ShapeTransformTemplate.Preserve);
         public FloatParameter                        EaseInLength    = new("roadShape.easeInLength",    0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut) {
             Handles = new IHandleSpec<float>[] {
-                new ComputedPositionHandle {
-                    ComputePosition = (tool, value) => {
-                        var t = (NT_RoadShapeToolSystem)tool;
-                        var start = t.m_ShapeTransformContext.StartPosition;
-                        var end   = t.m_ShapeTransformContext.EndPosition;
-                        var pos   = math.lerp(start, end, value);
-                        pos.y = start.y + 1f;
-                        return pos;
-                    },
-                    ComputeFromPosition = (tool, pos) => {
-                        var t    = (NT_RoadShapeToolSystem)tool;
-                        var start = t.m_ShapeTransformContext.StartPosition;
-                        var end   = t.m_ShapeTransformContext.EndPosition;
-                        var path  = end.xz - start.xz;
-                        var len   = math.length(path);
-                        if (len < 0.001f) return t.EaseInLength.Min;
-                        var axis   = path / len;
-                        var offset = pos.xz - start.xz;
-                        return math.clamp(math.dot(offset, axis) / len, t.EaseInLength.Min, t.EaseInLength.Max);
-                    }
+                new AxisHandle {
+                    StartPoint = tool => ((NT_RoadShapeToolSystem)tool).m_ShapeTransformContext.StartPosition,
+                    EndPoint   = tool => ((NT_RoadShapeToolSystem)tool).m_ShapeTransformContext.EndPosition,
+                    YOffset    = 1f
                 }
             }
         };
         public FloatParameter                        EaseOutLength   = new("roadShape.easeOutLength",   0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut) {
             Handles = new IHandleSpec<float>[] {
-                new ComputedPositionHandle {
-                    ComputePosition = (tool, value) => {
-                        var t   = (NT_RoadShapeToolSystem)tool;
-                        var start = t.m_ShapeTransformContext.StartPosition;
-                        var end   = t.m_ShapeTransformContext.EndPosition;
-                        var pos   = math.lerp(end, start, value);
-                        pos.y = end.y + 1f;
-                        return pos;
-                    },
-                    ComputeFromPosition = (tool, pos) => {
-                        var t    = (NT_RoadShapeToolSystem)tool;
-                        var start = t.m_ShapeTransformContext.StartPosition;
-                        var end   = t.m_ShapeTransformContext.EndPosition;
-                        var path  = start.xz - end.xz;
-                        var len   = math.length(path);
-                        if (len < 0.001f) return t.EaseOutLength.Min;
-                        var axis   = path / len;
-                        var offset = pos.xz - end.xz;
-                        return math.clamp(math.dot(offset, axis) / len, t.EaseOutLength.Min, t.EaseOutLength.Max);
-                    }
+                new AxisHandle {
+                    StartPoint = tool => ((NT_RoadShapeToolSystem)tool).m_ShapeTransformContext.StartPosition,
+                    EndPoint   = tool => ((NT_RoadShapeToolSystem)tool).m_ShapeTransformContext.EndPosition,
+                    YOffset    = 1f,
+                    Reverse    = true
                 }
             }
         };

@@ -1,7 +1,6 @@
 namespace NetworkTools.Systems.Tools {
     using System.Collections.Generic;
-
-    using NetworkTools.Systems.Handles;
+    using NetworkTools.Systems.Tools.Handles;
     using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Entities;

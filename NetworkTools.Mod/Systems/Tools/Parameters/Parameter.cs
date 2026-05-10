@@ -1,7 +1,6 @@
 namespace NetworkTools.Systems.Tools.Parameters {
     using System.Collections.Generic;
-
-    using NetworkTools.Systems.Handles;
+    using NetworkTools.Systems.Tools.Handles;
 
     /// <summary>
     ///     Typed parameter. Fires <see cref="ParameterBase.OnChanged" /> on value change (equality-guarded).
