@@ -15,7 +15,9 @@ export const PrefabSelection: React.FC = () => {
             <div className={styles.col}>
                 <div className={styles.controlRow}>
                     <div className={styles.controlRowInner}>
-                        <span className={styles.paramLabel}>{translate("NetworkTools.UI.PrefabSearch.NetworkPrefab")}</span>
+                        <span className={styles.paramLabel}>
+                            {translate("NetworkTools.UI.PrefabSearch.NetworkPrefab")}
+                        </span>
                         <button
                             className={styles.entityPreview}
                             onClick={() => (isOpen ? close() : open())}>
@@ -23,12 +25,12 @@ export const PrefabSelection: React.FC = () => {
                                 src={selectedNetPrefab.Thumbnail}
                                 className={styles.entityPreview__thumbnail}
                             />
-                            <span className={styles.entityPreview__name}>
+                            <div className={styles.entityPreview__name}>
                                 {translate(
                                     `Assets.NAME[${selectedNetPrefab.Name}]`,
                                     selectedNetPrefab.Name,
                                 )}
-                            </span>
+                            </div>
                             <img
                                 src={"coui://uil/Standard/ArrowRightThickStroke.svg"}
                                 className={styles.entityPreview__chevron}

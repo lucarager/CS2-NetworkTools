@@ -36,7 +36,9 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
     return (
         <div className={c(panels.nt_panel, styles.panel)}>
             <div className={styles.header}>
-                <span className={styles.title}>{translate("NetworkTools.UI.PrefabSearch.Title")}</span>
+                <span className={styles.title}>
+                    {translate("NetworkTools.UI.PrefabSearch.Title")}
+                </span>
                 <button className={styles.closeButton} onClick={onClose}>
                     <img
                         src={"coui://uil/Standard/XClose.svg"}
@@ -71,7 +73,9 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
             <div className={styles.list}>
                 <VC.Scrollable>
                     {filteredPrefabs.length === 0 && (
-                        <div className={styles.empty}>{translate("NetworkTools.UI.PrefabSearch.Empty")}</div>
+                        <div className={styles.empty}>
+                            {translate("NetworkTools.UI.PrefabSearch.Empty")}
+                        </div>
                     )}
                     {filteredPrefabs.map((prefab) => (
                         <div

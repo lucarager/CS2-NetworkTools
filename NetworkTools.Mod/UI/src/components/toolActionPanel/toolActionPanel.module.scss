@@ -77,9 +77,13 @@
     &__name {
         font-size: var(--fontSizeS);
         line-height: 1.25em;
-        flex: 2;
-        color: rgba(255, 255, 255, 0.75);
+        color: rgba(217, 217, 217, 1);
+        font-weight: 600;
+        white-space: nowrap;
         overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
+        text-align: left;
     }
 
     &__chevron {

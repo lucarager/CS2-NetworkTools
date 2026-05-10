@@ -148,10 +148,10 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Common.Tutorial", "Select the tool to configure it. Adjust snapping, target selection, and view mode using the options in the panel. Each tool provides its own specific parameters below." },
 
                 // ## Prefab Search
-                { "NetworkTools.UI.PrefabSearch.Title", "Select Prefab" },
-                { "NetworkTools.UI.PrefabSearch.Placeholder", "Search prefabs..." },
-                { "NetworkTools.UI.PrefabSearch.Empty", "No prefabs found." },
-                { "NetworkTools.UI.PrefabSearch.NetworkPrefab", "Network Prefab" },
+                { "NetworkTools.UI.PrefabSearch.Title", "Select Asset" },
+                { "NetworkTools.UI.PrefabSearch.Placeholder", "Search assets..." },
+                { "NetworkTools.UI.PrefabSearch.Empty", "No assets found." },
+                { "NetworkTools.UI.PrefabSearch.NetworkPrefab", "Asset" },
 
                 // ## Prefab Tabs
                 { "NetworkTools.UI.PrefabTab.Road", "Road" },
