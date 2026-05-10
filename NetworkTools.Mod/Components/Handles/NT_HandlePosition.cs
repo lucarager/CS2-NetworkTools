@@ -12,8 +12,7 @@ namespace NetworkTools.Components.Handles {
     using Unity.Mathematics;
 
     public struct NT_HandlePosition : IComponentData,
-        IEquatable<NT_HandlePosition>,
-        ISerializable {
+        IEquatable<NT_HandlePosition> {
         public float3 Position;
 
         public bool Equals(NT_HandlePosition other) {
@@ -22,19 +21,6 @@ namespace NetworkTools.Components.Handles {
 
         public override int GetHashCode() {
             return Position.GetHashCode();
-        }
-
-        public void Serialize<TWriter>(TWriter writer) where TWriter : IWriter {
-            writer.Write(Position);
-        }
-
-        public void Deserialize<TReader>(TReader reader) where TReader : IReader {
-            reader.Read(out Position);
-            if (math.all(Position >= -100000f) && math.all(Position <= 100000f)) {
-                return;
-            }
-
-            Position = new float3();
         }
     }
 }

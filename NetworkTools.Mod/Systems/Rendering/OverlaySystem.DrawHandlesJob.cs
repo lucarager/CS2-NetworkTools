@@ -147,7 +147,7 @@ namespace NetworkTools.Systems {
                                                   RenderColors               colors,
                                                   CustomOverlayRenderSystem.Buffer buffer) {
                 GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
-                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Radius * 2f);
+                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Size * 2f);
             }
 
             /// <summary>
@@ -165,7 +165,7 @@ namespace NetworkTools.Systems {
 
                 // Draw the handle itself (larger circle at current position)
                 GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
-                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Radius * 2f);
+                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Size * 2f);
             }
 
             /// <summary>
@@ -177,7 +177,7 @@ namespace NetworkTools.Systems {
                                                         RenderColors colors,
                                                         CustomOverlayRenderSystem.Buffer buffer) {
                 GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
-                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Radius * 2f);
+                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Size * 2f);
 
                 // If this is a control point, also draw a line to the main point
                 if (isControlPoint) {
@@ -254,7 +254,7 @@ namespace NetworkTools.Systems {
                                       CustomOverlayRenderSystem.CustomMeshType.Arrow, arrowRotation);
 
                 // Draw a small handle dot at the angle point
-                buffer.DrawCircle(outlineColor, fillColor, 0.4f, 0, new float2(0, 1), anglePoint, handle.Radius * 2f);
+                buffer.DrawCircle(outlineColor, fillColor, 0.4f, 0, new float2(0, 1), anglePoint, handle.Size * 2f);
             }
 
             /// <summary>

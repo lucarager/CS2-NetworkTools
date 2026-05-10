@@ -165,7 +165,7 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         private Entity CreateHandleFromSpec(IHandleSpec spec, float3 position, ParameterBase param) {
             var typeFlags = spec.TypeFlags;
-            var radius    = spec.Radius > 0f ? spec.Radius : NT_Handle.PrimaryRadius;
+            var radius    = spec.Size > 0f ? spec.Size : NT_Handle.SizePrimary;
 
             if ((typeFlags & HandleTypeFlags.Rotation) != 0 && spec is RotationHandle rot) {
                 var normal = math.lengthsq(rot.Normal) > 0f
@@ -471,7 +471,7 @@ namespace NetworkTools.Systems.Tools {
             float3                position,
             HandleTypeFlags       typeFlags,
             NT_HandleConstraints? constraints = null,
-            float                 radius = NT_Handle.PrimaryRadius) {
+            float                 radius = NT_Handle.SizePrimary) {
             var handle = EntityManager.CreateEntity();
 
             EntityManager.AddComponentData(handle, NT_Handle.Create(typeFlags | HandleTypeFlags.Position, radius));
@@ -531,7 +531,7 @@ namespace NetworkTools.Systems.Tools {
         /// <param name="linkedEntity">The entity this handle controls.</param>
         /// <param name="key">Identifier key.</param>
         /// <param name="center">Center point of the circle.</param>
-        /// <param name="radius">Radius of the circle.</param>
+        /// <param name="radius">Size of the circle.</param>
         /// <param name="normal">Normal vector defining the circle's plane.</param>
         /// <param name="typeFlags">Type flags defining the handle's purpose.</param>
         /// <returns>The created handle entity.</returns>
@@ -566,7 +566,7 @@ namespace NetworkTools.Systems.Tools {
         /// <param name="linkedEntity">The entity this handle controls.</param>
         /// <param name="key">Identifier key.</param>
         /// <param name="center">Center point of the rotation circle.</param>
-        /// <param name="radius">Radius of the rotation circle.</param>
+        /// <param name="radius">Size of the rotation circle.</param>
         /// <param name="normal">Normal vector defining the rotation plane.</param>
         /// <param name="referenceDirection">Zero-angle direction on the plane (must be perpendicular to normal).</param>
         /// <param name="angle">Initial angle in radians.</param>
@@ -685,7 +685,7 @@ namespace NetworkTools.Systems.Tools {
                 if (!EntityManager.Exists(handleEntity)) continue;
 
                 var   handleData = EntityManager.GetComponentData<NT_Handle>(handleEntity);
-                var   radius     = handleData.Radius > 0f ? handleData.Radius : NT_Handle.PrimaryRadius;
+                var   radius     = handleData.Size > 0f ? handleData.Size : NT_Handle.SizePrimary;
                 float t;
 
                 if (handleData.HasAnyFlag(HandleTypeFlags.Line)) {

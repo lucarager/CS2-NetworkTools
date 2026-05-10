@@ -6,7 +6,7 @@ namespace NetworkTools.Systems.Tools.Handles {
     public class ComputedPositionHandle : IHandleSpec<float> {
         public string                Parent          { get; init; }
         public NT_HandleConstraints? Constraints     { get; set; }
-        public float                 Radius          { get; init; } = NT_Handle.PrimaryRadius;
+        public float                 Size          { get; init; } = NT_Handle.SizePrimary;
         public ComputePositionDelegate<float>     ComputePosition     { get; init; }
         public ComputeFromPositionDelegate<float> ComputeFromPosition { get; init; }
 

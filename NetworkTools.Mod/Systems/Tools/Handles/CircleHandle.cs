@@ -9,7 +9,7 @@ namespace NetworkTools.Systems.Tools.Handles {
         public float3                Normal          { get; init; } = new(0, 1, 0);
         public string                NormalFrom      { get; init; }
         public NT_HandleConstraints? Constraints     { get; init; }
-        public float                 Radius          { get; init; } = NT_Handle.PrimaryRadius;
+        public float                 Size          { get; init; } = NT_Handle.SizePrimary;
         public ComputePositionDelegate<float>     ComputePosition     { get; init; }
         public ComputeFromPositionDelegate<float> ComputeFromPosition { get; init; }
 

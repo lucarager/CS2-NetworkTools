@@ -11,7 +11,7 @@ namespace NetworkTools.Systems.Tools.Handles {
         HandleTypeFlags       TypeFlags    { get; }
         string                Parent       { get; }
         NT_HandleConstraints? Constraints  { get; }
-        float                 Radius       { get; }
+        float                 Size         { get; }
 
         void SyncToEntity(NT_BaseToolSystem tool, Entity entity, ParameterBase param);
     }

@@ -81,14 +81,14 @@ namespace NetworkTools.Components.Handles {
     /// </summary>
     public struct NT_Handle : IComponentData {
         /// <summary>
-        /// Radius for primary (prominent) handles.
+        /// Size for primary (prominent) handles.
         /// </summary>
-        public const float PrimaryRadius = 2f;
+        public const float SizePrimary = 2f;
 
         /// <summary>
-        /// Radius for secondary (subdued) handles.
+        /// Size for secondary (subdued) handles.
         /// </summary>
-        public const float SecondaryRadius = 1f;
+        public const float SizeSecondary = 1f;
 
         /// <summary>
         /// Type flags defining the handle's purpose and behavior.
@@ -96,9 +96,9 @@ namespace NetworkTools.Components.Handles {
         public HandleTypeFlags TypeFlags;
 
         /// <summary>
-        /// Radius used for both hit detection and visual rendering (diameter = Radius * 2).
+        /// Size used for both hit detection and visual rendering (diameter = Size * 2).
         /// </summary>
-        public float Radius;
+        public float Size;
 
         /// <summary>
         /// Checks if the handle has all of the specified flags.
@@ -111,10 +111,10 @@ namespace NetworkTools.Components.Handles {
         public bool HasAnyFlag(HandleTypeFlags flags) => (TypeFlags & flags) != HandleTypeFlags.None;
 
         /// <summary>
-        /// Creates a handle with the specified type flags and radius.
+        /// Creates a handle with the specified type flags and size.
         /// </summary>
-        public static NT_Handle Create(HandleTypeFlags typeFlags, float radius = PrimaryRadius) {
-            return new NT_Handle { TypeFlags = typeFlags, Radius = radius };
+        public static NT_Handle Create(HandleTypeFlags typeFlags, float size = SizePrimary) {
+            return new NT_Handle { TypeFlags = typeFlags, Size = size };
         }
     }
 }

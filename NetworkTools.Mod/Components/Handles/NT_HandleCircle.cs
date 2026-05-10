@@ -14,7 +14,7 @@ namespace NetworkTools.Components.Handles {
     /// </summary>
     public struct NT_HandleCircle : IComponentData {
         /// <summary>
-        /// Radius of the circle.
+        /// Size of the circle.
         /// </summary>
         public float Radius;
 

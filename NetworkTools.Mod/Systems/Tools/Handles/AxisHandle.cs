@@ -7,12 +7,7 @@ namespace NetworkTools.Systems.Tools.Handles {
 
     /// <summary>
     ///     Handle spec for a scalar parameter that maps to a position along a line
-    ///     between two dynamic endpoints. Automatically provides axis-constrained
-    ///     dragging, value↔position projection, and dashed-line rendering.
-    ///     <para>
-    ///     By default, value 0 maps to <see cref="StartPoint"/> and value 1 maps to
-    ///     <see cref="EndPoint"/>. Set <see cref="Reverse"/> to invert the mapping.
-    ///     </para>
+    ///     between two dynamic endpoints. 
     /// </summary>
     public class AxisHandle : IHandleSpec<float> {
         /// <summary>Dynamic start point of the axis. Evaluated at handle creation and during drag.</summary>
@@ -32,7 +27,7 @@ namespace NetworkTools.Systems.Tools.Handles {
 
         public string                Parent      { get; init; }
         public NT_HandleConstraints? Constraints => null; // Computed dynamically in CreateHandleFromSpec
-        public float                 Radius      { get; init; } = NT_Handle.PrimaryRadius;
+        public float                 Size      { get; init; } = NT_Handle.SizePrimary;
 
         HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Position | HandleTypeFlags.ParameterRange;
 

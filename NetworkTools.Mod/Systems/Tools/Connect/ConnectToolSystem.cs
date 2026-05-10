@@ -27,7 +27,7 @@ namespace NetworkTools.Systems.Tools.Connect {
             Handles = new IHandleSpec<float>[] {
                 new CircleHandle {
                     Parent = nameof(LoopControlPointPosition),
-                    Radius = NT_Handle.SecondaryRadius
+                    Size = NT_Handle.SizeSecondary
                 }
             }
         };
@@ -67,7 +67,7 @@ namespace NetworkTools.Systems.Tools.Connect {
                 new PositionHandle {
                     Style  = HandleTypeFlags.BezierControlPoint,
                     Parent = nameof(CurveStartPointPosition),
-                    Radius = NT_Handle.SecondaryRadius
+                    Size = NT_Handle.SizeSecondary
                 }
             }
         };
@@ -78,7 +78,7 @@ namespace NetworkTools.Systems.Tools.Connect {
                 new PositionHandle {
                     Style  = HandleTypeFlags.BezierControlPoint,
                     Parent = nameof(CurveEndPointPosition),
-                    Radius = NT_Handle.SecondaryRadius
+                    Size = NT_Handle.SizeSecondary
                 }
             }
         };

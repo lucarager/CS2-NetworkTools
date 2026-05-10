@@ -8,7 +8,7 @@ namespace NetworkTools.Systems.Tools.Handles {
         public HandleTypeFlags       Style           { get; init; }
         public string                Parent          { get; init; }
         public NT_HandleConstraints? Constraints     { get; init; }
-        public float                 Radius          { get; init; } = NT_Handle.PrimaryRadius;
+        public float                 Size          { get; init; } = NT_Handle.SizePrimary;
         public ComputePositionDelegate<float3>     ComputePosition     { get; init; }
         public ComputeFromPositionDelegate<float3> ComputeFromPosition { get; init; }
 
