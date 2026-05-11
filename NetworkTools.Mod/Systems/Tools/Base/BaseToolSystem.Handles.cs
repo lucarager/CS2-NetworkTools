@@ -222,11 +222,13 @@ namespace NetworkTools.Systems.Tools {
             }
 
             foreach (var (entity, entry) in m_HandleEntries) {
-                // Resolve ReferenceDirectionFrom / NormalFrom on rotation and circle handles
+                // Resolve dynamic field references on typed handles
                 if (entry.Spec is RotationHandle rot) {
                     ResolveRotationFields(entity, rot, nameToParam);
                 } else if (entry.Spec is CircleHandle circ) {
                     ResolveCircleFields(entity, circ, nameToParam);
+                } else if (entry.Spec is PositionHandle ph) {
+                    ResolvePositionConstraintFields(entity, ph, nameToParam);
                 }
 
                 // Resolve Parent
@@ -313,6 +315,41 @@ namespace NetworkTools.Systems.Tools {
                     circle.Normal = math.normalizesafe(v);
                     EntityManager.SetComponentData(entity, circle);
                 }
+            }
+        }
+
+        /// <summary>
+        ///     Resolves <c>ConstraintAxisFrom</c> and <c>ConstraintOriginFrom</c> on a position handle.
+        ///     When both are set, builds an axis constraint from the referenced parameters and
+        ///     applies it to the ECS entity.
+        /// </summary>
+        private void ResolvePositionConstraintFields(Entity entity, PositionHandle ph, Dictionary<string, ParameterBase> nameToParam) {
+            ph.ResolvedConstraintAxis   = null;
+            ph.ResolvedConstraintOrigin = null;
+
+            if (!string.IsNullOrEmpty(ph.ConstraintAxisFrom)
+                && nameToParam.TryGetValue(ph.ConstraintAxisFrom, out var axisParam)
+                && axisParam is Float3Parameter axisF3) {
+                ph.ResolvedConstraintAxis = axisF3;
+            }
+
+            if (!string.IsNullOrEmpty(ph.ConstraintOriginFrom)
+                && nameToParam.TryGetValue(ph.ConstraintOriginFrom, out var originParam)
+                && originParam is Float3Parameter originF3) {
+                ph.ResolvedConstraintOrigin = originF3;
+            }
+
+            if (ph.ResolvedConstraintAxis == null || ph.ResolvedConstraintOrigin == null) return;
+
+            var axis   = ph.ResolvedConstraintAxis.Value;
+            var origin = ph.ResolvedConstraintOrigin.Value;
+            if (math.lengthsq(axis) < 0.0001f) return;
+
+            var constraints = NT_HandleConstraints.AxisOnly(axis, origin);
+            if (EntityManager.HasComponent<NT_HandleConstraints>(entity)) {
+                EntityManager.SetComponentData(entity, constraints);
+            } else {
+                EntityManager.AddComponentData(entity, constraints);
             }
         }
 

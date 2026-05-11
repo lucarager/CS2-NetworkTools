@@ -66,9 +66,11 @@ namespace NetworkTools.Systems.Tools.Connect {
             modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve) {
             Handles = new IHandleSpec<float3>[] {
                 new PositionHandle {
-                    Style  = HandleTypeFlags.BezierControlPoint,
-                    Parent = nameof(CurveStartPointPosition),
-                    Size = NT_Handle.SizeSecondary
+                    Style                = HandleTypeFlags.BezierControlPoint,
+                    Parent               = nameof(CurveStartPointPosition),
+                    Size                 = NT_Handle.SizeSecondary,
+                    ConstraintAxisFrom   = nameof(StartDirection),
+                    ConstraintOriginFrom = nameof(StartPosition),
                 }
             }
         };
@@ -77,9 +79,11 @@ namespace NetworkTools.Systems.Tools.Connect {
             modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve) {
             Handles = new IHandleSpec<float3>[] {
                 new PositionHandle {
-                    Style  = HandleTypeFlags.BezierControlPoint,
-                    Parent = nameof(CurveEndPointPosition),
-                    Size = NT_Handle.SizeSecondary
+                    Style                = HandleTypeFlags.BezierControlPoint,
+                    Parent               = nameof(CurveEndPointPosition),
+                    Size                 = NT_Handle.SizeSecondary,
+                    ConstraintAxisFrom   = nameof(EndDirection),
+                    ConstraintOriginFrom = nameof(EndPosition),
                 }
             }
         };
