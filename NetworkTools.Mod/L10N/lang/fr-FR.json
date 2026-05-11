@@ -63,8 +63,15 @@
   "NetworkTools.Tools.Connect.Description": "Permet de créer une nouvelle connexion entre deux noeuds de plusieurs façons.",
   "NetworkTools.Tools.Parallel.Name": "Outil Parallèle",
   "NetworkTools.Tools.Parallel.Description": "Permet de créer des réseaux parallèles parfaits à partir d'un réseau source.",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.SelectStart]": "Select a starting node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.SelectSecond]": "Select a second node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.RemoveLast]": "Remove last node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.ExtendPath]": "Select a new end node to extend the path",
   "NetworkTools.Tools.Generate.Name": "Outil Générer (Bientôt disponible !)",
   "NetworkTools.Tools.Generate.Description": "Permet de générer une variété de réseaux tels que des grilles routières et des cercles.",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]": "Place network origin",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]": "Rotate",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]": "Remove placement",
   "NetworkTools.UI.Common.NetworkTools": "Network Tools",
   "NetworkTools.UI.Common.Mode": "Mode",
   "NetworkTools.UI.Common.ToggleAll": "Tout activer",
@@ -129,5 +136,6 @@
   "NetworkTools.UI.Generate.ZSpacing": "Espacement Z",
   "NetworkTools.UI.Generate.XCount": "Nombre X",
   "NetworkTools.UI.Generate.ZCount": "Nombre Z",
-  "NetworkTools.UI.Generate.CreateGrid": "Créer un réseau en grille"
+  "NetworkTools.UI.Generate.Radius": "Radius",
+  "NetworkTools.UI.Generate.Apply": "Generate"
 }
