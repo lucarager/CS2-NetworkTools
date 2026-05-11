@@ -241,19 +241,19 @@ namespace NetworkTools.Systems {
                 var center      = position.Position;
                 var direction   = rotation.GetDirection();
                 var anglePoint  = center + direction * rotation.Radius;
-                var arrowHeight = rotation.Radius / 3f;
-                var arrowWidth  = 1f;
+                //var arrowHeight = rotation.Radius / 3f;
+                //var arrowWidth  = 1f;
 
-                // Rotate local +Y to point along direction on the XZ plane
-                var arrowRotation = quaternion.LookRotationSafe(direction, rotation.Normal);
-                // LookRotation points +Z along direction; rotate -90° around X to align +Y with direction instead
-                arrowRotation = math.mul(arrowRotation, quaternion.RotateX(math.PI * 0.5f));
+                //// Rotate local +Y to point along direction on the XZ plane
+                //var arrowRotation = quaternion.LookRotationSafe(direction, rotation.Normal);
+                //// LookRotation points +Z along direction; rotate -90° around X to align +Y with direction instead
+                //arrowRotation = math.mul(arrowRotation, quaternion.RotateX(math.PI * 0.5f));
 
-                buffer.DrawCustomMesh(outlineColor, center, arrowHeight, arrowWidth,
-                                      CustomOverlayRenderSystem.CustomMeshType.Arrow, arrowRotation);
+                //buffer.DrawCustomMesh(outlineColor, center, arrowHeight, arrowWidth,
+                //                      CustomOverlayRenderSystem.CustomMeshType.Arrow, arrowRotation);
 
                 // Draw a small handle dot at the angle point
-                buffer.DrawCircle(outlineColor, fillColor, 0.4f, 0, new float2(0, 1), anglePoint, handle.Size * 2f);
+                buffer.DrawCircle(outlineColor, outlineColor, 0.2f, 0, new float2(0, 1), anglePoint, handle.Size * 2f);
             }
 
             /// <summary>
