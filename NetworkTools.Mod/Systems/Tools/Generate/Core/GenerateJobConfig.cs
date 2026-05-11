@@ -6,7 +6,7 @@ namespace NetworkTools.Systems.Tools.Generate {
     ///     Built by <c>NT_GenerateToolSystem.ScheduleDefinitionsJob</c> immediately before job scheduling.
     /// </summary>
     public struct GenerateJobConfig {
-        public float3     StartPosition;
+        public float3     Position;
         public quaternion StartDirection;
         public float      GridXSpacing;
         public float      GridZSpacing;

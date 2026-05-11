@@ -6,6 +6,7 @@ namespace NetworkTools.Systems.Tools.Generate {
 
     using Unity.Entities;
     using Unity.Jobs;
+    using Unity.Mathematics;
 
     /// <summary>
     ///     Job scheduling and output methods for <see cref="NT_GenerateToolSystem"/>.
@@ -16,8 +17,8 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// </summary>
         internal GenerateJobConfig BuildJobConfig() {
             return new GenerateJobConfig {
-                StartPosition  = StartPosition.Value,
-                StartDirection = StartDirection.Value,
+                Position  = Position.Value,
+                StartDirection = quaternion.LookRotationSafe(Rotation.Value, math.up()),
                 GridXSpacing   = GridXSpacing.Value,
                 GridZSpacing   = GridZSpacing.Value,
                 GridXNum       = GridXNum.Value,

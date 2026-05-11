@@ -87,6 +87,11 @@ namespace NetworkTools.Systems.Tools {
         internal IProxyAction m_ApplyAction;
 
         /// <summary>
+        ///     Precise rotation
+        /// </summary>
+        internal IProxyAction m_PreciseRotation;
+
+        /// <summary>
         ///     Barrier
         /// </summary>
         protected ToolOutputBarrier m_Barrier;
@@ -357,6 +362,10 @@ namespace NetworkTools.Systems.Tools {
             // Actions
             m_ApplyAction          = applyAction;
             m_SecondaryApplyAction = secondaryApplyAction;
+            m_PreciseRotation = (typeof(InputManager)
+                .GetProperty("toolActionCollection", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?.GetValue(InputManager.instance) as UIInputActionCollection)
+                ?.GetActionState("Precise Rotation", toolID);
 
             // Native Collections 
             m_LastHoveredEntity = new NativeReference<Entity>(Allocator.Persistent);
@@ -483,6 +492,7 @@ namespace NetworkTools.Systems.Tools {
             // Disable actions
             m_ApplyAction.shouldBeEnabled          = false;
             m_SecondaryApplyAction.shouldBeEnabled = false;
+            if (m_PreciseRotation != null) m_PreciseRotation.shouldBeEnabled = false;
 
             // Re-enable vanilla systems
             m_ValidationSystem.Enabled    = true;
@@ -603,6 +613,7 @@ namespace NetworkTools.Systems.Tools {
             // Disable actions
             m_ApplyAction.shouldBeEnabled          = false;
             m_SecondaryApplyAction.shouldBeEnabled = false;
+            if (m_PreciseRotation != null) m_PreciseRotation.shouldBeEnabled = false;
 
             // Re-enable vanilla systems
             m_ValidationSystem.Enabled    = true;
@@ -637,6 +648,7 @@ namespace NetworkTools.Systems.Tools {
         protected virtual void UpdateActions() {
             m_ApplyAction.shouldBeEnabled          = true;
             m_SecondaryApplyAction.shouldBeEnabled = true;
+            if (m_PreciseRotation != null) m_PreciseRotation.shouldBeEnabled = true;
         }
 
 

@@ -1,5 +1,6 @@
 namespace NetworkTools.Systems.Tools.Generate {
     using Colossal.Collections;
+    using Game.Input;
     using Game.Prefabs;
     using Game.Tools;
     using NetworkTools.Components.Tools;
@@ -56,6 +57,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             // Reset internal state
             m_LastHitPosition = default;
             Phase             = OperationPhase.Idle;
+            Rotation.Value    = new float3(0, 0, 1);
 
             ResetToIdle();
         }

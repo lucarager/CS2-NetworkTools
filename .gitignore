@@ -75,3 +75,4 @@ node_modules
 UI/debug
 UI/build
 .claude/settings.local.json
+CLAUDE.md

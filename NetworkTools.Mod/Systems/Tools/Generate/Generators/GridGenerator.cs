@@ -17,7 +17,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         public void Generate(
             in  GenerateJobConfig      config,
             ref NativeList<EdgeConfig> curves) {
-            GenerateGrid(config.StartPosition,
+            GenerateGrid(config.Position,
                          config.StartDirection,
                          config.GridXSpacing,
                          config.GridZSpacing,

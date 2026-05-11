@@ -154,7 +154,7 @@
 
                     var elevation = new float2(0f);
 
-                    if (Config.SignedVerticalOffset > 0) {
+                    if (Config.SignedVerticalOffset >= 0) {
                         elevation = ElevatedThreshold;
                     } else if (Config.SignedVerticalOffset < 0) {
                         elevation = TunnelThreshold;
@@ -254,8 +254,8 @@
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
-                var startNodeFlags = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge;
-                var endNodeFlags   = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge;
+                var startNodeFlags = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge | CoursePosFlags.IsParallel;
+                var endNodeFlags   = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge | CoursePosFlags.IsParallel;
 
                 var startElevation  = elevation;
                 var endElevation    = elevation;

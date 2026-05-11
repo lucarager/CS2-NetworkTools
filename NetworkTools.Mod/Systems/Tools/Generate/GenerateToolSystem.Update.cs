@@ -23,6 +23,14 @@ namespace NetworkTools.Systems.Tools.Generate {
             }
 
             // ═══════════════════════════════════════════════════════════════════════════
+            // PRECISE ROTATION (shift + scrollwheel)
+            // ═══════════════════════════════════════════════════════════════════════════
+
+            if (m_PreciseRotation.IsInProgress()) {
+                ApplyPreciseRotation();
+            }
+
+            // ═══════════════════════════════════════════════════════════════════════════
             // CONTROL POINT PLACEMENT: Input Detection
             // ═══════════════════════════════════════════════════════════════════════════
 
@@ -44,7 +52,6 @@ namespace NetworkTools.Systems.Tools.Generate {
             // ═══════════════════════════════════════════════════════════════════════════
             // CONTROL POINT PLACEMENT: State Mutation
             // ═══════════════════════════════════════════════════════════════════════════
-            // todo handle rotation
 
             if (rightClickPressed) {
                 HandleRemoveControlPoint();
@@ -56,7 +63,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                     HandleHoverControlPoint(controlPoint);
                 }
                 m_UpdateNeeded = true;
-            } 
+            }
 
             // ═══════════════════════════════════════════════════════════════════════════
             // OUTPUT
@@ -79,13 +86,9 @@ namespace NetworkTools.Systems.Tools.Generate {
             m_SelectedControlPoint.value = controlPoint;
             UpdatePhaseFromSelection();
 
-            // Update parameters
-            StartPosition.Value = controlPoint.m_Position;
-            StartDirection.Value = controlPoint.m_Rotation;
+            Position.Value = controlPoint.m_Position;
 
-            // When a point is placed, initialize
-            if (Phase == OperationPhase.Ready)
-            {
+            if (Phase == OperationPhase.Ready) {
                 RebuildHandlesForActiveMode();
             }
 
@@ -95,11 +98,18 @@ namespace NetworkTools.Systems.Tools.Generate {
         protected bool HandleHoverControlPoint(ControlPoint controlPoint) {
             m_HoveredControlPoint.value = controlPoint;
 
-            // Update parameters
-            StartPosition.Value = controlPoint.m_Position;
-            StartDirection.Value = controlPoint.m_Rotation;
+            Position.Value = controlPoint.m_Position;
 
             return true;
+        }
+
+        private void ApplyPreciseRotation() {
+            var input = m_PreciseRotation.ReadValue<float>();
+            var delta = math.PI * 0.5f * input * UnityEngine.Time.deltaTime;
+            var current = Rotation.Value;
+            var angle = math.atan2(current.x, current.z) + delta;
+            Rotation.Value = new float3(math.sin(angle), 0, math.cos(angle));
+            m_UpdateNeeded = true;
         }
 
         /// <summary>

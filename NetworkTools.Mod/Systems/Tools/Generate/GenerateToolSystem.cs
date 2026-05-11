@@ -1,6 +1,7 @@
 namespace NetworkTools.Systems.Tools.Generate {
     using Colossal.Collections;
 
+    using Game.Input;
     using Game.Tools;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Handles;
@@ -28,12 +29,20 @@ namespace NetworkTools.Systems.Tools.Generate {
         // Circle
         public FloatParameter              CircleRadius = new("generate.circleRadius", 60f, 4f, 240f, modes: (int)GenerateMode.Circle);
         // Shared, Contextual (from control point placement + handle drags)
-        public Float3Parameter      StartPosition  = new("generate.startPosition", modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle) {
+        public Float3Parameter      Position  = new("generate.position", modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle) {
             Handles = new IHandleSpec<float3>[] { new PositionHandle() }
         };
 
-        public QuaternionParameter StartDirection =
-            new("generate.startDirection", modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle);
+        public Float3Parameter Rotation = new("generate.rotation", new float3(0, 0, 1),
+            modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle) {
+            Handles = new IHandleSpec<float3>[] {
+                new RotationHandle {
+                    Parent = nameof(Position),
+                    Normal = new float3(0, 1, 0),
+                    ReferenceDirection = new float3(0, 0, 1),
+                }
+            }
+        };
 
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Mode.Value;
