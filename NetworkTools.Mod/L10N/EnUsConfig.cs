@@ -235,7 +235,8 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Generate.ZSpacing", "Z Spacing" },
                 { "NetworkTools.UI.Generate.XCount", "X Count" },
                 { "NetworkTools.UI.Generate.ZCount", "Z Count" },
-                { "NetworkTools.UI.Generate.CreateGrid", "Create grid network" },
+                { "NetworkTools.UI.Generate.Radius", "Radius" },
+                { "NetworkTools.UI.Generate.Apply", "Generate" },
             };
         }
 

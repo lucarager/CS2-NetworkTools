@@ -112,7 +112,7 @@ namespace NetworkTools.Systems {
             CreateToolPrefab("ShapeCurve", "curve.svg",    "shape",      new NT_ShapeCurveTool(), IsToolActive(true));
             CreateToolPrefab("Connect",    "connect.svg",  "generative", new NT_ConnectTool(),    IsToolActive(false));
             CreateToolPrefab("Parallel",   "parallel.svg", "generative", new NT_ParallelTool(),   IsToolActive(true));
-            CreateToolPrefab("Generate",   "grid.svg",     "generative", new NT_GenerateTool(),   IsToolActive(false));
+            CreateToolPrefab("Generate",   "generate.svg", "generative", new NT_GenerateTool(),   IsToolActive(true));
 
             CreateHandlePrefab((MarkerObjectPrefab)prefabBaseDict["marker"]);
 
