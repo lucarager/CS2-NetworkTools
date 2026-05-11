@@ -59,10 +59,11 @@ namespace NetworkTools.Systems.Tools.Generate {
             } else if (raycastHit && !hasSelectedControlPoint) {
                 if (leftClickPressed) {
                     HandleAddControlPoint(controlPoint);
+                    m_UpdateNeeded = true;
                 } else if (hasNewHoverTarget) {
                     HandleHoverControlPoint(controlPoint);
+                    m_UpdateNeeded = true;
                 }
-                m_UpdateNeeded = true;
             }
 
             // ═══════════════════════════════════════════════════════════════════════════
