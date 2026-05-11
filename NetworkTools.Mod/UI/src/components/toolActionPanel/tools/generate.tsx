@@ -4,6 +4,7 @@ import { GAME_TRIGGERS } from "gameBindings";
 import {
     GenerateMode,
     PARAM_META,
+    PARAM_KEYS,
     PARAM_BINDINGS,
 } from "generated/parameters.generated";
 import { useValue } from "cs2/api";
@@ -42,7 +43,7 @@ export const GenerateControls: React.FC = () => {
 
     return (
         <>
-            <PrefabSelection />
+            <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
             <div className={styles.divider}></div>
             <div className={styles.col}>
                 <div className={styles.controlRow}>

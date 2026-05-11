@@ -37,7 +37,6 @@
         private int                                      m_LastAvailableSnaps;
         private int                                      m_LastAvailableTargets;
         private int                                      m_LastAvailableViews;
-        private Entity                                   m_LastNetPrefabEntity;
         private int                                      m_LastSelectedNodesHash;
         private string                                   m_LastSelectedPrefab;
         private int                                      m_LastSelectedSnaps;
@@ -52,7 +51,6 @@
         private NT_RoadShapeToolSystem                   m_NtRoadShapeToolSystem;
         private ValueBindingHelper<bool>                 m_PanelOpenBinding;
         private PrefabSystem                             m_PrefabSystem;
-        private ValueBindingHelper<NetPrefabData>        m_SelectedNetPrefabBinding;
         private ValueBindingHelper<ToolSelectionData[]>  m_SelectedEntitiesBinding;
         private ValueBindingHelper<string>               m_SelectedPrefabBinding;
         private ValueBindingHelper<int>                  m_SelectedSnapsBinding;
@@ -93,7 +91,6 @@
             m_SelectedPrefabBinding   = CreateBinding("SELECTED_PREFAB",     "");
             m_PanelOpenBinding        = CreateBinding("PANEL_OPEN",          false, HandlePanelOpen);
             m_SelectedEntitiesBinding = CreateBinding("SELECTED_ENTITIES",   new ToolSelectionData[] { });
-            m_SelectedNetPrefabBinding = CreateBinding("SELECTED_NET_PREFAB", NetPrefabData.Empty);
             RegisterToolParameterBindings(m_NtParallelToolSystem);
             RegisterToolParameterBindings(m_NtGenerateToolSystem);
             RegisterToolParameterBindings(m_NtConnectToolSystem);
@@ -161,7 +158,7 @@
 
         private void RegisterToolParameterBindings(NT_BaseToolSystem tool) {
             foreach (var param in tool.Parameters)
-                if (param.Bindable)
+                if (param.Bindable || param is NetPrefabParameter)
                     RegisterParameterBinding(param);
         }
 
@@ -178,6 +175,16 @@
             } else if (param is IEnumParameter ep) {
                 var b = CreateBinding(ep.Key, ep.IntValue, (int v) => ep.IntValue = v);
                 param.OnChanged += _ => b.Value = ep.IntValue;
+            } else if (param is NetPrefabParameter np) {
+                var b = CreateBinding(np.Key, NetPrefabData.Empty);
+                np.OnChanged += _ => {
+                    b.Value = np.Prefab != null
+                        ? new NetPrefabData(
+                            np.NetLanePrefabEntity != Entity.Null ? np.NetLanePrefabEntity : np.NetPrefabEntity,
+                            ImageSystem.GetThumbnail(np.Prefab),
+                            np.Prefab.name)
+                        : NetPrefabData.Empty;
+                };
             }
         }
 

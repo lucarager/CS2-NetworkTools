@@ -17,12 +17,13 @@
 
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
-            // If both are null, we fall back to the prefab of the first edge's start node
-            if (m_SelectedNetPrefabEntity == Entity.Null && m_SelectedNetLanePrefabEntity == Entity.Null) {
+            var netPrefabEntity = NetPrefab.NetPrefabEntity;
+            var netLanePrefabEntity = NetPrefab.NetLanePrefabEntity;
+
+            if (netPrefabEntity == Entity.Null && netLanePrefabEntity == Entity.Null) {
                 var firstEdge = EntityManager.GetComponentData<Edge>(m_CurrentPathEdges[0]);
                 var prefabRef = EntityManager.GetComponentData<PrefabRef>(firstEdge.m_Start);
-                m_SelectedNetPrefab       = m_PrefabSystem.GetPrefab<NetPrefab>(prefabRef);
-                m_SelectedNetPrefabEntity = prefabRef.m_Prefab;
+                netPrefabEntity = prefabRef.m_Prefab;
             }
 
             var jobConfig = new ParallelJobConfig {
@@ -38,8 +39,8 @@
                 Config                 = jobConfig,
                 CurrentPathNodes       = m_CurrentPathNodes,
                 CurrentPathEdges       = m_CurrentPathEdges,
-                NetPrefabEntity        = m_SelectedNetPrefabEntity,
-                NetLanePrefabEntity    = m_SelectedNetLanePrefabEntity,
+                NetPrefabEntity        = netPrefabEntity,
+                NetLanePrefabEntity    = netLanePrefabEntity,
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
                 EdgeLookup             = SystemAPI.GetComponentLookup<Edge>(true),

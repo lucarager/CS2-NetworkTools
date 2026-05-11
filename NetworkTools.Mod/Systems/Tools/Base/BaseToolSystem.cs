@@ -151,25 +151,6 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         internal IProxyAction m_SecondaryApplyAction;
 
-        /// <summary>
-        ///     Selected net lane prefab for parallel road segments.
-        /// </summary>
-        protected NetLanePrefab m_SelectedNetLanePrefab;
-
-        /// <summary>
-        ///     Selected net lane prefab entity.
-        /// </summary>
-        protected Entity m_SelectedNetLanePrefabEntity;
-
-        /// <summary>
-        ///     Selected net prefab for parallel road segments.
-        /// </summary>
-        protected NetPrefab m_SelectedNetPrefab;
-
-        /// <summary>
-        ///     Selected net prefab entity.
-        /// </summary>
-        protected Entity m_SelectedNetPrefabEntity;
 
         private EntityQuery m_TargetInvisiblePathEdgesQuery;
         private EntityQuery m_TargetInvisiblePathNodesQuery;
@@ -292,31 +273,6 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         public ViewOption SelectedViews { get; set; } = ViewOption.None;
 
-        /// <summary>
-        ///     Gets the currently selected net prefab, or <c>null</c> if none is selected.
-        /// </summary>
-        public PrefabBase SelectedNetPrefab {
-            get {
-                if (m_SelectedNetLanePrefab != null) {
-                    return m_SelectedNetLanePrefab;
-                }
-
-                return m_SelectedNetPrefab;
-            }
-        }
-
-        /// <summary>
-        ///     Gets the ECS entity of the selected net prefab, or <see cref="Entity.Null" /> if none.
-        /// </summary>
-        public Entity SelectedNetPrefabEntity {
-            get {
-                if (m_SelectedNetLanePrefabEntity != Entity.Null) {
-                    return m_SelectedNetLanePrefabEntity;
-                }
-
-                return m_SelectedNetPrefabEntity;
-            }
-        }
 
         public override string toolID => "NT_BaseToolSystem";
 
@@ -529,34 +485,18 @@ namespace NetworkTools.Systems.Tools {
             return false;
         }
 
-        /// <summary>
-        ///     Attempts to cache a net prefab selection.
-        /// </summary>
-        /// <param name="prefab">The prefab offered by the game.</param>
-        /// <returns>
-        ///     Boolean whether the prefab was recognized and cached as the current selection.
-        /// </returns>
-        public bool TryCacheNetPrefab(PrefabBase prefab) {
+        public bool SetNetPrefab(string key, PrefabBase prefab) {
+            if (!ParametersByKey.TryGetValue(key, out var param) || param is not NetPrefabParameter np) return false;
+
             switch (prefab) {
                 case RoadPrefab or TrackPrefab or WaterwayPrefab or PathwayPrefab:
-                {
-                    m_SelectedNetPrefab           = (NetPrefab)prefab;
-                    m_SelectedNetPrefabEntity     = m_PrefabSystem.GetEntity(m_SelectedNetPrefab);
-                    m_SelectedNetLanePrefab       = null;
-                    m_SelectedNetLanePrefabEntity = Entity.Null;
-                    m_UpdateNeeded                = true;
+                    np.Set(prefab, m_PrefabSystem.GetEntity((NetPrefab)prefab), Entity.Null);
                     return true;
-                }
                 case NetLanePrefab netLanePrefab:
-                {
-                    m_SelectedNetLanePrefab       = netLanePrefab;
-                    m_SelectedNetLanePrefabEntity = m_PrefabSystem.GetEntity(netLanePrefab);
-                    var foundContainers = GetContainers(m_ContainerQuery, out var laneContainer, out _);
-                    m_SelectedNetPrefab       = null;
-                    m_SelectedNetPrefabEntity = laneContainer;
-                    m_UpdateNeeded            = true;
+                    var laneEntity = m_PrefabSystem.GetEntity(netLanePrefab);
+                    GetContainers(m_ContainerQuery, out var container, out _);
+                    np.Set(prefab, container, laneEntity);
                     return true;
-                }
             }
 
             return false;

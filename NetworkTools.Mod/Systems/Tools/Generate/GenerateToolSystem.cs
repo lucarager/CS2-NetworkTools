@@ -13,12 +13,14 @@ namespace NetworkTools.Systems.Tools.Generate {
     /// <summary>
     ///     Tool system for generating networks.
     /// </summary>
-    public partial class NT_GenerateToolSystem : NT_BaseToolSystem, IToolPrefabProvider, INetPrefabCachingProvider, IManualApplyProvider, INetPrefabSelectionProvider {
+    public partial class NT_GenerateToolSystem : NT_BaseToolSystem, IToolPrefabProvider, IManualApplyProvider {
         /// <inheritdoc />
         public override string toolID => "GenerateTool";
 
         /// <inheritdoc />
         public override TargetOption AvailableTargets => TargetOption.None;
+
+        public NetPrefabParameter NetPrefab = new("generate.netPrefab", modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle);
 
         // Grid
         public EnumParameter<GenerateMode> Mode         = new("generate.mode", GenerateMode.Grid);

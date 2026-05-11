@@ -1,6 +1,5 @@
 namespace NetworkTools.Systems.UI {
     using Game.Prefabs;
-    using Game.UI;
     using NetworkTools.Systems.Tools;
     using Unity.Collections;
     using Unity.Entities;
@@ -49,20 +48,6 @@ namespace NetworkTools.Systems.UI {
                 }
 
                 m_SelectedEntitiesBinding.Value = selectedEntitiesData;
-            }
-
-            // Update net prefab binding when the active tool's selection changes
-            if (m_ToolSystem.activeTool is NT_BaseToolSystem prefabSelectionProvider and INetPrefabSelectionProvider) {
-                var currentNetPrefabEntity = prefabSelectionProvider.SelectedNetPrefabEntity;
-                if (currentNetPrefabEntity != m_LastNetPrefabEntity && currentNetPrefabEntity != Entity.Null) {
-                    m_LastNetPrefabEntity = currentNetPrefabEntity;
-                    var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(currentNetPrefabEntity);
-                    m_SelectedNetPrefabBinding.Value = prefab != null
-                                                           ? new NetPrefabData(currentNetPrefabEntity,
-                                                                               ImageSystem.GetThumbnail(prefab),
-                                                                               prefab.name)
-                                                           : NetPrefabData.Empty;
-                }
             }
 
             // Update snap/target bindings from the active tool

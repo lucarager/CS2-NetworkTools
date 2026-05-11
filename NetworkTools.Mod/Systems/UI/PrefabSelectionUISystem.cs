@@ -6,13 +6,10 @@
     using Game.UI;
     using NetworkTools.Extensions;
     using NetworkTools.Systems.Tools;
-    using NetworkTools.Systems.Tools.Connect;
-    using NetworkTools.Systems.Tools.Parallel;
-    using NetworkTools.Systems.Tools.RoadShape;
+    using NetworkTools.Systems.Tools.Parameters;
     using NetworkTools.Utils;
     using Unity.Collections;
     using Unity.Entities;
-    using NT_GenerateToolSystem = NetworkTools.Systems.Tools.Generate.NT_GenerateToolSystem;
 
     /// <summary>
     ///     System responsible for UI Bindings & Lookup Handling.
@@ -34,15 +31,8 @@
         private PrefabBase             m_DefaultRoadPrefab;
         private int                    m_LastPrefabType = -1;
         private PrefixedLogger         m_Log;
-        private NameSystem             m_NameSystem;
-        private NT_ConnectToolSystem   m_NtConnectToolSystem;
-        private NT_GenerateToolSystem      m_NTGenerateToolSystem;
-        private NT_ParallelToolSystem  m_NtParallelToolSystem;
-        private NT_RoadShapeToolSystem m_NtRoadShapeToolSystem;
         private PrefabSystem           m_PrefabSystem;
-
-        private EntityQuery             m_ToolPrefabQuery;
-        private ToolSystem              m_ToolSystem;
+        private ToolSystem             m_ToolSystem;
         private ValueBindingHelper<int> m_TypeBinding;
 
         /// <inheritdoc />
@@ -52,17 +42,12 @@
             m_Log = new PrefixedLogger(nameof(NT_PrefabSelectionUISystem));
             m_Log.Debug("OnCreate()");
 
-            m_PrefabSystem          = World.GetOrCreateSystemManaged<PrefabSystem>();
-            m_ToolSystem            = World.GetOrCreateSystemManaged<ToolSystem>();
-            m_NtConnectToolSystem   = World.GetOrCreateSystemManaged<NT_ConnectToolSystem>();
-            m_NTGenerateToolSystem      = World.GetOrCreateSystemManaged<NT_GenerateToolSystem>();
-            m_NtParallelToolSystem  = World.GetOrCreateSystemManaged<NT_ParallelToolSystem>();
-            m_NtRoadShapeToolSystem = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
-            m_NameSystem            = World.GetOrCreateSystemManaged<NameSystem>();
+            m_PrefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
+            m_ToolSystem   = World.GetOrCreateSystemManaged<ToolSystem>();
 
             m_TypeBinding = CreateBinding("PS:SELECTED_TYPE", (int)PrefabType.Road, HandleUpdateType);
             m_DataBinding = CreateBinding("PS:DATA",          new PrefabSelectionEntry[] { });
-            CreateTrigger<Entity>("PS:SELECT", HandleSelect);
+            CreateTrigger<string, Entity>("PS:SELECT", HandleSelect);
         }
 
         protected override void OnDestroy() {
@@ -88,12 +73,14 @@
                 m_DataBinding.Value = prefabData;
             }
 
-            // Cold-start: ensure tools that need a net prefab have one selected
-            if (m_ToolSystem.activeTool is NT_BaseToolSystem tool and INetPrefabCachingProvider
-                && tool.SelectedNetPrefab == null) {
-                var defaultPrefab = GetDefaultRoadPrefab();
-                if (defaultPrefab != null) {
-                    tool.TryCacheNetPrefab(defaultPrefab);
+            if (m_ToolSystem.activeTool is NT_BaseToolSystem tool) {
+                foreach (var param in tool.Parameters) {
+                    if (param is NetPrefabParameter np && !np.HasSelection) {
+                        var defaultPrefab = GetDefaultRoadPrefab();
+                        if (defaultPrefab != null) {
+                            tool.SetNetPrefab(np.Key, defaultPrefab);
+                        }
+                    }
                 }
             }
         }
@@ -122,13 +109,13 @@
             m_TypeBinding.Value = type;
         }
 
-        private void HandleSelect(Entity entity) {
-            m_Log.Debug($"HandleSelect(entity: {entity})");
+        private void HandleSelect(string key, Entity entity) {
+            m_Log.Debug($"HandleSelect(key: {key}, entity: {entity})");
 
-            if (m_ToolSystem.activeTool is NT_BaseToolSystem tool and INetPrefabCachingProvider) {
+            if (m_ToolSystem.activeTool is NT_BaseToolSystem tool) {
                 var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(entity);
                 if (prefab != null) {
-                    tool.TryCacheNetPrefab(prefab);
+                    tool.SetNetPrefab(key, prefab);
                 }
             }
         }

@@ -6,6 +6,7 @@ import { useValue } from "cs2/api";
 import { c } from "utils/classes";
 import { VC } from "components/vanilla/Components";
 import { useLocalization } from "cs2/l10n";
+import { usePrefabSearch } from "./prefabSearchContext";
 
 const PREFAB_TABS: { localeKey: string; type: PrefabType }[] = [
     { localeKey: "NetworkTools.UI.PrefabTab.Road", type: PrefabType.Road },
@@ -20,6 +21,7 @@ type PrefabSearchPanelProps = {
 };
 
 export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose }) => {
+    const { activeKey } = usePrefabSearch();
     const selectedType = useValue(GAME_BINDINGS.PS_SELECTED_TYPE.binding);
     const prefabData = useValue(GAME_BINDINGS.PS_DATA.binding);
     const [searchQuery, setSearchQuery] = useState("");
@@ -82,7 +84,7 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
                             key={`${prefab.Entity.index}-${prefab.Entity.version}`}
                             className={styles.listItem}
                             onClick={() => {
-                                GAME_TRIGGERS.PS_SELECT(prefab.Entity);
+                                if (activeKey) GAME_TRIGGERS.PS_SELECT(activeKey, prefab.Entity);
                                 onClose();
                             }}>
                             <img src={prefab.Icon} className={styles.listItem__icon} />

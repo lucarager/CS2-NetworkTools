@@ -42,20 +42,20 @@ namespace NetworkTools.Systems.Tools.Connect {
 
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
-            // If both are null, we fall back to the prefab of the first edge's start node
-            if (m_SelectedNetPrefabEntity == Entity.Null && m_SelectedNetLanePrefabEntity == Entity.Null)
-            {
+            var netPrefabEntity = NetPrefab.NetPrefabEntity;
+            var netLanePrefabEntity = NetPrefab.NetLanePrefabEntity;
+
+            if (netPrefabEntity == Entity.Null && netLanePrefabEntity == Entity.Null) {
                 var prefabRef = EntityManager.GetComponentData<PrefabRef>(m_SelectedNodes[0]);
-                m_SelectedNetPrefab = m_PrefabSystem.GetPrefab<NetPrefab>(prefabRef);
-                m_SelectedNetPrefabEntity = prefabRef.m_Prefab;
+                netPrefabEntity = prefabRef.m_Prefab;
             }
 
             var jobHandle = new CreateDefinitionsJob {
                 Mode = Mode.Value,
                 Config = BuildJobConfig(),
                 SelectedNodeEntities = m_SelectedNodes,
-                PrefabEntity = m_SelectedNetPrefabEntity,
-                NetLanePrefabEntity = m_SelectedNetLanePrefabEntity,
+                PrefabEntity = netPrefabEntity,
+                NetLanePrefabEntity = netLanePrefabEntity,
                 OutputMode = outputMode,
 
                 // Lookups needed for output and intersection adjustments

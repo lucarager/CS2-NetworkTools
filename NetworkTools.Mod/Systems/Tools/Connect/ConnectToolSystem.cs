@@ -13,7 +13,7 @@ namespace NetworkTools.Systems.Tools.Connect {
     /// <summary>
     ///     Tool system for connecting two nodes with a curve or loop.
     /// </summary>
-    public partial class NT_ConnectToolSystem : NT_BaseToolSystem, IToolPrefabProvider, INetPrefabCachingProvider, INodeSelectionProvider, INetPrefabSelectionProvider, IManualApplyProvider {
+    public partial class NT_ConnectToolSystem : NT_BaseToolSystem, IToolPrefabProvider, INodeSelectionProvider, IManualApplyProvider {
         /// <inheritdoc />
         public override string toolID => "ConnectTool";
 
@@ -22,6 +22,7 @@ namespace NetworkTools.Systems.Tools.Connect {
 
         // ── Parameters
 
+        public NetPrefabParameter         NetPrefab  = new("connect.netPrefab");
         public EnumParameter<ConnectMode> Mode       = new("connect.mode", ConnectMode.None);
         public FloatParameter             LoopRadius = new("connect.loopRadius", 50f, 1f, 500f, modes: (int)ConnectMode.Loop) {
             Handles = new IHandleSpec<float>[] {

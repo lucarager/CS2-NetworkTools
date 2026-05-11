@@ -86,10 +86,6 @@ export const GAME_BINDINGS = {
     SELECTED_ENTITIES: new TwoWayBinding<ToolSelectionData[]>("SELECTED_ENTITIES", []),
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
     PANEL_OPEN: new TwoWayBinding<boolean>("PANEL_OPEN", false),
-    SELECTED_NET_PREFAB: new TwoWayBinding<NetPrefabData>(
-        "SELECTED_NET_PREFAB",
-        EMPTY_NET_PREFAB_DATA,
-    ),
     AVAILABLE_SNAPS: new TwoWayBinding<number>("AVAILABLE_SNAPS", SnapOption.None),
     SELECTED_SNAPS: new TwoWayBinding<number>("SELECTED_SNAPS", SnapOption.None),
     AVAILABLE_TARGETS: new TwoWayBinding<number>("AVAILABLE_TARGETS", TargetOption.All),
@@ -107,8 +103,8 @@ export const GAME_TRIGGERS = {
     REQUEST_APPLY: () => {
         trigger(mod.id, "TRIGGER:REQUEST_APPLY");
     },
-    PS_SELECT: (entity: Entity) => {
-        trigger(mod.id, "TRIGGER:PS:SELECT", entity);
+    PS_SELECT: (key: string, entity: Entity) => {
+        trigger(mod.id, "TRIGGER:PS:SELECT", key, entity);
     },
     RESET_PARAM: (key: string) => {
         trigger(mod.id, "TRIGGER:RESET_PARAM", key);

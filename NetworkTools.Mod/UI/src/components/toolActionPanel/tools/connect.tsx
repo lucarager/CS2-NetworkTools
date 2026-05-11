@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
 import { GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
-import { ConnectMode, PARAM_BINDINGS } from "generated/parameters.generated";
+import { ConnectMode, PARAM_KEYS, PARAM_BINDINGS } from "generated/parameters.generated";
 import { useValue } from "cs2/api";
 import { Button, Tooltip } from "cs2/ui";
 import { PrefabSelection } from "../shared/prefabSelection";
@@ -41,7 +41,7 @@ export const ConnectControls: React.FC = () => {
     return (
         <>
             {/* <NodeSelection selectedEntities={selectedEntitiesBinding} /> */}
-            <PrefabSelection />
+            <PrefabSelection paramKey={PARAM_KEYS.connect.netPrefab} />
 
             {/* Transform Controls - Show when 2+ nodes selected */}
             {selectedEntitiesBinding.length >= 2 && (

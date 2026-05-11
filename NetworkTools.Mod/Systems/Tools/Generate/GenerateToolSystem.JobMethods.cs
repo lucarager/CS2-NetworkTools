@@ -44,8 +44,8 @@ namespace NetworkTools.Systems.Tools.Generate {
             var jobHandle = new CreateDefinitionsJob {
                 Mode                   = Mode.Value,
                 Config                 = BuildJobConfig(),
-                NetPrefabEntity        = m_SelectedNetPrefabEntity,
-                NetLanePrefabEntity    = m_SelectedNetLanePrefabEntity,
+                NetPrefabEntity        = NetPrefab.NetPrefabEntity,
+                NetLanePrefabEntity    = NetPrefab.NetLanePrefabEntity,
                 OutputMode             = outputMode,
 
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),

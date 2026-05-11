@@ -10,6 +10,7 @@ export enum VerticalSide { Up = 0, Down = 1 }
 
 export const PARAM_KEYS = {
     connect: {
+        netPrefab: "connect.netPrefab",
         mode: "connect.mode",
         loopRadius: "connect.loopRadius",
         startPosition: "connect.startPosition",
@@ -23,6 +24,7 @@ export const PARAM_KEYS = {
         loopControlPointPosition: "connect.loopControlPointPosition",
     },
     generate: {
+        netPrefab: "generate.netPrefab",
         mode: "generate.mode",
         gridXSpacing: "generate.gridXSpacing",
         gridZSpacing: "generate.gridZSpacing",
@@ -33,6 +35,7 @@ export const PARAM_KEYS = {
         rotation: "generate.rotation",
     },
     parallel: {
+        netPrefab: "parallel.netPrefab",
         horizontalOffset: "parallel.horizontalOffset",
         verticalOffset: "parallel.verticalOffset",
         horizontalDirection: "parallel.horizontalDirection",
@@ -50,6 +53,7 @@ export const PARAM_KEYS = {
 } as const;
 
 export const PARAM_META = {
+    "connect.netPrefab": { type: "netPrefab", modes: 0 },
     "connect.mode": { type: "enum", enumType: "ConnectMode", default: 0, modes: 0 },
     "connect.loopRadius": { type: "float", default: 50, min: 1, max: 500, modes: 3 },
     "connect.startPosition": { type: "float3", modes: 0 },
@@ -61,6 +65,7 @@ export const PARAM_META = {
     "connect.curveEndControlPointPosition": { type: "float3", modes: 3 },
     "connect.curveEndPointPosition": { type: "float3", modes: 3 },
     "connect.loopControlPointPosition": { type: "float3", modes: 3 },
+    "generate.netPrefab": { type: "netPrefab", modes: 3 },
     "generate.mode": { type: "enum", enumType: "GenerateMode", default: 1, modes: 0 },
     "generate.gridXSpacing": { type: "float", default: 60, min: 4, max: 240, modes: 1 },
     "generate.gridZSpacing": { type: "float", default: 60, min: 4, max: 240, modes: 1 },
@@ -69,6 +74,7 @@ export const PARAM_META = {
     "generate.circleRadius": { type: "float", default: 60, min: 4, max: 240, modes: 2 },
     "generate.position": { type: "float3", modes: 3 },
     "generate.rotation": { type: "float3", modes: 3 },
+    "parallel.netPrefab": { type: "netPrefab", modes: 0 },
     "parallel.horizontalOffset": { type: "float", default: 20, min: 0, max: 80, modes: 0 },
     "parallel.verticalOffset": { type: "float", default: 0, min: 0, max: 80, modes: 0 },
     "parallel.horizontalDirection": { type: "enum", enumType: "ParallelSide", default: 1, modes: 0 },

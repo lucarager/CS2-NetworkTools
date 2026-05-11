@@ -1,14 +1,26 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
-import { GAME_BINDINGS } from "gameBindings";
-import { useValue } from "cs2/api";
+import { useValue, bindValue } from "cs2/api";
 import { usePrefabSearch } from "../prefabSearchPanel/prefabSearchContext";
 import { useLocalization } from "cs2/l10n";
+import { EMPTY_NET_PREFAB_DATA, type NetPrefabData } from "gameBindings";
+import mod from "mod.json";
 
-export const PrefabSelection: React.FC = () => {
-    const selectedNetPrefab = useValue(GAME_BINDINGS.SELECTED_NET_PREFAB.binding);
-    const { isOpen, open, close } = usePrefabSearch();
+const bindingCache = new Map<string, ReturnType<typeof bindValue<NetPrefabData>>>();
+
+function getNetPrefabBinding(key: string) {
+    if (!bindingCache.has(key)) {
+        bindingCache.set(key, bindValue<NetPrefabData>(mod.id, `BINDING:${key}`, EMPTY_NET_PREFAB_DATA));
+    }
+    return bindingCache.get(key)!;
+}
+
+export const PrefabSelection: React.FC<{ paramKey: string }> = ({ paramKey }) => {
+    const prefabData = useValue(getNetPrefabBinding(paramKey));
+    const { isOpen, activeKey, open, close } = usePrefabSearch();
     const { translate } = useLocalization();
+    const isThisOpen = isOpen && activeKey === paramKey;
+
     return (
         <>
             <div className={styles.divider}></div>
@@ -20,15 +32,15 @@ export const PrefabSelection: React.FC = () => {
                         </span>
                         <button
                             className={styles.entityPreview}
-                            onClick={() => (isOpen ? close() : open())}>
+                            onClick={() => (isThisOpen ? close() : open(paramKey))}>
                             <img
-                                src={selectedNetPrefab.Thumbnail}
+                                src={prefabData.Thumbnail}
                                 className={styles.entityPreview__thumbnail}
                             />
                             <div className={styles.entityPreview__name}>
                                 {translate(
-                                    `Assets.NAME[${selectedNetPrefab.Name}]`,
-                                    selectedNetPrefab.Name,
+                                    `Assets.NAME[${prefabData.Name}]`,
+                                    prefabData.Name,
                                 )}
                             </div>
                             <img

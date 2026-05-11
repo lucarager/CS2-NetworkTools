@@ -329,11 +329,15 @@ namespace NetworkTools.Systems.Tools {
                 if (string.IsNullOrEmpty(parentName)) continue;
                 if (entry.Parameter is not Float3Parameter childF3) continue;
 
+                // Rotation handles store a direction, not a position — shifting by the
+                // parent's position delta would corrupt their value.  Their entity center
+                // is already repositioned by SyncParentPositionToChildHandles.
+                if (entry.Spec is RotationHandle) continue;
+
                 // Find the resolved parent from the spec
                 Float3Parameter parentF3 = entry.Spec switch {
                     PositionHandle ph        => ph.ResolvedParent,
                     CircleHandle ch          => ch.ResolvedParent,
-                    RotationHandle rh        => rh.ResolvedParent,
                     ComputedPositionHandle c => c.ResolvedParent,
                     AxisHandle ax            => ax.ResolvedParent,
                     _                        => null

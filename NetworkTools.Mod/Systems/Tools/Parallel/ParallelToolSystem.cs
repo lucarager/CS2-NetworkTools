@@ -20,10 +20,11 @@ namespace NetworkTools.Systems.Tools.Parallel {
     ///     This tool demonstrates the NT_PathSelectionToolSystem base class.
     ///     Selection, phase management, and path preview are all inherited.
     /// </remarks>
-    public partial class NT_ParallelToolSystem : NT_PathSelectionToolSystem, IToolPrefabProvider, INetPrefabCachingProvider, IManualApplyProvider, INetPrefabSelectionProvider {
+    public partial class NT_ParallelToolSystem : NT_PathSelectionToolSystem, IToolPrefabProvider, IManualApplyProvider {
         /// <inheritdoc />
         public override string toolID => "ParallelTool";
 
+        public NetPrefabParameter          NetPrefab           = new("parallel.netPrefab");
         public FloatParameter              HorizontalOffset    = new("parallel.horizontalOffset", 20f, 0f, 80f);
         public FloatParameter              VerticalOffset      = new("parallel.verticalOffset",   0f,  0f, 80f);
         public EnumParameter<ParallelSide> HorizontalDirection = new("parallel.horizontalDirection", ParallelSide.Right);

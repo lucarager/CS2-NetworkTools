@@ -5,6 +5,7 @@ import {
     ParallelSide,
     VerticalSide,
     PARAM_META,
+    PARAM_KEYS,
     PARAM_BINDINGS,
 } from "generated/parameters.generated";
 import { useValue } from "cs2/api";
@@ -56,7 +57,7 @@ export const ParallelControls: React.FC = () => {
     return (
         <>
             {/* <NodeSelection selectedEntities={selectedEntities} /> */}
-            <PrefabSelection />
+            <PrefabSelection paramKey={PARAM_KEYS.parallel.netPrefab} />
 
             {/* Configuration Controls - Show when 2+ nodes selected */}
             {selectedEntities.length >= 2 && (
