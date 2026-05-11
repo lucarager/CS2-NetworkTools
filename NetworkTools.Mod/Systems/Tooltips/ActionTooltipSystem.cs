@@ -17,6 +17,7 @@ namespace NetworkTools.Systems.Tooltips {
         private ToolSystem  m_ToolSystem;
         private ProxyAction m_ApplyAction;
         private ProxyAction m_SecondaryApplyAction;
+        private ProxyAction m_PreciseRotationAction;
 
         /// <inheritdoc />
         protected override void OnCreate() {
@@ -26,8 +27,9 @@ namespace NetworkTools.Systems.Tooltips {
 
             var inputManager = InputManager.instance;
             if (inputManager != null) {
-                m_ApplyAction          = inputManager.FindAction(InputManager.kToolMap, "Apply");
-                m_SecondaryApplyAction = inputManager.FindAction(InputManager.kToolMap, "Secondary Apply");
+                m_ApplyAction           = inputManager.FindAction(InputManager.kToolMap, "Apply");
+                m_SecondaryApplyAction  = inputManager.FindAction(InputManager.kToolMap, "Secondary Apply");
+                m_PreciseRotationAction = inputManager.FindAction(InputManager.kToolMap, "Precise Rotation");
             }
         }
 
@@ -45,7 +47,8 @@ namespace NetworkTools.Systems.Tooltips {
             var tooltipEntries = activeTool.GetHintTooltips(
                 activeTool.Phase,
                 m_ApplyAction,
-                m_SecondaryApplyAction);
+                m_SecondaryApplyAction,
+                m_PreciseRotationAction);
 
             ShowTooltips(tooltipEntries, InputManager.DeviceType.Mouse);
         }

@@ -291,6 +291,19 @@ namespace NetworkTools.Systems.Tools {
             return System.Array.Empty<HintTooltipEntry>();
         }
 
+        /// <summary>
+        ///     Returns hint tooltip entries including the precise rotation action.
+        ///     Override this in tools that use precise rotation (e.g. Generate).
+        ///     Defaults to delegating to the 3-parameter overload.
+        /// </summary>
+        public virtual IReadOnlyList<HintTooltipEntry> GetHintTooltips(
+            OperationPhase phase,
+            ProxyAction    applyAction,
+            ProxyAction    secondaryApplyAction,
+            ProxyAction    preciseRotationAction) {
+            return GetHintTooltips(phase, applyAction, secondaryApplyAction);
+        }
+
         protected override void OnCreate() {
             base.OnCreate();
 

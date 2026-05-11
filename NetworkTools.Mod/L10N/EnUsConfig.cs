@@ -132,11 +132,20 @@ namespace NetworkTools.L10N {
                 // ### Parallel - Metadata
                 { "NetworkTools.Tools.Parallel.Name", "Parallel Tool" },
                 { "NetworkTools.Tools.Parallel.Description", "Allows creating perfect parallel networks from a source network." },
+                // ### Parallel - Hint Tooltips
+                { "Common.ACTION[NetworkTools.HintTooltip.Parallel.SelectStart]", "Select a starting node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.Parallel.SelectSecond]", "Select a second node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.Parallel.RemoveLast]", "Remove last node" },
+                { "Common.ACTION[NetworkTools.HintTooltip.Parallel.ExtendPath]", "Select a new end node to extend the path" },
 
                 // ## Generate
                 // ### Generate - Metadata
                 { "NetworkTools.Tools.Generate.Name", "Generate Tool (Coming Soon!)" },
                 { "NetworkTools.Tools.Generate.Description", "Allows generating a variety of networks such as perfect road grids and circles." },
+                // ### Generate - Hint Tooltips
+                { "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]", "Place network origin" },
+                { "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]", "Rotate" },
+                { "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]", "Remove placement" },
 
                 // # UI Strings
                 // ## Common
