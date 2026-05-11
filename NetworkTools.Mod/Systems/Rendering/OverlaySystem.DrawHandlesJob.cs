@@ -97,10 +97,9 @@ namespace NetworkTools.Systems {
                     } else if (handle.HasAnyFlag(HandleTypeFlags.Circle) && hasCircleComponent) {
                         var circle = circleArray[i];
                         RenderCircleHandle(position, circle, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
-                    } else if (handle.HasAnyFlag(HandleTypeFlags.Rotation) && hasRotationComponent && hasCircleComponent) {
-                        var circle   = circleArray[i];
+                    } else if (handle.HasAnyFlag(HandleTypeFlags.Rotation) && hasRotationComponent) {
                         var rotation = rotationArray[i];
-                        RenderRotationHandle(position, circle, rotation, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
+                        RenderRotationHandle(position, rotation, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.ParameterRange) && hasConstraintsComponent) {
                         // Parameter handle with range indicator (origin dot + line to handle)
                         var constraints = constraintsArray[i];
@@ -224,7 +223,7 @@ namespace NetworkTools.Systems {
             /// <summary>
             ///     Renders a rotation handle: circle outline with an angle indicator line.
             /// </summary>
-            private static void RenderRotationHandle(NT_HandlePosition          position,      NT_HandleCircle circle,
+            private static void RenderRotationHandle(NT_HandlePosition          position,
                                                      NT_HandleRotation          rotation,      NT_Handle       handle,
                                                      bool                       isHighlighted, bool            isSelected,
                                                      RenderColors               colors,
@@ -233,20 +232,20 @@ namespace NetworkTools.Systems {
                 var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
 
                 // Draw the circle outline
-                buffer.DrawCircle(outlineColor, new Color(255, 255, 255, 0), borderWidth, 0, new float2(0, 1), position.Position, circle.Radius * 2f);
+                buffer.DrawCircle(outlineColor, new Color(255, 255, 255, 0), borderWidth, 0, new float2(0, 1), position.Position, rotation.Radius * 2f);
 
                 // Draw a small center point
                 buffer.DrawCircle(fillColor, position.Position, 1f);
 
                 // Draw angle indicator: arrow from center toward the angle point
                 var center      = position.Position;
-                var direction   = rotation.GetDirection(circle.Normal);
-                var anglePoint  = center + direction * circle.Radius;
-                var arrowHeight = circle.Radius / 3f;
+                var direction   = rotation.GetDirection();
+                var anglePoint  = center + direction * rotation.Radius;
+                var arrowHeight = rotation.Radius / 3f;
                 var arrowWidth  = 1f;
 
                 // Rotate local +Y to point along direction on the XZ plane
-                var arrowRotation = quaternion.LookRotationSafe(direction, circle.Normal);
+                var arrowRotation = quaternion.LookRotationSafe(direction, rotation.Normal);
                 // LookRotation points +Z along direction; rotate -90° around X to align +Y with direction instead
                 arrowRotation = math.mul(arrowRotation, quaternion.RotateX(math.PI * 0.5f));
 

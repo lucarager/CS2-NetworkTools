@@ -22,11 +22,11 @@ namespace NetworkTools.Systems.Tools.Handles {
 
         public void SyncToEntity(NT_BaseToolSystem tool, Entity entity, ParameterBase param) {
             var direction = ((Float3Parameter)param).Value;
-            var normal    = tool.EntityManager.GetComponentData<NT_HandleCircle>(entity).Normal;
-            var refDir    = tool.EntityManager.GetComponentData<NT_HandleRotation>(entity).ReferenceDirection;
-            var perp      = math.cross(normal, refDir);
-            var angle     = math.atan2(math.dot(direction, perp), math.dot(direction, refDir));
-            tool.EntityManager.SetComponentData(entity, NT_HandleRotation.Create(refDir, angle));
+            var rotation  = tool.EntityManager.GetComponentData<NT_HandleRotation>(entity);
+            var perp      = math.cross(rotation.Normal, rotation.ReferenceDirection);
+            var angle     = math.atan2(math.dot(direction, perp), math.dot(direction, rotation.ReferenceDirection));
+            rotation.Angle = angle;
+            tool.EntityManager.SetComponentData(entity, rotation);
         }
     }
 }

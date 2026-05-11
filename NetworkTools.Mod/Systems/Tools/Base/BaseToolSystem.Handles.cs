@@ -291,13 +291,12 @@ namespace NetworkTools.Systems.Tools {
                 }
             }
 
-            // Update ECS components with resolved values
-            if (EntityManager.HasComponent<NT_HandleCircle>(entity)) {
-                var circle = EntityManager.GetComponentData<NT_HandleCircle>(entity);
-                circle.Normal = normal;
-                EntityManager.SetComponentData(entity, circle);
-            }
-            EntityManager.SetComponentData(entity, NT_HandleRotation.Create(refDir, angle));
+            // Update ECS component with resolved values
+            var rotData = EntityManager.GetComponentData<NT_HandleRotation>(entity);
+            rotData.Normal             = normal;
+            rotData.ReferenceDirection = refDir;
+            rotData.Angle              = angle;
+            EntityManager.SetComponentData(entity, rotData);
         }
 
         /// <summary>
@@ -591,8 +590,7 @@ namespace NetworkTools.Systems.Tools {
                                                Key          = key
                                            });
             EntityManager.AddComponentData(handle, new NT_HandlePosition { Position = center });
-            EntityManager.AddComponentData(handle, NT_HandleCircle.Create(radius, normal));
-            EntityManager.AddComponentData(handle, NT_HandleRotation.Create(referenceDirection, angle));
+            EntityManager.AddComponentData(handle, NT_HandleRotation.Create(radius, normal, referenceDirection, angle));
 
             m_Handles.Add(handle);
             return handle;
@@ -696,7 +694,22 @@ namespace NetworkTools.Systems.Tools {
                             closestHandle = handleEntity;
                         }
                     }
-                } else if (handleData.HasAnyFlag(HandleTypeFlags.Circle | HandleTypeFlags.Rotation)) {
+                } else if (handleData.HasAnyFlag(HandleTypeFlags.Rotation)) {
+                    var circlePos = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
+                    var rotation  = EntityManager.GetComponentData<NT_HandleRotation>(handleEntity);
+                    if (TryRayCircleIntersection(rayOrigin,
+                                                 rayDir,
+                                                 circlePos,
+                                                 rotation.Radius,
+                                                 rotation.Normal,
+                                                 radius,
+                                                 out t)) {
+                        if (t < closestT) {
+                            closestT      = t;
+                            closestHandle = handleEntity;
+                        }
+                    }
+                } else if (handleData.HasAnyFlag(HandleTypeFlags.Circle)) {
                     var circlePos = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
                     var circle    = EntityManager.GetComponentData<NT_HandleCircle>(handleEntity);
                     if (TryRayCircleIntersection(rayOrigin,
@@ -829,8 +842,9 @@ namespace NetworkTools.Systems.Tools {
             if (!EntityManager.Exists(handleEntity)) return;
             if (!EntityManager.HasComponent<NT_HandlePosition>(handleEntity)) return;
 
-            // Circle-based handles (including rotation) don't move their position; they are computed separately
+            // Circle and rotation handles don't move their position; they are computed separately
             if (EntityManager.HasComponent<NT_HandleCircle>(handleEntity)) return;
+            if (EntityManager.HasComponent<NT_HandleRotation>(handleEntity)) return;
 
             var currentPos = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
             var newPos     = currentPos;
@@ -884,26 +898,24 @@ namespace NetworkTools.Systems.Tools {
 
         /// <summary>
         ///     Computes a rotation handle's new angle from the current mouse position
-        ///     projected onto the circle's plane.
-        ///     Reads geometry from <see cref="NT_HandleCircle"/> and updates <see cref="NT_HandleRotation"/>.
+        ///     projected onto the rotation's plane.
         /// </summary>
         /// <param name="handleEntity">The rotation handle entity being dragged.</param>
         /// <returns>The newly computed angle in radians, or the current angle if projection fails.</returns>
         private float ComputeRotationHandleAngle(Entity handleEntity) {
             var center   = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
             var rotation = EntityManager.GetComponentData<NT_HandleRotation>(handleEntity);
-            var circle   = EntityManager.GetComponentData<NT_HandleCircle>(handleEntity);
 
             if (!TryGetCurrentMouseRay(out var rayOrigin, out var rayDir)) {
                 return rotation.Angle;
             }
 
-            var denom = math.dot(circle.Normal, rayDir);
+            var denom = math.dot(rotation.Normal, rayDir);
             if (math.abs(denom) < 0.0001f) {
                 return rotation.Angle;
             }
 
-            var planeT = math.dot(center - rayOrigin, circle.Normal) / denom;
+            var planeT = math.dot(center - rayOrigin, rotation.Normal) / denom;
             if (planeT < 0) {
                 return rotation.Angle;
             }
@@ -911,7 +923,7 @@ namespace NetworkTools.Systems.Tools {
             var planeHit = rayOrigin + rayDir * planeT;
             var toHit    = planeHit - center;
 
-            var perpendicular = math.cross(circle.Normal, rotation.ReferenceDirection);
+            var perpendicular = math.cross(rotation.Normal, rotation.ReferenceDirection);
             var x             = math.dot(toHit, rotation.ReferenceDirection);
             var y             = math.dot(toHit, perpendicular);
             var newAngle      = math.atan2(y, x);
@@ -1191,8 +1203,7 @@ namespace NetworkTools.Systems.Tools {
                     && EntityManager.HasComponent<NT_HandleRotation>(m_DraggedHandle)) {
                 var newAngle  = ComputeRotationHandleAngle(m_DraggedHandle);
                 var rotation  = EntityManager.GetComponentData<NT_HandleRotation>(m_DraggedHandle);
-                var circle    = EntityManager.GetComponentData<NT_HandleCircle>(m_DraggedHandle);
-                DispatchRotationDrag(m_DraggedHandle, newAngle, rotation.GetDirection(circle.Normal));
+                DispatchRotationDrag(m_DraggedHandle, newAngle, rotation.GetDirection());
             } else if (handleData.HasAnyFlag(HandleTypeFlags.Circle)) {
                 var newRadius = ComputeCircleHandleRadius(m_DraggedHandle);
                 DispatchCircleDrag(m_DraggedHandle, newRadius);
