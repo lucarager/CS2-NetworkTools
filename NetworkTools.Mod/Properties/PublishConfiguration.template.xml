@@ -4,7 +4,7 @@
 	<!--Name of the mod to display to players-->
 	<DisplayName Value="NetworkTools" />
 	<!--Short description of the mod-->
-	<ShortDescription Value="NetworkTools (Early Access)" />
+	<ShortDescription Value="Add, remove, reshape, and generate network nodes and segments with precision." />
 	<!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
 	<!--LongDescription Value="This is a long description" /-->
 	<LongDescription>
