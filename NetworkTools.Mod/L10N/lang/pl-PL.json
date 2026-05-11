@@ -63,8 +63,15 @@
   "NetworkTools.Tools.Connect.Description": "Umożliwia tworzenie połączeń między dwoma węzłami.",
   "NetworkTools.Tools.Parallel.Name": "Tryb tworzenia równoległego",
   "NetworkTools.Tools.Parallel.Description": "Umożliwia tworzenie idealnych równoległych sieci względem oryginalnej sieci.",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.SelectStart]": "Select a starting node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.SelectSecond]": "Select a second node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.RemoveLast]": "Remove last node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.ExtendPath]": "Select a new end node to extend the path",
   "NetworkTools.Tools.Generate.Name": "Tryb tworzenia (Wkrótce)",
   "NetworkTools.Tools.Generate.Description": "Umożliwia tworzenie idealnych siatek i okręgów.",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]": "Place network origin",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]": "Rotate",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]": "Remove placement",
   "NetworkTools.UI.Common.NetworkTools": "Network Tools",
   "NetworkTools.UI.Common.Mode": "Tryb",
   "NetworkTools.UI.Common.ToggleAll": "Wł./Wył. wszystko",
@@ -129,5 +136,6 @@
   "NetworkTools.UI.Generate.ZSpacing": "Długość Y",
   "NetworkTools.UI.Generate.XCount": "Powtórzeń X",
   "NetworkTools.UI.Generate.ZCount": "Powtórzeń Y",
-  "NetworkTools.UI.Generate.CreateGrid": "Utwórz kształt"
+  "NetworkTools.UI.Generate.Radius": "Radius",
+  "NetworkTools.UI.Generate.Apply": "Generate"
 }
