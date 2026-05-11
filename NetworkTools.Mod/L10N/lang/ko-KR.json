@@ -63,8 +63,15 @@
   "NetworkTools.Tools.Connect.Description": "두 노드 사이에 다양한 방식으로 새로운 연결을 생성할 수 있습니다.",
   "NetworkTools.Tools.Parallel.Name": "평행 도구",
   "NetworkTools.Tools.Parallel.Description": "원본 네트워크로부터 완벽하게 평행한 네트워크를 생성할 수 있습니다.",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.SelectStart]": "Select a starting node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.SelectSecond]": "Select a second node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.RemoveLast]": "Remove last node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.ExtendPath]": "Select a new end node to extend the path",
   "NetworkTools.Tools.Generate.Name": "생성 도구 (출시 예정!)",
   "NetworkTools.Tools.Generate.Description": "완벽한 도로 그리드나 원형 등 다양한 네트워크를 생성할 수 있습니다.",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]": "Place network origin",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]": "Rotate",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]": "Remove placement",
   "NetworkTools.UI.Common.NetworkTools": "네트워크 도구(Network Tools)",
   "NetworkTools.UI.Common.Mode": "모드",
   "NetworkTools.UI.Common.ToggleAll": "모두 토글",
@@ -129,5 +136,6 @@
   "NetworkTools.UI.Generate.ZSpacing": "Z축 간격",
   "NetworkTools.UI.Generate.XCount": "X축 개수",
   "NetworkTools.UI.Generate.ZCount": "Z축 개수",
-  "NetworkTools.UI.Generate.CreateGrid": "그리드 네트워크 생성"
+  "NetworkTools.UI.Generate.Radius": "Radius",
+  "NetworkTools.UI.Generate.Apply": "Generate"
 }
