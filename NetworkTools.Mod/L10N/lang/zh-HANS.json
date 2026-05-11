@@ -63,8 +63,15 @@
   "NetworkTools.Tools.Connect.Description": "允许以多种方式在两个节点之间创建新连接。",
   "NetworkTools.Tools.Parallel.Name": "平行工具",
   "NetworkTools.Tools.Parallel.Description": "允许在现有的网络上创建完美的平行网络。",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.SelectStart]": "Select a starting node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.SelectSecond]": "Select a second node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.RemoveLast]": "Remove last node",
+  "Common.ACTION[NetworkTools.HintTooltip.Parallel.ExtendPath]": "Select a new end node to extend the path",
   "NetworkTools.Tools.Generate.Name": "生成工具（即将到来！）",
   "NetworkTools.Tools.Generate.Description": "可以生成各种网络，例如完美的道路网格和环形网络。",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]": "Place network origin",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]": "Rotate",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]": "Remove placement",
   "NetworkTools.UI.Common.NetworkTools": "Network Tools",
   "NetworkTools.UI.Common.Mode": "模式",
   "NetworkTools.UI.Common.ToggleAll": "切换全部",
@@ -129,5 +136,6 @@
   "NetworkTools.UI.Generate.ZSpacing": "Z 轴间距",
   "NetworkTools.UI.Generate.XCount": "X 轴数值",
   "NetworkTools.UI.Generate.ZCount": "Z 轴数值",
-  "NetworkTools.UI.Generate.CreateGrid": "创建网格网络"
+  "NetworkTools.UI.Generate.Radius": "Radius",
+  "NetworkTools.UI.Generate.Apply": "Generate"
 }
