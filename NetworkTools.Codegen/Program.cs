@@ -100,7 +100,7 @@ void ParseParameters(string source) {
             var defaultStr = ctorArgs.GetValueOrDefault("default") ?? ctorArgs.GetValueOrDefault("1") ?? "0";
             var defaultValue = ResolveEnumValue(defaultStr, enumType);
             var modes = ResolveModes(ctorArgs.GetValueOrDefault("modes") ?? ctorArgs.GetValueOrDefault("2") ?? "0");
-            parameters.Add(new EnumParamDef(key, fieldName, enumType, defaultValue, modes));
+            parameters.Add(new EnumParamDef(key, fieldName, enumType, defaultValue, modes) { Label = ParseLabel(ctorArgs) });
         }
     }
 }
@@ -111,7 +111,9 @@ void ParseFloatParam(string fieldName, Dictionary<string, string> args) {
     var min = ParseFloatLiteral(args.GetValueOrDefault("min") ?? args.GetValueOrDefault("2") ?? "0");
     var max = ParseFloatLiteral(args.GetValueOrDefault("max") ?? args.GetValueOrDefault("3") ?? "0");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("4") ?? "0");
-    parameters.Add(new FloatParamDef(key, fieldName, def, min, max, modes));
+    var label = ParseLabel(args);
+    var fractionDigits = int.TryParse(args.GetValueOrDefault("fractionDigits"), out var fd) ? fd : 1;
+    parameters.Add(new FloatParamDef(key, fieldName, def, min, max, modes) { Label = label, FractionDigits = fractionDigits });
 }
 
 void ParseIntParam(string fieldName, Dictionary<string, string> args) {
@@ -120,32 +122,37 @@ void ParseIntParam(string fieldName, Dictionary<string, string> args) {
     var min = int.Parse(args.GetValueOrDefault("min") ?? args.GetValueOrDefault("2") ?? "0");
     var max = int.Parse(args.GetValueOrDefault("max") ?? args.GetValueOrDefault("3") ?? "0");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("4") ?? "0");
-    parameters.Add(new IntParamDef(key, fieldName, def, min, max, modes));
+    parameters.Add(new IntParamDef(key, fieldName, def, min, max, modes) { Label = ParseLabel(args) });
 }
 
 void ParseBoolParam(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var def = bool.Parse(args.GetValueOrDefault("default") ?? args.GetValueOrDefault("1") ?? "false");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("2") ?? "0");
-    parameters.Add(new BoolParamDef(key, fieldName, def, modes));
+    parameters.Add(new BoolParamDef(key, fieldName, def, modes) { Label = ParseLabel(args) });
 }
 
 void ParseFloat3Param(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("2") ?? "0");
-    parameters.Add(new Float3ParamDef(key, fieldName, modes));
+    parameters.Add(new Float3ParamDef(key, fieldName, modes) { Label = ParseLabel(args) });
 }
 
 void ParseQuaternionParam(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("2") ?? "0");
-    parameters.Add(new QuaternionParamDef(key, fieldName, modes));
+    parameters.Add(new QuaternionParamDef(key, fieldName, modes) { Label = ParseLabel(args) });
 }
 
 void ParseNetPrefabParam(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("1") ?? "0");
-    parameters.Add(new NetPrefabParamDef(key, fieldName, modes));
+    parameters.Add(new NetPrefabParamDef(key, fieldName, modes) { Label = ParseLabel(args) });
+}
+
+string? ParseLabel(Dictionary<string, string> args) {
+    var raw = args.GetValueOrDefault("label");
+    return raw != null ? StripQuotes(raw) : null;
 }
 
 // ── Constructor argument parsing ───────────────────────────────────────────────
@@ -300,7 +307,7 @@ string EmitTypeScript() {
         sb.Append($"    \"{param.Key}\": {{ ");
         sb.Append(param switch {
             FloatParamDef f =>
-                $"type: \"float\", default: {Fmt(f.Default)}, min: {Fmt(f.Min)}, max: {Fmt(f.Max)}, modes: {f.Modes}",
+                $"type: \"float\", default: {Fmt(f.Default)}, min: {Fmt(f.Min)}, max: {Fmt(f.Max)}, fractionDigits: {f.FractionDigits}, modes: {f.Modes}",
             IntParamDef i =>
                 $"type: \"int\", default: {i.Default}, min: {i.Min}, max: {i.Max}, modes: {i.Modes}",
             BoolParamDef b =>
@@ -315,6 +322,7 @@ string EmitTypeScript() {
                 $"type: \"netPrefab\", modes: {np.Modes}",
             _ => ""
         });
+        if (param.Label != null) sb.Append($", label: \"{param.Label}\"");
         sb.AppendLine(" },");
     }
     sb.AppendLine("} as const;");
@@ -342,6 +350,16 @@ string EmitTypeScript() {
         sb.AppendLine("    },");
     }
     sb.AppendLine("};");
+    sb.AppendLine();
+
+    sb.AppendLine("export const PARAM_BINDING: Record<string, TwoWayBinding<any>> = {");
+    foreach (var group in bindableGroups) {
+        foreach (var param in group) {
+            var shortKey = GetShortKey(param.Key, group.Key);
+            sb.AppendLine($"    \"{param.Key}\": PARAM_BINDINGS.{group.Key}.{shortKey},");
+        }
+    }
+    sb.AppendLine("};");
 
     return sb.ToString();
 }
@@ -362,9 +380,13 @@ string Fmt(float v) => v == (int)v
 record EnumMember(string Name, int Value);
 record EnumDef(string Name, List<EnumMember> Members);
 
-abstract record ParamDef(string Key, string FieldName, int Modes);
+abstract record ParamDef(string Key, string FieldName, int Modes) {
+    public string? Label { get; init; }
+}
 record FloatParamDef(string Key, string FieldName, float Default, float Min, float Max, int Modes)
-    : ParamDef(Key, FieldName, Modes);
+    : ParamDef(Key, FieldName, Modes) {
+    public int FractionDigits { get; init; } = 1;
+}
 record IntParamDef(string Key, string FieldName, int Default, int Min, int Max, int Modes)
     : ParamDef(Key, FieldName, Modes);
 record BoolParamDef(string Key, string FieldName, bool Default, int Modes)

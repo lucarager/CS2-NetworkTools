@@ -25,7 +25,7 @@ namespace NetworkTools.Systems.Tools.Parameters {
             RaiseChanged(origin);
         }
 
-        protected Parameter(string key, T @default, int modes = 0, bool bindable = true) : base(key, modes, bindable) {
+        protected Parameter(string key, T @default, int modes = 0, bool bindable = true, string label = null) : base(key, modes, bindable, label) {
             Default = @default;
             m_Value = @default;
         }

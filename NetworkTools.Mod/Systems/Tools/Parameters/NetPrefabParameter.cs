@@ -9,8 +9,8 @@ namespace NetworkTools.Systems.Tools.Parameters {
 
         public bool HasSelection => Prefab != null;
 
-        public NetPrefabParameter(string key, int modes = 0)
-            : base(key, modes, bindable: false) { }
+        public NetPrefabParameter(string key, int modes = 0, string label = null)
+            : base(key, modes, bindable: false, label: label) { }
 
         public void Set(PrefabBase prefab, Entity netPrefabEntity, Entity netLanePrefabEntity) {
             if (NetPrefabEntity == netPrefabEntity && NetLanePrefabEntity == netLanePrefabEntity) return;

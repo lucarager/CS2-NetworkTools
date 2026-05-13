@@ -25,11 +25,11 @@ namespace NetworkTools.Systems.Tools.Parallel {
         public override string toolID => "ParallelTool";
 
         public NetPrefabParameter          NetPrefab           = new("parallel.netPrefab");
-        public FloatParameter              HorizontalOffset    = new("parallel.horizontalOffset", 20f, 0f, 80f);
-        public FloatParameter              VerticalOffset      = new("parallel.verticalOffset",   0f,  0f, 80f);
-        public EnumParameter<ParallelSide> HorizontalDirection = new("parallel.horizontalDirection", ParallelSide.Right);
-        public EnumParameter<VerticalSide> VerticalDirection   = new("parallel.verticalDirection",   VerticalSide.Up);
-        public BoolParameter               ReverseDirection    = new("parallel.reverseDirection", false);
+        public FloatParameter              HorizontalOffset    = new("parallel.horizontalOffset", 20f, 0f, 80f, label: "NetworkTools.UI.Parallel.HorizontalOffset", fractionDigits: 0);
+        public FloatParameter              VerticalOffset      = new("parallel.verticalOffset",   0f,  0f, 80f, label: "NetworkTools.UI.Parallel.VerticalOffset", fractionDigits: 0);
+        public EnumParameter<ParallelSide> HorizontalDirection = new("parallel.horizontalDirection", ParallelSide.Right, label: "NetworkTools.UI.Parallel.Side");
+        public EnumParameter<VerticalSide> VerticalDirection   = new("parallel.verticalDirection",   VerticalSide.Up, label: "NetworkTools.UI.Parallel.VerticalDirection");
+        public BoolParameter               ReverseDirection    = new("parallel.reverseDirection", false, label: "NetworkTools.UI.Parallel.Direction");
 
         #region Template Method Implementations
 

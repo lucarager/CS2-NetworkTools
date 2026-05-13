@@ -21,13 +21,17 @@ namespace NetworkTools.Systems.Tools.Parameters {
         /// <summary>Whether this parameter should be registered as a UI binding.</summary>
         public bool   Bindable { get; }
 
+        /// <summary>Locale key used as the display label in the UI (e.g. "NetworkTools.UI.Generate.XSpacing").</summary>
+        public string Label { get; }
+
         /// <summary>Fired whenever <see cref="Value" /> changes or <see cref="ForceNotify" /> is called.</summary>
         public event Action<ChangeOrigin> OnChanged;
 
-        protected ParameterBase(string key, int modes = 0, bool bindable = true) {
+        protected ParameterBase(string key, int modes = 0, bool bindable = true, string label = null) {
             Key      = key;
             Modes    = modes;
             Bindable = bindable;
+            Label    = label;
         }
 
         /// <summary>Reset value to the declared default. Always fires <see cref="OnChanged" />.</summary>

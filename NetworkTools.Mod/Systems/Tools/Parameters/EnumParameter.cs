@@ -14,8 +14,8 @@ namespace NetworkTools.Systems.Tools.Parameters {
     /// </summary>
     public class EnumParameter<TEnum> : Parameter<TEnum>, IEnumParameter
         where TEnum : struct, Enum {
-        public EnumParameter(string key, TEnum @default, int modes = 0)
-            : base(key, @default, modes) { }
+        public EnumParameter(string key, TEnum @default, int modes = 0, string label = null)
+            : base(key, @default, modes, label: label) { }
 
         public int IntValue {
             get => (int)(object)Value;

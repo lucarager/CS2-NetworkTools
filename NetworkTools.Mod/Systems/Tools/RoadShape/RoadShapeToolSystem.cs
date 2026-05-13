@@ -21,8 +21,8 @@ namespace NetworkTools.Systems.Tools.RoadShape {
 
         // ── Parameters 
 
-        public EnumParameter<ShapeTransformTemplate> Template        = new("roadShape.template", ShapeTransformTemplate.Preserve);
-        public FloatParameter                        EaseInLength    = new("roadShape.easeInLength",    0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut) {
+        public EnumParameter<ShapeTransformTemplate> Template        = new("roadShape.template", ShapeTransformTemplate.Preserve, label: "NetworkTools.UI.Common.Mode");
+        public FloatParameter                        EaseInLength    = new("roadShape.easeInLength",    0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut, label: "NetworkTools.UI.Slope.StartingFlatness", fractionDigits: 0) {
             Handles = new IHandleSpec<float>[] {
                 new AxisHandle {
                     StartPoint = tool => ((NT_RoadShapeToolSystem)tool).m_ShapeTransformContext.StartPosition,
@@ -31,7 +31,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 }
             }
         };
-        public FloatParameter                        EaseOutLength   = new("roadShape.easeOutLength",   0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut) {
+        public FloatParameter                        EaseOutLength   = new("roadShape.easeOutLength",   0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut, label: "NetworkTools.UI.Slope.EndingFlatness", fractionDigits: 0) {
             Handles = new IHandleSpec<float>[] {
                 new AxisHandle {
                     StartPoint = tool => ((NT_RoadShapeToolSystem)tool).m_ShapeTransformContext.StartPosition,
@@ -41,9 +41,9 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 }
             }
         };
-        public FloatParameter                        ArchHeight      = new("roadShape.archHeight",      0.5f, -1f, 1f,  modes: (int)ShapeTransformTemplate.SlopeArch);
-        public FloatParameter                        ArchPosition    = new("roadShape.archPosition",    0.5f, 0.1f, 0.9f, modes: (int)ShapeTransformTemplate.SlopeArch);
-        public FloatParameter                        SmoothingFactor = new("roadShape.smoothingFactor", 0.5f, 0f, 1f,   modes: (int)ShapeTransformTemplate.CurveSmooth);
+        public FloatParameter                        ArchHeight      = new("roadShape.archHeight",      0.5f, -1f, 1f,  modes: (int)ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Slope.ArchHeight", fractionDigits: 3);
+        public FloatParameter                        ArchPosition    = new("roadShape.archPosition",    0.5f, 0.1f, 0.9f, modes: (int)ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Slope.ArchPosition", fractionDigits: 3);
+        public FloatParameter                        SmoothingFactor = new("roadShape.smoothingFactor", 0.5f, 0f, 1f,   modes: (int)ShapeTransformTemplate.CurveSmooth, label: "NetworkTools.UI.Curve.SmoothingFactor", fractionDigits: 2);
 
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Template.Value;

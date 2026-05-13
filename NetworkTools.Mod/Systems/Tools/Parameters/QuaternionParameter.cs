@@ -6,7 +6,7 @@ namespace NetworkTools.Systems.Tools.Parameters {
     ///     Not bindable by default — the Colossal binding bridge has no <c>ValueWriter&lt;quaternion&gt;</c>.
     /// </summary>
     public class QuaternionParameter : Parameter<quaternion> {
-        public QuaternionParameter(string key, quaternion @default = default, int modes = 0)
-            : base(key, @default, modes, bindable: false) { }
+        public QuaternionParameter(string key, quaternion @default = default, int modes = 0, string label = null)
+            : base(key, @default, modes, bindable: false, label: label) { }
     }
 }

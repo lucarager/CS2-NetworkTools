@@ -4,7 +4,6 @@ import { GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
 import {
     ParallelSide,
     VerticalSide,
-    PARAM_META,
     PARAM_KEYS,
     PARAM_BINDINGS,
 } from "generated/parameters.generated";
@@ -13,11 +12,10 @@ import { Button } from "cs2/ui";
 import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
 import { PrefabSelection } from "../shared/prefabSelection";
+import { ParameterField } from "../shared/parameterField";
 import { useLocalization } from "cs2/l10n";
 
 const P = PARAM_BINDINGS.parallel;
-const hOffsetMeta = PARAM_META["parallel.horizontalOffset"];
-const vOffsetMeta = PARAM_META["parallel.verticalOffset"];
 
 const SIDE_OPTIONS: { localeKey: string; id: ParallelSide; icon: string }[] = [
     {
@@ -47,8 +45,6 @@ const VERTICAL_SIDE_OPTIONS: { localeKey: string; id: VerticalSide; icon: string
 
 export const ParallelControls: React.FC = () => {
     const selectedEntities = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
-    const horizontalOffset = useValue(P.horizontalOffset.binding);
-    const verticalOffset = useValue(P.verticalOffset.binding);
     const horizontalDirection = useValue(P.horizontalDirection.binding) as ParallelSide;
     const verticalDirection = useValue(P.verticalDirection.binding) as VerticalSide;
     const reverseDirection = useValue(P.reverseDirection.binding);
@@ -86,20 +82,7 @@ export const ParallelControls: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className={styles.controlRow}>
-                            <div className={styles.sliderField}>
-                                <VC.FloatSliderField
-                                    value={horizontalOffset}
-                                    label={
-                                        translate("NetworkTools.UI.Parallel.HorizontalOffset") ?? ""
-                                    }
-                                    min={hOffsetMeta.min}
-                                    max={hOffsetMeta.max}
-                                    fractionDigits={0}
-                                    onChange={(e: number) => P.horizontalOffset.set(e)}
-                                />
-                            </div>
-                        </div>
+                        <ParameterField paramKey="parallel.horizontalOffset" />
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
                                 <span className={styles.paramLabel}>
@@ -122,20 +105,7 @@ export const ParallelControls: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className={styles.controlRow}>
-                            <div className={styles.sliderField}>
-                                <VC.FloatSliderField
-                                    value={verticalOffset}
-                                    label={
-                                        translate("NetworkTools.UI.Parallel.VerticalOffset") ?? ""
-                                    }
-                                    min={vOffsetMeta.min}
-                                    max={vOffsetMeta.max}
-                                    fractionDigits={0}
-                                    onChange={(e: number) => P.verticalOffset.set(e)}
-                                />
-                            </div>
-                        </div>
+                        <ParameterField paramKey="parallel.verticalOffset" />
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
                                 <span className={styles.paramLabel}>

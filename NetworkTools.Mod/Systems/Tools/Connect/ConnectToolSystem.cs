@@ -23,8 +23,8 @@ namespace NetworkTools.Systems.Tools.Connect {
         // ── Parameters
 
         public NetPrefabParameter         NetPrefab  = new("connect.netPrefab");
-        public EnumParameter<ConnectMode> Mode       = new("connect.mode", ConnectMode.None);
-        public FloatParameter             LoopRadius = new("connect.loopRadius", 50f, 1f, 500f, modes: (int)ConnectMode.Loop) {
+        public EnumParameter<ConnectMode> Mode       = new("connect.mode", ConnectMode.None, label: "NetworkTools.UI.Common.Mode");
+        public FloatParameter             LoopRadius = new("connect.loopRadius", 50f, 1f, 500f, modes: (int)ConnectMode.Loop, label: "NetworkTools.UI.Connect.LoopRadius", fractionDigits: 0) {
             Handles = new IHandleSpec<float>[] {
                 new CircleHandle {
                     Parent = nameof(LoopControlPointPosition),

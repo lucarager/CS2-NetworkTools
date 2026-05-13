@@ -39,13 +39,13 @@ namespace NetworkTools.Systems.Tools.Generate {
 
         // Grid
         public EnumParameter<GenerateMode> Mode         = new("generate.mode", GenerateMode.Grid);
-        public FloatParameter              GridXSpacing = new("generate.gridXSpacing", 60f, 4f, 240f, modes: (int)GenerateMode.Grid);
-        public FloatParameter              GridZSpacing = new("generate.gridZSpacing", 60f, 4f, 240f, modes: (int)GenerateMode.Grid);
-        public IntParameter                GridXNum     = new("generate.gridXNum", 2, 1, 20, modes: (int)GenerateMode.Grid);
-        public IntParameter GridZNum = new("generate.gridZNum", 2, 1, 20, modes: (int)GenerateMode.Grid);
+        public FloatParameter GridXSpacing = new("generate.gridXSpacing", 60f, 4f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XSpacing", fractionDigits: 0);
+        public FloatParameter GridZSpacing = new("generate.gridZSpacing", 60f, 4f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZSpacing", fractionDigits: 0);
+        public IntParameter   GridXNum     = new("generate.gridXNum", 2, 1, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XCount");
+        public IntParameter   GridZNum     = new("generate.gridZNum", 2, 1, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZCount");
 
         // Circle
-        public FloatParameter              CircleRadius = new("generate.circleRadius", 60f, 4f, 240f, modes: (int)GenerateMode.Circle);
+        public FloatParameter CircleRadius = new("generate.circleRadius", 60f, 4f, 240f, modes: (int)GenerateMode.Circle, label: "NetworkTools.UI.Generate.Radius", fractionDigits: 0);
 
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Mode.Value;
