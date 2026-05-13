@@ -1,13 +1,17 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
-import { PARAM_META, PARAM_BINDING } from "generated/parameters.generated";
+import { PARAM_META, PARAM_BINDING, ENUM_OPTIONS } from "generated/parameters.generated";
 import { useValue } from "cs2/api";
+import { Button, Tooltip } from "cs2/ui";
 import { VC } from "components/vanilla/Components";
+import { c } from "utils/classes";
 import { useLocalization } from "cs2/l10n";
 
 type ParamKey = keyof typeof PARAM_META;
 
 type ParamMeta = (typeof PARAM_META)[ParamKey];
+
+type EnumOptionsKey = keyof typeof ENUM_OPTIONS;
 
 interface ParameterFieldProps {
     paramKey: ParamKey;
@@ -53,17 +57,39 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabl
                     </div>
                 </div>
             );
-        case "bool":
+        case "enum": {
+            const enumType = meta.enumType as EnumOptionsKey;
+            const options = ENUM_OPTIONS[enumType];
+            if (!options) return null;
             return (
                 <div className={styles.controlRow}>
-                    <VC.ToggleField
-                        value={value as boolean}
-                        label={label}
-                        disabled={disabled}
-                        onChange={(v: boolean) => binding.set(v)}
-                    />
+                    <div className={styles.controlRowInner}>
+                        <span className={styles.paramLabel}>{label}</span>
+                        <div className={styles.buttonRow}>
+                            {options.map((option) => (
+                                <Tooltip
+                                    key={option.value}
+                                    tooltip={translate(option.label)}
+                                    delayTime={0}>
+                                    <Button
+                                        variant="primary"
+                                        className={c(
+                                            styles.iconButton,
+                                            value === option.value
+                                                ? styles.iconButton__active
+                                                : null,
+                                        )}
+                                        disabled={disabled}
+                                        onSelect={() => binding.set(option.value)}>
+                                        <img src={option.icon} className={styles.icon} />
+                                    </Button>
+                                </Tooltip>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             );
+        }
         default:
             return null;
     }

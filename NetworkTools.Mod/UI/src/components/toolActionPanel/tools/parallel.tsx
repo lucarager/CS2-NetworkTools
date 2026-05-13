@@ -1,58 +1,19 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
 import { GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
-import {
-    ParallelSide,
-    VerticalSide,
-    PARAM_KEYS,
-    PARAM_BINDINGS,
-} from "generated/parameters.generated";
+import { PARAM_KEYS } from "generated/parameters.generated";
 import { useValue } from "cs2/api";
 import { Button } from "cs2/ui";
-import { VC, VF, VT } from "components/vanilla/Components";
-import { c } from "utils/classes";
 import { PrefabSelection } from "../shared/prefabSelection";
 import { ParameterField } from "../shared/parameterField";
 import { useLocalization } from "cs2/l10n";
 
-const P = PARAM_BINDINGS.parallel;
-
-const SIDE_OPTIONS: { localeKey: string; id: ParallelSide; icon: string }[] = [
-    {
-        localeKey: "NetworkTools.UI.Parallel.Left",
-        id: ParallelSide.Left,
-        icon: "coui://nt/Side/Left.svg",
-    },
-    {
-        localeKey: "NetworkTools.UI.Parallel.Right",
-        id: ParallelSide.Right,
-        icon: "coui://nt/Side/Right.svg",
-    },
-];
-
-const VERTICAL_SIDE_OPTIONS: { localeKey: string; id: VerticalSide; icon: string }[] = [
-    {
-        localeKey: "NetworkTools.UI.Parallel.Up",
-        id: VerticalSide.Up,
-        icon: "coui://nt/Side/Up.svg",
-    },
-    {
-        localeKey: "NetworkTools.UI.Parallel.Down",
-        id: VerticalSide.Down,
-        icon: "coui://nt/Side/Down.svg",
-    },
-];
-
 export const ParallelControls: React.FC = () => {
     const selectedEntities = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
-    const horizontalDirection = useValue(P.horizontalDirection.binding) as ParallelSide;
-    const verticalDirection = useValue(P.verticalDirection.binding) as VerticalSide;
-    const reverseDirection = useValue(P.reverseDirection.binding);
     const { translate } = useLocalization();
 
     return (
         <>
-            {/* <NodeSelection selectedEntities={selectedEntities} /> */}
             <PrefabSelection paramKey={PARAM_KEYS.parallel.netPrefab} />
 
             {/* Configuration Controls - Show when 2+ nodes selected */}
@@ -60,81 +21,11 @@ export const ParallelControls: React.FC = () => {
                 <>
                     <div className={styles.divider}></div>
                     <div className={styles.col}>
-                        <div className={styles.controlRow}>
-                            <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>
-                                    {translate("NetworkTools.UI.Parallel.Side")}
-                                </span>
-                                <div className={styles.buttonRow}>
-                                    {SIDE_OPTIONS.map((option) => (
-                                        <VC.ToolButton
-                                            key={option.id}
-                                            tooltip={translate(option.localeKey)}
-                                            className={c(VT.toolButton.button, styles.iconButton)}
-                                            src={option.icon}
-                                            onSelect={() => P.horizontalDirection.set(option.id)}
-                                            selected={horizontalDirection === option.id}
-                                            multiSelect={false}
-                                            disabled={false}
-                                            focusKey={VF.FOCUS_DISABLED}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                        <ParameterField paramKey="parallel.horizontalDirection" />
                         <ParameterField paramKey="parallel.horizontalOffset" />
-                        <div className={styles.controlRow}>
-                            <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>
-                                    {translate("NetworkTools.UI.Parallel.VerticalDirection")}
-                                </span>
-                                <div className={styles.buttonRow}>
-                                    {VERTICAL_SIDE_OPTIONS.map((option) => (
-                                        <VC.ToolButton
-                                            key={option.id}
-                                            tooltip={translate(option.localeKey)}
-                                            className={c(VT.toolButton.button, styles.iconButton)}
-                                            src={option.icon}
-                                            onSelect={() => P.verticalDirection.set(option.id)}
-                                            selected={verticalDirection === option.id}
-                                            multiSelect={false}
-                                            disabled={false}
-                                            focusKey={VF.FOCUS_DISABLED}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
+                        <ParameterField paramKey="parallel.verticalDirection" />
                         <ParameterField paramKey="parallel.verticalOffset" />
-                        <div className={styles.controlRow}>
-                            <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>
-                                    {translate("NetworkTools.UI.Parallel.Direction")}
-                                </span>
-                                <div className={styles.buttonRow}>
-                                    <VC.ToolButton
-                                        tooltip={translate("NetworkTools.UI.Parallel.Same")}
-                                        className={c(VT.toolButton.button, styles.iconButton)}
-                                        src="coui://nt/Direction/Same.svg"
-                                        onSelect={() => P.reverseDirection.set(false)}
-                                        selected={!reverseDirection}
-                                        multiSelect={false}
-                                        disabled={false}
-                                        focusKey={VF.FOCUS_DISABLED}
-                                    />
-                                    <VC.ToolButton
-                                        tooltip={translate("NetworkTools.UI.Parallel.Reverse")}
-                                        className={c(VT.toolButton.button, styles.iconButton)}
-                                        src="coui://nt/Direction/Opposite.svg"
-                                        onSelect={() => P.reverseDirection.set(true)}
-                                        selected={reverseDirection}
-                                        multiSelect={false}
-                                        disabled={false}
-                                        focusKey={VF.FOCUS_DISABLED}
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                        <ParameterField paramKey="parallel.reverseDirection" />
                     </div>
                 </>
             )}

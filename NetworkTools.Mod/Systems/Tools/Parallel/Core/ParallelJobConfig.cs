@@ -8,7 +8,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
         public float        VerticalOffset;
         public ParallelSide HorizontalDirection;
         public VerticalSide VerticalDirection;
-        public bool         ReverseDirection;
+        public ParallelDirection ReverseDirection;
 
         public readonly float SignedHorizontalOffset =>
             HorizontalDirection == ParallelSide.Right ? HorizontalOffset : -HorizontalOffset;

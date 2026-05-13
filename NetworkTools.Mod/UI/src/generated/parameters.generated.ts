@@ -4,6 +4,7 @@ import { TwoWayBinding } from "utils/bidirectionalBinding";
 
 export enum ConnectMode { None = 0, SimpleCurve = 1, ComplexCurve = 2, Loop = 3 }
 export enum GenerateMode { None = 0, Grid = 1, Circle = 2 }
+export enum ParallelDirection { Same = 0, Reverse = 1 }
 export enum ParallelSide { Left = 0, Right = 1 }
 export enum ShapeTransformTemplate { Preserve = 0, SlopeLinear = 1, SlopeEaseInOut = 2, SlopeArch = 3, CurveStraighten = 4, CurveSmooth = 5 }
 export enum VerticalSide { Up = 0, Down = 1 }
@@ -79,13 +80,38 @@ export const PARAM_META = {
     "parallel.verticalOffset": { type: "float", default: 0, min: 0, max: 80, fractionDigits: 0, modes: 0, label: "NetworkTools.UI.Parallel.VerticalOffset" },
     "parallel.horizontalDirection": { type: "enum", enumType: "ParallelSide", default: 1, modes: 0, label: "NetworkTools.UI.Parallel.Side" },
     "parallel.verticalDirection": { type: "enum", enumType: "VerticalSide", default: 0, modes: 0, label: "NetworkTools.UI.Parallel.VerticalDirection" },
-    "parallel.reverseDirection": { type: "bool", default: false, modes: 0, label: "NetworkTools.UI.Parallel.Direction" },
+    "parallel.reverseDirection": { type: "enum", enumType: "ParallelDirection", default: 0, modes: 0, label: "NetworkTools.UI.Parallel.Direction" },
     "roadShape.template": { type: "enum", enumType: "ShapeTransformTemplate", default: 0, modes: 0, label: "NetworkTools.UI.Common.Mode" },
     "roadShape.easeInLength": { type: "float", default: 0.1, min: 0, max: 0.5, fractionDigits: 0, modes: 2, label: "NetworkTools.UI.Slope.StartingFlatness" },
     "roadShape.easeOutLength": { type: "float", default: 0.1, min: 0, max: 0.5, fractionDigits: 0, modes: 2, label: "NetworkTools.UI.Slope.EndingFlatness" },
     "roadShape.archHeight": { type: "float", default: 0.5, min: -1, max: 1, fractionDigits: 3, modes: 3, label: "NetworkTools.UI.Slope.ArchHeight" },
     "roadShape.archPosition": { type: "float", default: 0.5, min: 0.1, max: 0.9, fractionDigits: 3, modes: 3, label: "NetworkTools.UI.Slope.ArchPosition" },
     "roadShape.smoothingFactor": { type: "float", default: 0.5, min: 0, max: 1, fractionDigits: 2, modes: 5, label: "NetworkTools.UI.Curve.SmoothingFactor" },
+} as const;
+
+export const ENUM_OPTIONS = {
+    ConnectMode: [
+        { value: ConnectMode.None, label: "NetworkTools.UI.Connect.None", icon: "coui://nt/Modes/Original.svg" },
+        { value: ConnectMode.SimpleCurve, label: "NetworkTools.UI.Connect.SimpleCurve", icon: "coui://nt/Modes/ConnectSimpleCurve.svg" },
+        { value: ConnectMode.ComplexCurve, label: "NetworkTools.UI.Connect.ComplexCurve", icon: "coui://nt/Modes/ConnectComplexCurve.svg" },
+        { value: ConnectMode.Loop, label: "NetworkTools.UI.Connect.Loop", icon: "coui://nt/Modes/ConnectLoop.svg" },
+    ],
+    GenerateMode: [
+        { value: GenerateMode.Grid, label: "NetworkTools.UI.Generate.Grid", icon: "coui://nt/Modes/GenerateGrid.svg" },
+        { value: GenerateMode.Circle, label: "NetworkTools.UI.Generate.Circle", icon: "coui://nt/Modes/GenerateCircle.svg" },
+    ],
+    ParallelDirection: [
+        { value: ParallelDirection.Same, label: "NetworkTools.UI.Parallel.Same", icon: "coui://nt/Direction/Same.svg" },
+        { value: ParallelDirection.Reverse, label: "NetworkTools.UI.Parallel.Reverse", icon: "coui://nt/Direction/Opposite.svg" },
+    ],
+    ParallelSide: [
+        { value: ParallelSide.Left, label: "NetworkTools.UI.Parallel.Left", icon: "coui://nt/Side/Left.svg" },
+        { value: ParallelSide.Right, label: "NetworkTools.UI.Parallel.Right", icon: "coui://nt/Side/Right.svg" },
+    ],
+    VerticalSide: [
+        { value: VerticalSide.Up, label: "NetworkTools.UI.Parallel.Up", icon: "coui://nt/Side/Up.svg" },
+        { value: VerticalSide.Down, label: "NetworkTools.UI.Parallel.Down", icon: "coui://nt/Side/Down.svg" },
+    ],
 } as const;
 
 export const PARAM_BINDINGS = {
@@ -106,7 +132,7 @@ export const PARAM_BINDINGS = {
         verticalOffset: new TwoWayBinding<number>("parallel.verticalOffset", 0),
         horizontalDirection: new TwoWayBinding<number>("parallel.horizontalDirection", 1),
         verticalDirection: new TwoWayBinding<number>("parallel.verticalDirection", 0),
-        reverseDirection: new TwoWayBinding<boolean>("parallel.reverseDirection", false),
+        reverseDirection: new TwoWayBinding<number>("parallel.reverseDirection", 0),
     },
     roadShape: {
         template: new TwoWayBinding<number>("roadShape.template", 0),

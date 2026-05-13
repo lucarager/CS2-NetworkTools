@@ -1,12 +1,14 @@
 namespace NetworkTools.Systems.Tools.Parallel {
+    using NetworkTools.Systems.Tools.Parameters;
+
     /// <summary>
     ///     Determines which side of the original path the parallel copy is placed on.
     /// </summary>
     public enum ParallelSide {
-        /// <summary>Offset to the left of the path direction.</summary>
+        [EnumOption("NetworkTools.UI.Parallel.Left", "coui://nt/Side/Left.svg")]
         Left = 0,
 
-        /// <summary>Offset to the right of the path direction.</summary>
+        [EnumOption("NetworkTools.UI.Parallel.Right", "coui://nt/Side/Right.svg")]
         Right = 1
     }
 
@@ -14,10 +16,21 @@ namespace NetworkTools.Systems.Tools.Parallel {
     ///     Determines whether the vertical offset goes up or down.
     /// </summary>
     public enum VerticalSide {
-        /// <summary>Offset upward.</summary>
+        [EnumOption("NetworkTools.UI.Parallel.Up", "coui://nt/Side/Up.svg")]
         Up = 0,
 
-        /// <summary>Offset downward.</summary>
+        [EnumOption("NetworkTools.UI.Parallel.Down", "coui://nt/Side/Down.svg")]
         Down = 1
+    }
+
+    /// <summary>
+    ///     Determines whether the parallel copy runs in the same or reverse direction.
+    /// </summary>
+    public enum ParallelDirection {
+        [EnumOption("NetworkTools.UI.Parallel.Same", "coui://nt/Direction/Same.svg")]
+        Same = 0,
+
+        [EnumOption("NetworkTools.UI.Parallel.Reverse", "coui://nt/Direction/Opposite.svg")]
+        Reverse = 1
     }
 }

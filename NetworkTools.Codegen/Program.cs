@@ -56,9 +56,12 @@ void ParseEnums(string source) {
         var body = m.Groups[2].Value;
 
         var members = new List<EnumMember>();
-        var memberRegex = new Regex(@"(\w+)\s*=\s*(-?\d+)");
-        foreach (Match mm in memberRegex.Matches(body))
-            members.Add(new EnumMember(mm.Groups[1].Value, int.Parse(mm.Groups[2].Value)));
+        var memberRegex = new Regex(@"(?:\[EnumOption\(\s*""([^""]*)""\s*,\s*""([^""]*)""\s*\)\]\s*)?(\w+)\s*=\s*(-?\d+)");
+        foreach (Match mm in memberRegex.Matches(body)) {
+            var label = mm.Groups[1].Success ? mm.Groups[1].Value : null;
+            var icon = mm.Groups[2].Success ? mm.Groups[2].Value : null;
+            members.Add(new EnumMember(mm.Groups[3].Value, int.Parse(mm.Groups[4].Value), label, icon));
+        }
 
         if (members.Count > 0)
             enums[name] = new EnumDef(name, members);
@@ -328,6 +331,24 @@ string EmitTypeScript() {
     sb.AppendLine("} as const;");
     sb.AppendLine();
 
+    var enumsWithOptions = referenced
+        .Where(n => enums.TryGetValue(n, out var d) && d.HasOptions)
+        .Select(n => enums[n])
+        .ToList();
+
+    if (enumsWithOptions.Count > 0) {
+        sb.AppendLine("export const ENUM_OPTIONS = {");
+        foreach (var def in enumsWithOptions) {
+            sb.AppendLine($"    {def.Name}: [");
+            foreach (var member in def.Members.Where(m => m.Label != null)) {
+                sb.AppendLine($"        {{ value: {def.Name}.{member.Name}, label: \"{member.Label}\", icon: \"{member.Icon}\" }},");
+            }
+            sb.AppendLine("    ],");
+        }
+        sb.AppendLine("} as const;");
+        sb.AppendLine();
+    }
+
     var bindableGroups = bindable
         .GroupBy(p => p.Key.Split('.')[0])
         .OrderBy(g => g.Key)
@@ -377,8 +398,10 @@ string Fmt(float v) => v == (int)v
 
 // ── Data models ────────────────────────────────────────────────────────────────
 
-record EnumMember(string Name, int Value);
-record EnumDef(string Name, List<EnumMember> Members);
+record EnumMember(string Name, int Value, string? Label = null, string? Icon = null);
+record EnumDef(string Name, List<EnumMember> Members) {
+    public bool HasOptions => Members.Any(m => m.Label != null);
+}
 
 abstract record ParamDef(string Key, string FieldName, int Modes) {
     public string? Label { get; init; }

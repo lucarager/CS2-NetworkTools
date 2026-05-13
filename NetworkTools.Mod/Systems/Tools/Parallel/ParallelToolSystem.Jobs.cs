@@ -161,7 +161,7 @@
                     }
 
                     // Reverse direction if configured: swap start/end and reverse bezier
-                    if (Config.ReverseDirection) {
+                    if (Config.ReverseDirection == ParallelDirection.Reverse) {
                         var reversedBezier        = new Bezier4x3(offsetBezier.d, offsetBezier.c, offsetBezier.b, offsetBezier.a);
                         var reversedStartTangent  = math.normalize(MathUtils.StartTangent(reversedBezier));
                         var reversedEndTangent    = math.normalize(MathUtils.EndTangent(reversedBezier));
