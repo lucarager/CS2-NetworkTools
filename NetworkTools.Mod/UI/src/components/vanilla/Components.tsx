@@ -47,8 +47,84 @@ const modulePaths = [
         components: ["TextInput"],
     },
     {
+        path: "game-ui/menu/widgets/field/field.tsx",
+        components: ["ValueField", "LocalizedValueField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/toggle-field.tsx",
+        components: ["ToggleField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/int-input-field.tsx",
+        components: ["IntInputField", "UIntInputField", "Int2InputField", "Int3InputField", "Int4InputField"],
+    },
+    {
         path: "game-ui/editor/widgets/fields/number-slider-field.tsx",
-        components: ["NumberSliderField", "FloatSliderField"],
+        components: ["NumberSliderField", "IntSliderField", "UIntSliderField", "FloatSliderField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/float-input-field.tsx",
+        components: ["FloatInputField", "Float2InputField", "Float3InputField", "Float4InputField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/time-slider-field.tsx",
+        components: ["TimeSliderField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/bounds-field.tsx",
+        components: ["Bounds1InputField", "Bounds1SliderField", "Bounds2InputField", "Bounds3InputField", "TimeBoundsSliderField"],
+    },
+    {
+        path: "game-ui/debug/widgets/fields/slider-field.tsx",
+        components: ["Float2SliderField", "Float3SliderField", "Float4SliderField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/bezier4x3-field.tsx",
+        components: ["Bezier4x3Field"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/ranged-slider-field.tsx",
+        components: ["RangedSliderField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/string-input-field.tsx",
+        components: ["StringInputField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/color-field.tsx",
+        components: ["ColorField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/gradient-slider-field.tsx",
+        components: ["GradientSliderField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/animation-curve-field/animation-curve-field.tsx",
+        components: ["AnimationCurveField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/enum-field.tsx",
+        components: ["EnumField", "FlagsField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/popup-value-field.tsx",
+        components: ["PopupValueField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/dropdown-field.tsx",
+        components: ["DropdownField"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/directory-picker-button.tsx",
+        components: ["DirectoryPickerButton"],
+    },
+    {
+        path: "game-ui/editor/widgets/fields/seasons-field/seasons-field.tsx",
+        components: ["SeasonsField"],
+    },
+    {
+        path: "game-ui/editor/widgets/image/image-field.tsx",
+        components: ["ImageField"],
     },
     {
         path: "game-ui/common/tooltip/tooltip-renderer/tooltip-renderer.tsx",
