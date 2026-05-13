@@ -18,14 +18,17 @@ export const ConnectControls: React.FC = () => {
     return (
         <>
             {/* <NodeSelection selectedEntities={selectedEntitiesBinding} /> */}
-            <PrefabSelection paramKey={PARAM_KEYS.connect.netPrefab} />
 
             {/* Transform Controls - Show when 2+ nodes selected */}
             {selectedEntitiesBinding.length >= 2 && (
                 <>
                     <div className={styles.divider}></div>
                     <div className={styles.col}>
-                        <ParameterField paramKey="connect.mode" />
+                        <ParameterField paramKey="connect.mode" big={true} />
+                    </div>
+                    <div className={styles.divider}></div>
+                    <div className={styles.col}>
+                        <PrefabSelection paramKey={PARAM_KEYS.connect.netPrefab} />
                     </div>
                 </>
             )}
@@ -35,7 +38,9 @@ export const ConnectControls: React.FC = () => {
             <div className={styles.row}>
                 <div className={styles.actions}>
                     {selectedEntitiesBinding.length < 2 && (
-                        <span className={styles.helper}>{translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}</span>
+                        <span className={styles.helper}>
+                            {translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}
+                        </span>
                     )}
                     {selectedEntitiesBinding.length >= 2 && (
                         <Button

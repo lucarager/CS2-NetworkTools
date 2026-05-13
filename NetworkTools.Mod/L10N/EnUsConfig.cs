@@ -111,7 +111,7 @@ namespace NetworkTools.L10N {
                 
                 // ## SlideNode
                 // ### SlideNode - Metadata
-                { "NetworkTools.Tools.SlideNode.Name", "Slide Node (Coming Soon!)" },
+                { "NetworkTools.Tools.SlideNode.Name", "Slide Node" },
                 { "NetworkTools.Tools.SlideNode.Description", "Allows sliding nodes along existing edges." },
 
                 // ## SuperNode
@@ -125,7 +125,7 @@ namespace NetworkTools.L10N {
 
                 // ## Connect
                 // ### Connect - Metadata
-                { "NetworkTools.Tools.Connect.Name", "Connect Tools (Coming Soon!)" },
+                { "NetworkTools.Tools.Connect.Name", "Connect Tools" },
                 { "NetworkTools.Tools.Connect.Description", "Allows creating a new connection between two nodes in a number of ways." },
 
                 // ## Parallel
@@ -140,7 +140,7 @@ namespace NetworkTools.L10N {
 
                 // ## Generate
                 // ### Generate - Metadata
-                { "NetworkTools.Tools.Generate.Name", "Generate Tool (Coming Soon!)" },
+                { "NetworkTools.Tools.Generate.Name", "Generate Tool" },
                 { "NetworkTools.Tools.Generate.Description", "Allows generating a variety of networks such as perfect road grids and circles." },
                 // ### Generate - Hint Tooltips
                 { "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]", "Place network origin" },
@@ -155,6 +155,7 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Common.SelectAtLeastTwoNodes", "Select at least two nodes." },
                 { "NetworkTools.UI.Common.HowToUse", "How to use" },
                 { "NetworkTools.UI.Common.Tutorial", "Select the tool to configure it. Adjust snapping, target selection, and view mode using the options in the panel. Each tool provides its own specific parameters below." },
+                { "NetworkTools.UI.Common.ComingSoon", "Coming Soon!" },
 
                 // ## Prefab Search
                 { "NetworkTools.UI.PrefabSearch.Title", "Select Asset" },
@@ -209,6 +210,7 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Connect.SimpleCurve", "Simple Curve" },
                 { "NetworkTools.UI.Connect.ComplexCurve", "Complex Curve" },
                 { "NetworkTools.UI.Connect.Loop", "Loop" },
+                { "NetworkTools.UI.Connect.LoopRadius", "Loop Radius" },
                 { "NetworkTools.UI.Connect.ApplyCurve", "Apply Curve" },
 
                 // ## SuperNode Tool
@@ -236,6 +238,8 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Generate.XCount", "X Count" },
                 { "NetworkTools.UI.Generate.ZCount", "Z Count" },
                 { "NetworkTools.UI.Generate.Radius", "Radius" },
+                { "NetworkTools.UI.Generate.AltPrefabX", "Alternate Prefab X" },
+                { "NetworkTools.UI.Generate.AltPrefabZ", "Alternate Prefab Z" },
                 { "NetworkTools.UI.Generate.Apply", "Generate" },
             };
         }

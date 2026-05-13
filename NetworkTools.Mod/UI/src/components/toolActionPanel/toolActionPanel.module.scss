@@ -100,41 +100,6 @@
     color: rgba(255, 255, 255, 0.75);
 }
 
-.sliderField {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
-    // Override some vanilla styles
-    & > * {
-        padding: 0;
-    }
-
-    [class^="label"] {
-        color: white;
-        // Undo some vanilla styles
-        flex-shrink: 0;
-        flex-grow: 0;
-        flex-basis: auto;
-    }
-
-    // Apply flex to the vanilla editor div
-    & > div {
-        flex: 1;
-    }
-
-    .unitLabel {
-        font-size: var(--fontSizeS);
-        line-height: 1.25em;
-        color: rgba(255, 255, 255, 0.75);
-        margin-left: 8rem;
-    }
-
-    &__withUnit {
-    }
-}
-
 .controlRow {
     .controlRowInner {
         display: flex;
@@ -150,6 +115,51 @@
     button[class*="selected"] {
         background-image: $color-nt-3 !important;
         background-color: $color-nt-1 !important;
+    }
+
+    & > .vanillaField {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        // Override some vanilla styles
+        & > * {
+            padding: 0;
+        }
+
+        [class^="label"] {
+            color: white;
+            // Undo some vanilla styles
+            flex-shrink: 0;
+            flex-grow: 0;
+            flex-basis: auto;
+            font-size: var(--fontSizeS);
+            line-height: 1.25em;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 120rem;
+            margin-right: 8rem;
+            opacity: 0.75;
+        }
+
+        [class^="row"] {
+            justify-content: space-between;
+        }
+
+        // Apply flex to the vanilla editor div
+        & > div {
+            flex: 1;
+        }
+
+        .unitLabel {
+            font-size: var(--fontSizeS);
+            line-height: 1.25em;
+            color: rgba(255, 255, 255, 0.75);
+            margin-left: 8rem;
+        }
     }
 }
 
@@ -250,8 +260,7 @@
     justify-content: space-between;
 }
 
-.paramLabel,
-.sliderField [class^="label"] {
+.paramLabel {
     font-size: var(--fontSizeS);
     line-height: 1.25em;
     overflow-x: hidden;

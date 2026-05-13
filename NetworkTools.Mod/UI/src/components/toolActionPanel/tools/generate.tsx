@@ -16,19 +16,20 @@ export const GenerateControls: React.FC = () => {
 
     return (
         <>
-            <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
-            <div className={styles.divider}></div>
             <div className={styles.col}>
-                <ParameterField paramKey="generate.mode" />
+                <ParameterField paramKey="generate.mode" big={true} />
             </div>
             <div className={styles.divider}></div>
             <div className={styles.col}>
                 {activeGenerateMode === GenerateMode.Grid && (
                     <>
+                        <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
                         <ParameterField paramKey="generate.gridXSpacing" />
                         <ParameterField paramKey="generate.gridZSpacing" />
                         <ParameterField paramKey="generate.gridXNum" />
                         <ParameterField paramKey="generate.gridZNum" />
+                        <ParameterField paramKey="generate.altPrefabX" />
+                        <ParameterField paramKey="generate.altPrefabZ" />
                     </>
                 )}
                 {activeGenerateMode === GenerateMode.Circle && (

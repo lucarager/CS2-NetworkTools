@@ -59,7 +59,11 @@ export const ToolSelectPanel = () => {
                                 style={{ opacity: item.tool.PrefabId === selectedBinding ? 1 : 0 }}
                             />
                             <Tooltip
-                                tooltip={translate(item.tool.DisplayName)}
+                                tooltip={
+                                    item.tool.Active
+                                        ? translate(item.tool.DisplayName)
+                                        : `${translate(item.tool.DisplayName)} (${translate("NetworkTools.UI.Common.ComingSoon")})`
+                                }
                                 delayTime={0}
                                 direction="right">
                                 <Button

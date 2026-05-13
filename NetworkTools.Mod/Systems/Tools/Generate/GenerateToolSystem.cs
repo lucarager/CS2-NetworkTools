@@ -27,7 +27,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         };
 
         public Float3Parameter Rotation = new("generate.rotation", new float3(0, 0, 1),
-            modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle) {
+            modes: (int)GenerateMode.Grid) {
             Handles = new IHandleSpec<float3>[] {
                 new RotationHandle {
                     Parent = nameof(Position),
@@ -38,11 +38,13 @@ namespace NetworkTools.Systems.Tools.Generate {
         };
 
         // Grid
-        public EnumParameter<GenerateMode> Mode         = new("generate.mode", GenerateMode.Grid);
+        public EnumParameter<GenerateMode> Mode         = new("generate.mode", GenerateMode.Grid, label: "NetworkTools.UI.Common.Mode");
         public FloatParameter GridXSpacing = new("generate.gridXSpacing", 60f, 4f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XSpacing", fractionDigits: 0);
         public FloatParameter GridZSpacing = new("generate.gridZSpacing", 60f, 4f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZSpacing", fractionDigits: 0);
         public IntParameter   GridXNum     = new("generate.gridXNum", 2, 1, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XCount");
         public IntParameter   GridZNum     = new("generate.gridZNum", 2, 1, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZCount");
+        public BoolParameter  AlternatingNetworkPrefabX = new("generate.altPrefabX", false, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltPrefabX");
+        public BoolParameter  AlternatingNetworkPrefabZ = new("generate.altPrefabZ", false, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltPrefabZ");
 
         // Circle
         public FloatParameter CircleRadius = new("generate.circleRadius", 60f, 4f, 240f, modes: (int)GenerateMode.Circle, label: "NetworkTools.UI.Generate.Radius", fractionDigits: 0);

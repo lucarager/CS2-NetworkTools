@@ -2,8 +2,8 @@ import React from "react";
 import styles from "../toolActionPanel.module.scss";
 import { PARAM_META, PARAM_BINDING, ENUM_OPTIONS } from "generated/parameters.generated";
 import { useValue } from "cs2/api";
-import { Button, Tooltip } from "cs2/ui";
-import { VC } from "components/vanilla/Components";
+import { Tooltip } from "cs2/ui";
+import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
 import { useLocalization } from "cs2/l10n";
 
@@ -16,9 +16,10 @@ type EnumOptionsKey = keyof typeof ENUM_OPTIONS;
 interface ParameterFieldProps {
     paramKey: ParamKey;
     disabled?: boolean;
+    big?: boolean;
 }
 
-export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabled }) => {
+export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabled, big }) => {
     const meta = PARAM_META[paramKey] as ParamMeta;
     const binding = PARAM_BINDING[paramKey];
     const value = useValue(binding.binding);
@@ -29,7 +30,7 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabl
         case "float":
             return (
                 <div className={styles.controlRow}>
-                    <div className={styles.sliderField}>
+                    <div className={styles.vanillaField}>
                         <VC.FloatSliderField
                             value={value as number}
                             label={label}
@@ -45,7 +46,7 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabl
         case "int":
             return (
                 <div className={styles.controlRow}>
-                    <div className={styles.sliderField}>
+                    <div className={styles.vanillaField}>
                         <VC.IntSliderField
                             value={value as number}
                             label={label}
@@ -53,6 +54,19 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabl
                             max={meta.max}
                             disabled={disabled}
                             onChange={(v: number) => binding.set(Math.round(v))}
+                        />
+                    </div>
+                </div>
+            );
+        case "bool":
+            return (
+                <div className={styles.controlRow}>
+                    <div className={styles.vanillaField}>
+                        <VC.ToggleField
+                            value={value as boolean}
+                            label={label}
+                            disabled={disabled}
+                            onChange={(v: boolean) => binding.set(v)}
                         />
                     </div>
                 </div>
@@ -71,18 +85,19 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabl
                                     key={option.value}
                                     tooltip={translate(option.label)}
                                     delayTime={0}>
-                                    <Button
-                                        variant="primary"
+                                    <VC.ToolButton
                                         className={c(
+                                            VT.toolButton.button,
                                             styles.iconButton,
-                                            value === option.value
-                                                ? styles.iconButton__active
-                                                : null,
+                                            big && styles.iconButton__xl,
                                         )}
-                                        disabled={disabled}
-                                        onSelect={() => binding.set(option.value)}>
-                                        <img src={option.icon} className={styles.icon} />
-                                    </Button>
+                                        src={option.icon}
+                                        onSelect={() => binding.set(option.value)}
+                                        selected={value === option.value}
+                                        multiSelect={false}
+                                        disabled={disabled ?? false}
+                                        focusKey={VF.FOCUS_DISABLED}
+                                    />
                                 </Tooltip>
                             ))}
                         </div>

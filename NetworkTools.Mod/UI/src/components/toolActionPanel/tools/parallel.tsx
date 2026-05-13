@@ -14,18 +14,17 @@ export const ParallelControls: React.FC = () => {
 
     return (
         <>
-            <PrefabSelection paramKey={PARAM_KEYS.parallel.netPrefab} />
-
             {/* Configuration Controls - Show when 2+ nodes selected */}
             {selectedEntities.length >= 2 && (
                 <>
                     <div className={styles.divider}></div>
                     <div className={styles.col}>
+                        <PrefabSelection paramKey={PARAM_KEYS.parallel.netPrefab} />
+                        <ParameterField paramKey="parallel.reverseDirection" />
                         <ParameterField paramKey="parallel.horizontalDirection" />
                         <ParameterField paramKey="parallel.horizontalOffset" />
                         <ParameterField paramKey="parallel.verticalDirection" />
                         <ParameterField paramKey="parallel.verticalOffset" />
-                        <ParameterField paramKey="parallel.reverseDirection" />
                     </div>
                 </>
             )}
