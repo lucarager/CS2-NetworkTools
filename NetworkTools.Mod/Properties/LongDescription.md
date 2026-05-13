@@ -33,7 +33,7 @@ This mod is currently in ALPHA stage.
 
 ### Features
 * **Real-Time Preview** -- See the result of every transformation before you apply it.
-* **Interactive Handles & Parameters** -- Drag handles in the world or adjust parameters in the sidebar to fine-tune your edits.
+* **Interactive Handles and Parameters** -- Drag handles in the world or adjust parameters in the sidebar to fine-tune your edits.
 * **Network Filtering** -- Choose which network types to target: roads, paths, rail, waterways, or invisible paths.
 * **Snap Options** -- Snap to the zone grid or edge midpoints.
 * **View Options** -- Toggle underground view, zone grid display, and invisible network visibility.
