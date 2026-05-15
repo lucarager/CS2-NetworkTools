@@ -117,6 +117,7 @@
   "NetworkTools.UI.Connect.SimpleCurve": "단순 곡선",
   "NetworkTools.UI.Connect.ComplexCurve": "복합 곡선",
   "NetworkTools.UI.Connect.Loop": "루프",
+  "NetworkTools.UI.Connect.LoopRadius": "Loop Radius",
   "NetworkTools.UI.Connect.ApplyCurve": "곡선 적용",
   "NetworkTools.UI.SuperNode.CreateSupernode": "슈퍼노드 생성",
   "NetworkTools.UI.Parallel.Side": "측면",
