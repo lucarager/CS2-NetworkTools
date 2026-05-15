@@ -117,6 +117,7 @@
   "NetworkTools.UI.Connect.SimpleCurve": "Curva simple",
   "NetworkTools.UI.Connect.ComplexCurve": "Curva compleja",
   "NetworkTools.UI.Connect.Loop": "Bucle",
+  "NetworkTools.UI.Connect.LoopRadius": "Loop Radius",
   "NetworkTools.UI.Connect.ApplyCurve": "Aplicar curva",
   "NetworkTools.UI.SuperNode.CreateSupernode": "Crear Supernodo",
   "NetworkTools.UI.Parallel.Side": "Lado",
