@@ -30,9 +30,6 @@ namespace NetworkTools.Systems.Tools {
             m_Log.Prefix = nameof(NT_AddNodeToolSystem);
 
             // Configuration
-            RenderTempEdges             = true;
-            RenderTempNodes             = true;
-            RenderEligibleNodes         = true;
             EligibilityTarget           = EligibilityTarget.Edge;
             DisableVanillaValidation    = true;
             DisableVanillaNodeReduction = true;

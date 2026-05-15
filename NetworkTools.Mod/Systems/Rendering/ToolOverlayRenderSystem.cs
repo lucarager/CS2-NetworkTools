@@ -73,7 +73,7 @@ namespace NetworkTools.Systems {
             }
 
             // 1. Collect temp entities so that we can use them in parallel jobs
-            m_TempOriginals = new NativeParallelHashSet<Entity>(16, Allocator.TempJob);
+            m_TempOriginals = new NativeParallelHashSet<Entity>(m_TempEdgeQuery.CalculateEntityCountWithoutFiltering(), Allocator.TempJob);
 
             var collectJob = new CollectTempOriginalsJob {
                 m_TempComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Temp>(),
@@ -85,7 +85,7 @@ namespace NetworkTools.Systems {
 
             // 2. Shared frustum + distance culling pre-pass
             var cameraPos      = Camera.main != null ? (float3)Camera.main.transform.position : float3.zero;
-            var visibleEntities = new NativeParallelHashSet<Entity>(128, Allocator.TempJob);
+            var visibleEntities = new NativeParallelHashSet<Entity>(activeQuery.Value.CalculateEntityCountWithoutFiltering(), Allocator.TempJob);
             var planePackets = BuildCullingPlanes();
 
             var cullJob = new FrustumCullEntitiesJob {
@@ -100,22 +100,13 @@ namespace NetworkTools.Systems {
 
             var cullHandle = cullJob.ScheduleParallel(activeQuery.Value, collectHandle);
 
-            // 3. Tool-specific prepare job
-            var prepareHandle = SchedulePrepareJob(tool, cullHandle, visibleEntities, out var commandStream, out var chunkCount);
-
-            // 4. Sequential dispatch of pre-computed commands to the overlay buffer
-            var renderJob = new RenderOverlayCommandsJob {
-                m_Buffer        = overlayBuffer,
-                m_CommandReader = commandStream.AsReader(),
-                m_ForEachCount  = chunkCount,
-            };
-
-            var renderHandle = renderJob.Schedule(JobHandle.CombineDependencies(prepareHandle, bufferDeps));
+            // 3. Tool-specific render job (sequential — writes directly to the overlay buffer)
+            var renderDeps   = JobHandle.CombineDependencies(cullHandle, bufferDeps);
+            var renderHandle = ScheduleRenderJob(tool, renderDeps, visibleEntities, overlayBuffer);
 
             m_OverlayRenderSystem.AddBufferWriter(renderHandle);
             m_TempOriginals.Dispose(renderHandle);
             visibleEntities.Dispose(renderHandle);
-            commandStream.Dispose(renderHandle);
             planePackets.Dispose(renderHandle);
             Dependency = renderHandle;
         }
@@ -144,38 +135,33 @@ namespace NetworkTools.Systems {
         /// </summary>
         private EntityQuery? GetQueryForTool(NT_BaseToolSystem tool) {
             return tool switch {
-                //NT_AddNodeToolSystem => m_AddNodeQuery,
+                NT_AddNodeToolSystem => m_AddNodeQuery,
                 _ => null
             };
         }
 
         /// <summary>
-        ///     Dispatches to the correct tool-specific prepare job.
+        ///     Dispatches to the correct tool-specific render job.
         /// </summary>
-        private JobHandle SchedulePrepareJob(
+        private JobHandle ScheduleRenderJob(
             NT_BaseToolSystem tool,
             JobHandle inputDeps,
             NativeParallelHashSet<Entity> visibleEntities,
-            out NativeStream commandStream,
-            out int chunkCount) {
+            CustomOverlayRenderSystem.Buffer overlayBuffer) {
             return tool switch {
-                //NT_AddNodeToolSystem => ScheduleAddNodePrepare(inputDeps, visibleEntities, out commandStream, out chunkCount),
-                _ => throw new NotImplementedException($"No prepare job implemented for tool type: {tool.GetType().Name}")
+                NT_AddNodeToolSystem => ScheduleAddNodeRender(inputDeps, visibleEntities, overlayBuffer),
+                _ => throw new NotImplementedException($"No render job implemented for tool type: {tool.GetType().Name}")
             };
         }
 
         /// <summary>
-        ///     Schedules the parallel prepare job for the AddNode tool overlay.
+        ///     Schedules the sequential render job for the AddNode tool overlay.
         /// </summary>
-        private JobHandle ScheduleAddNodePrepare(
+        private JobHandle ScheduleAddNodeRender(
             JobHandle inputDeps,
             NativeParallelHashSet<Entity> visibleEntities,
-            out NativeStream commandStream,
-            out int chunkCount) {
-            chunkCount    = math.max(1, m_AddNodeQuery.CalculateChunkCountWithoutFiltering());
-            commandStream = new NativeStream(chunkCount, Allocator.TempJob);
-
-            var prepareJob = new PrepareAddNodeCommandsJob {
+            CustomOverlayRenderSystem.Buffer overlayBuffer) {
+            var renderJob = new RenderAddNodeOverlayJob {
                 m_Colors                         = RenderColors.Default,
                 m_EntityTypeHandle               = SystemAPI.GetEntityTypeHandle(),
                 m_EdgeComponentTypeHandle        = SystemAPI.GetComponentTypeHandle<Edge>(),
@@ -189,10 +175,10 @@ namespace NetworkTools.Systems {
                 m_NodeLookup                     = SystemAPI.GetComponentLookup<Node>(true),
                 m_TempLookup                     = SystemAPI.GetComponentLookup<Temp>(true),
                 m_EdgeLookup                     = SystemAPI.GetComponentLookup<Edge>(true),
-                m_CommandWriter                  = commandStream.AsWriter(),
+                m_Buffer                         = overlayBuffer,
             };
 
-            return prepareJob.ScheduleParallel(m_AddNodeQuery, inputDeps);
+            return renderJob.Schedule(m_AddNodeQuery, inputDeps);
         }
     }
 }
