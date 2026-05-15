@@ -63,8 +63,6 @@ const customTooltipComponents: { [key: string]: React.FC<{ props: SlopeTooltipPr
 export const TooltipRenderer = () => {
     const tooltipGroups = useValue(tooltipGroups$);
 
-    console.log(tooltipGroups);
-
     return (
         <div className={styles.wrapper}>
             {tooltipGroups.map((group, index) => (

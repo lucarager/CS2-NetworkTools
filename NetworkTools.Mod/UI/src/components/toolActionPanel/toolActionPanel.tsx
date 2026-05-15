@@ -34,9 +34,6 @@ const ToolActionPanelInner = () => {
     const [showTutorial, setShowTutorial] = useState(false);
     const { isOpen: prefabSearchOpen, close: closePrefabSearch } = usePrefabSearch();
 
-    console.log("Selected Tool ID:", selectedBinding);
-    console.log("Active Tool Data:", activeTool);
-
     useEffect(() => {
         setShowTutorial(false);
         closePrefabSearch();
@@ -78,7 +75,9 @@ const ToolActionPanelInner = () => {
             {showTutorial && (
                 <div className={[panels.nt_panel, styles.tutorialPanel].join(" ")}>
                     <div className={styles.col}>
-                        <span className={styles.tutorialTitle}>{translate("NetworkTools.UI.Common.HowToUse")}</span>
+                        <span className={styles.tutorialTitle}>
+                            {translate("NetworkTools.UI.Common.HowToUse")}
+                        </span>
                         <span className={styles.tutorialText}>
                             {translate("NetworkTools.UI.Common.Tutorial")}
                         </span>

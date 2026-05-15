@@ -10,8 +10,6 @@ export const SuperNodeControls: React.FC = () => {
     const selectedEntitiesBinding = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
     const { translate } = useLocalization();
 
-    console.log("Selected Entities in SuperNodeControls:", selectedEntitiesBinding);
-
     return (
         <>
             <NodeSelection selectedEntities={selectedEntitiesBinding} />
@@ -21,7 +19,9 @@ export const SuperNodeControls: React.FC = () => {
             <div className={styles.row}>
                 <div className={styles.actions}>
                     {selectedEntitiesBinding.length < 2 && (
-                        <span className={styles.helper}>{translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}</span>
+                        <span className={styles.helper}>
+                            {translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}
+                        </span>
                     )}
                     {selectedEntitiesBinding.length >= 2 && (
                         <Button
