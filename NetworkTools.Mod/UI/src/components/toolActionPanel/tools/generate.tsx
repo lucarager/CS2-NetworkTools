@@ -28,8 +28,8 @@ export const GenerateControls: React.FC = () => {
                         <ParameterField paramKey="generate.gridZSpacing" />
                         <ParameterField paramKey="generate.gridXNum" />
                         <ParameterField paramKey="generate.gridZNum" />
-                        <ParameterField paramKey="generate.altPrefabX" />
-                        <ParameterField paramKey="generate.altPrefabZ" />
+                        {/* <ParameterField paramKey="generate.altPrefabX" /> */}
+                        {/* <ParameterField paramKey="generate.altPrefabZ" /> */}
                     </>
                 )}
                 {activeGenerateMode === GenerateMode.Circle && (
