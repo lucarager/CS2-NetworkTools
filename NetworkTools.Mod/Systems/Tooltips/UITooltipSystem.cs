@@ -1,17 +1,22 @@
 namespace NetworkTools.Systems.Tooltips {
     using System.Collections.Generic;
+
     using Colossal.Mathematics;
+
     using Game.Net;
     using Game.Tools;
     using Game.UI;
     using Game.UI.Tooltip;
     using Game.UI.Widgets;
+
     using NetworkTools.Components;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Utils;
+
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Mathematics;
+
     using UnityEngine;
 
     /// <summary>
@@ -102,6 +107,27 @@ namespace NetworkTools.Systems.Tooltips {
                     AddGroup(group);
                 }
             }
+
+            // Bandaid: show length tooltips on all temp edges regardless of selection state.
+            if (tool.RenderLengthTooltips) {
+                BuildTempEdgeLengthTooltips();
+            }
+        }
+
+        private void BuildTempEdgeLengthTooltips() {
+            var tempEdges = m_TempEdgesQuery.ToEntityArray(Allocator.Temp);
+            foreach (var tempEdge in tempEdges) {
+                var curve    = EntityManager.GetComponentData<Curve>(tempEdge);
+                var position = WorldToTooltipPos(MathUtils.Position(curve.m_Bezier, 0.5f));
+                var group = new TooltipGroup {
+                    path     = $"NT_TempEdge_{tempEdge.Index}_{tempEdge.Version}",
+                    category = TooltipGroup.Category.Network,
+                    position = position,
+                };
+                group.children.Add(new FloatTooltip { value = math.round(MathUtils.Length(curve.m_Bezier) * 10f) / 10f, unit = "m" });
+                AddGroup(group);
+            }
+            tempEdges.Dispose();
         }
 
         // Resolves the set of edges to render tooltips for, normalizing temp/non-temp into one shape.
@@ -155,8 +181,13 @@ namespace NetworkTools.Systems.Tooltips {
         }
 
         private static void AppendLengthTooltip(TooltipGroup group, EdgeTooltipContext ctx) {
-            var length = MathUtils.Length(ctx.CurrentCurve.m_Bezier);
-            group.children.Add(new FloatTooltip { value = length, unit = "m"});
+            var length = math.round(MathUtils.Length(ctx.CurrentCurve.m_Bezier) * 10f) / 10f;
+
+            group.children.Add(new FloatTooltip {
+                value = length, 
+                unit = "length",
+                icon = "Media/Glyphs/Length.svg",
+            });
         }
 
         private static float ComputeSlopePercent(Curve curve) {
