@@ -1,8 +1,8 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M28.7656 27H4.76562V25H26.7656V5H28.7656V27Z" fill="white" fill-opacity="0.5"/>
-<path d="M4.26621 25.1842C17.7629 25.1839 12.7656 6.41903 27.2626 6.4193" stroke="url(#paint0_linear_2347_9625)" stroke-width="4" stroke-linecap="round"/>
+<path d="M5 26H25C26.1046 26 27 25.1046 27 24V6" stroke="white" stroke-opacity="0.5" stroke-width="2" stroke-linecap="round"/>
+<path d="M5.50195 25.5C15.5021 25.4997 17.4971 6.50013 26.5001 6.50012" stroke="url(#paint0_linear_2347_9625)" stroke-width="4" stroke-linecap="round"/>
 <defs>
-<linearGradient id="paint0_linear_2347_9625" x1="13.9207" y1="13.3072" x2="17.4408" y2="18.0699" gradientUnits="userSpaceOnUse">
+<linearGradient id="paint0_linear_2347_9625" x1="14.7887" y1="14.8933" x2="17.221" y2="17.5577" gradientUnits="userSpaceOnUse">
 <stop stop-color="#CB40BE"/>
 <stop offset="1" stop-color="#9860E2"/>
 </linearGradient>
