@@ -117,6 +117,7 @@
   "NetworkTools.UI.Connect.SimpleCurve": "简单曲线",
   "NetworkTools.UI.Connect.ComplexCurve": "复杂曲线",
   "NetworkTools.UI.Connect.Loop": "圆环",
+  "NetworkTools.UI.Connect.LoopRadius": "Loop Radius",
   "NetworkTools.UI.Connect.ApplyCurve": "应用曲线",
   "NetworkTools.UI.SuperNode.CreateSupernode": "创建超级节点",
   "NetworkTools.UI.Parallel.Side": "侧边",
