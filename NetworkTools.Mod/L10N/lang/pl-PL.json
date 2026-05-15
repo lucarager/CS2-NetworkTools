@@ -117,6 +117,7 @@
   "NetworkTools.UI.Connect.SimpleCurve": "Proste połączenie",
   "NetworkTools.UI.Connect.ComplexCurve": "Zaawansowane połączenie",
   "NetworkTools.UI.Connect.Loop": "Pętla",
+  "NetworkTools.UI.Connect.LoopRadius": "Loop Radius",
   "NetworkTools.UI.Connect.ApplyCurve": "Stwórz połączenie",
   "NetworkTools.UI.SuperNode.CreateSupernode": "Stwórz skrzyżowanie",
   "NetworkTools.UI.Parallel.Side": "Strona",
