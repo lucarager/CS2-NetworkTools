@@ -8,6 +8,9 @@ Add or remove nodes, reshape slopes and curves, generate grids, and more -- all 
 Whether you're smoothing out a janky interchange, building a perfectly graded highway, or laying out a neighborhood street grid from scratch, NetworkTools has you covered.
 
 ### Tools
+Note: Tools are still in development. Features may be missing or be incomplete.
+More tools and more functions and options will be added to existing tools in future updates.
+Stay tuned!
 
 **Node Tools**
 * **Add Node** -- Click on any edge to insert a new intermediate node.
@@ -22,10 +25,12 @@ Whether you're smoothing out a janky interchange, building a perfectly graded hi
 **Creation Tools**
 * **Connect** *(coming soon)* -- Connect two nodes with adjustable segments
 * **Parallel** -- Create parallel networks based on existing segments
-* **Generate** *(coming soon)* -- Place new customizable networks like grids
+* **Generate** -- Place new customizable networks like grids
 
-### Alpha Warning
-This mod is currently in ALPHA stage. 
+### Early Access Warning
+This mod is currently in EARLY ACCESS stage. 
+Early access helps me gather feedback and prioritize development while allowing you to use and benefit from the mod sooner.
+However, please be aware of the following:
 - Not all features are complete. 
 - Feature updates may be frequent and cause intermittent issues.
 - While it is generally considered stable for use, unexpected issues may occur.

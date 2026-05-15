@@ -2,7 +2,7 @@
   <!--Id must be set in order to update existed mod. it is not required for publishing mod for the first time-->
   <ModId Value="133736" />
   <!--Name of the mod to display to players-->
-  <DisplayName Value="NetworkTools" />
+  <DisplayName Value="NetworkTools [Early Access]" />
   <!--Short description of the mod-->
   <ShortDescription Value="Add, remove, reshape, and generate network nodes and segments with precision." />
   <!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
@@ -17,6 +17,9 @@ Add or remove nodes, reshape slopes and curves, generate grids, and more -- all 
 Whether you're smoothing out a janky interchange, building a perfectly graded highway, or laying out a neighborhood street grid from scratch, NetworkTools has you covered.
 
 ### Tools
+Note: Tools are still in development. Features may be missing or be incomplete.
+More tools and more functions and options will be added to existing tools in future updates.
+Stay tuned!
 
 **Node Tools**
 * **Add Node** -- Click on any edge to insert a new intermediate node.
@@ -31,10 +34,12 @@ Whether you're smoothing out a janky interchange, building a perfectly graded hi
 **Creation Tools**
 * **Connect** *(coming soon)* -- Connect two nodes with adjustable segments
 * **Parallel** -- Create parallel networks based on existing segments
-* **Generate** *(coming soon)* -- Place new customizable networks like grids
+* **Generate** -- Place new customizable networks like grids
 
-### Alpha Warning
-This mod is currently in ALPHA stage. 
+### Early Access Warning
+This mod is currently in EARLY ACCESS stage. 
+Early access helps me gather feedback and prioritize development while allowing you to use and benefit from the mod sooner.
+However, please be aware of the following:
 - Not all features are complete. 
 - Feature updates may be frequent and cause intermittent issues.
 - While it is generally considered stable for use, unexpected issues may occur.
@@ -75,20 +80,23 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.2.2" />
+  <ModVersion Value="1.2.3" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog>- New: Generate tool. Allows creating networks like grids and circles from scratch
-- Updates various metadata, strings, icons, and descriptions for the generate tool
-- Update descriptions and assets on PDX further</ChangeLog>
+  <ChangeLog>- AddNode: Switch to new rendering system. Performance boosted and now shows all nodes and edges in the network.
+- AddNode: Now shows a tooltip with segment length information
+- UI: Updated tool icons
+- UI: Removed some logging from the UI layer
+- L10n: Added String for circle radius</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
   <ExternalLink Type="github" Url="https://github.com/lucarager/CS2-NetworkTools" />
   <ExternalLink Type="twitch" Url="https://twitch.tv/lucadevdesign" />
+  <ExternalLink Type="crowdin" Url="https://crowdin.com/project/networktools-cs2" />
   <!--Supported values Public, Private, Unlisted-->
   <AccessLevel Value="Unlisted" />
 </Publish>
