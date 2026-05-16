@@ -33,9 +33,6 @@ namespace NetworkTools.Systems {
         // Narrow query for temp edges only, used by CollectTempOriginalsJob
         private EntityQuery m_TempEdgeQuery;
 
-        // Shared temp originals set, available to all tool overlay methods
-        private NativeParallelHashSet<Entity> m_TempOriginals;
-
         /// <inheritdoc />
         protected override void OnCreate() {
             base.OnCreate();
@@ -68,16 +65,16 @@ namespace NetworkTools.Systems {
             // Exit early on empty queries
             var activeQuery = GetQueryForTool(tool);
 
-            if (!activeQuery.HasValue || (activeQuery.Value.IsEmptyIgnoreFilter && m_TempEdgeQuery.IsEmptyIgnoreFilter)) {
+            if (!activeQuery.HasValue || activeQuery.Value.IsEmptyIgnoreFilter) {
                 return;
             }
 
-            // 1. Collect temp entities so that we can use them in parallel jobs
-            m_TempOriginals = new NativeParallelHashSet<Entity>(m_TempEdgeQuery.CalculateEntityCountWithoutFiltering(), Allocator.TempJob);
+            // 1. Collect temp originals so the render job can suppress them
+            var tempOriginals = new NativeParallelHashSet<Entity>(m_TempEdgeQuery.CalculateEntityCountWithoutFiltering(), Allocator.TempJob);
 
             var collectJob = new CollectTempOriginalsJob {
                 m_TempComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Temp>(),
-                m_TempOriginals           = m_TempOriginals.AsParallelWriter()
+                m_TempOriginals           = tempOriginals.AsParallelWriter()
             };
 
             var collectHandle = collectJob.ScheduleByRef(m_TempEdgeQuery, Dependency);
@@ -102,10 +99,10 @@ namespace NetworkTools.Systems {
 
             // 3. Tool-specific render job (sequential — writes directly to the overlay buffer)
             var renderDeps   = JobHandle.CombineDependencies(cullHandle, bufferDeps);
-            var renderHandle = ScheduleRenderJob(tool, renderDeps, visibleEntities, overlayBuffer);
+            var renderHandle = ScheduleRenderJob(tool, renderDeps, tempOriginals, visibleEntities, overlayBuffer);
 
             m_OverlayRenderSystem.AddBufferWriter(renderHandle);
-            m_TempOriginals.Dispose(renderHandle);
+            tempOriginals.Dispose(renderHandle);
             visibleEntities.Dispose(renderHandle);
             planePackets.Dispose(renderHandle);
             Dependency = renderHandle;
@@ -146,10 +143,11 @@ namespace NetworkTools.Systems {
         private JobHandle ScheduleRenderJob(
             NT_BaseToolSystem tool,
             JobHandle inputDeps,
+            NativeParallelHashSet<Entity> tempOriginals,
             NativeParallelHashSet<Entity> visibleEntities,
             CustomOverlayRenderSystem.Buffer overlayBuffer) {
             return tool switch {
-                NT_AddNodeToolSystem => ScheduleAddNodeRender(inputDeps, visibleEntities, overlayBuffer),
+                NT_AddNodeToolSystem => ScheduleAddNodeRender(inputDeps, tempOriginals, visibleEntities, overlayBuffer),
                 _ => throw new NotImplementedException($"No render job implemented for tool type: {tool.GetType().Name}")
             };
         }
@@ -159,10 +157,10 @@ namespace NetworkTools.Systems {
         /// </summary>
         private JobHandle ScheduleAddNodeRender(
             JobHandle inputDeps,
+            NativeParallelHashSet<Entity> tempOriginals,
             NativeParallelHashSet<Entity> visibleEntities,
             CustomOverlayRenderSystem.Buffer overlayBuffer) {
             var renderJob = new RenderAddNodeOverlayJob {
-                m_Colors                         = RenderColors.Default,
                 m_EntityTypeHandle               = SystemAPI.GetEntityTypeHandle(),
                 m_EdgeComponentTypeHandle        = SystemAPI.GetComponentTypeHandle<Edge>(),
                 m_CurveComponentTypeHandle       = SystemAPI.GetComponentTypeHandle<Curve>(),
@@ -170,11 +168,12 @@ namespace NetworkTools.Systems {
                 m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
                 m_SelectedComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
                 m_TempComponentTypeHandle        = SystemAPI.GetComponentTypeHandle<Temp>(),
-                m_TempOriginals                  = m_TempOriginals,
+                m_TempOriginals                  = tempOriginals,
                 m_VisibleEntities                = visibleEntities,
                 m_NodeLookup                     = SystemAPI.GetComponentLookup<Node>(true),
                 m_TempLookup                     = SystemAPI.GetComponentLookup<Temp>(true),
                 m_EdgeLookup                     = SystemAPI.GetComponentLookup<Edge>(true),
+                m_EligibleLookup                 = SystemAPI.GetComponentLookup<NT_Eligible>(true),
                 m_Buffer                         = overlayBuffer,
             };
 

@@ -33,6 +33,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             [ReadOnly] public required ComponentLookup<Curve> CurveLookup;
             [ReadOnly] public required ComponentLookup<Upgraded> UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Aggregated> AggregatedLookup;
+            [ReadOnly] public required ComponentLookup<NetGeometryData> NetGeometryDataLookup;
 
             public required EntityCommandBuffer ECB;
 
@@ -40,14 +41,21 @@ namespace NetworkTools.Systems.Tools.Generate {
                 // 1. Create data structures
                 var curves = new NativeList<EdgeConfig>(64, Allocator.Temp);
 
+                // Resolve prefab width so user-facing spacing/radius can be
+                // interpreted edge-to-edge instead of centerline-to-centerline.
+                var netWidth = 0f;
+                if (NetGeometryDataLookup.TryGetComponent(NetPrefabEntity, out var netGeometry)) {
+                    netWidth = netGeometry.m_DefaultWidth;
+                }
+
                 // 2. Create definitions
                 switch (Mode)
                 {
                     case GenerateMode.Grid:
-                        new GridGenerator().Generate(Config, ref curves);
+                        new GridGenerator().Generate(Config, netWidth, ref curves);
                         break;
                     case GenerateMode.Circle:
-                        new CircleGenerator().Generate(Config, ref curves);
+                        new CircleGenerator().Generate(Config, netWidth, ref curves);
                         break;
                 }
 

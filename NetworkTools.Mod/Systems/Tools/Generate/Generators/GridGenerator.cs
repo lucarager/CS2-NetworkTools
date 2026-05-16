@@ -16,11 +16,14 @@ namespace NetworkTools.Systems.Tools.Generate {
 
         public void Generate(
             in  GenerateJobConfig      config,
+            float                      netWidth,
             ref NativeList<EdgeConfig> curves) {
+            // User-facing spacing is edge-to-edge; add the prefab width to get
+            // the centerline-to-centerline distance the geometry needs.
             GenerateGrid(config.Position,
                          config.StartDirection,
-                         config.GridXSpacing,
-                         config.GridZSpacing,
+                         config.GridXSpacing + netWidth,
+                         config.GridZSpacing + netWidth,
                          config.GridXNum + 1,
                          config.GridZNum + 1,
                          ref curves);

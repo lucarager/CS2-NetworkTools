@@ -117,6 +117,13 @@ namespace NetworkTools.Systems.Tooltips {
         private void BuildTempEdgeLengthTooltips() {
             var tempEdges = m_TempEdgesQuery.ToEntityArray(Allocator.Temp);
             foreach (var tempEdge in tempEdges) {
+                var temp = EntityManager.GetComponentData<Temp>(tempEdge);
+
+                // Skip replacement edges
+                if (temp.m_Original != Entity.Null) {
+                    continue;
+                }
+
                 var curve    = EntityManager.GetComponentData<Curve>(tempEdge);
                 var position = WorldToTooltipPos(MathUtils.Position(curve.m_Bezier, 0.5f));
                 var group = new TooltipGroup {
@@ -124,7 +131,7 @@ namespace NetworkTools.Systems.Tooltips {
                     category = TooltipGroup.Category.Network,
                     position = position,
                 };
-                group.children.Add(new FloatTooltip { value = math.round(MathUtils.Length(curve.m_Bezier) * 10f) / 10f, unit = "m" });
+                AppendLengthTooltip(group, new EdgeTooltipContext { CurrentCurve = curve });
                 AddGroup(group);
             }
             tempEdges.Dispose();

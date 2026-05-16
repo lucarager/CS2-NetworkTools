@@ -22,7 +22,6 @@ namespace NetworkTools.Systems {
         [BurstCompile]
 #endif
         protected struct RenderAddNodeOverlayJob : IJobChunk {
-            [ReadOnly] public required RenderColors                        m_Colors;
             [ReadOnly] public required EntityTypeHandle                    m_EntityTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Edge>           m_EdgeComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<Curve>          m_CurveComponentTypeHandle;
@@ -35,6 +34,7 @@ namespace NetworkTools.Systems {
             [ReadOnly] public required ComponentLookup<Node>               m_NodeLookup;
             [ReadOnly] public required ComponentLookup<Temp>               m_TempLookup;
             [ReadOnly] public required ComponentLookup<Edge>               m_EdgeLookup;
+            [ReadOnly] public required ComponentLookup<NT_Eligible>        m_EligibleLookup;
 
             public required CustomOverlayRenderSystem.Buffer m_Buffer;
 
@@ -54,6 +54,7 @@ namespace NetworkTools.Systems {
 
             private void RenderEligibleEdges(in ArchetypeChunk chunk) {
                 var entities    = chunk.GetNativeArray(m_EntityTypeHandle);
+                var edgesArray  = chunk.GetNativeArray(ref m_EdgeComponentTypeHandle);
                 var curvesArray = chunk.GetNativeArray(ref m_CurveComponentTypeHandle);
 
                 for (var i = 0; i < entities.Length; i++) {
@@ -65,8 +66,19 @@ namespace NetworkTools.Systems {
                         continue;
                     }
 
-                    var color = (Color)(Vector4)m_Colors.AddNodeEdgeEligible;
-                    DrawCurveWithEndCaps(color, curvesArray[i].m_Bezier);
+                    RenderVisibleEdge(edgesArray[i], curvesArray[i]);
+                }
+            }
+
+            private void RenderVisibleEdge(in Edge edge, in Curve curve) {
+                m_Buffer.DrawCurve(NT_Colors.EDGE_VISIBLE_FILL, curve.m_Bezier, 1f, true);
+
+                if (m_NodeLookup.TryGetComponent(edge.m_Start, out var startNode)) {
+                    m_Buffer.DrawCircle(NT_Colors.NODE_VISIBLE_FILL, startNode.m_Position, 3f);
+                }
+
+                if (m_NodeLookup.TryGetComponent(edge.m_End, out var endNode)) {
+                    m_Buffer.DrawCircle(NT_Colors.NODE_VISIBLE_FILL, endNode.m_Position, 3f);
                 }
             }
 
@@ -81,7 +93,9 @@ namespace NetworkTools.Systems {
                     var temp  = tempArray[i];
 
                     if (temp.m_Original != Entity.Null || (temp.m_Flags & TempFlags.Replace) != 0) {
-                        DrawCurveWithEndCaps((Color)(Vector4)m_Colors.AddNodeEdgeEligible, curve.m_Bezier);
+                        if (m_EligibleLookup.HasComponent(temp.m_Original)) {
+                            RenderVisibleEdge(edge, curve);
+                        }
                         continue;
                     }
 
@@ -96,39 +110,35 @@ namespace NetworkTools.Systems {
                     var endTrim       = endNodeIsMiddle ? relativeTrim : 0f;
                     var trimmedBezier = MathUtils.Cut(curve.m_Bezier, new Bounds1(startTrim, 1f - endTrim));
 
-                    var color = (Color)(Vector4)m_Colors.AddNodeEdgeTemp;
-                    DrawCurveWithEndCaps(color, trimmedBezier);
+                    m_Buffer.DrawCurve(NT_Colors.EDGE_ELIGIBLE_ACTIVE_FILL, trimmedBezier, 1f, true);
 
-                    var nodeColor = (Color)(Vector4)m_Colors.AddNodeNode;
+                    if (startNodeIsMiddle) {
+                        var tangent = math.normalize(MathUtils.Tangent(trimmedBezier, 0f));
+                        var perp    = new float3(-tangent.z, 0f, tangent.x);
+                        m_Buffer.DrawLine(NT_Colors.EDGE_ELIGIBLE_ACTIVE_FILL, new Line3.Segment(trimmedBezier.a - perp * 2f, trimmedBezier.a + perp * 2f), 1f);
+                    }
+
+                    if (endNodeIsMiddle) {
+                        var tangent = math.normalize(MathUtils.Tangent(trimmedBezier, 1f));
+                        var perp    = new float3(-tangent.z, 0f, tangent.x);
+                        m_Buffer.DrawLine(NT_Colors.EDGE_ELIGIBLE_ACTIVE_FILL, new Line3.Segment(trimmedBezier.d - perp * 2f, trimmedBezier.d + perp * 2f), 1f);
+                    }
+
 
                     if (m_TempLookup.TryGetComponent(edge.m_Start, out var startNodeTemp)
                         && (startNodeTemp.m_Flags & TempFlags.Replace) != 0
                         && m_NodeLookup.TryGetComponent(edge.m_Start, out var startNode)) {
-                        m_Buffer.DrawCircle(nodeColor, startNode.m_Position, 3f);
+                        m_Buffer.DrawCircle(NT_Colors.NODE_ADDED_FILL, startNode.m_Position, 3f);
                     }
 
                     if (m_TempLookup.TryGetComponent(edge.m_End, out var endNodeTemp)
                         && (endNodeTemp.m_Flags & TempFlags.Replace) != 0
                         && m_NodeLookup.TryGetComponent(edge.m_End, out var endNode)) {
-                        m_Buffer.DrawCircle(nodeColor, endNode.m_Position, 3f);
+                        m_Buffer.DrawCircle(NT_Colors.NODE_ADDED_FILL, endNode.m_Position, 3f);
                     }
                 }
             }
 
-            private void DrawCurveWithEndCaps(Color color, Bezier4x3 bezier) {
-                var width              = 1f;
-                var perpLineHalfLength = 2f;
-
-                m_Buffer.DrawCurve(color, bezier, width, true);
-
-                var startTangent = math.normalize(MathUtils.Tangent(bezier, 0f));
-                var startPerp    = new float3(-startTangent.z, 0f, startTangent.x);
-                m_Buffer.DrawLine(color, new Line3.Segment(bezier.a - startPerp * perpLineHalfLength, bezier.a + startPerp * perpLineHalfLength), width);
-
-                var endTangent = math.normalize(MathUtils.Tangent(bezier, 1f));
-                var endPerp    = new float3(-endTangent.z, 0f, endTangent.x);
-                m_Buffer.DrawLine(color, new Line3.Segment(bezier.d - endPerp * perpLineHalfLength, bezier.d + endPerp * perpLineHalfLength), width);
-            }
         }
     }
 }

@@ -56,6 +56,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
                 ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 AggregatedLookup       = SystemAPI.GetComponentLookup<Aggregated>(true),
+                NetGeometryDataLookup  = SystemAPI.GetComponentLookup<NetGeometryData>(true),
                 ECB                    = m_Barrier.CreateCommandBuffer(),
             }.Schedule(inputDeps);
             m_Barrier.AddJobHandleForProducer(jobHandle);

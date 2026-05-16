@@ -8,7 +8,7 @@ namespace NetworkTools.Systems {
     public partial class NT_ToolOverlayRenderSystem {
         /// <summary>
         ///     Collects the <see cref="Temp.m_Original"/> entities from temp edges
-        ///     so the draw job can skip those originals when rendering eligible edges.
+        ///     so the render job can skip those originals when rendering eligible edges.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
 #if BURST

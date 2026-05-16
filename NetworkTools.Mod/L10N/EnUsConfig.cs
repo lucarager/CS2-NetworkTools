@@ -202,8 +202,9 @@ namespace NetworkTools.L10N {
                 // ## Curve Tool
                 { "NetworkTools.UI.Curve.Preserve", "Preserve" },
                 { "NetworkTools.UI.Curve.StraightenCurve", "Straighten Curve" },
+                { "NetworkTools.UI.Curve.SmoothCurve", "Smooth Curve" },
                 { "NetworkTools.UI.Curve.SmoothingFactor", "Smoothing Factor" },
-                { "NetworkTools.UI.Curve.ApplyCurve", "Apply Curve" },
+                { "NetworkTools.UI.Curve.ApplyCurve", "Apply Transformation" },
 
                 // ## Connect Tool
                 { "NetworkTools.UI.Connect.None", "None" },

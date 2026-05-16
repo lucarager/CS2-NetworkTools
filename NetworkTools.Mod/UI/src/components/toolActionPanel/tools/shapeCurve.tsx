@@ -1,14 +1,7 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
-import {
-    GAME_BINDINGS,
-    GAME_TRIGGERS,
-} from "gameBindings";
-import {
-    ShapeTransformTemplate,
-    PARAM_BINDINGS,
-    PARAM_META,
-} from "generated/parameters.generated";
+import { GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
+import { ShapeTransformTemplate, PARAM_BINDINGS, PARAM_META } from "generated/parameters.generated";
 
 const smoothingFactorMeta = PARAM_META["roadShape.smoothingFactor"];
 import { useValue } from "cs2/api";
@@ -57,7 +50,9 @@ export const ShapeCurveControls: React.FC = () => {
                     <div className={styles.col}>
                         <div className={styles.controlRow}>
                             <div className={styles.controlRowInner}>
-                                <span className={styles.paramLabel}>{translate("NetworkTools.UI.Common.Mode")}</span>
+                                <span className={styles.paramLabel}>
+                                    {translate("NetworkTools.UI.Common.Mode")}
+                                </span>
                                 <div className={styles.buttonRow}>
                                     {CURVE_MODES.map((preset) => (
                                         <Tooltip
@@ -84,6 +79,17 @@ export const ShapeCurveControls: React.FC = () => {
                                             />
                                         </Tooltip>
                                     ))}
+                                    <Tooltip
+                                        tooltip={`${translate("NetworkTools.UI.Curve.SmoothCurve", "Smooth Curve")} (${translate("NetworkTools.UI.Common.ComingSoon")})`}
+                                        delayTime={0}>
+                                        <VC.ToolButton
+                                            className={c(styles.iconButton, styles.iconButton__xl)}
+                                            src={"coui://nt/Modes/CurveSmooth.svg"}
+                                            multiSelect={false}
+                                            disabled={true}
+                                            focusKey={VF.FOCUS_DISABLED}
+                                        />
+                                    </Tooltip>
                                 </div>
                             </div>
                         </div>
@@ -112,7 +118,9 @@ export const ShapeCurveControls: React.FC = () => {
             <div className={styles.row}>
                 <div className={styles.actions}>
                     {selectedEntitiesBinding.length < 2 && (
-                        <span className={styles.helper}>{translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}</span>
+                        <span className={styles.helper}>
+                            {translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}
+                        </span>
                     )}
                     {selectedEntitiesBinding.length >= 2 && (
                         <Button

@@ -17,8 +17,11 @@ namespace NetworkTools.Systems.Tools.Generate {
 
         public void Generate(
             in  GenerateJobConfig      config,
+            float                      netWidth,
             ref NativeList<EdgeConfig> curves) {
-            var radius   = config.CircleRadius;
+            // User-facing radius is inner-edge; shift it out by half the prefab
+            // width to get the centerline radius the geometry needs.
+            var radius   = config.CircleRadius + netWidth * 0.5f;
             var center   = config.Position;
             var rotation = config.StartDirection;
 
