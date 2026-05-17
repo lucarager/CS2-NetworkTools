@@ -21,9 +21,8 @@ export const ParallelControls: React.FC = () => {
                     <div className={styles.col}>
                         <PrefabSelection paramKey={PARAM_KEYS.parallel.netPrefab} />
                         <ParameterField paramKey="parallel.reverseDirection" />
-                        <ParameterField paramKey="parallel.horizontalDirection" />
+                        {/* <ParameterField paramKey="parallel.origin" /> */}
                         <ParameterField paramKey="parallel.horizontalOffset" />
-                        <ParameterField paramKey="parallel.verticalDirection" />
                         <ParameterField paramKey="parallel.verticalOffset" />
                     </div>
                 </>

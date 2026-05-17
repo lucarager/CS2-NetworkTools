@@ -27,7 +27,8 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabl
     const label = ("label" in meta ? translate(meta.label as string) : paramKey) ?? paramKey;
 
     switch (meta.type) {
-        case "float":
+        case "float": {
+            const showZeroMark = meta.min < 0 && meta.max > 0;
             return (
                 <div className={styles.controlRow}>
                     <div className={styles.vanillaField}>
@@ -40,9 +41,15 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabl
                             disabled={disabled}
                             onChange={(v: number) => binding.set(v)}
                         />
+                        {showZeroMark && (
+                            <div className={styles.zeroMark}>
+                                <div className={styles.zeroMark__tick} />
+                            </div>
+                        )}
                     </div>
                 </div>
             );
+        }
         case "int":
             return (
                 <div className={styles.controlRow}>

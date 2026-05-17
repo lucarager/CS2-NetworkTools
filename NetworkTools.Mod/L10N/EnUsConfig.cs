@@ -218,17 +218,15 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.SuperNode.CreateSupernode", "Create Supernode" },
 
                 // ## Parallel Tool
-                { "NetworkTools.UI.Parallel.Side", "Side" },
-                { "NetworkTools.UI.Parallel.Left", "Left" },
-                { "NetworkTools.UI.Parallel.Right", "Right" },
                 { "NetworkTools.UI.Parallel.HorizontalOffset", "Horizontal Offset" },
-                { "NetworkTools.UI.Parallel.VerticalDirection", "Vertical Direction" },
-                { "NetworkTools.UI.Parallel.Up", "Up" },
-                { "NetworkTools.UI.Parallel.Down", "Down" },
                 { "NetworkTools.UI.Parallel.VerticalOffset", "Vertical Offset" },
                 { "NetworkTools.UI.Parallel.Direction", "Direction" },
                 { "NetworkTools.UI.Parallel.Same", "Same" },
                 { "NetworkTools.UI.Parallel.Reverse", "Reverse" },
+                { "NetworkTools.UI.Parallel.Origin", "Origin" },
+                { "NetworkTools.UI.Parallel.LeftEdge", "Left Edge" },
+                { "NetworkTools.UI.Parallel.Center", "Center" },
+                { "NetworkTools.UI.Parallel.RightEdge", "Right Edge" },
                 { "NetworkTools.UI.Parallel.CreateParallel", "Create parallel network" },
 
                 // ## Generate Tool

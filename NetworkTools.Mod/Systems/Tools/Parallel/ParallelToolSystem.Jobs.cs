@@ -27,6 +27,7 @@
             [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
             [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Aggregated>       AggregatedLookup;
+            [ReadOnly] public required ComponentLookup<NetGeometryData> NetGeometryDataLookup;
             [ReadOnly] public required Entity                            NetPrefabEntity;
             [ReadOnly] public required Entity                            NetLanePrefabEntity;
 
@@ -43,8 +44,8 @@
             public static float2 ElevatedThreshold = new(11f, 11f);
 
             public void Execute() {
-                var signedDistance = Config.SignedHorizontalOffset;
-                var verticalOffset = Config.SignedVerticalOffset;
+                var signedDistance = Config.HorizontalOffset;
+                var verticalOffset = Config.VerticalOffset;
                 var verticalShift  = new float3(0f, verticalOffset, 0f);
                 var edgeCount      = CurrentPathEdges.Length;
 
@@ -52,8 +53,9 @@
                     return;
                 }
 
-                // --- Phase 1: Collect path-ordered edge state ---
-                var edges = new NativeArray<EdgeConfig>(edgeCount, Allocator.Temp);
+                // --- Phase 1: Collect path-ordered edge state and per-edge half-widths ---
+                var edges      = new NativeArray<EdgeConfig>(edgeCount, Allocator.Temp);
+                var halfWidths = new NativeArray<float>(edgeCount, Allocator.Temp);
 
                 for (var i = 0; i < edgeCount; i++) {
                     var edgeEntity = CurrentPathEdges[i];
@@ -76,6 +78,13 @@
                         Bezier          = bezier,
                         Length          = MathUtils.Length(bezier)
                     };
+
+                    var halfWidth = 0f;
+                    if (PrefabRefLookup.TryGetComponent(edgeEntity, out var prefabRef) &&
+                        NetGeometryDataLookup.TryGetComponent(prefabRef.m_Prefab, out var netGeometry)) {
+                        halfWidth = netGeometry.m_DefaultWidth * 0.5f;
+                    }
+                    halfWidths[i] = halfWidth;
                 }
 
                 // --- Phase 2: Compute offset node positions with miter at interior nodes ---
@@ -96,18 +105,22 @@
                     float3 offset;
 
                     if (hasPrev && hasNext) {
-                        // Interior node: miter from both adjacent edge tangents
+                        var prevEffective = signedDistance + GetOriginShift(halfWidths[i - 1]);
+                        var nextEffective = signedDistance + GetOriginShift(halfWidths[i]);
+                        var effectiveDistance = (prevEffective + nextEffective) * 0.5f;
                         var prevBezier   = edges[i - 1].Bezier;
                         var nextBezier   = edges[i].Bezier;
                         var incomingPerp = GetPerpendicularOffset(prevBezier.c, prevBezier.d, 1f);
                         var outgoingPerp = GetPerpendicularOffset(nextBezier.a, nextBezier.b, 1f);
-                        offset = ComputeMiterOffset(incomingPerp, outgoingPerp, signedDistance);
+                        offset = ComputeMiterOffset(incomingPerp, outgoingPerp, effectiveDistance);
                     } else if (hasPrev) {
+                        var effectiveDistance = signedDistance + GetOriginShift(halfWidths[i - 1]);
                         var prevBezier = edges[i - 1].Bezier;
-                        offset = GetPerpendicularOffset(prevBezier.c, prevBezier.d, signedDistance);
+                        offset = GetPerpendicularOffset(prevBezier.c, prevBezier.d, effectiveDistance);
                     } else if (hasNext) {
+                        var effectiveDistance = signedDistance + GetOriginShift(halfWidths[i]);
                         var nextBezier = edges[i].Bezier;
-                        offset = GetPerpendicularOffset(nextBezier.a, nextBezier.b, signedDistance);
+                        offset = GetPerpendicularOffset(nextBezier.a, nextBezier.b, effectiveDistance);
                     } else {
                         offset = float3.zero;
                     }
@@ -154,9 +167,9 @@
 
                     var elevation = new float2(0f);
 
-                    if (Config.SignedVerticalOffset >= 0) {
+                    if (Config.VerticalOffset >= 0) {
                         elevation = ElevatedThreshold;
-                    } else if (Config.SignedVerticalOffset < 0) {
+                    } else if (Config.VerticalOffset < 0) {
                         elevation = TunnelThreshold;
                     }
 
@@ -187,7 +200,16 @@
                 }
 
                 edges.Dispose();
+                halfWidths.Dispose();
                 cachedNodePositions.Dispose();
+            }
+
+            private float GetOriginShift(float halfWidth) {
+                switch (Config.Origin) {
+                    case ParallelOrigin.LeftEdge:  return halfWidth;
+                    case ParallelOrigin.RightEdge: return -halfWidth;
+                    default:                       return 0f;
+                }
             }
 
             /// <summary>

@@ -27,11 +27,10 @@
             }
 
             var jobConfig = new ParallelJobConfig {
-                HorizontalOffset    = HorizontalOffset.Value,
-                VerticalOffset      = VerticalOffset.Value,
-                HorizontalDirection = HorizontalDirection.Value,
-                VerticalDirection   = VerticalDirection.Value,
-                ReverseDirection    = ReverseDirection.Value,
+                HorizontalOffset = HorizontalOffset.Value,
+                VerticalOffset   = VerticalOffset.Value,
+                ReverseDirection = ReverseDirection.Value,
+                Origin           = Origin.Value,
             };
 
             var jobHandle = new CreateDefinitionsJob {
@@ -49,6 +48,7 @@
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
                 ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 AggregatedLookup       = SystemAPI.GetComponentLookup<Aggregated>(true),
+                NetGeometryDataLookup  = SystemAPI.GetComponentLookup<NetGeometryData>(true),
                 ECB                    = m_Barrier.CreateCommandBuffer()
             }.Schedule(inputDeps);
             m_Barrier.AddJobHandleForProducer(jobHandle);

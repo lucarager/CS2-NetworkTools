@@ -5,9 +5,8 @@ import { TwoWayBinding } from "utils/bidirectionalBinding";
 export enum ConnectMode { None = 0, SimpleCurve = 1, ComplexCurve = 2, Loop = 3 }
 export enum GenerateMode { None = 0, Grid = 1, Circle = 2 }
 export enum ParallelDirection { Same = 0, Reverse = 1 }
-export enum ParallelSide { Left = 0, Right = 1 }
+export enum ParallelOrigin { LeftEdge = 0, Center = 1, RightEdge = 2 }
 export enum ShapeTransformTemplate { Preserve = 0, SlopeLinear = 1, SlopeEaseInOut = 2, SlopeArch = 3, CurveStraighten = 4, CurveSmooth = 5 }
-export enum VerticalSide { Up = 0, Down = 1 }
 
 export const PARAM_KEYS = {
     connect: {
@@ -41,9 +40,8 @@ export const PARAM_KEYS = {
         netPrefab: "parallel.netPrefab",
         horizontalOffset: "parallel.horizontalOffset",
         verticalOffset: "parallel.verticalOffset",
-        horizontalDirection: "parallel.horizontalDirection",
-        verticalDirection: "parallel.verticalDirection",
         reverseDirection: "parallel.reverseDirection",
+        origin: "parallel.origin",
     },
     roadShape: {
         template: "roadShape.template",
@@ -80,11 +78,10 @@ export const PARAM_META = {
     "generate.altPrefabZ": { type: "bool", default: false, modes: 1, label: "NetworkTools.UI.Generate.AltPrefabZ" },
     "generate.circleRadius": { type: "float", default: 60, min: 4, max: 240, fractionDigits: 0, modes: 2, label: "NetworkTools.UI.Generate.Radius" },
     "parallel.netPrefab": { type: "netPrefab", modes: 0 },
-    "parallel.horizontalOffset": { type: "float", default: 20, min: 0, max: 80, fractionDigits: 0, modes: 0, label: "NetworkTools.UI.Parallel.HorizontalOffset" },
-    "parallel.verticalOffset": { type: "float", default: 0, min: 0, max: 80, fractionDigits: 0, modes: 0, label: "NetworkTools.UI.Parallel.VerticalOffset" },
-    "parallel.horizontalDirection": { type: "enum", enumType: "ParallelSide", default: 1, modes: 0, label: "NetworkTools.UI.Parallel.Side" },
-    "parallel.verticalDirection": { type: "enum", enumType: "VerticalSide", default: 0, modes: 0, label: "NetworkTools.UI.Parallel.VerticalDirection" },
+    "parallel.horizontalOffset": { type: "float", default: 20, min: -80, max: 80, fractionDigits: 0, modes: 0, label: "NetworkTools.UI.Parallel.HorizontalOffset" },
+    "parallel.verticalOffset": { type: "float", default: 0, min: -80, max: 80, fractionDigits: 0, modes: 0, label: "NetworkTools.UI.Parallel.VerticalOffset" },
     "parallel.reverseDirection": { type: "enum", enumType: "ParallelDirection", default: 0, modes: 0, label: "NetworkTools.UI.Parallel.Direction" },
+    "parallel.origin": { type: "enum", enumType: "ParallelOrigin", default: 1, modes: 0, label: "NetworkTools.UI.Parallel.Origin" },
     "roadShape.template": { type: "enum", enumType: "ShapeTransformTemplate", default: 0, modes: 0, label: "NetworkTools.UI.Common.Mode" },
     "roadShape.easeInLength": { type: "float", default: 0.1, min: 0, max: 0.5, fractionDigits: 0, modes: 2, label: "NetworkTools.UI.Slope.StartingFlatness" },
     "roadShape.easeOutLength": { type: "float", default: 0.1, min: 0, max: 0.5, fractionDigits: 0, modes: 2, label: "NetworkTools.UI.Slope.EndingFlatness" },
@@ -108,13 +105,10 @@ export const ENUM_OPTIONS = {
         { value: ParallelDirection.Same, label: "NetworkTools.UI.Parallel.Same", icon: "coui://nt/Direction/Same.svg" },
         { value: ParallelDirection.Reverse, label: "NetworkTools.UI.Parallel.Reverse", icon: "coui://nt/Direction/Opposite.svg" },
     ],
-    ParallelSide: [
-        { value: ParallelSide.Left, label: "NetworkTools.UI.Parallel.Left", icon: "coui://nt/Side/Left.svg" },
-        { value: ParallelSide.Right, label: "NetworkTools.UI.Parallel.Right", icon: "coui://nt/Side/Right.svg" },
-    ],
-    VerticalSide: [
-        { value: VerticalSide.Up, label: "NetworkTools.UI.Parallel.Up", icon: "coui://nt/Side/Up.svg" },
-        { value: VerticalSide.Down, label: "NetworkTools.UI.Parallel.Down", icon: "coui://nt/Side/Down.svg" },
+    ParallelOrigin: [
+        { value: ParallelOrigin.LeftEdge, label: "NetworkTools.UI.Parallel.LeftEdge", icon: "coui://nt/Origin/LeftEdge.svg" },
+        { value: ParallelOrigin.Center, label: "NetworkTools.UI.Parallel.Center", icon: "coui://nt/Origin/Center.svg" },
+        { value: ParallelOrigin.RightEdge, label: "NetworkTools.UI.Parallel.RightEdge", icon: "coui://nt/Origin/RightEdge.svg" },
     ],
 } as const;
 
@@ -136,9 +130,8 @@ export const PARAM_BINDINGS = {
     parallel: {
         horizontalOffset: new TwoWayBinding<number>("parallel.horizontalOffset", 20),
         verticalOffset: new TwoWayBinding<number>("parallel.verticalOffset", 0),
-        horizontalDirection: new TwoWayBinding<number>("parallel.horizontalDirection", 1),
-        verticalDirection: new TwoWayBinding<number>("parallel.verticalDirection", 0),
         reverseDirection: new TwoWayBinding<number>("parallel.reverseDirection", 0),
+        origin: new TwoWayBinding<number>("parallel.origin", 1),
     },
     roadShape: {
         template: new TwoWayBinding<number>("roadShape.template", 0),
@@ -163,9 +156,8 @@ export const PARAM_BINDING: Record<string, TwoWayBinding<any>> = {
     "generate.circleRadius": PARAM_BINDINGS.generate.circleRadius,
     "parallel.horizontalOffset": PARAM_BINDINGS.parallel.horizontalOffset,
     "parallel.verticalOffset": PARAM_BINDINGS.parallel.verticalOffset,
-    "parallel.horizontalDirection": PARAM_BINDINGS.parallel.horizontalDirection,
-    "parallel.verticalDirection": PARAM_BINDINGS.parallel.verticalDirection,
     "parallel.reverseDirection": PARAM_BINDINGS.parallel.reverseDirection,
+    "parallel.origin": PARAM_BINDINGS.parallel.origin,
     "roadShape.template": PARAM_BINDINGS.roadShape.template,
     "roadShape.easeInLength": PARAM_BINDINGS.roadShape.easeInLength,
     "roadShape.easeOutLength": PARAM_BINDINGS.roadShape.easeOutLength,
