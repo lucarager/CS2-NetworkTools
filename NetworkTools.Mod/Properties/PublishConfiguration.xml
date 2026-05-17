@@ -80,17 +80,20 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.2.3" />
+  <ModVersion Value="1.2.4" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog>- AddNode: Switch to new rendering system. Performance boosted and now shows all nodes and edges in the network.
-- AddNode: Now shows a tooltip with segment length information
-- UI: Updated tool icons
-- UI: Removed some logging from the UI layer
-- L10n: Added String for circle radius</ChangeLog>
+  <ChangeLog>- AddNode: Updated visuals of the overlay renderer
+- AddNode: Tooltips now have correct icon and values are rounded
+- Generate: Takes asset widths into account. Spacing is now edge-to-edge, not center-to-center. Parallel tool will get this improvement in a future update  
+- Generate: Allow 0 spacing for edge-to-edge generation
+- Curve Tool: Shows smooth mode as coming soon
+- Curve Tool: Updated language for clarity
+- Fix: Fixed a bug where some tools were making unecessary updates
+- Fix: Minor enhancements to code internals</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
