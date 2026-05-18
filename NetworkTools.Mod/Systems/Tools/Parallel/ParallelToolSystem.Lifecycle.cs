@@ -51,7 +51,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
 
             // Reset internal state
             Phase = OperationPhase.Idle;
-
+            base.requireNetArrows = true;
             ElevationBoundParameter = VerticalOffset;
 
             // Initialize selection state (makes all nodes eligible)
@@ -61,6 +61,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
         /// <inheritdoc />
         protected override void OnStopRunning() {
             ElevationBoundParameter = null;
+            base.requireNetArrows = false;
 
             base.OnStopRunning();
 

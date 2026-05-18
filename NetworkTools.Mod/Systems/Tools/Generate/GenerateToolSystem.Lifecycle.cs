@@ -61,6 +61,8 @@ namespace NetworkTools.Systems.Tools.Generate {
 
             ElevationBoundParameter = Elevation;
 
+            base.requireNetArrows = true;
+
             ResetToIdle();
         }
 
@@ -68,7 +70,10 @@ namespace NetworkTools.Systems.Tools.Generate {
         protected override void OnStopRunning() {
             ElevationBoundParameter = null;
 
+            base.requireNetArrows = false;
+
             base.OnStopRunning();
+
 
             ClearSelectionState();
         }

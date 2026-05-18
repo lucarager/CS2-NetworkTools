@@ -199,6 +199,7 @@ namespace NetworkTools.Systems.Tools.Connect {
             // Reset internal state
             m_LastHitPosition = default;
             Phase             = OperationPhase.Idle;
+            base.requireNetArrows = true;
 
             // Initialize selection state (makes all nodes eligible)
             ResetToIdle();
@@ -206,6 +207,8 @@ namespace NetworkTools.Systems.Tools.Connect {
 
         protected override void OnStopRunning() {
             base.OnStopRunning();
+
+            base.requireNetArrows = false;
 
             // Clear selection state
             ClearSelectionState();
