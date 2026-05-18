@@ -63,6 +63,12 @@ namespace NetworkTools.Systems.Tools {
         protected float3 m_HandleMouseDownPosition;
 
         /// <summary>
+        ///     Angular offset between the mouse's initial position on the circle
+        ///     and the handle's angle at drag start, so dragging is relative.
+        /// </summary>
+        private float m_RotationDragOffset;
+
+        /// <summary>
         ///     Entity query for all handle entities.
         /// </summary>
         protected EntityQuery m_HandleQuery;
@@ -938,12 +944,10 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Computes a rotation handle's new angle from the current mouse position
-        ///     projected onto the rotation's plane.
+        ///     Computes the raw angle of the current mouse position on the rotation plane,
+        ///     without applying any offset. Used to capture the initial grab point.
         /// </summary>
-        /// <param name="handleEntity">The rotation handle entity being dragged.</param>
-        /// <returns>The newly computed angle in radians, or the current angle if projection fails.</returns>
-        private float ComputeRotationHandleAngle(Entity handleEntity) {
+        private float ComputeRawRotationAngle(Entity handleEntity) {
             var center   = EntityManager.GetComponentData<NT_HandlePosition>(handleEntity).Position;
             var rotation = EntityManager.GetComponentData<NT_HandleRotation>(handleEntity);
 
@@ -967,7 +971,23 @@ namespace NetworkTools.Systems.Tools {
             var perpendicular = math.cross(rotation.Normal, rotation.ReferenceDirection);
             var x             = math.dot(toHit, rotation.ReferenceDirection);
             var y             = math.dot(toHit, perpendicular);
-            var newAngle      = math.atan2(y, x);
+
+            return math.atan2(y, x);
+        }
+
+        /// <summary>
+        ///     Computes a rotation handle's new angle from the current mouse position,
+        ///     applying the drag offset so rotation is relative to the grab point.
+        /// </summary>
+        private float ComputeRotationHandleAngle(Entity handleEntity) {
+            var rotation = EntityManager.GetComponentData<NT_HandleRotation>(handleEntity);
+            var rawAngle = ComputeRawRotationAngle(handleEntity);
+
+            if (math.abs(rawAngle - rotation.Angle) < 0.00001f) {
+                return rotation.Angle;
+            }
+
+            var newAngle = rawAngle - m_RotationDragOffset;
 
             rotation.Angle = newAngle;
             EntityManager.SetComponentData(handleEntity, rotation);
@@ -1212,6 +1232,14 @@ namespace NetworkTools.Systems.Tools {
                     }
 
                     EntityManager.AddComponentData(m_DraggedHandle, NT_Selected.DefaultNode);
+
+                    // For rotation handles, capture the offset between where the user
+                    // clicked and the handle's current angle so dragging is relative.
+                    if (EntityManager.HasComponent<NT_HandleRotation>(m_DraggedHandle)) {
+                        var currentAngle = EntityManager.GetComponentData<NT_HandleRotation>(m_DraggedHandle).Angle;
+                        var mouseAngle   = ComputeRawRotationAngle(m_DraggedHandle);
+                        m_RotationDragOffset = mouseAngle - currentAngle;
+                    }
 
                     OnHandleDragStart(m_DraggedHandle);
                     return true;
