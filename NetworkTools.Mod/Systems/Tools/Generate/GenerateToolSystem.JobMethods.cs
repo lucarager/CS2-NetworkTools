@@ -24,6 +24,8 @@ namespace NetworkTools.Systems.Tools.Generate {
                 GridXNum       = GridXNum.Value,
                 GridZNum       = GridZNum.Value,
                 CircleRadius   = CircleRadius.Value,
+                OvalRadiusX    = OvalRadiusX.Value,
+                OvalRadiusZ    = OvalRadiusZ.Value,
                 Elevation      = Elevation.Value,
             };
         }

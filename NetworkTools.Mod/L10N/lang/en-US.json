@@ -138,5 +138,9 @@
   "NetworkTools.UI.Generate.XCount": "X Count",
   "NetworkTools.UI.Generate.ZCount": "Z Count",
   "NetworkTools.UI.Generate.Radius": "Radius",
+  "NetworkTools.UI.Generate.Oval": "Oval",
+  "NetworkTools.UI.Generate.RadiusX": "X Radius",
+  "NetworkTools.UI.Generate.RadiusZ": "Z Radius",
+  "NetworkTools.UI.Generate.Elevation": "Elevation",
   "NetworkTools.UI.Generate.Apply": "Generate"
 }

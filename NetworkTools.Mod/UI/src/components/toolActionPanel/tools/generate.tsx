@@ -35,6 +35,13 @@ export const GenerateControls: React.FC = () => {
                 {activeGenerateMode === GenerateMode.Circle && (
                     <ParameterField paramKey="generate.circleRadius" />
                 )}
+                {activeGenerateMode === GenerateMode.Oval && (
+                    <>
+                        <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
+                        <ParameterField paramKey="generate.ovalRadiusX" />
+                        <ParameterField paramKey="generate.ovalRadiusZ" />
+                    </>
+                )}
             </div>
 
             {/* Apply Button */}

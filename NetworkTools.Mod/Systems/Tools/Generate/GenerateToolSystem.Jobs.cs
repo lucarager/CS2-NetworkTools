@@ -57,6 +57,9 @@ namespace NetworkTools.Systems.Tools.Generate {
                     case GenerateMode.Circle:
                         new CircleGenerator().Generate(Config, netWidth, ref curves);
                         break;
+                    case GenerateMode.Oval:
+                        new OvalGenerator().Generate(Config, netWidth, ref curves);
+                        break;
                 }
 
                 // 3. Output

@@ -3,7 +3,7 @@
 import { TwoWayBinding } from "utils/bidirectionalBinding";
 
 export enum ConnectMode { None = 0, SimpleCurve = 1, ComplexCurve = 2, Loop = 3 }
-export enum GenerateMode { None = 0, Grid = 1, Circle = 2 }
+export enum GenerateMode { None = 0, Grid = 1, Circle = 2, Oval = 4 }
 export enum ParallelDirection { Same = 0, Reverse = 1 }
 export enum ParallelOrigin { LeftEdge = 0, Center = 1, RightEdge = 2 }
 export enum ShapeTransformTemplate { Preserve = 0, SlopeLinear = 1, SlopeEaseInOut = 2, SlopeArch = 3, CurveStraighten = 4, CurveSmooth = 5 }
@@ -35,6 +35,8 @@ export const PARAM_KEYS = {
         altPrefabX: "generate.altPrefabX",
         altPrefabZ: "generate.altPrefabZ",
         circleRadius: "generate.circleRadius",
+        ovalRadiusX: "generate.ovalRadiusX",
+        ovalRadiusZ: "generate.ovalRadiusZ",
         elevation: "generate.elevation",
     },
     parallel: {
@@ -67,9 +69,9 @@ export const PARAM_META = {
     "connect.curveEndControlPointPosition": { type: "float3", modes: 3 },
     "connect.curveEndPointPosition": { type: "float3", modes: 3 },
     "connect.loopControlPointPosition": { type: "float3", modes: 3 },
-    "generate.netPrefab": { type: "netPrefab", modes: 3 },
-    "generate.position": { type: "float3", modes: 3 },
-    "generate.rotation": { type: "float3", modes: 1 },
+    "generate.netPrefab": { type: "netPrefab", modes: 7 },
+    "generate.position": { type: "float3", modes: 7 },
+    "generate.rotation": { type: "float3", modes: 5 },
     "generate.mode": { type: "enum", enumType: "GenerateMode", default: 1, modes: 0, label: "NetworkTools.UI.Common.Mode" },
     "generate.gridXSpacing": { type: "float", default: 60, min: 0, max: 240, fractionDigits: 0, modes: 1, label: "NetworkTools.UI.Generate.XSpacing" },
     "generate.gridZSpacing": { type: "float", default: 60, min: 0, max: 240, fractionDigits: 0, modes: 1, label: "NetworkTools.UI.Generate.ZSpacing" },
@@ -78,7 +80,9 @@ export const PARAM_META = {
     "generate.altPrefabX": { type: "bool", default: false, modes: 1, label: "NetworkTools.UI.Generate.AltPrefabX" },
     "generate.altPrefabZ": { type: "bool", default: false, modes: 1, label: "NetworkTools.UI.Generate.AltPrefabZ" },
     "generate.circleRadius": { type: "float", default: 60, min: 4, max: 240, fractionDigits: 0, modes: 2, label: "NetworkTools.UI.Generate.Radius" },
-    "generate.elevation": { type: "float", default: 0, min: -100, max: 100, fractionDigits: 0, modes: 3, label: "NetworkTools.UI.Generate.Elevation" },
+    "generate.ovalRadiusX": { type: "float", default: 80, min: 4, max: 240, fractionDigits: 0, modes: 4, label: "NetworkTools.UI.Generate.RadiusX" },
+    "generate.ovalRadiusZ": { type: "float", default: 40, min: 4, max: 240, fractionDigits: 0, modes: 4, label: "NetworkTools.UI.Generate.RadiusZ" },
+    "generate.elevation": { type: "float", default: 0, min: -100, max: 100, fractionDigits: 0, modes: 7, label: "NetworkTools.UI.Generate.Elevation" },
     "parallel.netPrefab": { type: "netPrefab", modes: 0 },
     "parallel.horizontalOffset": { type: "float", default: 20, min: -80, max: 80, fractionDigits: 0, modes: 0, label: "NetworkTools.UI.Parallel.HorizontalOffset" },
     "parallel.verticalOffset": { type: "float", default: 0, min: -80, max: 80, fractionDigits: 0, modes: 0, label: "NetworkTools.UI.Parallel.VerticalOffset" },
@@ -102,6 +106,7 @@ export const ENUM_OPTIONS = {
     GenerateMode: [
         { value: GenerateMode.Grid, label: "NetworkTools.UI.Generate.Grid", icon: "coui://nt/Modes/GenerateGrid.svg" },
         { value: GenerateMode.Circle, label: "NetworkTools.UI.Generate.Circle", icon: "coui://nt/Modes/GenerateCircle.svg" },
+        { value: GenerateMode.Oval, label: "NetworkTools.UI.Generate.Oval", icon: "coui://nt/Modes/GenerateOval.svg" },
     ],
     ParallelDirection: [
         { value: ParallelDirection.Same, label: "NetworkTools.UI.Parallel.Same", icon: "coui://nt/Direction/Same.svg" },
@@ -128,6 +133,8 @@ export const PARAM_BINDINGS = {
         altPrefabX: new TwoWayBinding<boolean>("generate.altPrefabX", false),
         altPrefabZ: new TwoWayBinding<boolean>("generate.altPrefabZ", false),
         circleRadius: new TwoWayBinding<number>("generate.circleRadius", 60),
+        ovalRadiusX: new TwoWayBinding<number>("generate.ovalRadiusX", 80),
+        ovalRadiusZ: new TwoWayBinding<number>("generate.ovalRadiusZ", 40),
         elevation: new TwoWayBinding<number>("generate.elevation", 0),
     },
     parallel: {
@@ -157,6 +164,8 @@ export const PARAM_BINDING: Record<string, TwoWayBinding<any>> = {
     "generate.altPrefabX": PARAM_BINDINGS.generate.altPrefabX,
     "generate.altPrefabZ": PARAM_BINDINGS.generate.altPrefabZ,
     "generate.circleRadius": PARAM_BINDINGS.generate.circleRadius,
+    "generate.ovalRadiusX": PARAM_BINDINGS.generate.ovalRadiusX,
+    "generate.ovalRadiusZ": PARAM_BINDINGS.generate.ovalRadiusZ,
     "generate.elevation": PARAM_BINDINGS.generate.elevation,
     "parallel.horizontalOffset": PARAM_BINDINGS.parallel.horizontalOffset,
     "parallel.verticalOffset": PARAM_BINDINGS.parallel.verticalOffset,

@@ -12,5 +12,8 @@ namespace NetworkTools.Systems.Tools.Generate {
 
         [EnumOption("NetworkTools.UI.Generate.Circle", "coui://nt/Modes/GenerateCircle.svg")]
         Circle = 2,
+
+        [EnumOption("NetworkTools.UI.Generate.Oval", "coui://nt/Modes/GenerateOval.svg")]
+        Oval = 4,
     }
 }
