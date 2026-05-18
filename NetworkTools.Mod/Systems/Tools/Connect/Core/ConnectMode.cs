@@ -5,7 +5,7 @@ namespace NetworkTools.Systems.Tools.Connect {
     ///     Defines the type of transformation to apply
     /// </summary>
     public enum ConnectMode {
-        [EnumOption("NetworkTools.UI.Connect.None", "coui://nt/Modes/Original.svg")]
+        [EnumOption("NetworkTools.UI.Connect.None", "coui://nt/Modes/Original.svg", Visible = false)]
         None = 0,
 
         [EnumOption("NetworkTools.UI.Connect.SimpleCurve", "coui://nt/Modes/ConnectSimpleCurve.svg")]
