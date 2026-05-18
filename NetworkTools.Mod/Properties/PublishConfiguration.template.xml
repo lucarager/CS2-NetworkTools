@@ -11,9 +11,9 @@
 		..inserted programmatically..
 	</LongDescription>
 	<!--Thumbnail-->
-	<Thumbnail Value="Properties/thumbnail.png" />
+	<Thumbnail Value="Assets/Thumbnail.png" />
 	<!--Screenshot, can be set multiple times-->
-	<Screenshot Value="Properties/cover.jpg" />
+	<Screenshot Value="Assets/Cover/1.jpg" />
 	<!--Tag, can be set multiple times-->
 	<Tag Value="Code Mod" />
 	<!--Link to the forum post where the mod can be discussed-->
