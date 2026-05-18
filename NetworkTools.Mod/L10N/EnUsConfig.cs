@@ -197,14 +197,12 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Slope.EndingFlatness", "Ending Flatness" },
                 { "NetworkTools.UI.Slope.ArchHeight", "Arch Height" },
                 { "NetworkTools.UI.Slope.ArchPosition", "Arch Position" },
-                { "NetworkTools.UI.Slope.ApplySlope", "Apply Slope" },
 
                 // ## Curve Tool
                 { "NetworkTools.UI.Curve.Preserve", "Preserve" },
                 { "NetworkTools.UI.Curve.StraightenCurve", "Straighten Curve" },
                 { "NetworkTools.UI.Curve.SmoothCurve", "Smooth Curve" },
                 { "NetworkTools.UI.Curve.SmoothingFactor", "Smoothing Factor" },
-                { "NetworkTools.UI.Curve.ApplyCurve", "Apply Transformation" },
 
                 // ## Connect Tool
                 { "NetworkTools.UI.Connect.None", "None" },
@@ -212,10 +210,6 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Connect.ComplexCurve", "Complex Curve" },
                 { "NetworkTools.UI.Connect.Loop", "Loop" },
                 { "NetworkTools.UI.Connect.LoopRadius", "Loop Radius" },
-                { "NetworkTools.UI.Connect.ApplyCurve", "Apply Curve" },
-
-                // ## SuperNode Tool
-                { "NetworkTools.UI.SuperNode.CreateSupernode", "Create Supernode" },
 
                 // ## Parallel Tool
                 { "NetworkTools.UI.Parallel.HorizontalOffset", "Horizontal Offset" },
@@ -227,7 +221,6 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Parallel.LeftEdge", "Left Edge" },
                 { "NetworkTools.UI.Parallel.Center", "Center" },
                 { "NetworkTools.UI.Parallel.RightEdge", "Right Edge" },
-                { "NetworkTools.UI.Parallel.CreateParallel", "Create parallel network" },
 
                 // ## Generate Tool
                 { "NetworkTools.UI.Generate.Grid", "Grid" },
@@ -243,7 +236,14 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Generate.Elevation", "Elevation" },
                 //{ "NetworkTools.UI.Generate.AltPrefabX", "Alternate Prefab X" },
                 //{ "NetworkTools.UI.Generate.AltPrefabZ", "Alternate Prefab Z" },
-                { "NetworkTools.UI.Generate.Apply", "Generate" },
+
+                // ## Apply Buttons
+                { "NetworkTools.UI.Apply.ShapeSlope", "Apply Slope" },
+                { "NetworkTools.UI.Apply.ShapeCurve", "Apply Transformation" },
+                { "NetworkTools.UI.Apply.Connect", "Apply Curve" },
+                { "NetworkTools.UI.Apply.SuperNode", "Create Supernode" },
+                { "NetworkTools.UI.Apply.Parallel", "Create parallel network" },
+                { "NetworkTools.UI.Apply.Generate", "Generate" },
             };
         }
 

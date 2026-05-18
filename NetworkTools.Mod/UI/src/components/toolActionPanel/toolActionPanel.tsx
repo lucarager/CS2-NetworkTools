@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import styles from "./toolActionPanel.module.scss";
 import panels from "../shared/panels.module.scss";
-import { GAME_BINDINGS } from "gameBindings";
+import { GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
 import { useValue } from "cs2/api";
+import { Button } from "cs2/ui";
 import { ShapeSlopeControls } from "./tools/shapeSlope";
 import { ShapeCurveControls } from "./tools/shapeCurve";
 import { ConnectControls } from "./tools/connect";
@@ -16,26 +17,33 @@ import { GenerateControls } from "./tools/generate";
 import { PrefabSearchProvider, usePrefabSearch } from "./prefabSearchPanel/prefabSearchContext";
 import { PrefabSearchPanel } from "./prefabSearchPanel/prefabSearchPanel";
 
-// Registry of tool components mapped by tool ID
-const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
-    ShapeSlope: ShapeSlopeControls,
-    ShapeCurve: ShapeCurveControls,
-    Connect: ConnectControls,
-    SuperNode: SuperNodeControls,
-    Parallel: ParallelControls,
-    Generate: GenerateControls,
+interface ToolConfig {
+    component: React.ComponentType<any>;
+    applyMinEntities?: number;
+}
+
+const TOOL_COMPONENTS: Record<string, ToolConfig> = {
+    ShapeSlope: { component: ShapeSlopeControls, applyMinEntities: 2 },
+    ShapeCurve: { component: ShapeCurveControls, applyMinEntities: 2 },
+    Connect: { component: ConnectControls, applyMinEntities: 2 },
+    SuperNode: { component: SuperNodeControls, applyMinEntities: 2 },
+    Parallel: { component: ParallelControls, applyMinEntities: 2 },
+    Generate: { component: GenerateControls, applyMinEntities: 0 },
 };
 
 const ToolActionPanelInner = () => {
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
     const toolUIDataBinding = useValue(GAME_BINDINGS.UI_DATA.binding);
+    const selectedEntities = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
     const activeTool = toolUIDataBinding.find((t) => t.PrefabId === selectedBinding);
     const { translate } = useLocalization();
     const [showTutorial, setShowTutorial] = useState(false);
+    const [applyDisabled, setApplyDisabled] = useState(false);
     const { isOpen: prefabSearchOpen, close: closePrefabSearch } = usePrefabSearch();
 
     useEffect(() => {
         setShowTutorial(false);
+        setApplyDisabled(false);
         closePrefabSearch();
     }, [closePrefabSearch, selectedBinding]);
 
@@ -43,7 +51,9 @@ const ToolActionPanelInner = () => {
         return <div className={styles.wrapper}></div>;
     }
 
-    const ToolComponent = TOOL_COMPONENTS[activeTool.Id];
+    const toolConfig = TOOL_COMPONENTS[activeTool.Id];
+    const ToolComponent = toolConfig?.component;
+    const applyMinEntities = toolConfig?.applyMinEntities;
 
     return (
         <div className={styles.wrapper}>
@@ -65,12 +75,44 @@ const ToolActionPanelInner = () => {
                             <VC.TintedIcon src={"Media/Glyphs/Info.svg"} className={styles.icon} />
                     </Button> */}
                 </div>
-                <div className={styles.col}>
-                    <ViewSelection />
-                    <TargetSelection />
-                    <SnapSelection />
+                <div className={panels.nt_panel__content}>
+                    <div className={styles.section}>
+                        <div className={styles.section__content}>
+                            <ViewSelection />
+                            <TargetSelection />
+                            <SnapSelection />
+                        </div>
+                    </div>
+                    {ToolComponent && (
+                        <ToolComponent
+                            toolId={selectedBinding}
+                            onApplyDisabledChange={setApplyDisabled}
+                        />
+                    )}
+                    {applyMinEntities !== undefined && (
+                        <div className={styles.row}>
+                            <div className={styles.actions}>
+                                {applyMinEntities > 0 &&
+                                selectedEntities.length < applyMinEntities ? (
+                                    <Button
+                                        variant="primary"
+                                        className={styles.applyButton}
+                                        disabled={true}>
+                                        {translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        variant="primary"
+                                        className={styles.applyButton}
+                                        disabled={applyDisabled}
+                                        onSelect={() => GAME_TRIGGERS.REQUEST_APPLY()}>
+                                        {translate(`NetworkTools.UI.Apply.${activeTool.Id}`)}
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
-                {ToolComponent && <ToolComponent toolId={selectedBinding} />}
             </div>
             {showTutorial && (
                 <div className={[panels.nt_panel, styles.tutorialPanel].join(" ")}>

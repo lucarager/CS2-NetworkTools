@@ -1,36 +1,24 @@
 namespace NetworkTools.Systems.Tools.RoadShape {
-    /// <summary>
-    ///     Defines the type of transformation to apply.
-    /// </summary>
+    using NetworkTools.Systems.Tools.Parameters;
+
     public enum ShapeTransformTemplate {
-        /// <summary>
-        ///     Keep existing positions (no-op).
-        /// </summary>
+        [EnumOption("NetworkTools.UI.Slope.Preserve", "coui://nt/Modes/Original.svg", Group = "Slope", Visible = false)]
+        [EnumOption("NetworkTools.UI.Curve.Preserve", "coui://nt/Modes/Original.svg", Group = "Curve", Visible = false)]
         Preserve = 0,
 
-        /// <summary>
-        ///     Linear slope interpolation - constant slope throughout the path.
-        /// </summary>
+        [EnumOption("NetworkTools.UI.Slope.ConstantSlope", "coui://nt/Modes/SlopeLinear.svg", Group = "Slope")]
         SlopeLinear = 1,
 
-        /// <summary>
-        ///     Ease-in-out slope - smooth transitions at start and end with steeper middle section.
-        /// </summary>
+        [EnumOption("NetworkTools.UI.Slope.EaseInOutSlope", "coui://nt/Modes/SlopeEaseInOut.svg", Group = "Slope")]
         SlopeEaseInOut = 2,
 
-        /// <summary>
-        ///     Arch slope - creates an arch (hill) or dip (valley) along the path.
-        /// </summary>
+        [EnumOption("NetworkTools.UI.Slope.Arch", "coui://nt/Modes/SlopeArch.svg", Group = "Slope", Visible = false)]
         SlopeArch = 3,
 
-        /// <summary>
-        ///     Straight curve - Align all nodes along a straight line between start/end.
-        /// </summary>
+        [EnumOption("NetworkTools.UI.Curve.StraightenCurve", "coui://nt/Modes/CurveStraighten.svg", Group = "Curve")]
         CurveStraighten = 4,
 
-        /// <summary>
-        ///     Smooth curve - Fit nodes to a smooth Bézier curve.
-        /// </summary>
+        [EnumOption("NetworkTools.UI.Curve.SmoothCurve", "coui://nt/Modes/CurveSmooth.svg", Group = "Curve", Disabled = true)]
         CurveSmooth = 5,
     }
 }

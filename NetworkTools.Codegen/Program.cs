@@ -56,16 +56,43 @@ void ParseEnums(string source) {
         var body = m.Groups[2].Value;
 
         var members = new List<EnumMember>();
-        var memberRegex = new Regex(@"(?:\[EnumOption\(\s*""([^""]*)""\s*,\s*""([^""]*)""\s*\)\]\s*)?(\w+)\s*=\s*(-?\d+)");
+        var memberRegex = new Regex(@"((?:\[EnumOption\([^)]*\)\]\s*)*)\s*(\w+)\s*=\s*(-?\d+)");
+        var attrRegex = new Regex(@"\[EnumOption\(([^)]*)\)\]");
         foreach (Match mm in memberRegex.Matches(body)) {
-            var label = mm.Groups[1].Success ? mm.Groups[1].Value : null;
-            var icon = mm.Groups[2].Success ? mm.Groups[2].Value : null;
-            members.Add(new EnumMember(mm.Groups[3].Value, int.Parse(mm.Groups[4].Value), label, icon));
+            var attrsBlock = mm.Groups[1].Value;
+            var options = new List<EnumOptionDef>();
+            foreach (Match am in attrRegex.Matches(attrsBlock))
+                options.Add(ParseEnumOptionAttr(am.Groups[1].Value));
+            members.Add(new EnumMember(mm.Groups[2].Value, int.Parse(mm.Groups[3].Value), options));
         }
 
         if (members.Count > 0)
             enums[name] = new EnumDef(name, members);
     }
+}
+
+EnumOptionDef ParseEnumOptionAttr(string argsStr) {
+    var parts = SplitArgs(argsStr);
+    var label = StripQuotes(parts[0].Trim());
+    var icon = StripQuotes(parts[1].Trim());
+    string? group = null;
+    bool visible = true;
+    bool disabled = false;
+
+    for (int i = 2; i < parts.Count; i++) {
+        var part = parts[i].Trim();
+        var eqIdx = part.IndexOf('=');
+        if (eqIdx < 0) continue;
+        var argName = part[..eqIdx].Trim();
+        var argValue = part[(eqIdx + 1)..].Trim();
+        switch (argName) {
+            case "Group": group = StripQuotes(argValue); break;
+            case "Visible": visible = argValue.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+            case "Disabled": disabled = argValue.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+        }
+    }
+
+    return new EnumOptionDef(label, icon, group, visible, disabled);
 }
 
 // ── Parameter parsing ──────────────────────────────────────────────────────────
@@ -337,15 +364,37 @@ string EmitTypeScript() {
         .ToList();
 
     if (enumsWithOptions.Count > 0) {
+        sb.AppendLine("export interface EnumOption { readonly value: number; readonly label: string; readonly icon: string; readonly visible?: boolean; readonly disabled?: boolean }");
+        sb.AppendLine();
         sb.AppendLine("export const ENUM_OPTIONS = {");
         foreach (var def in enumsWithOptions) {
-            sb.AppendLine($"    {def.Name}: [");
-            foreach (var member in def.Members.Where(m => m.Label != null)) {
-                sb.AppendLine($"        {{ value: {def.Name}.{member.Name}, label: \"{member.Label}\", icon: \"{member.Icon}\" }},");
+            if (def.HasGroups) {
+                foreach (var group in def.Groups) {
+                    sb.AppendLine($"    \"{def.Name}.{group}\": [");
+                    foreach (var member in def.Members) {
+                        foreach (var opt in member.Options.Where(o => o.Group == group)) {
+                            sb.Append($"        {{ value: {def.Name}.{member.Name}, label: \"{opt.Label}\", icon: \"{opt.Icon}\"");
+                            if (!opt.Visible) sb.Append(", visible: false");
+                            if (opt.Disabled) sb.Append(", disabled: true");
+                            sb.AppendLine(" },");
+                        }
+                    }
+                    sb.AppendLine("    ] as readonly EnumOption[],");
+                }
+            } else {
+                sb.AppendLine($"    {def.Name}: [");
+                foreach (var member in def.Members) {
+                    foreach (var opt in member.Options) {
+                        sb.Append($"        {{ value: {def.Name}.{member.Name}, label: \"{opt.Label}\", icon: \"{opt.Icon}\"");
+                        if (!opt.Visible) sb.Append(", visible: false");
+                        if (opt.Disabled) sb.Append(", disabled: true");
+                        sb.AppendLine(" },");
+                    }
+                }
+                sb.AppendLine("    ] as readonly EnumOption[],");
             }
-            sb.AppendLine("    ],");
         }
-        sb.AppendLine("} as const;");
+        sb.AppendLine("};");
         sb.AppendLine();
     }
 
@@ -398,9 +447,15 @@ string Fmt(float v) => v == (int)v
 
 // ── Data models ────────────────────────────────────────────────────────────────
 
-record EnumMember(string Name, int Value, string? Label = null, string? Icon = null);
+record EnumOptionDef(string Label, string Icon, string? Group = null, bool Visible = true, bool Disabled = false);
+record EnumMember(string Name, int Value, List<EnumOptionDef> Options);
 record EnumDef(string Name, List<EnumMember> Members) {
-    public bool HasOptions => Members.Any(m => m.Label != null);
+    public bool HasOptions => Members.Any(m => m.Options.Count > 0);
+    public bool HasGroups => Members.Any(m => m.Options.Any(o => o.Group != null));
+    public IEnumerable<string> Groups => Members
+        .SelectMany(m => m.Options.Where(o => o.Group != null).Select(o => o.Group!))
+        .Distinct()
+        .OrderBy(g => g);
 }
 
 abstract record ParamDef(string Key, string FieldName, int Modes) {

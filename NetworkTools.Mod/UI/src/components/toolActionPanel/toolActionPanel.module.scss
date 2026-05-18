@@ -12,7 +12,7 @@
 .panel {
     margin-left: 4rem;
     animation: slideIn 0.16s ease-out forwards;
-    width: 352rem;
+    width: 370rem;
 }
 
 .divider {
@@ -37,6 +37,74 @@
     flex: 2;
 }
 
+.section {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8rem;
+    overflow: hidden;
+
+    & + .section {
+        margin-top: 8rem;
+    }
+
+    &__tabs {
+        padding: 0;
+    }
+
+    &__content {
+        padding: $panel-padding-y $panel-padding-x;
+    }
+}
+
+.tabBar {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+}
+
+.tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4rem;
+    padding: 8rem 4rem;
+    background: transparent;
+    border: none;
+    border-bottom: 2rem solid transparent;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+
+    &:hover {
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    &__active {
+        color: white;
+        border-bottom-color: $color-nt-1;
+    }
+
+    &__disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+
+    &__icon {
+        width: 24rem;
+        height: 24rem;
+    }
+
+    &__label {
+        font-size: var(--fontSizeXS);
+        line-height: 1.25em;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        text-align: center;
+        max-width: 100%;
+    }
+}
+
 .selectedEntity {
     display: flex;
     flex-direction: row;
@@ -55,7 +123,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 4rem;
+    padding: 0 4rem;
     flex: 1;
     overflow: hidden;
     background: transparent;
@@ -69,8 +137,8 @@
     }
 
     &__thumbnail {
-        width: 32rem;
-        height: 32rem;
+        width: 28rem;
+        height: 28rem;
         margin-right: 4rem;
     }
 
@@ -183,7 +251,6 @@
     align-items: center;
     justify-content: center;
     flex: 1;
-    padding: 8rem 0;
 
     & > * {
         margin: 0 4rem;
@@ -333,7 +400,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-left: 38rem;
+    margin-left: 37rem;
 
     &__tick {
         width: 1rem;

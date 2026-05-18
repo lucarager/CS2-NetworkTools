@@ -96,28 +96,41 @@ export const PARAM_META = {
     "roadShape.smoothingFactor": { type: "float", default: 0.5, min: 0, max: 1, fractionDigits: 2, modes: 5, label: "NetworkTools.UI.Curve.SmoothingFactor" },
 } as const;
 
+export interface EnumOption { readonly value: number; readonly label: string; readonly icon: string; readonly visible?: boolean; readonly disabled?: boolean }
+
 export const ENUM_OPTIONS = {
     ConnectMode: [
         { value: ConnectMode.None, label: "NetworkTools.UI.Connect.None", icon: "coui://nt/Modes/Original.svg" },
         { value: ConnectMode.SimpleCurve, label: "NetworkTools.UI.Connect.SimpleCurve", icon: "coui://nt/Modes/ConnectSimpleCurve.svg" },
         { value: ConnectMode.ComplexCurve, label: "NetworkTools.UI.Connect.ComplexCurve", icon: "coui://nt/Modes/ConnectComplexCurve.svg" },
         { value: ConnectMode.Loop, label: "NetworkTools.UI.Connect.Loop", icon: "coui://nt/Modes/ConnectLoop.svg" },
-    ],
+    ] as readonly EnumOption[],
     GenerateMode: [
         { value: GenerateMode.Grid, label: "NetworkTools.UI.Generate.Grid", icon: "coui://nt/Modes/GenerateGrid.svg" },
         { value: GenerateMode.Circle, label: "NetworkTools.UI.Generate.Circle", icon: "coui://nt/Modes/GenerateCircle.svg" },
         { value: GenerateMode.Oval, label: "NetworkTools.UI.Generate.Oval", icon: "coui://nt/Modes/GenerateOval.svg" },
-    ],
+    ] as readonly EnumOption[],
     ParallelDirection: [
         { value: ParallelDirection.Same, label: "NetworkTools.UI.Parallel.Same", icon: "coui://nt/Direction/Same.svg" },
         { value: ParallelDirection.Reverse, label: "NetworkTools.UI.Parallel.Reverse", icon: "coui://nt/Direction/Opposite.svg" },
-    ],
+    ] as readonly EnumOption[],
     ParallelOrigin: [
         { value: ParallelOrigin.LeftEdge, label: "NetworkTools.UI.Parallel.LeftEdge", icon: "coui://nt/Origin/LeftEdge.svg" },
         { value: ParallelOrigin.Center, label: "NetworkTools.UI.Parallel.Center", icon: "coui://nt/Origin/Center.svg" },
         { value: ParallelOrigin.RightEdge, label: "NetworkTools.UI.Parallel.RightEdge", icon: "coui://nt/Origin/RightEdge.svg" },
-    ],
-} as const;
+    ] as readonly EnumOption[],
+    "ShapeTransformTemplate.Curve": [
+        { value: ShapeTransformTemplate.Preserve, label: "NetworkTools.UI.Curve.Preserve", icon: "coui://nt/Modes/Original.svg", visible: false },
+        { value: ShapeTransformTemplate.CurveStraighten, label: "NetworkTools.UI.Curve.StraightenCurve", icon: "coui://nt/Modes/CurveStraighten.svg" },
+        { value: ShapeTransformTemplate.CurveSmooth, label: "NetworkTools.UI.Curve.SmoothCurve", icon: "coui://nt/Modes/CurveSmooth.svg", disabled: true },
+    ] as readonly EnumOption[],
+    "ShapeTransformTemplate.Slope": [
+        { value: ShapeTransformTemplate.Preserve, label: "NetworkTools.UI.Slope.Preserve", icon: "coui://nt/Modes/Original.svg", visible: false },
+        { value: ShapeTransformTemplate.SlopeLinear, label: "NetworkTools.UI.Slope.ConstantSlope", icon: "coui://nt/Modes/SlopeLinear.svg" },
+        { value: ShapeTransformTemplate.SlopeEaseInOut, label: "NetworkTools.UI.Slope.EaseInOutSlope", icon: "coui://nt/Modes/SlopeEaseInOut.svg" },
+        { value: ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Slope.Arch", icon: "coui://nt/Modes/SlopeArch.svg", visible: false },
+    ] as readonly EnumOption[],
+};
 
 export const PARAM_BINDINGS = {
     connect: {

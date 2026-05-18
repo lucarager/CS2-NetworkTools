@@ -4,13 +4,14 @@
 $opacityRest: 100%;
 $brighten: 10%;
 
-$iconSize: 28rem;
-$iconPadding: 6rem;
+$iconSize: 24rem;
+$iconPadding: 8rem;
+$width: 40rem;
 $barHeight: $iconSize + $iconPadding * 2;
 
 .wrapper {
     animation: slideInLeft 0.16s ease-out forwards;
-    width: 40rem;
+    width: $width;
 }
 
 .column {
@@ -52,7 +53,7 @@ $barHeight: $iconSize + $iconPadding * 2;
 
 .column .actionButton {
     margin: 0;
-    padding: $iconPadding;
+    padding: $iconPadding 0;
     display: flex;
     flex-direction: row;
     background: transparent;
