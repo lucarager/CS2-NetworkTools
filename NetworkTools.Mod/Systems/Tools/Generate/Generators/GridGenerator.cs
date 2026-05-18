@@ -9,8 +9,6 @@ namespace NetworkTools.Systems.Tools.Generate {
     using Unity.Mathematics;
 
     public struct GridGenerator : IGenerator {
-        private const float PreviewDistance = 32f;
-
         public void InitializeConfig(ref GenerateJobConfig config) {
         }
 
@@ -20,7 +18,8 @@ namespace NetworkTools.Systems.Tools.Generate {
             ref NativeList<EdgeConfig> curves) {
             // User-facing spacing is edge-to-edge; add the prefab width to get
             // the centerline-to-centerline distance the geometry needs.
-            GenerateGrid(config.Position,
+            var yOffset = config.Elevation + config.BaselineElevation;
+            GenerateGrid(config.Position + new float3(0, yOffset, 0),
                          config.StartDirection,
                          config.GridXSpacing + netWidth,
                          config.GridZSpacing + netWidth,
@@ -58,27 +57,39 @@ namespace NetworkTools.Systems.Tools.Generate {
                     var isFirstCol = col == 0;
                     var isLastCol  = col == xNum - 1;
 
-                    // X-direction edge: (row, col) → (row, col+1)
+                    // X-direction edge: odd rows are reversed so one-way roads alternate
                     if (!isLastCol) {
-                        var bezier = NT_EdgeUtils.GenerateStraightEdge(nodes[row * xNum + col],
-                                                                       nodes[row * xNum + col + 1]);
+                        var reverse = row % 2 != 0;
+                        var idxA    = row * xNum + col;
+                        var idxB    = row * xNum + col + 1;
+                        var flagsA  = GridNodeFlags(isFirstRow, isLastRow, isFirstCol, false);
+                        var flagsB  = GridNodeFlags(isFirstRow, isLastRow, false,      col + 1 == xNum - 1);
+                        var bezier  = NT_EdgeUtils.GenerateStraightEdge(
+                            nodes[reverse ? idxB : idxA],
+                            nodes[reverse ? idxA : idxB]);
                         curves.Add(new EdgeConfig {
                             Bezier         = bezier,
                             Length         = MathUtils.Length(bezier),
-                            StartNodeFlags = GridNodeFlags(isFirstRow, isLastRow, isFirstCol, false),
-                            EndNodeFlags   = GridNodeFlags(isFirstRow, isLastRow, false,      col + 1 == xNum - 1)
+                            StartNodeFlags = reverse ? flagsB : flagsA,
+                            EndNodeFlags   = reverse ? flagsA : flagsB
                         });
                     }
 
-                    // Z-direction edge: (row, col) → (row+1, col)
+                    // Z-direction edge: odd columns are reversed so one-way roads alternate
                     if (!isLastRow) {
-                        var bezier = NT_EdgeUtils.GenerateStraightEdge(nodes[row       * xNum + col],
-                                                                       nodes[(row + 1) * xNum + col]);
+                        var reverse = col % 2 == 0;
+                        var idxA    = row * xNum + col;
+                        var idxB    = (row + 1) * xNum + col;
+                        var flagsA  = GridNodeFlags(isFirstRow, false,               isFirstCol, isLastCol);
+                        var flagsB  = GridNodeFlags(false,      row + 1 == zNum - 1, isFirstCol, isLastCol);
+                        var bezier  = NT_EdgeUtils.GenerateStraightEdge(
+                            nodes[reverse ? idxB : idxA],
+                            nodes[reverse ? idxA : idxB]);
                         curves.Add(new EdgeConfig {
                             Bezier         = bezier,
                             Length         = MathUtils.Length(bezier),
-                            StartNodeFlags = GridNodeFlags(isFirstRow, false,               isFirstCol, isLastCol),
-                            EndNodeFlags   = GridNodeFlags(false,      row + 1 == zNum - 1, isFirstCol, isLastCol)
+                            StartNodeFlags = reverse ? flagsB : flagsA,
+                            EndNodeFlags   = reverse ? flagsA : flagsB
                         });
                     }
                 }
@@ -95,7 +106,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             }
 
             if (isBoundary) {
-                return CoursePosFlags.FreeHeight;
+                return CoursePosFlags.IsRight;
             }
 
             return CoursePosFlags.IsParallel;
