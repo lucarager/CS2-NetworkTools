@@ -35,6 +35,7 @@ export const PARAM_KEYS = {
         altPrefabX: "generate.altPrefabX",
         altPrefabZ: "generate.altPrefabZ",
         circleRadius: "generate.circleRadius",
+        elevation: "generate.elevation",
     },
     parallel: {
         netPrefab: "parallel.netPrefab",
@@ -77,6 +78,7 @@ export const PARAM_META = {
     "generate.altPrefabX": { type: "bool", default: false, modes: 1, label: "NetworkTools.UI.Generate.AltPrefabX" },
     "generate.altPrefabZ": { type: "bool", default: false, modes: 1, label: "NetworkTools.UI.Generate.AltPrefabZ" },
     "generate.circleRadius": { type: "float", default: 60, min: 4, max: 240, fractionDigits: 0, modes: 2, label: "NetworkTools.UI.Generate.Radius" },
+    "generate.elevation": { type: "float", default: 0, min: -100, max: 100, fractionDigits: 0, modes: 3, label: "NetworkTools.UI.Generate.Elevation" },
     "parallel.netPrefab": { type: "netPrefab", modes: 0 },
     "parallel.horizontalOffset": { type: "float", default: 20, min: -80, max: 80, fractionDigits: 0, modes: 0, label: "NetworkTools.UI.Parallel.HorizontalOffset" },
     "parallel.verticalOffset": { type: "float", default: 0, min: -80, max: 80, fractionDigits: 0, modes: 0, label: "NetworkTools.UI.Parallel.VerticalOffset" },
@@ -126,6 +128,7 @@ export const PARAM_BINDINGS = {
         altPrefabX: new TwoWayBinding<boolean>("generate.altPrefabX", false),
         altPrefabZ: new TwoWayBinding<boolean>("generate.altPrefabZ", false),
         circleRadius: new TwoWayBinding<number>("generate.circleRadius", 60),
+        elevation: new TwoWayBinding<number>("generate.elevation", 0),
     },
     parallel: {
         horizontalOffset: new TwoWayBinding<number>("parallel.horizontalOffset", 20),
@@ -154,6 +157,7 @@ export const PARAM_BINDING: Record<string, TwoWayBinding<any>> = {
     "generate.altPrefabX": PARAM_BINDINGS.generate.altPrefabX,
     "generate.altPrefabZ": PARAM_BINDINGS.generate.altPrefabZ,
     "generate.circleRadius": PARAM_BINDINGS.generate.circleRadius,
+    "generate.elevation": PARAM_BINDINGS.generate.elevation,
     "parallel.horizontalOffset": PARAM_BINDINGS.parallel.horizontalOffset,
     "parallel.verticalOffset": PARAM_BINDINGS.parallel.verticalOffset,
     "parallel.reverseDirection": PARAM_BINDINGS.parallel.reverseDirection,

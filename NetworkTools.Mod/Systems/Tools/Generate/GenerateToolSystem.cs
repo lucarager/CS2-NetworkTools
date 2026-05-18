@@ -49,6 +49,9 @@ namespace NetworkTools.Systems.Tools.Generate {
         // Circle
         public FloatParameter CircleRadius = new("generate.circleRadius", 60f, 4f, 240f, modes: (int)GenerateMode.Circle, label: "NetworkTools.UI.Generate.Radius", fractionDigits: 0);
 
+        // Elevation (controlled via PageUp/PageDown shortcuts)
+        public FloatParameter Elevation = new("generate.elevation", 0f, -100f, 100f, modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle, label: "NetworkTools.UI.Generate.Elevation", fractionDigits: 0);
+
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Mode.Value;
 

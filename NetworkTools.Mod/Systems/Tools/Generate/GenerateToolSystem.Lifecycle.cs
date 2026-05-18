@@ -59,11 +59,15 @@ namespace NetworkTools.Systems.Tools.Generate {
             Phase             = OperationPhase.Idle;
             Rotation.Value    = new float3(0, 0, 1);
 
+            ElevationBoundParameter = Elevation;
+
             ResetToIdle();
         }
 
         /// <inheritdoc />
         protected override void OnStopRunning() {
+            ElevationBoundParameter = null;
+
             base.OnStopRunning();
 
             ClearSelectionState();

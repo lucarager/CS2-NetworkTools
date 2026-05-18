@@ -16,6 +16,7 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
+    using Unity.Mathematics;
 
     /// <summary>
     ///     Represents the phase of the current transformation operation.
@@ -273,6 +274,17 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         public ViewOption SelectedViews { get; set; } = ViewOption.None;
 
+        /// <summary>
+        ///     The parameter bound to PageUp/PageDown elevation shortcuts.
+        ///     Null (default) means elevation shortcuts are disabled for this tool.
+        ///     Set in derived tool's OnStartRunning to opt in.
+        /// </summary>
+        protected FloatParameter ElevationBoundParameter { get; set; }
+
+        /// <summary>
+        ///     Step size for elevation shortcuts. Matches the game's default of 10m.
+        /// </summary>
+        protected float ElevationStep { get; set; } = 10f;
 
         public override string toolID => "NT_BaseToolSystem";
 
@@ -604,6 +616,21 @@ namespace NetworkTools.Systems.Tools {
             if (m_PreciseRotation != null) m_PreciseRotation.shouldBeEnabled = true;
         }
 
+        public override void ElevationUp() {
+            if (ElevationBoundParameter == null) return;
+            var stepped = math.floor(ElevationBoundParameter.Value / ElevationStep + 1.00001f) * ElevationStep;
+            ElevationBoundParameter.Value = math.min(stepped, ElevationBoundParameter.Max);
+        }
+
+        public override void ElevationDown() {
+            if (ElevationBoundParameter == null) return;
+            var stepped = math.ceil(ElevationBoundParameter.Value / ElevationStep - 1.00001f) * ElevationStep;
+            ElevationBoundParameter.Value = math.max(stepped, ElevationBoundParameter.Min);
+        }
+
+        public override void ElevationScroll() {
+            ElevationUp();
+        }
 
         /// <summary>
         ///     Swaps highlighting between two entities (removes from old, adds to new).

@@ -237,6 +237,7 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Generate.XCount", "X Count" },
                 { "NetworkTools.UI.Generate.ZCount", "Z Count" },
                 { "NetworkTools.UI.Generate.Radius", "Radius" },
+                { "NetworkTools.UI.Generate.Elevation", "Elevation" },
                 //{ "NetworkTools.UI.Generate.AltPrefabX", "Alternate Prefab X" },
                 //{ "NetworkTools.UI.Generate.AltPrefabZ", "Alternate Prefab Z" },
                 { "NetworkTools.UI.Generate.Apply", "Generate" },

@@ -74,47 +74,45 @@ namespace NetworkTools.Systems.Tools.Generate {
                 }
             }
 
-            private void OutputPreviewEdge(EdgeConfig curve) {
+            private void OutputPreviewEdge(EdgeConfig EC) {
                 var definitionEntity = ECB.CreateEntity();
 
                 var creationDefinition = new CreationDefinition {
                     m_Original = Entity.Null,
                     m_Prefab = NetPrefabEntity,
                     m_SubPrefab = NetLanePrefabEntity,
-                    m_Flags = CreationFlags.Construction
+                    m_Flags = Config.Elevation != 0f
+                        ? CreationFlags.SubElevation
+                        : CreationFlags.Construction
                 };
 
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
-                var startNodeFlags = CoursePosFlags.IsRight | CoursePosFlags.FreeHeight;
-                var endNodeFlags = CoursePosFlags.IsRight | CoursePosFlags.FreeHeight;
-                var startElevation = float2.zero;
-                var endElevation = float2.zero;
-                var courseElevation = float2.zero;
+                var elevation = new float2(Config.Elevation);
 
                 var netCourse = new NetCourse {
-                    m_Curve = curve.Bezier,
-                    m_Length = curve.Length,
+                    m_Curve = EC.Bezier,
+                    m_Length = EC.Length,
                     m_FixedIndex = -1,
-                    m_Elevation = courseElevation,
+                    m_Elevation = elevation,
                     m_StartPosition = new CoursePos {
-                        m_Entity = curve.StartNodeEntity,
-                        m_Position = curve.Bezier.a,
-                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.StartTangent(curve.Bezier)),
+                        m_Entity = EC.StartNodeEntity,
+                        m_Position = EC.Bezier.a,
+                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.StartTangent(EC.Bezier)),
                         m_CourseDelta = 0,
-                        m_Elevation = startElevation,
-                        m_Flags = startNodeFlags,
+                        m_Elevation = elevation,
+                        m_Flags = EC.StartNodeFlags,
                         m_ParentMesh = -1,
                         m_SplitPosition = 0
                     },
                     m_EndPosition = new CoursePos {
-                        m_Entity = curve.EndNodeEntity,
-                        m_Position = curve.Bezier.d,
-                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.EndTangent(curve.Bezier)),
+                        m_Entity = EC.EndNodeEntity,
+                        m_Position = EC.Bezier.d,
+                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.EndTangent(EC.Bezier)),
                         m_CourseDelta = 1,
-                        m_Elevation = endElevation,
-                        m_Flags = endNodeFlags,
+                        m_Elevation = elevation,
+                        m_Flags = EC.EndNodeFlags,
                         m_ParentMesh = -1,
                         m_SplitPosition = 0
                     }

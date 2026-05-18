@@ -52,12 +52,16 @@ namespace NetworkTools.Systems.Tools.Parallel {
             // Reset internal state
             Phase = OperationPhase.Idle;
 
+            ElevationBoundParameter = VerticalOffset;
+
             // Initialize selection state (makes all nodes eligible)
             ResetToNoSelection();
         }
 
         /// <inheritdoc />
         protected override void OnStopRunning() {
+            ElevationBoundParameter = null;
+
             base.OnStopRunning();
 
             // Clear selection state

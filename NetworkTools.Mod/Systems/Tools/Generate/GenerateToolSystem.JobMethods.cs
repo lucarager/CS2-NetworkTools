@@ -17,13 +17,14 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// </summary>
         internal GenerateJobConfig BuildJobConfig() {
             return new GenerateJobConfig {
-                Position  = Position.Value,
+                Position       = Position.Value,
                 StartDirection = quaternion.LookRotationSafe(Rotation.Value, math.up()),
                 GridXSpacing   = GridXSpacing.Value,
                 GridZSpacing   = GridZSpacing.Value,
                 GridXNum       = GridXNum.Value,
                 GridZNum       = GridZNum.Value,
                 CircleRadius   = CircleRadius.Value,
+                Elevation      = Elevation.Value,
             };
         }
 

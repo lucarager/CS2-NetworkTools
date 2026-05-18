@@ -13,5 +13,6 @@ namespace NetworkTools.Systems.Tools.Generate {
         public int        GridXNum;
         public int        GridZNum;
         public float      CircleRadius;
+        public float      Elevation;
     }
 }
