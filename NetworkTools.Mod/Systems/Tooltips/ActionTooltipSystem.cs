@@ -17,6 +17,7 @@ namespace NetworkTools.Systems.Tooltips {
         private ToolSystem  m_ToolSystem;
         private ProxyAction m_ApplyAction;
         private ProxyAction m_SecondaryApplyAction;
+        private ProxyAction m_PreciseRotation;
 
         /// <inheritdoc />
         protected override void OnCreate() {
@@ -28,6 +29,7 @@ namespace NetworkTools.Systems.Tooltips {
             if (inputManager != null) {
                 m_ApplyAction          = inputManager.FindAction(InputManager.kToolMap, "Apply");
                 m_SecondaryApplyAction = inputManager.FindAction(InputManager.kToolMap, "Secondary Apply");
+                m_PreciseRotation      = inputManager.FindAction(InputManager.kToolMap, "Precise Rotation");
             }
         }
 
@@ -42,15 +44,13 @@ namespace NetworkTools.Systems.Tooltips {
                 return;
             }
 
-            var preciseRotationAction = activeTool.m_PreciseRotation as ProxyAction;
-
             var tooltipEntries = activeTool.GetHintTooltips(
                 activeTool.Phase,
                 m_ApplyAction,
                 m_SecondaryApplyAction,
-                preciseRotationAction);
+                m_PreciseRotation);
 
-            ShowTooltips(tooltipEntries, InputManager.DeviceType.All);
+            ShowTooltips(tooltipEntries, InputManager.DeviceType.Mouse);
         }
 
         private void ShowTooltips(System.Collections.Generic.IReadOnlyList<HintTooltipEntry> entries,
@@ -75,6 +75,12 @@ namespace NetworkTools.Systems.Tooltips {
                     inputHint.Refresh(device);
 
                     displayOverride.Dispose();
+
+                    // Add non-apply tooltips manually
+                    if (inputHint.path != "Tool/Secondary ApplyMouse" && 
+                        inputHint.path != "Tool/ApplyMouse") {
+                        AddMouseTooltip(inputHint);
+                    }
                 } else {
                     AddMouseTooltip(new StringTooltip { value = entry.Text });
                 }
