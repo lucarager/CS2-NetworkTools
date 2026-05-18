@@ -50,7 +50,7 @@ namespace NetworkTools.Systems.Tooltips {
                 m_SecondaryApplyAction,
                 preciseRotationAction);
 
-            ShowTooltips(tooltipEntries, InputManager.DeviceType.Mouse);
+            ShowTooltips(tooltipEntries, InputManager.DeviceType.All);
         }
 
         private void ShowTooltips(System.Collections.Generic.IReadOnlyList<HintTooltipEntry> entries,
@@ -67,9 +67,7 @@ namespace NetworkTools.Systems.Tooltips {
                         "NetworkTools.HintTooltip.Tooltip",
                         entry.Action,
                         entry.Text,
-                        0,
-                        InputManager.DeviceType.All,
-                        UIBaseInputAction.Transform.None
+                        1
                     );
                     displayOverride.active = true;
 
