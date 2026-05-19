@@ -44,9 +44,12 @@ namespace NetworkTools.Systems.Tools.Generate {
                 return inputDeps;
             }
 
+            var config = BuildJobConfig();
+            config.BaselineElevation = controlPoint.m_Elevation;
+
             var jobHandle = new CreateDefinitionsJob {
                 Mode                   = Mode.Value,
-                Config                 = BuildJobConfig(),
+                Config                 = config,
                 NetPrefabEntity        = NetPrefab.NetPrefabEntity,
                 NetLanePrefabEntity    = NetPrefab.NetLanePrefabEntity,
                 OutputMode             = outputMode,

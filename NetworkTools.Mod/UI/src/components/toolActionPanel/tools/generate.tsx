@@ -20,21 +20,26 @@ export const GenerateControls: React.FC = () => {
                 {activeGenerateMode === GenerateMode.Grid && (
                     <>
                         <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
+                        <ParameterField paramKey="generate.elevation" />
                         <ParameterField paramKey="generate.gridXSpacing" />
                         <ParameterField paramKey="generate.gridZSpacing" />
                         <ParameterField paramKey="generate.gridXNum" />
                         <ParameterField paramKey="generate.gridZNum" />
-                        <ParameterField paramKey="generate.elevation" />
                         {/* <ParameterField paramKey="generate.altPrefabX" /> */}
                         {/* <ParameterField paramKey="generate.altPrefabZ" /> */}
                     </>
                 )}
                 {activeGenerateMode === GenerateMode.Circle && (
-                    <ParameterField paramKey="generate.circleRadius" />
+                    <>
+                        <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
+                        <ParameterField paramKey="generate.elevation" />
+                        <ParameterField paramKey="generate.circleRadius" />
+                    </>
                 )}
                 {activeGenerateMode === GenerateMode.Oval && (
                     <>
                         <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
+                        <ParameterField paramKey="generate.elevation" />
                         <ParameterField paramKey="generate.ovalRadiusX" />
                         <ParameterField paramKey="generate.ovalRadiusZ" />
                     </>

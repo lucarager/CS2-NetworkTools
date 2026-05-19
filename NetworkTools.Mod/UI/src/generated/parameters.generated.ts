@@ -58,7 +58,7 @@ export const PARAM_KEYS = {
 
 export const PARAM_META = {
     "connect.netPrefab": { type: "netPrefab", modes: 0 },
-    "connect.mode": { type: "enum", enumType: "ConnectMode", default: 0, modes: 0, label: "NetworkTools.UI.Common.Mode" },
+    "connect.mode": { type: "enum", enumType: "ConnectMode", default: 1, modes: 0, label: "NetworkTools.UI.Common.Mode" },
     "connect.loopRadius": { type: "float", default: 50, min: 1, max: 500, fractionDigits: 0, modes: 3, label: "NetworkTools.UI.Connect.LoopRadius" },
     "connect.startPosition": { type: "float3", modes: 0 },
     "connect.endPosition": { type: "float3", modes: 0 },
@@ -100,7 +100,7 @@ export interface EnumOption { readonly value: number; readonly label: string; re
 
 export const ENUM_OPTIONS = {
     ConnectMode: [
-        { value: ConnectMode.None, label: "NetworkTools.UI.Connect.None", icon: "coui://nt/Modes/Original.svg" },
+        { value: ConnectMode.None, label: "NetworkTools.UI.Connect.None", icon: "coui://nt/Modes/Original.svg", visible: false },
         { value: ConnectMode.SimpleCurve, label: "NetworkTools.UI.Connect.SimpleCurve", icon: "coui://nt/Modes/ConnectSimpleCurve.svg" },
         { value: ConnectMode.ComplexCurve, label: "NetworkTools.UI.Connect.ComplexCurve", icon: "coui://nt/Modes/ConnectComplexCurve.svg" },
         { value: ConnectMode.Loop, label: "NetworkTools.UI.Connect.Loop", icon: "coui://nt/Modes/ConnectLoop.svg" },
@@ -134,7 +134,7 @@ export const ENUM_OPTIONS = {
 
 export const PARAM_BINDINGS = {
     connect: {
-        mode: new TwoWayBinding<number>("connect.mode", 0),
+        mode: new TwoWayBinding<number>("connect.mode", 1),
         loopRadius: new TwoWayBinding<number>("connect.loopRadius", 50),
     },
     generate: {

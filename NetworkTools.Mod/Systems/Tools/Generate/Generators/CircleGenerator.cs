@@ -18,11 +18,16 @@ namespace NetworkTools.Systems.Tools.Generate {
         public void Generate(
             in  GenerateJobConfig      config,
             float                      netWidth,
+            float                      elevationLimit,
             ref NativeList<EdgeConfig> curves) {
             // User-facing radius is inner-edge; shift it out by half the prefab
             // width to get the centerline radius the geometry needs.
             var radius   = config.CircleRadius + netWidth * 0.5f;
-            var center   = config.Position;
+            var yOffset  = config.Elevation + config.BaselineElevation;
+            var center   = config.Position + new float3(0, yOffset, 0);
+            var freeHeight = yOffset > -elevationLimit && yOffset < elevationLimit
+                ? CoursePosFlags.FreeHeight
+                : (CoursePosFlags)0;
             var rotation = config.StartDirection;
 
             float angleStep = 2f * math.PI / Segments;
@@ -54,8 +59,8 @@ namespace NetworkTools.Systems.Tools.Generate {
                 curves.Add(new EdgeConfig {
                     Bezier         = bezier,
                     Length         = MathUtils.Length(bezier),
-                    StartNodeFlags = CoursePosFlags.FreeHeight,
-                    EndNodeFlags   = CoursePosFlags.FreeHeight,
+                    StartNodeFlags = CoursePosFlags.IsRight | freeHeight,
+                    EndNodeFlags   = CoursePosFlags.IsRight | freeHeight,
                 });
             }
 

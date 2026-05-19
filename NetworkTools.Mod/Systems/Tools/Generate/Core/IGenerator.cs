@@ -14,6 +14,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         void Generate(
             in  GenerateJobConfig      config,
             float                      netWidth,
+            float                      elevationLimit,
             ref NativeList<EdgeConfig> curves);
     }
 }

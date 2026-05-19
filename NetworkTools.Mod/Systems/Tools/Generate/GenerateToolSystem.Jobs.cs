@@ -43,22 +43,24 @@ namespace NetworkTools.Systems.Tools.Generate {
 
                 // Resolve prefab width so user-facing spacing/radius can be
                 // interpreted edge-to-edge instead of centerline-to-centerline.
-                var netWidth = 0f;
+                var netWidth       = 0f;
+                var elevationLimit = 0f;
                 if (NetGeometryDataLookup.TryGetComponent(NetPrefabEntity, out var netGeometry)) {
-                    netWidth = netGeometry.m_DefaultWidth;
+                    netWidth       = netGeometry.m_DefaultWidth;
+                    elevationLimit = netGeometry.m_ElevationLimit;
                 }
 
                 // 2. Create definitions
                 switch (Mode)
                 {
                     case GenerateMode.Grid:
-                        new GridGenerator().Generate(Config, netWidth, ref curves);
+                        new GridGenerator().Generate(Config, netWidth, elevationLimit, ref curves);
                         break;
                     case GenerateMode.Circle:
-                        new CircleGenerator().Generate(Config, netWidth, ref curves);
+                        new CircleGenerator().Generate(Config, netWidth, elevationLimit, ref curves);
                         break;
                     case GenerateMode.Oval:
-                        new OvalGenerator().Generate(Config, netWidth, ref curves);
+                        new OvalGenerator().Generate(Config, netWidth, elevationLimit, ref curves);
                         break;
                 }
 
@@ -80,11 +82,13 @@ namespace NetworkTools.Systems.Tools.Generate {
             private void OutputPreviewEdge(EdgeConfig EC) {
                 var definitionEntity = ECB.CreateEntity();
 
+                var effectiveElevation = Config.BaselineElevation + Config.Elevation;
+
                 var creationDefinition = new CreationDefinition {
                     m_Original = Entity.Null,
                     m_Prefab = NetPrefabEntity,
                     m_SubPrefab = NetLanePrefabEntity,
-                    m_Flags = Config.Elevation != 0f
+                    m_Flags = effectiveElevation != 0f
                         ? CreationFlags.SubElevation
                         : CreationFlags.Construction
                 };
@@ -92,7 +96,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
-                var elevation = new float2(Config.Elevation);
+                var elevation = new float2(effectiveElevation);
 
                 var netCourse = new NetCourse {
                     m_Curve = EC.Bezier,

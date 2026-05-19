@@ -15,16 +15,21 @@ namespace NetworkTools.Systems.Tools.Generate {
         public void Generate(
             in  GenerateJobConfig      config,
             float                      netWidth,
+            float                      elevationLimit,
             ref NativeList<EdgeConfig> curves) {
             // User-facing spacing is edge-to-edge; add the prefab width to get
             // the centerline-to-centerline distance the geometry needs.
             var yOffset = config.Elevation + config.BaselineElevation;
+            var freeHeight = yOffset > -elevationLimit && yOffset < elevationLimit
+                ? CoursePosFlags.FreeHeight
+                : (CoursePosFlags)0;
             GenerateGrid(config.Position + new float3(0, yOffset, 0),
                          config.StartDirection,
                          config.GridXSpacing + netWidth,
                          config.GridZSpacing + netWidth,
                          config.GridXNum + 1,
                          config.GridZNum + 1,
+                         freeHeight,
                          ref curves);
         }
 
@@ -35,6 +40,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             float                      zSpacing,
             int                        xNum,
             int                        zNum,
+            CoursePosFlags             extraFlags,
             ref NativeList<EdgeConfig> curves
         ) {
             var xDir = math.mul(startDirection, new float3(1, 0, 0));
@@ -70,8 +76,8 @@ namespace NetworkTools.Systems.Tools.Generate {
                         curves.Add(new EdgeConfig {
                             Bezier         = bezier,
                             Length         = MathUtils.Length(bezier),
-                            StartNodeFlags = reverse ? flagsB : flagsA,
-                            EndNodeFlags   = reverse ? flagsA : flagsB
+                            StartNodeFlags = (reverse ? flagsB : flagsA) | extraFlags,
+                            EndNodeFlags   = (reverse ? flagsA : flagsB) | extraFlags
                         });
                     }
 
@@ -88,8 +94,8 @@ namespace NetworkTools.Systems.Tools.Generate {
                         curves.Add(new EdgeConfig {
                             Bezier         = bezier,
                             Length         = MathUtils.Length(bezier),
-                            StartNodeFlags = reverse ? flagsB : flagsA,
-                            EndNodeFlags   = reverse ? flagsA : flagsB
+                            StartNodeFlags = (reverse ? flagsB : flagsA) | extraFlags,
+                            EndNodeFlags   = (reverse ? flagsA : flagsB) | extraFlags
                         });
                     }
                 }
