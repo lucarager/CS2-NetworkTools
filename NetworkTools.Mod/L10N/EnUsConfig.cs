@@ -49,6 +49,8 @@ namespace NetworkTools.L10N {
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool8Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool9Str), "Open Generate Tool" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool9Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
+                { m_Setting.GetOptionLabelLocaleID(NT_Settings.ApplyTransformationStr), "Apply Tool" },
+                { m_Setting.GetOptionDescLocaleID(NT_Settings.ApplyTransformationStr), "Applies the current tool's action" },
 
                 // Sections
 
