@@ -239,12 +239,12 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Generate.RadiusX", "Width Radius" },
                 { "NetworkTools.UI.Generate.RadiusZ", "Depth Radius" },
                 { "NetworkTools.UI.Generate.Elevation", "Elevation" },
-                { "NetworkTools.UI.Generate.AltPrefabX", "[Column] Use Alternating Asset" },
-                { "NetworkTools.UI.Generate.AltNetPrefabX", "[Column] Alternating Asset" },
-                { "NetworkTools.UI.Generate.AltEveryX", "[Column] Alternate every.." },
-                { "NetworkTools.UI.Generate.AltPrefabZ", "[Row] Use Alternating Asset" },
-                { "NetworkTools.UI.Generate.AltNetPrefabZ", "[Row] Alternating Asset" },
-                { "NetworkTools.UI.Generate.AltEveryZ", "[Row] Alternate every.." },
+                { "NetworkTools.UI.Generate.AltPrefabX", "Column - Use alternating asset" },
+                { "NetworkTools.UI.Generate.AltNetPrefabX", "Asset" },
+                { "NetworkTools.UI.Generate.AltEveryX", "Alternate every" },
+                { "NetworkTools.UI.Generate.AltPrefabZ", "Row - Use alternating asset" },
+                { "NetworkTools.UI.Generate.AltNetPrefabZ", "Asset" },
+                { "NetworkTools.UI.Generate.AltEveryZ", "Alternate every" },
                 { "NetworkTools.UI.PrefabSearch.None", "None" },
 
                 // ## Apply Buttons
