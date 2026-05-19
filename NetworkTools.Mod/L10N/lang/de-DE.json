@@ -20,6 +20,8 @@
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool8]": "Schnellzugriff zum Öffnen eines bestimmten Netzwerktools; verwenden Sie diesen nach dem Öffnen des NT-Fensters",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "Tool „Generieren“ öffnen",
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "Schnellzugriff zum Öffnen eines bestimmten Netzwerktools; verwenden Sie diesen nach dem Öffnen des NT-Fensters",
+  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.ApplyTransformation]": "Apply Tool",
+  "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.ApplyTransformation]": "Applies the current tool's action",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.KeybindingsGroupStr]": "Tastenkombinationen",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.AboutGroupStr]": "Über",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.Version]": "Version",
