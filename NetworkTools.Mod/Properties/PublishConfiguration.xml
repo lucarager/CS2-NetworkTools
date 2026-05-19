@@ -7,7 +7,9 @@
   <ShortDescription Value="Add, remove, reshape, and generate network nodes and segments with precision." />
   <!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
   <!--LongDescription Value="This is a long description" /-->
-  <LongDescription># Network Tools: The Network Manipulation Toolkit
+  <LongDescription>**The mod is available as an UNLISTED mod on PDXMods. We will be on the honor system. Please do NOT publicly share the direct link to the mod. This is both to safeguard players and myself. Keeping the link private helps me manage the stress and workload. It ensures that only people that have read this disclaimer and know what they are doing are using the mod. Be cool!**
+
+# Network Tools: The Network Manipulation Toolkit
 
 The spiritual successor to the beloved [Network Multitool](https://steamcommunity.com/sharedfiles/filedetails/?id=2560782729) for Cities: Skylines 1, rebuilt from the ground up for CS2. 
 
@@ -80,20 +82,20 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.3.1" />
+  <ModVersion Value="1.3.2" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog># 1.3.1
+  <ChangeLog># 1.3.2
 
-- Prefab Selector: Added "recently used" section that will show the net asset last used in the vanilla UI.
-- Prefab Selector: Assets are now sorted more accurately, matching the order in the vanilla UI.
-- Generate (Grid): Reworded all parameter labels for better clarity, preferring column and row over x and z.
-- Generate (Grid): Disabled built-in anarchy so that networks merge properly.
-- UI: Improved visuals for busy parameter sections such as Generate.
-- Internal: Replaced regex codegen with roslyn source generator.</ChangeLog>
+- UI: Added labels to numeric sliders (meter, percentage, etc.)
+- UI: Tighened up some spacing for the new tab UI
+- UI: Fixed some smaller alignment issues with labels
+- UI: Added ability for parameters to specify displayScale and numberType
+- Slope Tool: UI parameters are now correctly shown as percentage from 0 to 100 again.
+- Generate Tool: Tweaked strings for advanced grid options.</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
