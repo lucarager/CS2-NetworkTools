@@ -20,6 +20,8 @@
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool8]": "Shortcut to open a specific Network Tools tool, use it after opening the NT panel",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "Open Generate Tool",
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "Shortcut to open a specific Network Tools tool, use it after opening the NT panel",
+  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.ApplyTransformation]": "Apply Tool",
+  "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.ApplyTransformation]": "Applies the current tool's action",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.KeybindingsGroupStr]": "Key Bindings",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.AboutGroupStr]": "About",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.Version]": "Version",
