@@ -17,16 +17,24 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// </summary>
         internal GenerateJobConfig BuildJobConfig() {
             return new GenerateJobConfig {
-                Position       = Position.Value,
-                StartDirection = quaternion.LookRotationSafe(Rotation.Value, math.up()),
-                GridXSpacing   = GridXSpacing.Value,
-                GridZSpacing   = GridZSpacing.Value,
-                GridXNum       = GridXNum.Value,
-                GridZNum       = GridZNum.Value,
-                CircleRadius   = CircleRadius.Value,
-                OvalRadiusX    = OvalRadiusX.Value,
-                OvalRadiusZ    = OvalRadiusZ.Value,
-                Elevation      = Elevation.Value,
+                Position              = Position.Value,
+                StartDirection        = quaternion.LookRotationSafe(Rotation.Value, math.up()),
+                GridXSpacing          = GridXSpacing.Value,
+                GridZSpacing          = GridZSpacing.Value,
+                GridXNum                = GridXNum.Value,
+                GridZNum                = GridZNum.Value,
+                AltPrefabX              = AlternatingNetworkPrefabX.Value,
+                AltNetPrefabXEntity     = AltNetPrefabX.NetPrefabEntity,
+                AltNetLanePrefabXEntity = AltNetPrefabX.NetLanePrefabEntity,
+                AltEveryX               = AltEveryX.Value,
+                AltPrefabZ              = AlternatingNetworkPrefabZ.Value,
+                AltNetPrefabZEntity     = AltNetPrefabZ.NetPrefabEntity,
+                AltNetLanePrefabZEntity = AltNetPrefabZ.NetLanePrefabEntity,
+                AltEveryZ               = AltEveryZ.Value,
+                CircleRadius          = CircleRadius.Value,
+                OvalRadiusX           = OvalRadiusX.Value,
+                OvalRadiusZ           = OvalRadiusZ.Value,
+                Elevation             = Elevation.Value,
             };
         }
 

@@ -41,26 +41,31 @@ namespace NetworkTools.Systems.Tools.Generate {
                 // 1. Create data structures
                 var curves = new NativeList<EdgeConfig>(64, Allocator.Temp);
 
-                // Resolve prefab width so user-facing spacing/radius can be
-                // interpreted edge-to-edge instead of centerline-to-centerline.
-                var netWidth       = 0f;
-                var elevationLimit = 0f;
-                if (NetGeometryDataLookup.TryGetComponent(NetPrefabEntity, out var netGeometry)) {
-                    netWidth       = netGeometry.m_DefaultWidth;
-                    elevationLimit = netGeometry.m_ElevationLimit;
+                // Resolve all runtime prefab data into a local config copy so generators
+                // receive a self-contained snapshot without needing component lookups.
+                var config = Config;
+                config.NetPrefabEntity    = NetPrefabEntity;
+                config.NetLanePrefabEntity = NetLanePrefabEntity;
+                if (NetGeometryDataLookup.TryGetComponent(NetPrefabEntity, out var netGeom)) {
+                    config.NetWidth       = netGeom.m_DefaultWidth;
+                    config.ElevationLimit = netGeom.m_ElevationLimit;
                 }
+                config.AltNetPrefabXWidth = NetGeometryDataLookup.TryGetComponent(config.AltNetPrefabXEntity, out var altXGeom)
+                    ? altXGeom.m_DefaultWidth : config.NetWidth;
+                config.AltNetPrefabZWidth = NetGeometryDataLookup.TryGetComponent(config.AltNetPrefabZEntity, out var altZGeom)
+                    ? altZGeom.m_DefaultWidth : config.NetWidth;
 
                 // 2. Create definitions
                 switch (Mode)
                 {
                     case GenerateMode.Grid:
-                        new GridGenerator().Generate(Config, netWidth, elevationLimit, ref curves);
+                        new GridGenerator().Generate(config, ref curves);
                         break;
                     case GenerateMode.Circle:
-                        new CircleGenerator().Generate(Config, netWidth, elevationLimit, ref curves);
+                        new CircleGenerator().Generate(config, ref curves);
                         break;
                     case GenerateMode.Oval:
-                        new OvalGenerator().Generate(Config, netWidth, elevationLimit, ref curves);
+                        new OvalGenerator().Generate(config, ref curves);
                         break;
                 }
 
@@ -86,8 +91,8 @@ namespace NetworkTools.Systems.Tools.Generate {
 
                 var creationDefinition = new CreationDefinition {
                     m_Original = Entity.Null,
-                    m_Prefab = NetPrefabEntity,
-                    m_SubPrefab = NetLanePrefabEntity,
+                    m_Prefab = EC.NetPrefabEntity,
+                    m_SubPrefab = EC.NetLanePrefabEntity,
                     m_Flags = effectiveElevation != 0f
                         ? CreationFlags.SubElevation
                         : CreationFlags.Construction

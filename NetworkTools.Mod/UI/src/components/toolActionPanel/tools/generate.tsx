@@ -10,6 +10,8 @@ const G = PARAM_BINDINGS.generate;
 
 export const GenerateControls: React.FC = () => {
     const activeGenerateMode = useValue(G.mode.binding) as GenerateMode;
+    const altPrefabX = useValue(G.altPrefabX.binding) as boolean;
+    const altPrefabZ = useValue(G.altPrefabZ.binding) as boolean;
 
     return (
         <div className={styles.section}>
@@ -25,8 +27,20 @@ export const GenerateControls: React.FC = () => {
                         <ParameterField paramKey="generate.gridZSpacing" />
                         <ParameterField paramKey="generate.gridXNum" />
                         <ParameterField paramKey="generate.gridZNum" />
-                        {/* <ParameterField paramKey="generate.altPrefabX" /> */}
-                        {/* <ParameterField paramKey="generate.altPrefabZ" /> */}
+                        <ParameterField paramKey="generate.altPrefabX" />
+                        {altPrefabX && (
+                            <>
+                                <PrefabSelection paramKey={PARAM_KEYS.generate.altNetPrefabX} />
+                                <ParameterField paramKey="generate.altEveryX" />
+                            </>
+                        )}
+                        <ParameterField paramKey="generate.altPrefabZ" />
+                        {altPrefabZ && (
+                            <>
+                                <PrefabSelection paramKey={PARAM_KEYS.generate.altNetPrefabZ} />
+                                <ParameterField paramKey="generate.altEveryZ" />
+                            </>
+                        )}
                     </>
                 )}
                 {activeGenerateMode === GenerateMode.Circle && (

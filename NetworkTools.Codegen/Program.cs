@@ -329,7 +329,8 @@ void ParseQuaternionParam(string fieldName, Dictionary<string, string> args) {
 void ParseNetPrefabParam(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("1") ?? "0");
-    parameters.Add(new NetPrefabParamDef(key, fieldName, modes) { Label = ParseLabel(args) });
+    var nullable = args.GetValueOrDefault("nullable") == "true";
+    parameters.Add(new NetPrefabParamDef(key, fieldName, modes, nullable) { Label = ParseLabel(args) });
 }
 
 /// <summary>
@@ -484,7 +485,7 @@ string EmitTypeScript() {
             QuaternionParamDef q =>
                 $"type: \"quaternion\", modes: {q.Modes}",
             NetPrefabParamDef np =>
-                $"type: \"netPrefab\", modes: {np.Modes}",
+                $"type: \"netPrefab\", modes: {np.Modes}{(np.Nullable ? ", nullable: true" : "")}",
             _ => ""
         });
         if (param.Label != null) sb.Append($", label: \"{param.Label}\"");
@@ -673,5 +674,5 @@ record Float3ParamDef(string Key, string FieldName, int Modes)
     : ParamDef(Key, FieldName, Modes);
 record QuaternionParamDef(string Key, string FieldName, int Modes)
     : ParamDef(Key, FieldName, Modes);
-record NetPrefabParamDef(string Key, string FieldName, int Modes)
+record NetPrefabParamDef(string Key, string FieldName, int Modes, bool Nullable = false)
     : ParamDef(Key, FieldName, Modes);

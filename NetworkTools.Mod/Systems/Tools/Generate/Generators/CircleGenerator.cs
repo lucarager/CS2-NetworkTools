@@ -6,6 +6,7 @@ namespace NetworkTools.Systems.Tools.Generate {
     using NetworkTools.Systems.Tools.Utils;
 
     using Unity.Collections;
+    using Unity.Entities;
     using Unity.Mathematics;
 
     public struct CircleGenerator : IGenerator {
@@ -17,15 +18,13 @@ namespace NetworkTools.Systems.Tools.Generate {
 
         public void Generate(
             in  GenerateJobConfig      config,
-            float                      netWidth,
-            float                      elevationLimit,
             ref NativeList<EdgeConfig> curves) {
             // User-facing radius is inner-edge; shift it out by half the prefab
             // width to get the centerline radius the geometry needs.
-            var radius   = config.CircleRadius + netWidth * 0.5f;
-            var yOffset  = config.Elevation + config.BaselineElevation;
-            var center   = config.Position + new float3(0, yOffset, 0);
-            var freeHeight = yOffset > -elevationLimit && yOffset < elevationLimit
+            var radius     = config.CircleRadius + config.NetWidth * 0.5f;
+            var yOffset    = config.Elevation + config.BaselineElevation;
+            var center     = config.Position + new float3(0, yOffset, 0);
+            var freeHeight = yOffset > -config.ElevationLimit && yOffset < config.ElevationLimit
                 ? CoursePosFlags.FreeHeight
                 : (CoursePosFlags)0;
             var rotation = config.StartDirection;
@@ -57,10 +56,12 @@ namespace NetworkTools.Systems.Tools.Generate {
 
                 var bezier = new Bezier4x3(nodes[i], p1, p2, nodes[next]);
                 curves.Add(new EdgeConfig {
-                    Bezier         = bezier,
-                    Length         = MathUtils.Length(bezier),
-                    StartNodeFlags = CoursePosFlags.IsRight | freeHeight,
-                    EndNodeFlags   = CoursePosFlags.IsRight | freeHeight,
+                    Bezier              = bezier,
+                    Length              = MathUtils.Length(bezier),
+                    NetPrefabEntity     = config.NetPrefabEntity,
+                    NetLanePrefabEntity = config.NetLanePrefabEntity,
+                    StartNodeFlags      = CoursePosFlags.IsRight | freeHeight,
+                    EndNodeFlags        = CoursePosFlags.IsRight | freeHeight,
                 });
             }
 

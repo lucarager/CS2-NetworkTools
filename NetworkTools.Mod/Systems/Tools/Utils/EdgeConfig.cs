@@ -34,6 +34,14 @@ namespace NetworkTools.Systems.Tools.Utils {
         /// <summary>Arc length of <see cref="Bezier"/>.</summary>
         public float Length;
 
+        // === Prefab override ===
+
+        /// <summary>Per-edge prefab override. <see cref="Entity.Null"/> falls back to the tool's default prefab.</summary>
+        public Entity NetPrefabEntity;
+
+        /// <summary>Per-edge lane prefab override. <see cref="Entity.Null"/> falls back to the tool's default.</summary>
+        public Entity NetLanePrefabEntity;
+
         // === Output hints ===
 
         /// <summary>Course position flags applied to the start node during output.</summary>

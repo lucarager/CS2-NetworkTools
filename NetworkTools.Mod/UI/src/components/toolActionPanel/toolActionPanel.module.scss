@@ -162,6 +162,40 @@
     }
 }
 
+.prefabSelectGroup {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+    gap: 4rem;
+    overflow: hidden;
+}
+
+.prefabClearButton {
+    flex-shrink: 0;
+    width: 28rem;
+    height: 28rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1rem solid rgba(255, 255, 255, 0.1);
+    border-radius: 3rem;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+
+    &:hover {
+        border-color: rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    &__icon {
+        width: 14rem;
+        height: 14rem;
+        opacity: 0.7;
+    }
+}
+
 .helper {
     font-size: var(--fontSizeS);
     line-height: 1.25em;

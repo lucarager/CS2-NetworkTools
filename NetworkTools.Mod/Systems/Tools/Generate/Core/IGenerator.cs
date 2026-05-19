@@ -1,7 +1,6 @@
 namespace NetworkTools.Systems.Tools.Generate {
     using NetworkTools.Systems.Tools.Utils;
     using Unity.Collections;
-    using Unity.Mathematics;
 
     public interface IGenerator {
         /// <summary>
@@ -13,8 +12,6 @@ namespace NetworkTools.Systems.Tools.Generate {
 
         void Generate(
             in  GenerateJobConfig      config,
-            float                      netWidth,
-            float                      elevationLimit,
             ref NativeList<EdgeConfig> curves);
     }
 }

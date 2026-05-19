@@ -236,8 +236,13 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Generate.RadiusX", "X Radius" },
                 { "NetworkTools.UI.Generate.RadiusZ", "Z Radius" },
                 { "NetworkTools.UI.Generate.Elevation", "Elevation" },
-                //{ "NetworkTools.UI.Generate.AltPrefabX", "Alternate Prefab X" },
-                //{ "NetworkTools.UI.Generate.AltPrefabZ", "Alternate Prefab Z" },
+                { "NetworkTools.UI.Generate.AltPrefabX", "Alternate X" },
+                { "NetworkTools.UI.Generate.AltNetPrefabX", "Alternate X Asset" },
+                { "NetworkTools.UI.Generate.AltEveryX", "Every Nth X" },
+                { "NetworkTools.UI.Generate.AltPrefabZ", "Alternate Z" },
+                { "NetworkTools.UI.Generate.AltNetPrefabZ", "Alternate Z Asset" },
+                { "NetworkTools.UI.Generate.AltEveryZ", "Every Nth Z" },
+                { "NetworkTools.UI.PrefabSearch.None", "None" },
 
                 // ## Apply Buttons
                 { "NetworkTools.UI.Apply.ShapeSlope", "Apply Slope" },

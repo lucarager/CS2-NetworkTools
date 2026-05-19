@@ -24,7 +24,7 @@ namespace NetworkTools.Systems.Tools.Generate {
 
             // Configuration
             RenderHandles            = true;
-            DisableVanillaValidation = true;
+            //DisableVanillaValidation = true;
 
             // Mode change additionally reinitializes handles
             Mode.OnChanged += _ => {

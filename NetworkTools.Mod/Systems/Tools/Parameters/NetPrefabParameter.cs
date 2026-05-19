@@ -9,8 +9,13 @@ namespace NetworkTools.Systems.Tools.Parameters {
 
         public bool HasSelection => Prefab != null;
 
-        public NetPrefabParameter(string key, int modes = 0, string label = null)
-            : base(key, modes, bindable: false, label: label) { }
+        /// <summary>Whether this prefab selection can be cleared to "None" in the UI.</summary>
+        public bool Nullable { get; }
+
+        public NetPrefabParameter(string key, int modes = 0, bool nullable = false, string label = null)
+            : base(key, modes, bindable: false, label: label) {
+            Nullable = nullable;
+        }
 
         public void Set(PrefabBase prefab, Entity netPrefabEntity, Entity netLanePrefabEntity) {
             if (NetPrefabEntity == netPrefabEntity && NetLanePrefabEntity == netLanePrefabEntity) return;
