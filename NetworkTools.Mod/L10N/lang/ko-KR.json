@@ -20,6 +20,8 @@
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool8]": "네트워크 도구, NT 패널을 연 후 특정 도구를 열기 위한 단축키입니다",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "생성 도구 열기",
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "네트워크 도구, NT 패널을 연 후 특정 도구를 열기 위한 단축키입니다",
+  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.ApplyTransformation]": "Apply Tool",
+  "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.ApplyTransformation]": "Applies the current tool's action",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.KeybindingsGroupStr]": "단축키 설정",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.AboutGroupStr]": "정보",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.Version]": "버전",
