@@ -72,28 +72,48 @@ I am looking for volunteers to help translate the mod into other languages.
 If you'd like to show appreciation and help me continue developing mods, you may support me on [Ko-fi](https://ko-fi.com/lucadevdesign)!
 Donations are incredibly kind and appreciated.</LongDescription>
   <!--Thumbnail-->
-  <Thumbnail Value="Properties/thumbnail.png" />
+  <Thumbnail Value="Assets/Thumbnail.png" />
   <!--Screenshot, can be set multiple times-->
-  <Screenshot Value="Properties/cover.jpg" />
+  <Screenshot Value="Assets/Cover/1.jpg" />
   <!--Tag, can be set multiple times-->
   <Tag Value="Code Mod" />
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.2.4" />
+  <ModVersion Value="1.3.0" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog>- AddNode: Updated visuals of the overlay renderer
-- AddNode: Tooltips now have correct icon and values are rounded
-- Generate: Takes asset widths into account. Spacing is now edge-to-edge, not center-to-center. Parallel tool will get this improvement in a future update  
-- Generate: Allow 0 spacing for edge-to-edge generation
-- Curve Tool: Shows smooth mode as coming soon
-- Curve Tool: Updated language for clarity
-- Fix: Fixed a bug where some tools were making unecessary updates
-- Fix: Minor enhancements to code internals</ChangeLog>
+  <ChangeLog># 1.3.0
+
+- Meta: Updated images and assets for PDXMods.
+
+- UI: Updated tool icons and assets. Now more balanced visually and with less visual corruption.
+- UI: Refreshed tool UI with tabs and refactored transform controls.
+- UI: Cleaned up and improved visuals for parameters in all tools
+- UI: Cleaned up apply button visuals, text, and logic
+- UI: Hid some redundant and confusing options in the UI, such as "none" connect mode.
+- UI: Added "zero" indicator for sliders that support negative to positive values.
+
+- All Tools: Show network direction arrows in applicable tools
+
+- Generate: Add Oval generation mode.
+- Generate: Add elevation support.
+- Generate: Improve the way generated networks adapt to terrain.
+- Generate: Added tooltip for rotation shortcut.
+- Generate: Alternate direction in the Grid tool.
+
+- Handles: Improved rotation handle logic.
+
+- Parallel: Refactor internals for offset calculation. Future updates will allow specifying whether the offset should apply from the center line, or left/right edge.
+- Parallel: Reduced complexity of parameters by merging direction and offset parameters into just offset parameter with positive/negative values.
+
+- Translations: Updated various strings. Removed redundant strings. 
+- Translations: Added string for apply action.
+
+- Internal: Improved codegen for tool parameters.</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
