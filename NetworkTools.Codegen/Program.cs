@@ -1,6 +1,25 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// NetworkTools.Codegen
+//
+// Scans C# source files for enum declarations and parameter field declarations,
+// then emits a TypeScript file containing:
+//   - Mirrored enum definitions
+//   - PARAM_KEYS     — dot-separated key constants grouped by tool
+//   - PARAM_META     — type/default/range/modes metadata for each parameter
+//   - ENUM_OPTIONS   — UI option lists derived from [EnumOption] attributes
+//   - PARAM_BINDINGS — pre-built TwoWayBinding instances for bindable types
+//   - PARAM_BINDING  — flat key->binding lookup map
+//
+// Parsing uses Roslyn syntax trees instead of regex, making the extraction
+// resilient to formatting changes and self-documenting via typed AST nodes.
+// ─────────────────────────────────────────────────────────────────────────────
+
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 var enums = new Dictionary<string, EnumDef>();
 var parameters = new List<ParamDef>();
@@ -18,17 +37,20 @@ if (!Directory.Exists(sourceDir)) {
     return 1;
 }
 
+// Parse every .cs file into a Roslyn syntax tree up front so we can walk them
+// in two passes without re-reading from disk.
 var csFiles = Directory.GetFiles(sourceDir, "*.cs", SearchOption.AllDirectories);
-
+var roots = new List<CompilationUnitSyntax>();
 foreach (var file in csFiles) {
-    var content = File.ReadAllText(file);
-    ParseEnums(content);
+    var tree = CSharpSyntaxTree.ParseText(File.ReadAllText(file));
+    roots.Add(tree.GetCompilationUnitRoot());
 }
 
-foreach (var file in csFiles) {
-    var content = File.ReadAllText(file);
-    ParseParameters(content);
-}
+// Two-pass strategy: enums must be collected first because parameter parsing
+// needs to resolve enum member references (e.g. "ConnectMode.Loop" -> 3)
+// when extracting default values and mode bitmasks.
+foreach (var root in roots) ParseEnums(root);
+foreach (var root in roots) ParseParameters(root);
 
 if (parameters.Count == 0)
     Console.Error.WriteLine("WARNING: No parameter declarations found. Emitting empty generated file.");
@@ -37,6 +59,7 @@ var ts = EmitTypeScript();
 
 Directory.CreateDirectory(Path.GetDirectoryName(outputFile)!);
 
+// Only write when content actually changed to avoid unnecessary rebuilds downstream.
 var existing = File.Exists(outputFile) ? File.ReadAllText(outputFile) : null;
 if (ts != existing) {
     File.WriteAllText(outputFile, ts);
@@ -49,21 +72,39 @@ return 0;
 
 // ── Enum parsing ───────────────────────────────────────────────────────────────
 
-void ParseEnums(string source) {
-    var regex = new Regex(@"public\s+enum\s+(\w+)\s*\{([^}]+)\}", RegexOptions.Singleline);
-    foreach (Match m in regex.Matches(source)) {
-        var name = m.Groups[1].Value;
-        var body = m.Groups[2].Value;
-
+/// <summary>
+/// Walks all <c>enum</c> declarations in a syntax tree, extracting members
+/// that have explicit integer values and any <c>[EnumOption]</c> attributes.
+/// Members without an explicit <c>= value</c> are skipped (mirrors the
+/// regex codegen's <c>(\w+)\s*=\s*(-?\d+)</c> capture group).
+/// </summary>
+void ParseEnums(CompilationUnitSyntax root) {
+    foreach (var enumDecl in root.DescendantNodes().OfType<EnumDeclarationSyntax>()) {
+        var name = enumDecl.Identifier.Text;
         var members = new List<EnumMember>();
-        var memberRegex = new Regex(@"((?:\[EnumOption\([^)]*\)\]\s*)*)\s*(\w+)\s*=\s*(-?\d+)");
-        var attrRegex = new Regex(@"\[EnumOption\(([^)]*)\)\]");
-        foreach (Match mm in memberRegex.Matches(body)) {
-            var attrsBlock = mm.Groups[1].Value;
-            var options = new List<EnumOptionDef>();
-            foreach (Match am in attrRegex.Matches(attrsBlock))
-                options.Add(ParseEnumOptionAttr(am.Groups[1].Value));
-            members.Add(new EnumMember(mm.Groups[2].Value, int.Parse(mm.Groups[3].Value), options));
+
+        foreach (var member in enumDecl.Members) {
+            // Extract the integer value from the EqualsValue clause.
+            // Handles both positive literals (e.g. `= 3`) and negated literals (e.g. `= -1`).
+            // Members with computed expressions (shifts, casts) are skipped.
+            var memberValue = member.EqualsValue?.Value switch {
+                LiteralExpressionSyntax { Token.Value: int v } => (int?)v,
+                PrefixUnaryExpressionSyntax { Operand: LiteralExpressionSyntax { Token.Value: int v } } neg
+                    when neg.IsKind(SyntaxKind.UnaryMinusExpression) => -v,
+                _ => null
+            };
+            if (memberValue is not int value) continue;
+
+            // A single enum member can have multiple [EnumOption] attributes when it
+            // appears in different groups (e.g. ShapeTransformTemplate.Preserve has both
+            // a "Slope" and a "Curve" option).
+            var options = member.AttributeLists
+                .SelectMany(al => al.Attributes)
+                .Where(a => a.Name.ToString() == "EnumOption")
+                .Select(ParseEnumOptionAttr)
+                .ToList();
+
+            members.Add(new EnumMember(member.Identifier.Text, value, options));
         }
 
         if (members.Count > 0)
@@ -71,70 +112,161 @@ void ParseEnums(string source) {
     }
 }
 
-EnumOptionDef ParseEnumOptionAttr(string argsStr) {
-    var parts = SplitArgs(argsStr);
-    var label = StripQuotes(parts[0].Trim());
-    var icon = StripQuotes(parts[1].Trim());
-    string? group = null;
-    bool visible = true;
-    bool disabled = false;
+/// <summary>
+/// Parses a single <c>[EnumOption("label", "icon", Group = ..., Visible = ..., Disabled = ...)]</c>
+/// attribute into an <see cref="EnumOptionDef"/>.
+/// </summary>
+/// <remarks>
+/// The attribute uses two syntax forms for its arguments:
+/// <list type="bullet">
+///   <item>Positional constructor args (label, icon) — accessed via index, no <c>NameColon</c> or <c>NameEquals</c>.</item>
+///   <item>Named property setters (Group, Visible, Disabled) — identified by <c>arg.NameEquals</c>.</item>
+/// </list>
+/// This is distinct from constructor named args (which use <c>arg.NameColon</c>).
+/// </remarks>
+EnumOptionDef ParseEnumOptionAttr(AttributeSyntax attr) {
+    var attrArgs = attr.ArgumentList?.Arguments;
+    if (attrArgs == null) return new EnumOptionDef("", "");
 
-    for (int i = 2; i < parts.Count; i++) {
-        var part = parts[i].Trim();
-        var eqIdx = part.IndexOf('=');
-        if (eqIdx < 0) continue;
-        var argName = part[..eqIdx].Trim();
-        var argValue = part[(eqIdx + 1)..].Trim();
-        switch (argName) {
-            case "Group": group = StripQuotes(argValue); break;
-            case "Visible": visible = argValue.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-            case "Disabled": disabled = argValue.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+    string label = "", icon = "";
+    string? group = null;
+    bool visible = true, disabled = false;
+    int positional = 0;
+
+    foreach (var arg in attrArgs) {
+        // NameEquals is set for property-setter-style args: `Group = "Slope"`
+        var propName = arg.NameEquals?.Name.Identifier.Text;
+        if (propName != null) {
+            switch (propName) {
+                case "Group": group = GetStringLiteral(arg.Expression); break;
+                case "Visible": visible = arg.Expression.ToString() == "true"; break;
+                case "Disabled": disabled = arg.Expression.ToString() == "true"; break;
+            }
+        } else {
+            // Positional args: first is the localization key, second is the icon URI
+            if (positional == 0) label = GetStringLiteral(arg.Expression);
+            else if (positional == 1) icon = GetStringLiteral(arg.Expression);
+            positional++;
         }
     }
 
     return new EnumOptionDef(label, icon, group, visible, disabled);
 }
 
+/// <summary>
+/// Extracts the raw string from a string literal expression node.
+/// Uses <c>Token.Value</c> to get the unescaped value without surrounding quotes.
+/// Falls back to <c>ToString().Trim('"')</c> for non-literal expressions.
+/// </summary>
+string GetStringLiteral(ExpressionSyntax expr) =>
+    expr is LiteralExpressionSyntax { Token.Value: string s } ? s : expr.ToString().Trim('"');
+
 // ── Parameter parsing ──────────────────────────────────────────────────────────
 
-void ParseParameters(string source) {
-    source = Regex.Replace(source, @"//.*?$", "", RegexOptions.Multiline);
-    source = Regex.Replace(source, @"/\*.*?\*/", "", RegexOptions.Singleline);
-    source = Regex.Replace(source, @"\s+", " ");
+/// <summary>
+/// Walks all <c>public</c> field declarations in a syntax tree, looking for
+/// fields typed as one of the known parameter types (FloatParameter, IntParameter,
+/// BoolParameter, etc.). For each match, extracts the constructor arguments from
+/// the field initializer and delegates to the appropriate Parse*Param handler.
+/// </summary>
+void ParseParameters(CompilationUnitSyntax root) {
+    foreach (var field in root.DescendantNodes().OfType<FieldDeclarationSyntax>()) {
+        if (!field.Modifiers.Any(SyntaxKind.PublicKeyword)) continue;
 
-    var regex = new Regex(
-        @"public\s+(FloatParameter|IntParameter|BoolParameter|Float3Parameter|QuaternionParameter|NetPrefabParameter|EnumParameter<(\w+)>)\s+(\w+)\s*=\s*new\s*\(");
+        var typeName = field.Declaration.Type.ToString();
+        if (!IsParameterType(typeName)) continue;
 
-    var matches = regex.Matches(source).Cast<Match>().OrderBy(m => m.Index);
-    foreach (var m in matches) {
-        var typeName = m.Groups[1].Value;
-        var fieldName = m.Groups[3].Value;
-        var argsStr = ExtractBalancedParens(source, m.Index + m.Length);
-        var ctorArgs = ParseConstructorArgs(argsStr);
+        foreach (var variable in field.Declaration.Variables) {
+            var fieldName = variable.Identifier.Text;
 
-        if (typeName == "FloatParameter")
-            ParseFloatParam(fieldName, ctorArgs);
-        else if (typeName == "IntParameter")
-            ParseIntParam(fieldName, ctorArgs);
-        else if (typeName == "BoolParameter")
-            ParseBoolParam(fieldName, ctorArgs);
-        else if (typeName == "Float3Parameter")
-            ParseFloat3Param(fieldName, ctorArgs);
-        else if (typeName == "QuaternionParameter")
-            ParseQuaternionParam(fieldName, ctorArgs);
-        else if (typeName == "NetPrefabParameter")
-            ParseNetPrefabParam(fieldName, ctorArgs);
-        else if (typeName.StartsWith("EnumParameter<")) {
-            var enumType = m.Groups[2].Value;
-            var key = StripQuotes(ctorArgs.GetValueOrDefault("key") ?? ctorArgs.GetValueOrDefault("0") ?? "");
-            var defaultStr = ctorArgs.GetValueOrDefault("default") ?? ctorArgs.GetValueOrDefault("1") ?? "0";
-            var defaultValue = ResolveEnumValue(defaultStr, enumType);
-            var modes = ResolveModes(ctorArgs.GetValueOrDefault("modes") ?? ctorArgs.GetValueOrDefault("2") ?? "0");
-            parameters.Add(new EnumParamDef(key, fieldName, enumType, defaultValue, modes) { Label = ParseLabel(ctorArgs) });
+            // Handle both target-typed new (C# 9+):  `= new("key", ...)`
+            // and explicit new:                       `= new FloatParameter("key", ...)`
+            var argList = variable.Initializer?.Value switch {
+                ImplicitObjectCreationExpressionSyntax impl => impl.ArgumentList,
+                ObjectCreationExpressionSyntax obj => obj.ArgumentList,
+                _ => null
+            };
+            if (argList == null) continue;
+
+            var ctorArgs = ExtractArgs(argList.Arguments);
+
+            if (typeName == "FloatParameter")
+                ParseFloatParam(fieldName, ctorArgs);
+            else if (typeName == "IntParameter")
+                ParseIntParam(fieldName, ctorArgs);
+            else if (typeName == "BoolParameter")
+                ParseBoolParam(fieldName, ctorArgs);
+            else if (typeName == "Float3Parameter")
+                ParseFloat3Param(fieldName, ctorArgs);
+            else if (typeName == "QuaternionParameter")
+                ParseQuaternionParam(fieldName, ctorArgs);
+            else if (typeName == "NetPrefabParameter")
+                ParseNetPrefabParam(fieldName, ctorArgs);
+            else if (typeName.StartsWith("EnumParameter<")) {
+                // Extract the generic type argument: "EnumParameter<ConnectMode>" -> "ConnectMode"
+                var enumType = typeName["EnumParameter<".Length..^1];
+                var key = StripQuotes(ctorArgs.GetValueOrDefault("key") ?? ctorArgs.GetValueOrDefault("0") ?? "");
+                var defaultStr = ctorArgs.GetValueOrDefault("default") ?? ctorArgs.GetValueOrDefault("1") ?? "0";
+                var defaultValue = ResolveEnumValue(defaultStr, enumType);
+                var modes = ResolveModes(ctorArgs.GetValueOrDefault("modes") ?? ctorArgs.GetValueOrDefault("2") ?? "0");
+                parameters.Add(new EnumParamDef(key, fieldName, enumType, defaultValue, modes) { Label = ParseLabel(ctorArgs) });
+            }
         }
     }
 }
 
+/// <summary>
+/// Checks whether <paramref name="typeName"/> is one of the recognized parameter types.
+/// </summary>
+bool IsParameterType(string typeName) =>
+    typeName is "FloatParameter" or "IntParameter" or "BoolParameter"
+        or "Float3Parameter" or "QuaternionParameter" or "NetPrefabParameter"
+    || typeName.StartsWith("EnumParameter<");
+
+/// <summary>
+/// Converts a Roslyn <see cref="ArgumentSyntax"/> list into a string dictionary,
+/// keyed by named-argument name or positional index.
+/// This bridges the Roslyn AST into the same format the Parse*Param handlers expect,
+/// keeping the downstream resolution logic (modes, enum values, floats) unchanged.
+/// </summary>
+/// <remarks>
+/// Named constructor args use colon syntax (<c>modes: 3</c>) and are identified
+/// via <c>arg.NameColon</c>. Positional args are stored under their zero-based
+/// index as a string key ("0", "1", ...).
+/// <para/>
+/// Note: Roslyn's <c>NameColon.Name.Identifier.Text</c> automatically strips the
+/// <c>@</c> verbatim prefix from escaped keywords (e.g. <c>@default:</c> becomes
+/// key <c>"default"</c>).
+/// </remarks>
+Dictionary<string, string> ExtractArgs(SeparatedSyntaxList<ArgumentSyntax> syntaxArgs) {
+    var result = new Dictionary<string, string>();
+    int positional = 0;
+    foreach (var arg in syntaxArgs) {
+        var name = arg.NameColon?.Name.Identifier.Text;
+        var value = arg.Expression.ToString().Trim();
+        if (name != null)
+            result[name] = value;
+        else
+            result[(positional++).ToString()] = value;
+    }
+    return result;
+}
+
+// ── Parameter type handlers ────────────────────────────────────────────────────
+//
+// Each handler extracts constructor arguments by trying the named key first,
+// then falling back to positional index. This matches the C# constructor
+// signatures where early args (key, default, min, max) are typically passed
+// positionally, while later optional args (modes, label, fractionDigits) use
+// named syntax:
+//
+//   new("connect.loopRadius", 50f, 1f, 500f, modes: (int)ConnectMode.Loop, label: "...")
+//        ^--- positional 0-3 ---^              ^--- named ---^
+
+/// <summary>
+/// Extracts a <see cref="FloatParamDef"/> from constructor args.
+/// Positional order: key(0), default(1), min(2), max(3), modes(4).
+/// </summary>
 void ParseFloatParam(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var def = ParseFloatLiteral(args.GetValueOrDefault("default") ?? args.GetValueOrDefault("1") ?? "0");
@@ -146,6 +278,10 @@ void ParseFloatParam(string fieldName, Dictionary<string, string> args) {
     parameters.Add(new FloatParamDef(key, fieldName, def, min, max, modes) { Label = label, FractionDigits = fractionDigits });
 }
 
+/// <summary>
+/// Extracts an <see cref="IntParamDef"/> from constructor args.
+/// Positional order: key(0), default(1), min(2), max(3), modes(4).
+/// </summary>
 void ParseIntParam(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var def = int.Parse(args.GetValueOrDefault("default") ?? args.GetValueOrDefault("1") ?? "0");
@@ -155,6 +291,10 @@ void ParseIntParam(string fieldName, Dictionary<string, string> args) {
     parameters.Add(new IntParamDef(key, fieldName, def, min, max, modes) { Label = ParseLabel(args) });
 }
 
+/// <summary>
+/// Extracts a <see cref="BoolParamDef"/> from constructor args.
+/// Positional order: key(0), default(1), modes(2).
+/// </summary>
 void ParseBoolParam(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var def = bool.Parse(args.GetValueOrDefault("default") ?? args.GetValueOrDefault("1") ?? "false");
@@ -162,103 +302,73 @@ void ParseBoolParam(string fieldName, Dictionary<string, string> args) {
     parameters.Add(new BoolParamDef(key, fieldName, def, modes) { Label = ParseLabel(args) });
 }
 
+/// <summary>
+/// Extracts a <see cref="Float3ParamDef"/> from constructor args.
+/// Positional order: key(0), default(1), modes(2). Default is unused in codegen.
+/// </summary>
 void ParseFloat3Param(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("2") ?? "0");
     parameters.Add(new Float3ParamDef(key, fieldName, modes) { Label = ParseLabel(args) });
 }
 
+/// <summary>
+/// Extracts a <see cref="QuaternionParamDef"/> from constructor args.
+/// Positional order: key(0), default(1), modes(2). Default is unused in codegen.
+/// </summary>
 void ParseQuaternionParam(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("2") ?? "0");
     parameters.Add(new QuaternionParamDef(key, fieldName, modes) { Label = ParseLabel(args) });
 }
 
+/// <summary>
+/// Extracts a <see cref="NetPrefabParamDef"/> from constructor args.
+/// Positional order: key(0), modes(1). No default value.
+/// </summary>
 void ParseNetPrefabParam(string fieldName, Dictionary<string, string> args) {
     var key = StripQuotes(args.GetValueOrDefault("key") ?? args.GetValueOrDefault("0") ?? "");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("1") ?? "0");
     parameters.Add(new NetPrefabParamDef(key, fieldName, modes) { Label = ParseLabel(args) });
 }
 
+/// <summary>
+/// Extracts the <c>label</c> named argument if present, stripping surrounding quotes.
+/// </summary>
 string? ParseLabel(Dictionary<string, string> args) {
     var raw = args.GetValueOrDefault("label");
     return raw != null ? StripQuotes(raw) : null;
 }
 
-// ── Constructor argument parsing ───────────────────────────────────────────────
-
-string ExtractBalancedParens(string source, int startAfterOpen) {
-    int depth = 1;
-    int i = startAfterOpen;
-    while (i < source.Length && depth > 0) {
-        if (source[i] == '(') depth++;
-        else if (source[i] == ')') depth--;
-        if (depth > 0) i++;
-    }
-    return source[startAfterOpen..i];
-}
-
-Dictionary<string, string> ParseConstructorArgs(string argsStr) {
-    var result = new Dictionary<string, string>();
-    var parts = SplitArgs(argsStr);
-    for (int i = 0; i < parts.Count; i++) {
-        var part = parts[i].Trim();
-        if (string.IsNullOrEmpty(part)) continue;
-
-        var colonIdx = FindNamedArgColon(part);
-        if (colonIdx > 0) {
-            var name = part[..colonIdx].Trim().TrimStart('@');
-            var value = part[(colonIdx + 1)..].Trim();
-            result[name] = value;
-        } else {
-            result[i.ToString()] = part;
-        }
-    }
-    return result;
-}
-
-int FindNamedArgColon(string part) {
-    if (part.StartsWith("\"")) return -1;
-    for (int i = 0; i < part.Length; i++) {
-        if (part[i] == ':') return i;
-        if (part[i] == '"' || part[i] == '(') return -1;
-    }
-    return -1;
-}
-
-List<string> SplitArgs(string argsStr) {
-    var result = new List<string>();
-    int depth = 0;
-    int start = 0;
-    bool inString = false;
-    for (int i = 0; i < argsStr.Length; i++) {
-        var c = argsStr[i];
-        if (c == '"') inString = !inString;
-        if (inString) continue;
-        switch (c) {
-            case '(': depth++; break;
-            case ')': depth--; break;
-            case ',' when depth == 0:
-                result.Add(argsStr[start..i]);
-                start = i + 1;
-                break;
-        }
-    }
-    result.Add(argsStr[start..]);
-    return result;
-}
-
 // ── Value resolution ───────────────────────────────────────────────────────────
+//
+// These helpers operate on the raw expression strings produced by ExtractArgs
+// (e.g. "0.5f", "ConnectMode.Loop", "(int)GenerateMode.Grid | (int)GenerateMode.Oval").
+// A small amount of regex is still used here because the expressions are already
+// flattened to strings — walking Roslyn nodes for these would add complexity
+// without improving clarity.
 
+/// <summary>
+/// Parses a C# float literal string, stripping the optional <c>f</c>/<c>F</c> suffix.
+/// </summary>
 float ParseFloatLiteral(string s) {
     s = s.Trim().TrimEnd('f', 'F');
     return float.Parse(s, CultureInfo.InvariantCulture);
 }
 
+/// <summary>
+/// Strips surrounding whitespace and double-quote characters from a string.
+/// </summary>
 string StripQuotes(string s) => s.Trim().Trim('"');
 
+/// <summary>
+/// Resolves an enum member access expression (e.g. <c>"ConnectMode.SimpleCurve"</c>)
+/// to its integer value by looking it up in the previously-collected <see cref="enums"/> dictionary.
+/// Falls back to <see cref="int.TryParse"/> for raw integer literals, or <c>0</c> if unresolvable.
+/// </summary>
 int ResolveEnumValue(string expr, string enumType) {
     expr = expr.Trim();
+    // Match "EnumType.MemberName" and look up the integer value
     var match = Regex.Match(expr, @"(\w+)\.(\w+)");
     if (match.Success && enums.TryGetValue(match.Groups[1].Value, out var def)) {
         var member = def.Members.FirstOrDefault(m => m.Name == match.Groups[2].Value);
@@ -268,11 +378,18 @@ int ResolveEnumValue(string expr, string enumType) {
     return 0;
 }
 
+/// <summary>
+/// Resolves a mode bitmask expression that may contain bitwise OR of cast enum values.
+/// Handles expressions like <c>"(int)GenerateMode.Grid | (int)GenerateMode.Circle"</c>
+/// by splitting on <c>|</c>, resolving each part, and OR-ing them together.
+/// The result is a bitmask controlling which tool modes a parameter is visible in.
+/// </summary>
 int ResolveModes(string expr) {
     expr = expr.Trim();
     if (expr == "0") return 0;
     if (int.TryParse(expr, out var literal)) return literal;
 
+    // Split on | and resolve each "(int)EnumType.Member" segment
     int result = 0;
     foreach (var part in expr.Split('|')) {
         var trimmed = part.Trim();
@@ -289,6 +406,10 @@ int ResolveModes(string expr) {
 
 // ── TypeScript emission ────────────────────────────────────────────────────────
 
+/// <summary>
+/// Returns the sorted, distinct list of enum type names that are actually referenced
+/// by <see cref="EnumParamDef"/> parameters — only these need to be emitted in the output.
+/// </summary>
 List<string> ReferencedEnumNames() =>
     parameters.OfType<EnumParamDef>()
         .Select(p => p.EnumType)
@@ -296,6 +417,10 @@ List<string> ReferencedEnumNames() =>
         .OrderBy(e => e)
         .ToList();
 
+/// <summary>
+/// Builds the complete TypeScript output string containing enum mirrors, parameter
+/// metadata, enum option arrays, and TwoWayBinding declarations.
+/// </summary>
 string EmitTypeScript() {
     var sb = new StringBuilder();
     sb.AppendLine("// AUTO-GENERATED by NetworkTools.Codegen. Do not edit.");
@@ -303,6 +428,8 @@ string EmitTypeScript() {
     sb.AppendLine("import { TwoWayBinding } from \"utils/bidirectionalBinding\";");
     sb.AppendLine();
 
+    // ── Enum definitions ──
+    // Mirror only the enums actually used by EnumParameter<T> fields.
     var referenced = ReferencedEnumNames();
     foreach (var enumName in referenced) {
         if (!enums.TryGetValue(enumName, out var def)) continue;
@@ -312,14 +439,19 @@ string EmitTypeScript() {
     }
     if (referenced.Count > 0) sb.AppendLine();
 
+    // Parameters grouped by the tool prefix (first segment of the dot-separated key).
+    // e.g. "connect.loopRadius" belongs to the "connect" group.
     var groups = parameters
         .GroupBy(p => p.Key.Split('.')[0])
         .OrderBy(g => g.Key)
         .ToList();
 
-    // Bindable parameter types (skip types without Colossal ValueWriter support)
+    // Float3, Quaternion, and NetPrefab types lack Colossal ValueWriter support,
+    // so they are excluded from TwoWayBinding generation.
     var bindable = parameters.Where(p => p is not Float3ParamDef and not QuaternionParamDef and not NetPrefabParamDef).ToList();
 
+    // ── PARAM_KEYS ──
+    // Nested object of short key names -> full dot-separated key strings.
     sb.AppendLine("export const PARAM_KEYS = {");
     foreach (var group in groups) {
         sb.AppendLine($"    {group.Key}: {{");
@@ -332,6 +464,9 @@ string EmitTypeScript() {
     sb.AppendLine("} as const;");
     sb.AppendLine();
 
+    // ── PARAM_META ──
+    // Flat map of every parameter's full key to its type descriptor (type, default,
+    // min/max, modes bitmask, optional label).
     sb.AppendLine("export const PARAM_META = {");
     foreach (var param in parameters) {
         sb.Append($"    \"{param.Key}\": {{ ");
@@ -358,6 +493,10 @@ string EmitTypeScript() {
     sb.AppendLine("} as const;");
     sb.AppendLine();
 
+    // ── ENUM_OPTIONS ──
+    // UI option arrays for enums that have [EnumOption] attributes.
+    // Enums with groups (e.g. ShapeTransformTemplate with "Slope"/"Curve") are
+    // keyed as "EnumName.GroupName"; ungrouped enums use just the enum name.
     var enumsWithOptions = referenced
         .Where(n => enums.TryGetValue(n, out var d) && d.HasOptions)
         .Select(n => enums[n])
@@ -369,6 +508,8 @@ string EmitTypeScript() {
         sb.AppendLine("export const ENUM_OPTIONS = {");
         foreach (var def in enumsWithOptions) {
             if (def.HasGroups) {
+                // Grouped enums: each group gets its own array, keyed as "EnumName.GroupName".
+                // A single member can appear in multiple groups via multiple [EnumOption] attributes.
                 foreach (var group in def.Groups) {
                     sb.AppendLine($"    \"{def.Name}.{group}\": [");
                     foreach (var member in def.Members) {
@@ -382,6 +523,7 @@ string EmitTypeScript() {
                     sb.AppendLine("    ] as readonly EnumOption[],");
                 }
             } else {
+                // Ungrouped enums: single array keyed by enum name.
                 sb.AppendLine($"    {def.Name}: [");
                 foreach (var member in def.Members) {
                     foreach (var opt in member.Options) {
@@ -398,6 +540,9 @@ string EmitTypeScript() {
         sb.AppendLine();
     }
 
+    // ── PARAM_BINDINGS ──
+    // Grouped TwoWayBinding instances for bindable parameter types.
+    // These are used by the UI to establish bidirectional communication with the mod.
     var bindableGroups = bindable
         .GroupBy(p => p.Key.Split('.')[0])
         .OrderBy(g => g.Key)
@@ -422,6 +567,9 @@ string EmitTypeScript() {
     sb.AppendLine("};");
     sb.AppendLine();
 
+    // ── PARAM_BINDING ──
+    // Flat lookup from full key string to its TwoWayBinding instance.
+    // Provides O(1) access when the key is known at runtime but the group is not.
     sb.AppendLine("export const PARAM_BINDING: Record<string, TwoWayBinding<any>> = {");
     foreach (var group in bindableGroups) {
         foreach (var param in group) {
@@ -434,41 +582,91 @@ string EmitTypeScript() {
     return sb.ToString();
 }
 
+/// <summary>
+/// Converts a full dot-separated parameter key to a short camelCase property name
+/// within its tool group.
+/// </summary>
+/// <example>
+/// <c>GetShortKey("connect.loopRadius", "connect")</c> returns <c>"loopRadius"</c>.
+/// <c>GetShortKey("generate.grid.xSpacing", "generate")</c> returns <c>"gridXSpacing"</c>.
+/// </example>
 string GetShortKey(string fullKey, string toolPrefix) {
+    // Strip the tool prefix and its trailing dot
     var suffix = fullKey[(toolPrefix.Length + 1)..];
     if (!suffix.Contains('.')) return suffix;
+    // Remaining dots become camelCase boundaries: "grid.xSpacing" -> "gridXSpacing"
     var parts = suffix.Split('.');
     return parts[0] + string.Concat(parts.Skip(1).Select(p => char.ToUpper(p[0]) + p[1..]));
 }
 
+/// <summary>
+/// Formats a float for TypeScript output. Whole numbers are emitted without a decimal
+/// point (e.g. <c>1</c> not <c>1.0</c>), while fractional values use the "G" format
+/// with invariant culture to avoid locale-dependent separators.
+/// </summary>
 string Fmt(float v) => v == (int)v
     ? ((int)v).ToString()
     : v.ToString("G", CultureInfo.InvariantCulture);
 
 // ── Data models ────────────────────────────────────────────────────────────────
 
+/// <summary>
+/// A single <c>[EnumOption]</c> attribute's parsed content.
+/// Represents one UI option entry for an enum value.
+/// </summary>
+/// <param name="Label">Localization key for the option's display text.</param>
+/// <param name="Icon">URI to the option's icon (e.g. <c>"coui://nt/Modes/ConnectLoop.svg"</c>).</param>
+/// <param name="Group">Optional group name for enums that split options across categories (e.g. "Slope", "Curve").</param>
+/// <param name="Visible">Whether the option appears in the UI. Hidden options are still valid values.</param>
+/// <param name="Disabled">Whether the option is shown but greyed out / unselectable.</param>
 record EnumOptionDef(string Label, string Icon, string? Group = null, bool Visible = true, bool Disabled = false);
+
+/// <summary>
+/// A single member of an enum declaration (e.g. <c>Grid = 1</c>) with its
+/// associated <see cref="EnumOptionDef"/> attributes.
+/// </summary>
 record EnumMember(string Name, int Value, List<EnumOptionDef> Options);
+
+/// <summary>
+/// A complete enum declaration with all its members.
+/// Provides helpers to determine whether the enum has UI options and/or groups.
+/// </summary>
 record EnumDef(string Name, List<EnumMember> Members) {
+    /// <summary>Whether any member has at least one <c>[EnumOption]</c> attribute.</summary>
     public bool HasOptions => Members.Any(m => m.Options.Count > 0);
+    /// <summary>Whether any option specifies a <c>Group</c>, requiring split option arrays in the output.</summary>
     public bool HasGroups => Members.Any(m => m.Options.Any(o => o.Group != null));
+    /// <summary>The distinct, sorted group names across all members' options.</summary>
     public IEnumerable<string> Groups => Members
         .SelectMany(m => m.Options.Where(o => o.Group != null).Select(o => o.Group!))
         .Distinct()
         .OrderBy(g => g);
 }
 
+/// <summary>
+/// Base record for all parameter definitions. The <see cref="Key"/> is the full
+/// dot-separated identifier used for C#/TypeScript binding (e.g. <c>"connect.loopRadius"</c>).
+/// <see cref="Modes"/> is a bitmask of tool modes in which this parameter is active.
+/// </summary>
 abstract record ParamDef(string Key, string FieldName, int Modes) {
+    /// <summary>Optional localization key for the parameter's UI label.</summary>
     public string? Label { get; init; }
 }
+
+/// <param name="Default">Initial value.</param>
+/// <param name="Min">Minimum slider/input value.</param>
+/// <param name="Max">Maximum slider/input value.</param>
 record FloatParamDef(string Key, string FieldName, float Default, float Min, float Max, int Modes)
     : ParamDef(Key, FieldName, Modes) {
+    /// <summary>Number of decimal places shown in the UI (default 1).</summary>
     public int FractionDigits { get; init; } = 1;
 }
 record IntParamDef(string Key, string FieldName, int Default, int Min, int Max, int Modes)
     : ParamDef(Key, FieldName, Modes);
 record BoolParamDef(string Key, string FieldName, bool Default, int Modes)
     : ParamDef(Key, FieldName, Modes);
+/// <param name="EnumType">The C# enum type name (e.g. <c>"ConnectMode"</c>).</param>
+/// <param name="DefaultValue">The resolved integer value of the default enum member.</param>
 record EnumParamDef(string Key, string FieldName, string EnumType, int DefaultValue, int Modes)
     : ParamDef(Key, FieldName, Modes);
 record Float3ParamDef(string Key, string FieldName, int Modes)
