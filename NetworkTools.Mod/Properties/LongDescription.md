@@ -1,3 +1,5 @@
+**The mod is available as an UNLISTED mod on PDXMods. We will be on the honor system. Please do NOT publicly share the direct link to the mod. This is both to safeguard players and myself. Keeping the link private helps me manage the stress and workload. It ensures that only people that have read this disclaimer and know what they are doing are using the mod. Be cool!**
+
 # Network Tools: The Network Manipulation Toolkit
 
 The spiritual successor to the beloved [Network Multitool](https://steamcommunity.com/sharedfiles/filedetails/?id=2560782729) for Cities: Skylines 1, rebuilt from the ground up for CS2. 
