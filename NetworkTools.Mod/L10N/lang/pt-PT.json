@@ -20,6 +20,8 @@
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool8]": "Atalho para abrir uma ferramenta de ferramentas de rede específica, use-a após abrir o painel NT",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "Abrir ferramenta de geração",
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "Atalho para abrir uma ferramenta de ferramentas de rede específica, use-a após abrir o painel NT",
+  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.ApplyTransformation]": "Apply Tool",
+  "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.ApplyTransformation]": "Applies the current tool's action",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.KeybindingsGroupStr]": "Teclas de atalho",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.AboutGroupStr]": "Sobre",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.Version]": "Versão",
