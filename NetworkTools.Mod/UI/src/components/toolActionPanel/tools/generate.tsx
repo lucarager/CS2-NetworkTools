@@ -5,6 +5,7 @@ import { useValue } from "cs2/api";
 import { PrefabSelection } from "../shared/prefabSelection";
 import { ParameterField } from "../shared/parameterField";
 import { TabBar } from "../shared/tabBar";
+import { useLocalization } from "cs2/l10n";
 
 const G = PARAM_BINDINGS.generate;
 
@@ -12,6 +13,7 @@ export const GenerateControls: React.FC = () => {
     const activeGenerateMode = useValue(G.mode.binding) as GenerateMode;
     const altPrefabX = useValue(G.altPrefabX.binding) as boolean;
     const altPrefabZ = useValue(G.altPrefabZ.binding) as boolean;
+    const { translate } = useLocalization();
 
     return (
         <div className={styles.section}>
@@ -23,10 +25,17 @@ export const GenerateControls: React.FC = () => {
                     <>
                         <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
                         <ParameterField paramKey="generate.elevation" />
-                        <ParameterField paramKey="generate.gridXSpacing" />
-                        <ParameterField paramKey="generate.gridZSpacing" />
                         <ParameterField paramKey="generate.gridXNum" />
                         <ParameterField paramKey="generate.gridZNum" />
+                        <ParameterField paramKey="generate.gridXSpacing" />
+                        <ParameterField paramKey="generate.gridZSpacing" />
+                        <div className={styles.sectionDivider}>
+                            <div className={styles.sectionDivider__line}></div>
+                            <span className={styles.sectionDivider__label}>
+                                {translate("NetworkTools.UI.Common.Advanced")}
+                            </span>
+                            <div className={styles.sectionDivider__line}></div>
+                        </div>
                         <ParameterField paramKey="generate.altPrefabX" />
                         {altPrefabX && (
                             <>

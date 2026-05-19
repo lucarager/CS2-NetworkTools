@@ -24,6 +24,7 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
     const { activeKey } = usePrefabSearch();
     const selectedType = useValue(GAME_BINDINGS.PS_SELECTED_TYPE.binding);
     const prefabData = useValue(GAME_BINDINGS.PS_DATA.binding);
+    const cachedPrefab = useValue(GAME_BINDINGS.PS_CACHED_PREFAB.binding);
     const [searchQuery, setSearchQuery] = useState("");
     const { translate } = useLocalization();
 
@@ -34,6 +35,15 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
             translate(`Assets.NAME[${p.Name}]`, p.Name)?.toLowerCase().includes(query),
         );
     }, [prefabData, searchQuery, translate]);
+
+    const filteredCachedPrefab = useMemo(() => {
+        if (cachedPrefab.length === 0) return [];
+        if (!searchQuery.trim()) return cachedPrefab;
+        const query = searchQuery.toLowerCase();
+        return cachedPrefab.filter((p) =>
+            translate(`Assets.NAME[${p.Name}]`, p.Name)?.toLowerCase().includes(query),
+        );
+    }, [cachedPrefab, searchQuery, translate]);
 
     return (
         <div className={c(panels.nt_panel, styles.panel)}>
@@ -74,9 +84,34 @@ export const PrefabSearchPanel: React.FC<PrefabSearchPanelProps> = ({ onClose })
 
             <div className={styles.list}>
                 <VC.Scrollable>
-                    {filteredPrefabs.length === 0 && (
+                    {filteredCachedPrefab.length > 0 && (
+                        <>
+                            <div className={styles.sectionLabel}>
+                                {translate("NetworkTools.UI.PrefabSearch.RecentlyUsed")}
+                            </div>
+                            {filteredCachedPrefab.map((prefab) => (
+                                <div
+                                    key={`cached-${prefab.Entity.index}-${prefab.Entity.version}`}
+                                    className={styles.listItem}
+                                    onClick={() => {
+                                        if (activeKey)
+                                            GAME_TRIGGERS.PS_SELECT(activeKey, prefab.Entity);
+                                        onClose();
+                                    }}>
+                                    <img src={prefab.Icon} className={styles.listItem__icon} />
+                                    {translate(`Assets.NAME[${prefab.Name}]`, prefab.Name)}
+                                </div>
+                            ))}
+                        </>
+                    )}
+                    {filteredPrefabs.length === 0 && filteredCachedPrefab.length === 0 && (
                         <div className={styles.empty}>
                             {translate("NetworkTools.UI.PrefabSearch.Empty")}
+                        </div>
+                    )}
+                    {filteredCachedPrefab.length > 0 && filteredPrefabs.length > 0 && (
+                        <div className={styles.sectionLabel}>
+                            {translate("NetworkTools.UI.PrefabSearch.All", "All")}
                         </div>
                     )}
                     {filteredPrefabs.map((prefab) => (

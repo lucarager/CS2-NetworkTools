@@ -9,6 +9,9 @@ export enum ParallelOrigin { LeftEdge = 0, Center = 1, RightEdge = 2 }
 export enum ShapeTransformTemplate { Preserve = 0, SlopeLinear = 1, SlopeEaseInOut = 2, SlopeArch = 3, CurveStraighten = 4, CurveSmooth = 5 }
 
 export const PARAM_KEYS = {
+    common: {
+        lastNetPrefab: "common.lastNetPrefab",
+    },
     connect: {
         netPrefab: "connect.netPrefab",
         mode: "connect.mode",
@@ -96,6 +99,7 @@ export const PARAM_META = {
     "parallel.verticalOffset": { type: "float", default: 0, min: -80, max: 80, fractionDigits: 0, modes: 0, label: "NetworkTools.UI.Parallel.VerticalOffset" },
     "parallel.reverseDirection": { type: "enum", enumType: "ParallelDirection", default: 0, modes: 0, label: "NetworkTools.UI.Parallel.Direction" },
     "parallel.origin": { type: "enum", enumType: "ParallelOrigin", default: 1, modes: 0, label: "NetworkTools.UI.Parallel.Origin" },
+    "common.lastNetPrefab": { type: "netPrefab", modes: 0 },
     "roadShape.template": { type: "enum", enumType: "ShapeTransformTemplate", default: 0, modes: 0, label: "NetworkTools.UI.Common.Mode" },
     "roadShape.easeInLength": { type: "float", default: 0.1, min: 0, max: 0.5, fractionDigits: 0, modes: 2, label: "NetworkTools.UI.Slope.StartingFlatness" },
     "roadShape.easeOutLength": { type: "float", default: 0.1, min: 0, max: 0.5, fractionDigits: 0, modes: 2, label: "NetworkTools.UI.Slope.EndingFlatness" },

@@ -94,6 +94,7 @@ export const GAME_BINDINGS = {
     SELECTED_VIEWS: new TwoWayBinding<number>("SELECTED_VIEWS", ViewOption.None),
     PS_SELECTED_TYPE: new TwoWayBinding<number>("PS:SELECTED_TYPE", PrefabType.Road),
     PS_DATA: new TwoWayBinding<PrefabSelectionEntry[]>("PS:DATA", []),
+    PS_CACHED_PREFAB: new TwoWayBinding<PrefabSelectionEntry[]>("PS:CACHED_PREFAB", []),
 };
 
 export const GAME_TRIGGERS = {

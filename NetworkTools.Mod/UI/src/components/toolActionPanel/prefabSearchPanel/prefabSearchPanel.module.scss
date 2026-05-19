@@ -97,6 +97,14 @@
     padding: 4rem 0;
 }
 
+.sectionLabel {
+    padding: 6rem $panel-padding-x 2rem;
+    font-size: var(--fontSizeXS);
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5rem;
+}
+
 .listItem {
     padding: 6rem $panel-padding-x;
     font-size: var(--fontSizeS);

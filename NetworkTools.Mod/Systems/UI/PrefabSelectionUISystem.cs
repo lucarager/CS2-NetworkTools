@@ -1,5 +1,6 @@
 ﻿namespace NetworkTools.Systems.UI {
     using System.Linq;
+    using Colossal.Entities;
     using Colossal.UI.Binding;
     using Game.Prefabs;
     using Game.Tools;
@@ -26,14 +27,17 @@
             NetLane
         }
 
+        private ValueBindingHelper<PrefabSelectionEntry[]> m_CachedPrefabBinding;
         private ValueBindingHelper<PrefabSelectionEntry[]> m_DataBinding;
 
-        private PrefabBase             m_DefaultRoadPrefab;
-        private int                    m_LastPrefabType = -1;
-        private PrefixedLogger         m_Log;
-        private PrefabSystem           m_PrefabSystem;
-        private ToolSystem             m_ToolSystem;
-        private ValueBindingHelper<int> m_TypeBinding;
+        private PrefabBase                m_DefaultRoadPrefab;
+        private Entity                    m_LastCachedEntity;
+        private int                       m_LastPrefabType = -1;
+        private PrefixedLogger            m_Log;
+        private NT_PrefabCacheToolSystem  m_PrefabCacheSystem;
+        private PrefabSystem              m_PrefabSystem;
+        private ToolSystem                m_ToolSystem;
+        private ValueBindingHelper<int>   m_TypeBinding;
 
         /// <inheritdoc />
         protected override void OnCreate() {
@@ -42,11 +46,13 @@
             m_Log = new PrefixedLogger(nameof(NT_PrefabSelectionUISystem));
             m_Log.Debug("OnCreate()");
 
-            m_PrefabSystem = World.GetOrCreateSystemManaged<PrefabSystem>();
-            m_ToolSystem   = World.GetOrCreateSystemManaged<ToolSystem>();
+            m_PrefabSystem      = World.GetOrCreateSystemManaged<PrefabSystem>();
+            m_PrefabCacheSystem = World.GetOrCreateSystemManaged<NT_PrefabCacheToolSystem>();
+            m_ToolSystem        = World.GetOrCreateSystemManaged<ToolSystem>();
 
-            m_TypeBinding = CreateBinding("PS:SELECTED_TYPE", (int)PrefabType.Road, HandleUpdateType);
-            m_DataBinding = CreateBinding("PS:DATA",          new PrefabSelectionEntry[] { });
+            m_TypeBinding          = CreateBinding("PS:SELECTED_TYPE", (int)PrefabType.Road, HandleUpdateType);
+            m_DataBinding          = CreateBinding("PS:DATA",          new PrefabSelectionEntry[] { });
+            m_CachedPrefabBinding  = CreateBinding("PS:CACHED_PREFAB", new PrefabSelectionEntry[] { });
             CreateTrigger<string, Entity>("PS:SELECT", HandleSelect);
         }
 
@@ -72,6 +78,8 @@
                 };
                 m_DataBinding.Value = prefabData;
             }
+
+            UpdateCachedPrefabBinding();
 
             if (m_ToolSystem.activeTool is NT_BaseToolSystem tool) {
                 foreach (var param in tool.Parameters) {
@@ -121,31 +129,31 @@
         }
 
         private PrefabSelectionEntry[] GetRoadPrefabs() {
-            return GetSortedPrefabs<RoadData>(PrefabType.Road);
+            var entities = SystemAPI.QueryBuilder().WithAll<RoadData>().Build().ToEntityArray(Allocator.Temp);
+            return GetSortedPrefabs(entities, PrefabType.Road);
         }
 
         private PrefabSelectionEntry[] GetPathPrefabs() {
-            return GetSortedPrefabs<PathwayData>(PrefabType.Path);
+            var entities = SystemAPI.QueryBuilder().WithAll<PathwayData>().Build().ToEntityArray(Allocator.Temp);
+            return GetSortedPrefabs(entities, PrefabType.Path);
         }
 
         private PrefabSelectionEntry[] GetRailPrefabs() {
-            return GetSortedPrefabs<TrackData>(PrefabType.Rail);
+            var entities = SystemAPI.QueryBuilder().WithAll<TrackData>().Build().ToEntityArray(Allocator.Temp);
+            return GetSortedPrefabs(entities, PrefabType.Rail);
         }
 
         private PrefabSelectionEntry[] GetWaterwayPrefabs() {
-            return GetSortedPrefabs<WaterwayData>(PrefabType.Waterway);
+            var entities = SystemAPI.QueryBuilder().WithAll<WaterwayData>().Build().ToEntityArray(Allocator.Temp);
+            return GetSortedPrefabs(entities, PrefabType.Waterway);
         }
 
         private PrefabSelectionEntry[] GetNetLanePrefabs() {
-            return GetSortedPrefabs<NetLaneData>(PrefabType.NetLane);
+            var entities = SystemAPI.QueryBuilder().WithAll<NetLaneData>().Build().ToEntityArray(Allocator.Temp);
+            return GetSortedPrefabs(entities, PrefabType.NetLane);
         }
 
-        private PrefabSelectionEntry[] GetSortedPrefabs<T>(PrefabType type) where T : unmanaged, IComponentData {
-            var entities = SystemAPI.QueryBuilder()
-                                    .WithAll<T>()
-                                    .Build()
-                                    .ToEntityArray(Allocator.Temp);
-
+        private PrefabSelectionEntry[] GetSortedPrefabs(NativeArray<Entity> entities, PrefabType type) {
             return entities.Select(entity => {
                                var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(entity);
                                var name   = prefab.name;
@@ -157,6 +165,36 @@
                            .ThenBy(x => x.itemPriority)
                            .Select(x => x.entry)
                            .ToArray();
+        }
+
+        private void UpdateCachedPrefabBinding() {
+            var cache = m_PrefabCacheSystem.LastNetPrefab;
+            if (!cache.HasSelection) {
+                if (m_LastCachedEntity != Entity.Null) {
+                    m_LastCachedEntity = Entity.Null;
+                    m_CachedPrefabBinding.Value = new PrefabSelectionEntry[] { };
+                }
+                return;
+            }
+
+            var isLane = cache.Prefab is NetLanePrefab;
+            var entity = isLane ? cache.NetLanePrefabEntity : cache.NetPrefabEntity;
+
+            if (entity == m_LastCachedEntity) return;
+            m_LastCachedEntity = entity;
+
+            var prefab = cache.Prefab;
+            var type = prefab switch {
+                PathwayPrefab  => PrefabType.Path,
+                TrackPrefab    => PrefabType.Rail,
+                WaterwayPrefab => PrefabType.Waterway,
+                NetLanePrefab  => PrefabType.NetLane,
+                _              => PrefabType.Road
+            };
+
+            m_CachedPrefabBinding.Value = new[] {
+                new PrefabSelectionEntry(entity, prefab.name, ImageSystem.GetThumbnail(prefab), type)
+            };
         }
 
         private (int groupPriority, int itemPriority) GetPriority(Entity entity) {
