@@ -20,6 +20,8 @@
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool8]": "打开 Network Tools 具体功能的快捷方式，请在打开 NT 面板后使用它",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "打开生成工具",
   "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.OpenTool9]": "打开 Network Tools 具体功能的快捷方式，请在打开 NT 面板后使用它",
+  "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.ApplyTransformation]": "Apply Tool",
+  "Options.OPTION_DESCRIPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.ApplyTransformation]": "Applies the current tool's action",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.KeybindingsGroupStr]": "快捷键",
   "Options.GROUP[NetworkTools.NetworkTools.NetworkToolsMod.AboutGroupStr]": "关于",
   "Options.OPTION[NetworkTools.NetworkTools.NetworkToolsMod.NT_Settings.Version]": "版本",
