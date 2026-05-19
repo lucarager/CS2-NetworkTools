@@ -39,10 +39,10 @@ namespace NetworkTools.Systems.Tools.Generate {
 
         // Grid
         public EnumParameter<GenerateMode> Mode         = new("generate.mode", GenerateMode.Grid, label: "NetworkTools.UI.Common.Mode");
-        public FloatParameter GridXSpacing = new("generate.gridXSpacing", 60f, 0f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XSpacing", fractionDigits: 0);
-        public FloatParameter GridZSpacing = new("generate.gridZSpacing", 60f, 0f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZSpacing", fractionDigits: 0);
-        public IntParameter   GridXNum     = new("generate.gridXNum", 3, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XCount");
-        public IntParameter   GridZNum     = new("generate.gridZNum", 3, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZCount");
+        public FloatParameter GridXSpacing = new("generate.gridXSpacing", 60f, 0f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XSpacing", fractionDigits: 0, numberType: NumberType.Distance);
+        public FloatParameter GridZSpacing = new("generate.gridZSpacing", 60f, 0f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZSpacing", fractionDigits: 0, numberType: NumberType.Distance);
+        public IntParameter   GridXNum     = new("generate.gridXNum", 3, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XCount", numberType: NumberType.Columns);
+        public IntParameter   GridZNum     = new("generate.gridZNum", 3, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZCount", numberType: NumberType.Rows);
         public BoolParameter      AlternatingNetworkPrefabX = new("generate.altPrefabX", false, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltPrefabX");
         public NetPrefabParameter AltNetPrefabX             = new("generate.altNetPrefabX", modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltNetPrefabX");
         public IntParameter       AltEveryX                 = new("generate.altEveryX", 2, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltEveryX");
@@ -51,14 +51,14 @@ namespace NetworkTools.Systems.Tools.Generate {
         public IntParameter       AltEveryZ                 = new("generate.altEveryZ", 2, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltEveryZ");
 
         // Circle
-        public FloatParameter CircleRadius = new("generate.circleRadius", 60f, 4f, 240f, modes: (int)GenerateMode.Circle, label: "NetworkTools.UI.Generate.Radius", fractionDigits: 0);
+        public FloatParameter CircleRadius = new("generate.circleRadius", 60f, 4f, 240f, modes: (int)GenerateMode.Circle, label: "NetworkTools.UI.Generate.Radius", fractionDigits: 0, numberType: NumberType.Distance);
 
         // Oval
-        public FloatParameter OvalRadiusX = new("generate.ovalRadiusX", 80f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusX", fractionDigits: 0);
-        public FloatParameter OvalRadiusZ = new("generate.ovalRadiusZ", 40f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusZ", fractionDigits: 0);
+        public FloatParameter OvalRadiusX = new("generate.ovalRadiusX", 80f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusX", fractionDigits: 0, numberType: NumberType.Distance);
+        public FloatParameter OvalRadiusZ = new("generate.ovalRadiusZ", 40f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusZ", fractionDigits: 0, numberType: NumberType.Distance);
 
         // Elevation (controlled via PageUp/PageDown shortcuts)
-        public FloatParameter Elevation = new("generate.elevation", 0f, -100f, 100f, modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.Elevation", fractionDigits: 0);
+        public FloatParameter Elevation = new("generate.elevation", 0f, -100f, 100f, modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.Elevation", fractionDigits: 0, numberType: NumberType.Distance);
 
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Mode.Value;

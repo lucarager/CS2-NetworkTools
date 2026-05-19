@@ -275,7 +275,9 @@ void ParseFloatParam(string fieldName, Dictionary<string, string> args) {
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("4") ?? "0");
     var label = ParseLabel(args);
     var fractionDigits = int.TryParse(args.GetValueOrDefault("fractionDigits"), out var fd) ? fd : 1;
-    parameters.Add(new FloatParamDef(key, fieldName, def, min, max, modes) { Label = label, FractionDigits = fractionDigits });
+    var numberType = ParseNumberType(args);
+    var displayScale = ParseDisplayScale(args);
+    parameters.Add(new FloatParamDef(key, fieldName, def, min, max, modes) { Label = label, FractionDigits = fractionDigits, NumberType = numberType, DisplayScale = displayScale });
 }
 
 /// <summary>
@@ -288,7 +290,9 @@ void ParseIntParam(string fieldName, Dictionary<string, string> args) {
     var min = int.Parse(args.GetValueOrDefault("min") ?? args.GetValueOrDefault("2") ?? "0");
     var max = int.Parse(args.GetValueOrDefault("max") ?? args.GetValueOrDefault("3") ?? "0");
     var modes = ResolveModes(args.GetValueOrDefault("modes") ?? args.GetValueOrDefault("4") ?? "0");
-    parameters.Add(new IntParamDef(key, fieldName, def, min, max, modes) { Label = ParseLabel(args) });
+    var numberType = ParseNumberType(args);
+    var displayScale = ParseDisplayScale(args);
+    parameters.Add(new IntParamDef(key, fieldName, def, min, max, modes) { Label = ParseLabel(args), NumberType = numberType, DisplayScale = displayScale });
 }
 
 /// <summary>
@@ -339,6 +343,31 @@ void ParseNetPrefabParam(string fieldName, Dictionary<string, string> args) {
 string? ParseLabel(Dictionary<string, string> args) {
     var raw = args.GetValueOrDefault("label");
     return raw != null ? StripQuotes(raw) : null;
+}
+
+/// <summary>
+/// Extracts the <c>numberType</c> named argument if present, resolving the
+/// <c>NumberType.XXX</c> enum member to a lowercase string for TypeScript output.
+/// Returns <c>null</c> when absent or when the value is <c>NumberType.None</c>.
+/// </summary>
+string? ParseNumberType(Dictionary<string, string> args) {
+    var raw = args.GetValueOrDefault("numberType");
+    if (raw == null) return null;
+    var member = raw.Contains('.') ? raw.Split('.').Last() : raw;
+    return member == "None" ? null : CamelCase(member);
+}
+
+string CamelCase(string s) => s.Length == 0 ? s : char.ToLower(s[0]) + s[1..];
+
+/// <summary>
+/// Extracts the <c>displayScale</c> named argument if present, parsing the float literal.
+/// Returns <c>null</c> when absent or when the value is <c>1</c> (the default).
+/// </summary>
+float? ParseDisplayScale(Dictionary<string, string> args) {
+    var raw = args.GetValueOrDefault("displayScale");
+    if (raw == null) return null;
+    var val = ParseFloatLiteral(raw);
+    return val == 1f ? null : val;
 }
 
 // ── Value resolution ───────────────────────────────────────────────────────────
@@ -473,9 +502,9 @@ string EmitTypeScript() {
         sb.Append($"    \"{param.Key}\": {{ ");
         sb.Append(param switch {
             FloatParamDef f =>
-                $"type: \"float\", default: {Fmt(f.Default)}, min: {Fmt(f.Min)}, max: {Fmt(f.Max)}, fractionDigits: {f.FractionDigits}, modes: {f.Modes}",
+                $"type: \"float\", default: {Fmt(f.Default)}, min: {Fmt(f.Min)}, max: {Fmt(f.Max)}, fractionDigits: {f.FractionDigits}, displayScale: {Fmt(f.DisplayScale ?? 1f)}, numberType: \"{f.NumberType ?? "none"}\", modes: {f.Modes}",
             IntParamDef i =>
-                $"type: \"int\", default: {i.Default}, min: {i.Min}, max: {i.Max}, modes: {i.Modes}",
+                $"type: \"int\", default: {i.Default}, min: {i.Min}, max: {i.Max}, displayScale: {Fmt(i.DisplayScale ?? 1f)}, numberType: \"{i.NumberType ?? "none"}\", modes: {i.Modes}",
             BoolParamDef b =>
                 $"type: \"bool\", default: {(b.Default ? "true" : "false")}, modes: {b.Modes}",
             EnumParamDef e =>
@@ -661,9 +690,18 @@ record FloatParamDef(string Key, string FieldName, float Default, float Min, flo
     : ParamDef(Key, FieldName, Modes) {
     /// <summary>Number of decimal places shown in the UI (default 1).</summary>
     public int FractionDigits { get; init; } = 1;
+    /// <summary>Optional semantic number type (e.g. "distance", "percentage") for UI formatting hints.</summary>
+    public string? NumberType { get; init; }
+    /// <summary>Optional display multiplier for the UI (e.g. 100 to show 0–1 as 0–100). Null when 1 (default).</summary>
+    public float? DisplayScale { get; init; }
 }
 record IntParamDef(string Key, string FieldName, int Default, int Min, int Max, int Modes)
-    : ParamDef(Key, FieldName, Modes);
+    : ParamDef(Key, FieldName, Modes) {
+    /// <summary>Optional semantic number type (e.g. "rows", "columns") for UI formatting hints.</summary>
+    public string? NumberType { get; init; }
+    /// <summary>Optional display multiplier for the UI. Null when 1 (default).</summary>
+    public float? DisplayScale { get; init; }
+}
 record BoolParamDef(string Key, string FieldName, bool Default, int Modes)
     : ParamDef(Key, FieldName, Modes);
 /// <param name="EnumType">The C# enum type name (e.g. <c>"ConnectMode"</c>).</param>

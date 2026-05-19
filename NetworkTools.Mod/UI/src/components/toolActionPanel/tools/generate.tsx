@@ -20,54 +20,52 @@ export const GenerateControls: React.FC = () => {
             <div className={styles.section__tabs}>
                 <TabBar paramKey="generate.mode" />
             </div>
-            <div className={styles.section__content}>
-                {activeGenerateMode === GenerateMode.Grid && (
-                    <>
-                        <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
-                        <ParameterField paramKey="generate.elevation" />
-                        <ParameterField paramKey="generate.gridXNum" />
-                        <ParameterField paramKey="generate.gridZNum" />
-                        <ParameterField paramKey="generate.gridXSpacing" />
-                        <ParameterField paramKey="generate.gridZSpacing" />
-                        <div className={styles.sectionDivider}>
-                            <div className={styles.sectionDivider__line}></div>
-                            <span className={styles.sectionDivider__label}>
-                                {translate("NetworkTools.UI.Common.Advanced")}
-                            </span>
-                            <div className={styles.sectionDivider__line}></div>
-                        </div>
-                        <ParameterField paramKey="generate.altPrefabX" />
-                        {altPrefabX && (
-                            <>
-                                <PrefabSelection paramKey={PARAM_KEYS.generate.altNetPrefabX} />
-                                <ParameterField paramKey="generate.altEveryX" />
-                            </>
-                        )}
-                        <ParameterField paramKey="generate.altPrefabZ" />
-                        {altPrefabZ && (
-                            <>
-                                <PrefabSelection paramKey={PARAM_KEYS.generate.altNetPrefabZ} />
-                                <ParameterField paramKey="generate.altEveryZ" />
-                            </>
-                        )}
-                    </>
-                )}
-                {activeGenerateMode === GenerateMode.Circle && (
-                    <>
-                        <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
-                        <ParameterField paramKey="generate.elevation" />
-                        <ParameterField paramKey="generate.circleRadius" />
-                    </>
-                )}
-                {activeGenerateMode === GenerateMode.Oval && (
-                    <>
-                        <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
-                        <ParameterField paramKey="generate.elevation" />
-                        <ParameterField paramKey="generate.ovalRadiusX" />
-                        <ParameterField paramKey="generate.ovalRadiusZ" />
-                    </>
-                )}
-            </div>
+            {activeGenerateMode === GenerateMode.Grid && (
+                <div className={styles.section__content}>
+                    <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
+                    <ParameterField paramKey="generate.elevation" />
+                    <ParameterField paramKey="generate.gridXNum" />
+                    <ParameterField paramKey="generate.gridZNum" />
+                    <ParameterField paramKey="generate.gridXSpacing" />
+                    <ParameterField paramKey="generate.gridZSpacing" />
+                    <div className={styles.sectionDivider}>
+                        <div className={styles.sectionDivider__line}></div>
+                        <span className={styles.sectionDivider__label}>
+                            {translate("NetworkTools.UI.Common.Advanced")}
+                        </span>
+                        <div className={styles.sectionDivider__line}></div>
+                    </div>
+                    <ParameterField paramKey="generate.altPrefabX" />
+                    {altPrefabX && (
+                        <>
+                            <PrefabSelection paramKey={PARAM_KEYS.generate.altNetPrefabX} />
+                            <ParameterField paramKey="generate.altEveryX" />
+                        </>
+                    )}
+                    <ParameterField paramKey="generate.altPrefabZ" />
+                    {altPrefabZ && (
+                        <>
+                            <PrefabSelection paramKey={PARAM_KEYS.generate.altNetPrefabZ} />
+                            <ParameterField paramKey="generate.altEveryZ" />
+                        </>
+                    )}
+                </div>
+            )}
+            {activeGenerateMode === GenerateMode.Circle && (
+                <div className={styles.section__content}>
+                    <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
+                    <ParameterField paramKey="generate.elevation" />
+                    <ParameterField paramKey="generate.circleRadius" />
+                </div>
+            )}
+            {activeGenerateMode === GenerateMode.Oval && (
+                <div className={styles.section__content}>
+                    <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
+                    <ParameterField paramKey="generate.elevation" />
+                    <ParameterField paramKey="generate.ovalRadiusX" />
+                    <ParameterField paramKey="generate.ovalRadiusZ" />
+                </div>
+            )}
         </div>
     );
 };

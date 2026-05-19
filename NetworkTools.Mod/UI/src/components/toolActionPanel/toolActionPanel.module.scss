@@ -263,8 +263,7 @@
             line-height: 1.25em;
             overflow-x: hidden;
             overflow-y: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            white-space: pre-wrap;
             width: 120rem;
             margin-right: 8rem;
             opacity: 0.75;
@@ -272,6 +271,10 @@
 
         [class^="row"] {
             justify-content: space-between;
+        }
+
+        [class^="slider-input"] {
+            width: 60rem;
         }
 
         // Apply flex to the vanilla editor div
@@ -282,8 +285,9 @@
         .unitLabel {
             font-size: var(--fontSizeS);
             line-height: 1.25em;
-            color: rgba(255, 255, 255, 0.75);
-            margin-left: 8rem;
+            color: rgba(255, 255, 255, 0.5);
+            position: absolute;
+            right: 5px;
         }
     }
 }
@@ -307,6 +311,8 @@
     align-items: center;
     justify-content: center;
     flex: 1;
+    padding-top: 8rem;
+    height: 45rem;
 
     & > * {
         margin: 0 4rem;
@@ -352,9 +358,6 @@
     }
 }
 
-.toolButton {
-}
-
 .icon {
     width: 36rem;
     height: 36rem;
@@ -389,8 +392,7 @@
     line-height: 1.25em;
     overflow-x: hidden;
     overflow-y: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: pre-wrap;
     width: 120rem;
     margin-right: 8rem;
     opacity: 0.75;

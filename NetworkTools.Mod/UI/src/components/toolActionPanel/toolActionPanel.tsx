@@ -94,12 +94,9 @@ const ToolActionPanelInner = () => {
                             <div className={styles.actions}>
                                 {applyMinEntities > 0 &&
                                 selectedEntities.length < applyMinEntities ? (
-                                    <Button
-                                        variant="primary"
-                                        className={styles.applyButton}
-                                        disabled={true}>
+                                    <span className={styles.helper}>
                                         {translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}
-                                    </Button>
+                                    </span>
                                 ) : (
                                     <Button
                                         variant="primary"

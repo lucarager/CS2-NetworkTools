@@ -22,7 +22,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         // ── Parameters 
 
         public EnumParameter<ShapeTransformTemplate> Template        = new("roadShape.template", ShapeTransformTemplate.Preserve, label: "NetworkTools.UI.Common.Mode");
-        public FloatParameter                        EaseInLength    = new("roadShape.easeInLength",    0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut, label: "NetworkTools.UI.Slope.StartingFlatness", fractionDigits: 0) {
+        public FloatParameter                        EaseInLength    = new("roadShape.easeInLength",    0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut, label: "NetworkTools.UI.Slope.StartingFlatness", fractionDigits: 0, numberType: NumberType.Percentage, displayScale: 200f) {
             Handles = new IHandleSpec<float>[] {
                 new AxisHandle {
                     StartPoint = tool => ((NT_RoadShapeToolSystem)tool).m_ShapeTransformContext.StartPosition,
@@ -31,7 +31,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 }
             }
         };
-        public FloatParameter                        EaseOutLength   = new("roadShape.easeOutLength",   0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut, label: "NetworkTools.UI.Slope.EndingFlatness", fractionDigits: 0) {
+        public FloatParameter                        EaseOutLength   = new("roadShape.easeOutLength",   0.1f, 0f, 0.5f, modes: (int)ShapeTransformTemplate.SlopeEaseInOut, label: "NetworkTools.UI.Slope.EndingFlatness", fractionDigits: 0, numberType: NumberType.Percentage, displayScale: 200f) {
             Handles = new IHandleSpec<float>[] {
                 new AxisHandle {
                     StartPoint = tool => ((NT_RoadShapeToolSystem)tool).m_ShapeTransformContext.StartPosition,

@@ -25,22 +25,18 @@ export const ShapeSlopeControls: React.FC<{
             <div className={styles.section__tabs}>
                 <TabBar paramKey="roadShape.template" group="Slope" />
             </div>
-            <div className={styles.section__content}>
-                {template === ShapeTransformTemplate.SlopeEaseInOut && (
-                    <>
-                        <ParameterField paramKey="roadShape.easeInLength" />
-                        <ParameterField paramKey="roadShape.easeOutLength" />
-                    </>
-                )}
-
-                {/* Arch Parameters */}
-                {template === ShapeTransformTemplate.SlopeArch && (
-                    <>
-                        <ParameterField paramKey="roadShape.archHeight" />
-                        <ParameterField paramKey="roadShape.archPosition" />
-                    </>
-                )}
-            </div>
+            {template === ShapeTransformTemplate.SlopeEaseInOut && (
+                <div className={styles.section__content}>
+                    <ParameterField paramKey="roadShape.easeInLength" />
+                    <ParameterField paramKey="roadShape.easeOutLength" />
+                </div>
+            )}
+            {template === ShapeTransformTemplate.SlopeArch && (
+                <div className={styles.section__content}>
+                    <ParameterField paramKey="roadShape.archHeight" />
+                    <ParameterField paramKey="roadShape.archPosition" />
+                </div>
+            )}
         </div>
     );
 };

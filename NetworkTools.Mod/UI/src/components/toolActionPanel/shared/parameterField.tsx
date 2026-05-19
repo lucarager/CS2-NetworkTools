@@ -9,6 +9,11 @@ import { useLocalization } from "cs2/l10n";
 
 type ParamKey = keyof typeof PARAM_META;
 
+const UNIT_LABELS: Record<string, string> = {
+    distance: "m",
+    percentage: "%",
+};
+
 type ParamMeta = (typeof PARAM_META)[ParamKey];
 
 type EnumOptionsKey = keyof typeof ENUM_OPTIONS;
@@ -28,43 +33,50 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabl
 
     switch (meta.type) {
         case "float": {
+            const displayScale = meta.displayScale;
+            const unitLabel = UNIT_LABELS[meta.numberType] ?? null;
             const showZeroMark = meta.min < 0 && meta.max > 0;
             return (
                 <div className={styles.controlRow}>
                     <div className={styles.vanillaField}>
                         <VC.FloatSliderField
-                            value={value as number}
+                            value={(value as number) * displayScale}
                             label={label}
-                            min={meta.min}
-                            max={meta.max}
+                            min={meta.min * displayScale}
+                            max={meta.max * displayScale}
                             fractionDigits={meta.fractionDigits}
                             disabled={disabled}
-                            onChange={(v: number) => binding.set(v)}
+                            onChange={(v: number) => binding.set(v / displayScale)}
                         />
                         {showZeroMark && (
                             <div className={styles.zeroMark}>
                                 <div className={styles.zeroMark__tick} />
                             </div>
                         )}
+                        {unitLabel && <span className={styles.unitLabel}>{unitLabel}</span>}
                     </div>
                 </div>
             );
         }
-        case "int":
+        case "int": {
+            const intDisplayScale = meta.displayScale;
+            const intUnitLabel = UNIT_LABELS[meta.numberType] ?? null;
             return (
                 <div className={styles.controlRow}>
                     <div className={styles.vanillaField}>
                         <VC.IntSliderField
-                            value={value as number}
+                            value={(value as number) * intDisplayScale}
                             label={label}
-                            min={meta.min}
-                            max={meta.max}
+                            min={meta.min * intDisplayScale}
+                            max={meta.max * intDisplayScale}
                             disabled={disabled}
-                            onChange={(v: number) => binding.set(Math.round(v))}
+                            onChange={(v: number) => binding.set(Math.round(v / intDisplayScale))}
                         />
+                        {intUnitLabel && <span className={styles.unitLabel}>{intUnitLabel}</span>}
                     </div>
                 </div>
             );
+        }
         case "bool":
             return (
                 <div className={styles.controlRow}>

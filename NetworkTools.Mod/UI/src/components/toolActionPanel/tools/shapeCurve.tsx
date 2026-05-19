@@ -25,13 +25,11 @@ export const ShapeCurveControls: React.FC<{
             <div className={styles.section__tabs}>
                 <TabBar paramKey="roadShape.template" group="Curve" />
             </div>
-            <div className={styles.section__content}>
-                {template === ShapeTransformTemplate.CurveSmooth && (
-                    <>
-                        <ParameterField paramKey="roadShape.smoothingFactor" />
-                    </>
-                )}
-            </div>
+            {template === ShapeTransformTemplate.CurveSmooth && (
+                <div className={styles.section__content}>
+                    <ParameterField paramKey="roadShape.smoothingFactor" />
+                </div>
+            )}
         </div>
     );
 };

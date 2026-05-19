@@ -25,8 +25,8 @@ namespace NetworkTools.Systems.Tools.Parallel {
         public override string toolID => "ParallelTool";
 
         public NetPrefabParameter          NetPrefab           = new("parallel.netPrefab");
-        public FloatParameter              HorizontalOffset    = new("parallel.horizontalOffset", 20f, -80f, 80f, label: "NetworkTools.UI.Parallel.HorizontalOffset", fractionDigits: 0);
-        public FloatParameter              VerticalOffset      = new("parallel.verticalOffset",   0f,  -80f, 80f, label: "NetworkTools.UI.Parallel.VerticalOffset", fractionDigits: 0);
+        public FloatParameter              HorizontalOffset    = new("parallel.horizontalOffset", 20f, -80f, 80f, label: "NetworkTools.UI.Parallel.HorizontalOffset", fractionDigits: 0, numberType: NumberType.Distance);
+        public FloatParameter              VerticalOffset      = new("parallel.verticalOffset",   0f,  -80f, 80f, label: "NetworkTools.UI.Parallel.VerticalOffset", fractionDigits: 0, numberType: NumberType.Distance);
         public EnumParameter<ParallelDirection> ReverseDirection = new("parallel.reverseDirection", ParallelDirection.Same, label: "NetworkTools.UI.Parallel.Direction");
         public EnumParameter<ParallelOrigin>   Origin           = new("parallel.origin", ParallelOrigin.Center, label: "NetworkTools.UI.Parallel.Origin");
 

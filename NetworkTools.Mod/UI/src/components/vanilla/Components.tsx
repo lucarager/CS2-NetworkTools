@@ -56,7 +56,13 @@ const modulePaths = [
     },
     {
         path: "game-ui/editor/widgets/fields/int-input-field.tsx",
-        components: ["IntInputField", "UIntInputField", "Int2InputField", "Int3InputField", "Int4InputField"],
+        components: [
+            "IntInputField",
+            "UIntInputField",
+            "Int2InputField",
+            "Int3InputField",
+            "Int4InputField",
+        ],
     },
     {
         path: "game-ui/editor/widgets/fields/number-slider-field.tsx",
@@ -72,7 +78,13 @@ const modulePaths = [
     },
     {
         path: "game-ui/editor/widgets/fields/bounds-field.tsx",
-        components: ["Bounds1InputField", "Bounds1SliderField", "Bounds2InputField", "Bounds3InputField", "TimeBoundsSliderField"],
+        components: [
+            "Bounds1InputField",
+            "Bounds1SliderField",
+            "Bounds2InputField",
+            "Bounds3InputField",
+            "TimeBoundsSliderField",
+        ],
     },
     {
         path: "game-ui/debug/widgets/fields/slider-field.tsx",
@@ -137,7 +149,7 @@ const modulePaths = [
     {
         path: "game-ui/common/localization/localized-number.tsx",
         components: ["LocalizedNumber"],
-    }
+    },
 ];
 
 const themePaths = [
@@ -200,7 +212,7 @@ const themePaths = [
     {
         path: "game-ui/common/tooltip/tooltip-renderer/tooltip-renderer.module.scss",
         name: "tooltipRenderer",
-    }
+    },
 ];
 
 export const VC = {} as IVanillaComponents;
