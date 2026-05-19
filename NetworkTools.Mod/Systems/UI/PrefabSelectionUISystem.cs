@@ -121,68 +121,57 @@
         }
 
         private PrefabSelectionEntry[] GetRoadPrefabs() {
-            return SystemAPI.QueryBuilder()
-                            .WithAll<RoadData>()
-                            .Build()
-                            .ToEntityArray(Allocator.Temp).Select(entity =>
-                            {
-                                var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(entity);
-                                var name   = prefab.name;
-                                var icon   = ImageSystem.GetThumbnail(prefab);
-                                return new PrefabSelectionEntry(entity, name, icon, PrefabType.Road);
-                            }).ToArray();
+            return GetSortedPrefabs<RoadData>(PrefabType.Road);
         }
 
         private PrefabSelectionEntry[] GetPathPrefabs() {
-            return SystemAPI.QueryBuilder()
-                            .WithAll<PathwayData>()
-                            .Build()
-                            .ToEntityArray(Allocator.Temp).Select(entity =>
-                            {
-                                var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(entity);
-                                var name   = prefab.name;
-                                var icon   = ImageSystem.GetThumbnail(prefab);
-                                return new PrefabSelectionEntry(entity, name, icon, PrefabType.Path);
-                            }).ToArray();
+            return GetSortedPrefabs<PathwayData>(PrefabType.Path);
         }
 
         private PrefabSelectionEntry[] GetRailPrefabs() {
-            return SystemAPI.QueryBuilder()
-                            .WithAll<TrackData>()
-                            .Build()
-                            .ToEntityArray(Allocator.Temp).Select(entity =>
-                            {
-                                var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(entity);
-                                var name   = prefab.name;
-                                var icon   = ImageSystem.GetThumbnail(prefab);
-                                return new PrefabSelectionEntry(entity, name, icon, PrefabType.Rail);
-                            }).ToArray();
+            return GetSortedPrefabs<TrackData>(PrefabType.Rail);
         }
 
         private PrefabSelectionEntry[] GetWaterwayPrefabs() {
-            return SystemAPI.QueryBuilder()
-                            .WithAll<WaterwayData>()
-                            .Build()
-                            .ToEntityArray(Allocator.Temp).Select(entity =>
-                            {
-                                var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(entity);
-                                var name   = prefab.name;
-                                var icon   = ImageSystem.GetThumbnail(prefab);
-                                return new PrefabSelectionEntry(entity, name, icon, PrefabType.Waterway);
-                            }).ToArray();
+            return GetSortedPrefabs<WaterwayData>(PrefabType.Waterway);
         }
 
         private PrefabSelectionEntry[] GetNetLanePrefabs() {
-            return SystemAPI.QueryBuilder()
-                            .WithAll<NetLaneData>()
-                            .Build()
-                            .ToEntityArray(Allocator.Temp).Select(entity =>
-                            {
-                                var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(entity);
-                                var name   = prefab.name;
-                                var icon   = ImageSystem.GetThumbnail(prefab);
-                                return new PrefabSelectionEntry(entity, name, icon, PrefabType.NetLane);
-                            }).ToArray();
+            return GetSortedPrefabs<NetLaneData>(PrefabType.NetLane);
+        }
+
+        private PrefabSelectionEntry[] GetSortedPrefabs<T>(PrefabType type) where T : unmanaged, IComponentData {
+            var entities = SystemAPI.QueryBuilder()
+                                    .WithAll<T>()
+                                    .Build()
+                                    .ToEntityArray(Allocator.Temp);
+
+            return entities.Select(entity => {
+                               var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(entity);
+                               var name   = prefab.name;
+                               var icon   = ImageSystem.GetThumbnail(prefab);
+                               var (groupPriority, itemPriority) = GetPriority(entity);
+                               return (entry: new PrefabSelectionEntry(entity, name, icon, type), groupPriority, itemPriority);
+                           })
+                           .OrderBy(x => x.groupPriority)
+                           .ThenBy(x => x.itemPriority)
+                           .Select(x => x.entry)
+                           .ToArray();
+        }
+
+        private (int groupPriority, int itemPriority) GetPriority(Entity entity) {
+            if (!EntityManager.TryGetComponent<UIObjectData>(entity, out var uiData)) {
+                return (int.MaxValue, int.MaxValue);
+            }
+
+            var itemPriority = uiData.m_Priority;
+
+            if (uiData.m_Group != Entity.Null &&
+                EntityManager.TryGetComponent<UIObjectData>(uiData.m_Group, out var groupUiData)) {
+                return (groupUiData.m_Priority, itemPriority);
+            }
+
+            return (int.MaxValue, itemPriority);
         }
 
         /// <summary>
