@@ -24,8 +24,8 @@ namespace NetworkTools.Systems.Tools.Generate {
             var origin = config.Position + new float3(0, yOffset, 0);
             var xDir   = math.mul(config.StartDirection, new float3(1, 0, 0));
             var zDir   = math.mul(config.StartDirection, new float3(0, 0, 1));
-            var xNum   = config.GridXNum + 1; // node count in X
-            var zNum   = config.GridZNum + 1; // node count in Z
+            var xNum   = config.GridXNum;
+            var zNum   = config.GridZNum;
 
             var altXActive = config.AltPrefabX && config.AltNetPrefabXEntity != Entity.Null;
             var altZActive = config.AltPrefabZ && config.AltNetPrefabZEntity != Entity.Null;

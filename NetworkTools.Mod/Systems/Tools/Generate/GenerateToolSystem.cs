@@ -41,8 +41,8 @@ namespace NetworkTools.Systems.Tools.Generate {
         public EnumParameter<GenerateMode> Mode         = new("generate.mode", GenerateMode.Grid, label: "NetworkTools.UI.Common.Mode");
         public FloatParameter GridXSpacing = new("generate.gridXSpacing", 60f, 0f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XSpacing", fractionDigits: 0);
         public FloatParameter GridZSpacing = new("generate.gridZSpacing", 60f, 0f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZSpacing", fractionDigits: 0);
-        public IntParameter   GridXNum     = new("generate.gridXNum", 2, 1, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XCount");
-        public IntParameter   GridZNum     = new("generate.gridZNum", 2, 1, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZCount");
+        public IntParameter   GridXNum     = new("generate.gridXNum", 3, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XCount");
+        public IntParameter   GridZNum     = new("generate.gridZNum", 3, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZCount");
         public BoolParameter      AlternatingNetworkPrefabX = new("generate.altPrefabX", false, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltPrefabX");
         public NetPrefabParameter AltNetPrefabX             = new("generate.altNetPrefabX", modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltNetPrefabX");
         public IntParameter       AltEveryX                 = new("generate.altEveryX", 2, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltEveryX");
