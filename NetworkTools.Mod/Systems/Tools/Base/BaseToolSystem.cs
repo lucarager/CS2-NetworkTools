@@ -64,6 +64,11 @@ namespace NetworkTools.Systems.Tools {
         public bool DebugMode;
 
         /// <summary>
+        ///     Tool requests disabling vanilla CourseSplitSystem during lifecycle
+        /// </summary>
+        public bool DisableVanillaCourseSplit = false;
+
+        /// <summary>
         ///     Tool requests disabling vanilla NodeReductionSystem during lifecycle
         /// </summary>
         public bool DisableVanillaNodeReduction = false;
@@ -123,6 +128,11 @@ namespace NetworkTools.Systems.Tools {
         protected NativeReference<Entity> m_LastRaycastEntity;
 
         internal PrefixedLogger m_Log;
+
+        /// <summary>
+        ///     Vanilla CourseSplitSystem
+        /// </summary>
+        protected CourseSplitSystem m_CourseSplitSystem;
 
         /// <summary>
         ///     Vanilla NodeReductionSystem
@@ -329,6 +339,7 @@ namespace NetworkTools.Systems.Tools {
             // Systems
             m_ValidationSystem    = World.GetOrCreateSystemManaged<ValidationSystem>();
             m_NodeReductionSystem = World.GetOrCreateSystemManaged<NodeReductionSystem>();
+            m_CourseSplitSystem   = World.GetOrCreateSystemManaged<CourseSplitSystem>();
             m_Barrier             = World.GetOrCreateSystemManaged<ToolOutputBarrier>();
             m_ToolSystem          = World.GetOrCreateSystemManaged<ToolSystem>();
             m_RenderingSystem     = World.GetOrCreateSystemManaged<RenderingSystem>();
@@ -478,6 +489,7 @@ namespace NetworkTools.Systems.Tools {
             // Re-enable vanilla systems
             m_ValidationSystem.Enabled    = true;
             m_NodeReductionSystem.Enabled = true;
+            m_CourseSplitSystem.Enabled   = true;
 
             // Cleanup rendering state
             m_RenderingSystem.markersVisible = false;
@@ -548,6 +560,10 @@ namespace NetworkTools.Systems.Tools {
                 m_NodeReductionSystem.Enabled = false;
             }
 
+            if (DisableVanillaCourseSplit) {
+                m_CourseSplitSystem.Enabled = false;
+            }
+
             // Restore persisted preferences, masked by what this tool supports
             var settings = NetworkToolsMod.Instance?.Settings;
             SelectedSnaps = settings != null
@@ -589,6 +605,7 @@ namespace NetworkTools.Systems.Tools {
             // Re-enable vanilla systems
             m_ValidationSystem.Enabled    = true;
             m_NodeReductionSystem.Enabled = true;
+            m_CourseSplitSystem.Enabled   = true;
 
             // Cleanup rendering state
             m_RenderingSystem.markersVisible = false;
