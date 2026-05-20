@@ -253,7 +253,7 @@ namespace NetworkTools.L10N {
                 // ## Apply Buttons
                 { "NetworkTools.UI.Apply.ShapeSlope", "Apply Slope" },
                 { "NetworkTools.UI.Apply.ShapeCurve", "Apply Transformation" },
-                { "NetworkTools.UI.Apply.Connect", "Apply Curve" },
+                { "NetworkTools.UI.Apply.Connect", "Create Connection" },
                 { "NetworkTools.UI.Apply.SuperNode", "Create Supernode" },
                 { "NetworkTools.UI.Apply.Parallel", "Create parallel network" },
                 { "NetworkTools.UI.Apply.Generate", "Generate" },

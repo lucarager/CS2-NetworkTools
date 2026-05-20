@@ -1,6 +1,8 @@
 namespace NetworkTools.Systems.Tools.Connect {
     using Colossal.Mathematics;
 
+    using Game.Tools;
+
     using NetworkTools.Systems.Tools.Utils;
 
     using Unity.Collections;
@@ -16,7 +18,10 @@ namespace NetworkTools.Systems.Tools.Connect {
         public void InitializeConfig(ref ConnectJobConfig config) {
             var distance = 100f;
             // Place loop center perpendicular to start direction (to the right)
-            var right = new float3(config.StartDirection.z, 0f, -config.StartDirection.x);
+            var right = math.cross(config.StartDirection, new float3(0, 1, 0));
+            if (math.lengthsq(right) < 0.0001f)
+                right = math.cross(config.StartDirection, new float3(1, 0, 0));
+            right = math.normalizesafe(right);
             config.LoopControlPointPosition = config.StartPosition + config.StartDirection * distance + right * distance;
             config.LoopRadius = distance * 2/3;
         }
@@ -81,24 +86,41 @@ namespace NetworkTools.Systems.Tools.Connect {
             };
             curves.Add(new EdgeConfig {
                 Bezier = firstBezier,
-                Length = MathUtils.Length(firstBezier)
+                Length = MathUtils.Length(firstBezier),
+                StartNodeElevation = config.StartElevation,
+                StartNodeFlags = CoursePosFlags.IsFirst | CoursePosFlags.IsRight,
+                EndNodeFlags = CoursePosFlags.IsRight,
+                NetPrefabEntity = config.NetPrefabEntity,
+                NetLanePrefabEntity = config.NetLanePrefabEntity,
             });
 
             // 2: The loop itself (3 × 90° arcs)
             var loopBezier1 = Calculate90DegreeCurve(C, loopStartPointPosition, loopMidPoint1Position);
             curves.Add(new EdgeConfig {
                 Bezier = loopBezier1,
-                Length = MathUtils.Length(loopBezier1)
+                Length = MathUtils.Length(loopBezier1),
+                StartNodeFlags = CoursePosFlags.IsRight,
+                EndNodeFlags = CoursePosFlags.IsRight,
+                NetPrefabEntity = config.NetPrefabEntity,
+                NetLanePrefabEntity = config.NetLanePrefabEntity,
             });
             var loopBezier2 = Calculate90DegreeCurve(C, loopMidPoint1Position, loopMidPoint2Position);
             curves.Add(new EdgeConfig {
                 Bezier = loopBezier2,
-                Length = MathUtils.Length(loopBezier2)
+                Length = MathUtils.Length(loopBezier2),
+                StartNodeFlags = CoursePosFlags.IsRight,
+                EndNodeFlags = CoursePosFlags.IsRight,
+                NetPrefabEntity = config.NetPrefabEntity,
+                NetLanePrefabEntity = config.NetLanePrefabEntity,
             });
             var loopBezier3 = Calculate90DegreeCurve(C, loopMidPoint2Position, loopEndPointPosition);
             curves.Add(new EdgeConfig {
                 Bezier = loopBezier3,
-                Length = MathUtils.Length(loopBezier3)
+                Length = MathUtils.Length(loopBezier3),
+                StartNodeFlags = CoursePosFlags.IsRight,
+                EndNodeFlags = CoursePosFlags.IsRight,
+                NetPrefabEntity = config.NetPrefabEntity,
+                NetLanePrefabEntity = config.NetLanePrefabEntity,
             });
 
             // 3: Loop end → end (tangent-smooth straight segment)
@@ -112,7 +134,12 @@ namespace NetworkTools.Systems.Tools.Connect {
             };
             curves.Add(new EdgeConfig {
                 Bezier = endBezier,
-                Length = MathUtils.Length(endBezier)
+                Length = MathUtils.Length(endBezier),
+                EndNodeElevation = config.EndElevation,
+                StartNodeFlags = CoursePosFlags.IsRight,
+                EndNodeFlags = CoursePosFlags.IsLast | CoursePosFlags.IsRight,
+                NetPrefabEntity = config.NetPrefabEntity,
+                NetLanePrefabEntity = config.NetLanePrefabEntity,
             });
         }
 

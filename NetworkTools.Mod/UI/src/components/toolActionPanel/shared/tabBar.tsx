@@ -32,6 +32,7 @@ export const TabBar: React.FC<TabBarProps> = ({ paramKey, group }) => {
                 <button
                     key={option.value}
                     className={`${styles.tab} ${value === option.value ? styles.tab__active : ""} ${option.disabled ? styles.tab__disabled : ""}`}
+                    style={{ width: `${100 / visibleOptions.length}%` }}
                     onClick={() => binding.set(option.value)}
                     disabled={option.disabled}>
                     <img src={option.icon} className={styles.tab__icon} />

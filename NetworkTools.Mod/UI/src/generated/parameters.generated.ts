@@ -114,7 +114,7 @@ export const ENUM_OPTIONS = {
     ConnectMode: [
         { value: ConnectMode.None, label: "NetworkTools.UI.Connect.None", icon: "coui://nt/Modes/Original.svg", visible: false },
         { value: ConnectMode.SimpleCurve, label: "NetworkTools.UI.Connect.SimpleCurve", icon: "coui://nt/Modes/ConnectSimpleCurve.svg" },
-        { value: ConnectMode.ComplexCurve, label: "NetworkTools.UI.Connect.ComplexCurve", icon: "coui://nt/Modes/ConnectComplexCurve.svg" },
+        { value: ConnectMode.ComplexCurve, label: "NetworkTools.UI.Connect.ComplexCurve", icon: "coui://nt/Modes/ConnectComplexCurve.svg", visible: false },
         { value: ConnectMode.Loop, label: "NetworkTools.UI.Connect.Loop", icon: "coui://nt/Modes/ConnectLoop.svg" },
     ] as readonly EnumOption[],
     GenerateMode: [

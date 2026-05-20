@@ -139,7 +139,9 @@
             EntityManager.RemoveComponent<NT_SelectedLast>(lastNode);
             m_SelectedNodes.RemoveAt(m_SelectedNodes.Length - 1);
 
-            // Update phase 
+            DestroyAllHandles();
+
+            // Update phase
             UpdatePhaseFromSelection();
 
             // Recalculate eligible nodes

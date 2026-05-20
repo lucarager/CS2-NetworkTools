@@ -101,17 +101,18 @@ namespace NetworkTools.Systems.Tools.Connect {
                 return ComputeInBetweenNodeDirection(nodeEntity, connectedEdges[0].m_Edge, nodePosition, otherPosition);
             }
 
-            // Intersection (3+ edges) or isolated (0 edges): horizontal vector toward the other node
-            return ComputeHorizontalDirection(nodePosition, otherPosition);
+            // Intersection (3+ edges) or isolated (0 edges): direct vector toward the other node
+            return ComputeDirectionToward(nodePosition, otherPosition);
         }
 
         /// <summary>
         /// For an end node, returns the continuation direction past the dead end (away from the connected edge).
+        /// Preserves the full 3D tangent so the curve follows the road's slope.
         /// </summary>
         private float3 ComputeEndNodeDirection(Entity nodeEntity, Entity edgeEntity, float3 nodePosition, float3 otherPosition) {
             if (!EntityManager.TryGetComponent<Edge>(edgeEntity, out var edge) ||
                 !EntityManager.TryGetComponent<Curve>(edgeEntity, out var curve)) {
-                return ComputeHorizontalDirection(nodePosition, otherPosition);
+                return ComputeDirectionToward(nodePosition, otherPosition);
             }
 
             // Get the tangent at this node that continues the road direction past the dead end:
@@ -121,48 +122,44 @@ namespace NetworkTools.Systems.Tools.Connect {
                 ? MathUtils.EndTangent(curve.m_Bezier)
                 : -MathUtils.StartTangent(curve.m_Bezier);
 
-            tangent.y = 0f;
-            return math.normalizesafe(tangent, ComputeHorizontalDirection(nodePosition, otherPosition));
+            return math.normalizesafe(tangent, ComputeDirectionToward(nodePosition, otherPosition));
         }
 
         /// <summary>
         /// For an in-between node (2 edges), returns a direction perpendicular to the road's
         /// through-direction, oriented toward the other selected node.
+        /// Operates in full 3D so the result follows the road's slope.
         /// </summary>
         private float3 ComputeInBetweenNodeDirection(Entity nodeEntity, Entity edgeEntity, float3 nodePosition, float3 otherPosition) {
             if (!EntityManager.TryGetComponent<Edge>(edgeEntity, out var edge) ||
                 !EntityManager.TryGetComponent<Curve>(edgeEntity, out var curve)) {
-                return ComputeHorizontalDirection(nodePosition, otherPosition);
+                return ComputeDirectionToward(nodePosition, otherPosition);
             }
 
-            // Through-direction: the tangent leaving this node along the first edge
             var throughDir = edge.m_Start == nodeEntity
                 ? MathUtils.StartTangent(curve.m_Bezier)
                 : -MathUtils.EndTangent(curve.m_Bezier);
-
-            throughDir.y = 0f;
             throughDir = math.normalizesafe(throughDir, new float3(1, 0, 0));
 
-            // Perpendicular in the XZ plane
-            var perpendicular = new float3(throughDir.z, 0f, -throughDir.x);
-
-            // Orient toward the other selected node
+            // Project toOther onto the plane perpendicular to throughDir
             var toOther = otherPosition - nodePosition;
-            toOther.y = 0f;
-            if (math.dot(perpendicular, toOther) < 0f) {
-                perpendicular = -perpendicular;
+            var perpendicular = toOther - throughDir * math.dot(toOther, throughDir);
+
+            if (math.lengthsq(perpendicular) < 0.0001f) {
+                perpendicular = math.cross(throughDir, new float3(0, 1, 0));
+                if (math.lengthsq(perpendicular) < 0.0001f) {
+                    perpendicular = math.cross(throughDir, new float3(1, 0, 0));
+                }
             }
 
-            return perpendicular;
+            return math.normalizesafe(perpendicular);
         }
 
         /// <summary>
-        /// Returns the horizontal direction from one position to another, flattened to XZ.
+        /// Returns the 3D direction from one position to another.
         /// </summary>
-        private static float3 ComputeHorizontalDirection(float3 from, float3 to) {
-            var delta = to - from;
-            delta.y = 0f;
-            return math.normalizesafe(delta, new float3(1, 0, 0));
+        private static float3 ComputeDirectionToward(float3 from, float3 to) {
+            return math.normalizesafe(to - from, new float3(1, 0, 0));
         }
 
         protected override void OnCreate() {

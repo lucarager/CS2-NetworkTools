@@ -56,10 +56,10 @@ namespace NetworkTools.Systems.Tools.Connect {
                 // 2. Create definitions
                 switch (Mode) {
                     case ConnectMode.SimpleCurve:
-                        new SimpleCurveGenerator().GenerateConnection(Config, ref curves);
+                        new SimpleCurveGenerator().GenerateConnection(config, ref curves);
                         break;
                     case ConnectMode.Loop:
-                        new LoopGenerator().GenerateConnection(Config, ref curves);
+                        new LoopGenerator().GenerateConnection(config, ref curves);
                         break;
                 }
 
