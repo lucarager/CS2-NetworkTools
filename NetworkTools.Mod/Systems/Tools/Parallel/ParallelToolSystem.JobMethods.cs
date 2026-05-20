@@ -86,7 +86,8 @@
 
             jobHandle.Complete();
 
-            ResetToIdle();
+            Phase = OperationPhase.Ready;
+            m_UpdateNeeded = true;
 
             return jobHandle;
         }
