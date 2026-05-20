@@ -54,7 +54,7 @@ namespace NetworkTools.Systems.Tools.Connect {
                 Mode = Mode.Value,
                 Config = BuildJobConfig(),
                 SelectedNodeEntities = m_SelectedNodes,
-                PrefabEntity = netPrefabEntity,
+                NetPrefabEntity = netPrefabEntity,
                 NetLanePrefabEntity = netLanePrefabEntity,
                 OutputMode = outputMode,
 

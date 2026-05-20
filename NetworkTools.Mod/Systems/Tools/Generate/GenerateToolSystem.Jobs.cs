@@ -87,33 +87,31 @@ namespace NetworkTools.Systems.Tools.Generate {
             private void OutputPreviewEdge(EdgeConfig EC) {
                 var definitionEntity = ECB.CreateEntity();
 
-                var effectiveElevation = Config.BaselineElevation + Config.Elevation;
-
                 var creationDefinition = new CreationDefinition {
                     m_Original = Entity.Null,
                     m_Prefab = EC.NetPrefabEntity,
                     m_SubPrefab = EC.NetLanePrefabEntity,
-                    m_Flags = effectiveElevation != 0f
-                        ? CreationFlags.SubElevation
-                        : CreationFlags.Construction
+                    m_Flags = CreationFlags.SubElevation,
                 };
 
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
-                var elevation = new float2(effectiveElevation);
+                var edgeElevation = new float2(EC.Elevation);
+                var startElevation = new float2(EC.StartNodeElevation);
+                var endElevation = new float2(EC.EndNodeElevation);
 
                 var netCourse = new NetCourse {
                     m_Curve = EC.Bezier,
                     m_Length = EC.Length,
                     m_FixedIndex = -1,
-                    m_Elevation = elevation,
+                    m_Elevation = edgeElevation,
                     m_StartPosition = new CoursePos {
                         m_Entity = EC.StartNodeEntity,
                         m_Position = EC.Bezier.a,
                         m_Rotation = NetUtils.GetNodeRotation(MathUtils.StartTangent(EC.Bezier)),
                         m_CourseDelta = 0,
-                        m_Elevation = elevation,
+                        m_Elevation = startElevation,
                         m_Flags = EC.StartNodeFlags,
                         m_ParentMesh = -1,
                         m_SplitPosition = 0
@@ -123,7 +121,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                         m_Position = EC.Bezier.d,
                         m_Rotation = NetUtils.GetNodeRotation(MathUtils.EndTangent(EC.Bezier)),
                         m_CourseDelta = 1,
-                        m_Elevation = elevation,
+                        m_Elevation = endElevation,
                         m_Flags = EC.EndNodeFlags,
                         m_ParentMesh = -1,
                         m_SplitPosition = 0

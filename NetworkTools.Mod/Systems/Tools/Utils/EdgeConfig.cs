@@ -34,6 +34,14 @@ namespace NetworkTools.Systems.Tools.Utils {
         /// <summary>Arc length of <see cref="Bezier"/>.</summary>
         public float Length;
 
+        /// <summary>
+        /// Elevation
+        /// </summary>
+        public float Elevation;
+
+        public float StartNodeElevation;
+        public float EndNodeElevation;
+
         // === Prefab override ===
 
         /// <summary>Per-edge prefab override. <see cref="Entity.Null"/> falls back to the tool's default prefab.</summary>

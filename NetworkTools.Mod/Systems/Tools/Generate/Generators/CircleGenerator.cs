@@ -58,6 +58,9 @@ namespace NetworkTools.Systems.Tools.Generate {
                 curves.Add(new EdgeConfig {
                     Bezier              = bezier,
                     Length              = MathUtils.Length(bezier),
+                    Elevation           = yOffset,
+                    StartNodeElevation  = yOffset,
+                    EndNodeElevation    = yOffset,
                     NetPrefabEntity     = config.NetPrefabEntity,
                     NetLanePrefabEntity = config.NetLanePrefabEntity,
                     StartNodeFlags      = CoursePosFlags.IsRight | freeHeight,

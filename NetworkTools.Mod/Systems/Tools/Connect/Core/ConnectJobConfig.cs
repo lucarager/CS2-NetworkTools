@@ -1,4 +1,5 @@
 namespace NetworkTools.Systems.Tools.Connect {
+    using Unity.Entities;
     using Unity.Mathematics;
 
     /// <summary>
@@ -8,9 +9,18 @@ namespace NetworkTools.Systems.Tools.Connect {
     public struct ConnectJobConfig {
         // Shared
         public float3 StartPosition;
-        public float3 EndPosition;
         public float3 StartDirection;
+        public float  StartElevation;
+        public float3 EndPosition;
         public float3 EndDirection;
+        public float  EndElevation;
+        public float Elevation;
+
+        // Computed at job start
+        public Entity NetPrefabEntity;
+        public Entity NetLanePrefabEntity;
+        public float NetWidth;
+        public float ElevationLimit;
 
         // Simple Curve
         public float3 CurveStartPointPosition;

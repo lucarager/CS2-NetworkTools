@@ -3,10 +3,12 @@ namespace NetworkTools.Systems.Tools.Connect {
 
     using Game.Common;
     using Game.Net;
+    using Game.Objects;
     using Game.Prefabs;
     using Game.Tools;
 
     using NetworkTools.Systems.Tools.Utils;
+
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -21,8 +23,8 @@ namespace NetworkTools.Systems.Tools.Connect {
             [ReadOnly] public required ConnectJobConfig   Config;
             [ReadOnly] public required ToolOutputMode     OutputMode;
             [ReadOnly] public required NativeList<Entity> SelectedNodeEntities;
-            [ReadOnly] public required Entity             PrefabEntity;
-            [ReadOnly] public required Entity NetLanePrefabEntity;
+            [ReadOnly] public required Entity             NetPrefabEntity;
+            [ReadOnly] public required Entity             NetLanePrefabEntity;
 
             [ReadOnly] public required ComponentLookup<Node>             NodeLookup;
             [ReadOnly] public required ComponentLookup<PrefabRef>        PrefabRefLookup;
@@ -32,12 +34,24 @@ namespace NetworkTools.Systems.Tools.Connect {
             [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
             [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Aggregated>       AggregatedLookup;
+            [ReadOnly] public required ComponentLookup<NetGeometryData>  NetGeometryDataLookup;
 
             public required EntityCommandBuffer ECB;
 
             public void Execute() {
                 // 1. Create data structures
                 var curves = new NativeList<EdgeConfig>(64, Allocator.Temp);
+
+                // Resolve all runtime prefab data into a local config copy so generators
+                // receive a self-contained snapshot without needing component lookups.
+                var config = Config;
+                config.NetPrefabEntity = NetPrefabEntity;
+                config.NetLanePrefabEntity = NetLanePrefabEntity;
+                if (NetGeometryDataLookup.TryGetComponent(NetPrefabEntity, out var netGeom))
+                {
+                    config.NetWidth = netGeom.m_DefaultWidth;
+                    config.ElevationLimit = netGeom.m_ElevationLimit;
+                }
 
                 // 2. Create definitions
                 switch (Mode) {
@@ -65,47 +79,41 @@ namespace NetworkTools.Systems.Tools.Connect {
                 }
             }
 
-            private void OutputPreviewEdge(EdgeConfig curve) {
+            private void OutputPreviewEdge(EdgeConfig EC) {
                 var definitionEntity = ECB.CreateEntity();
 
                 var creationDefinition = new CreationDefinition {
                     m_Original = Entity.Null,
-                    m_Prefab = PrefabEntity,
-                    m_SubPrefab = NetLanePrefabEntity,
-                    m_Flags = CreationFlags.Construction
+                    m_Prefab = EC.NetPrefabEntity,
+                    m_SubPrefab = EC.NetLanePrefabEntity,
+                    m_Flags = CreationFlags.SubElevation,
                 };
 
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
-                var startNodeFlags = CoursePosFlags.IsRight | CoursePosFlags.FreeHeight;
-                var endNodeFlags = CoursePosFlags.IsRight | CoursePosFlags.FreeHeight;
-                var startElevation = float2.zero;
-                var endElevation = float2.zero;
-                var courseElevation = float2.zero;
-
                 var netCourse = new NetCourse {
-                    m_Curve = curve.Bezier,
-                    m_Length = curve.Length,
+                    m_Curve = EC.Bezier,
+                    m_Length = EC.Length,
                     m_FixedIndex = -1,
-                    m_Elevation = courseElevation,
+                    m_Elevation = EC.Elevation,
                     m_StartPosition = new CoursePos {
-                        m_Entity = curve.StartNodeEntity,
-                        m_Position = curve.Bezier.a,
-                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.StartTangent(curve.Bezier)),
+                        m_Entity = EC.StartNodeEntity,
+                        m_Position = EC.Bezier.a,
+                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.StartTangent(EC.Bezier)),
                         m_CourseDelta = 0,
-                        m_Elevation = startElevation,
-                        m_Flags = startNodeFlags,
+                        m_Elevation = EC.StartNodeElevation,
+                        m_Flags = EC.StartNodeFlags,
                         m_ParentMesh = -1,
                         m_SplitPosition = 0
                     },
                     m_EndPosition = new CoursePos {
-                        m_Entity = curve.EndNodeEntity,
-                        m_Position = curve.Bezier.d,
-                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.EndTangent(curve.Bezier)),
+                        m_Entity = EC.EndNodeEntity,
+                        m_Position = EC.Bezier.d,
+                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.EndTangent(EC.Bezier)),
                         m_CourseDelta = 1,
-                        m_Elevation = endElevation,
-                        m_Flags = endNodeFlags,
+                        m_Elevation = EC.EndNodeElevation,
+                        m_Flags = EC.EndNodeFlags,
                         m_ParentMesh = -1,
                         m_SplitPosition = 0
                     }
