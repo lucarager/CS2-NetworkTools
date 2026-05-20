@@ -7,6 +7,6 @@ namespace NetworkTools.Systems.Tools.Parameters {
     /// </summary>
     public class Float3Parameter : Parameter<float3> {
         public Float3Parameter(string key, float3 @default = default, int modes = 0, string label = null)
-            : base(key, @default, modes, bindable: false, label: label) { }
+            : base(key, @default, modes, bindable: false, label: label, persist: false) { }
     }
 }

@@ -7,6 +7,6 @@ namespace NetworkTools.Systems.Tools.Parameters {
     /// </summary>
     public class QuaternionParameter : Parameter<quaternion> {
         public QuaternionParameter(string key, quaternion @default = default, int modes = 0, string label = null)
-            : base(key, @default, modes, bindable: false, label: label) { }
+            : base(key, @default, modes, bindable: false, label: label, persist: false) { }
     }
 }

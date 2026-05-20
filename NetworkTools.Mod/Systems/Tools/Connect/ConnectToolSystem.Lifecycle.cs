@@ -170,7 +170,6 @@ namespace NetworkTools.Systems.Tools.Connect {
             // Configuration
             RenderEligibleNodes      = true;
             RenderHandles            = true;
-            DisableVanillaValidation = true;
 
             // Mode change reinitializes context and handles
             Mode.OnChanged += _ => {

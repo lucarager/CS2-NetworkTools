@@ -157,6 +157,13 @@ namespace NetworkTools.Settings {
         public int SavedSelectedViews { get; set; } = (int)ViewOption.None;
 
         /// <summary>
+        ///     Persisted tool parameter values (hidden from UI).
+        ///     JSON-encoded dictionary keyed by "toolID.paramKey".
+        /// </summary>
+        [SettingsUIHidden]
+        public string SavedParameterValues { get; set; } = "{}";
+
+        /// <summary>
         ///     Restores mod settings to default.
         /// </summary>
         public override void SetDefaults() {
@@ -164,6 +171,7 @@ namespace NetworkTools.Settings {
             SavedSelectedSnaps   = (int)SnapOption.All;
             SavedSelectedTargets = (int)TargetOption.All;
             SavedSelectedViews   = (int)ViewOption.None;
+            SavedParameterValues = "{}";
         }
     }
 }

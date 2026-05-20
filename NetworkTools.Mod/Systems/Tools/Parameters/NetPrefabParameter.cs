@@ -13,7 +13,7 @@ namespace NetworkTools.Systems.Tools.Parameters {
         public bool Nullable { get; }
 
         public NetPrefabParameter(string key, int modes = 0, bool nullable = false, string label = null)
-            : base(key, modes, bindable: false, label: label) {
+            : base(key, modes, bindable: false, label: label, persist: false) {
             Nullable = nullable;
         }
 

@@ -561,6 +561,9 @@ namespace NetworkTools.Systems.Tools {
                                 : ViewOption.None;
             DebugMode = settings?.DebugMode ?? false;
 
+            // Restore persisted parameter values
+            RestoreParameters();
+
             // Reset tracking
             if (m_LastHoveredEntity.IsCreated) {
                 m_LastHoveredEntity.Value = Entity.Null;
@@ -575,6 +578,9 @@ namespace NetworkTools.Systems.Tools {
         }
 
         protected override void OnStopRunning() {
+            // Persist parameter values
+            SaveParameters();
+
             // Disable actions
             m_ApplyAction.shouldBeEnabled          = false;
             m_SecondaryApplyAction.shouldBeEnabled = false;

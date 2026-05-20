@@ -5,8 +5,8 @@ namespace NetworkTools.Systems.Tools.Parameters {
         public NumberType NumberType { get; }
         public float DisplayScale { get; }
 
-        public IntParameter(string key, int @default, int min, int max, int modes = 0, string label = null, NumberType numberType = NumberType.None, float displayScale = 1f)
-            : base(key, @default, modes, label: label) {
+        public IntParameter(string key, int @default, int min, int max, int modes = 0, string label = null, NumberType numberType = NumberType.None, float displayScale = 1f, bool persist = true)
+            : base(key, @default, modes, label: label, persist: persist) {
             Min = min;
             Max = max;
             NumberType = numberType;

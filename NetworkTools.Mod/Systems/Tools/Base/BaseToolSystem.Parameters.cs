@@ -1,8 +1,10 @@
 namespace NetworkTools.Systems.Tools {
     using System.Collections.Generic;
+    using NetworkTools.Settings;
     using NetworkTools.Systems.Tools.Handles;
     using NetworkTools.Systems.Tools.Parameters;
 
+    using Newtonsoft.Json;
     using Unity.Entities;
     using Unity.Mathematics;
 
@@ -115,5 +117,55 @@ namespace NetworkTools.Systems.Tools {
         }
 
         private void MarkUpdateNeeded(ChangeOrigin _) => m_UpdateNeeded = true;
+
+        /// <summary>
+        ///     Persists all <see cref="ParameterBase.Persist" /> parameters to
+        ///     <see cref="NT_Settings.SavedParameterValues" />, keyed by <c>toolID.paramKey</c>.
+        /// </summary>
+        protected void SaveParameters() {
+            var settings = NetworkToolsMod.Instance?.Settings;
+            if (settings == null) return;
+
+            var dict   = LoadParameterDictionary(settings);
+            var prefix = toolID + ".";
+
+            foreach (var p in Parameters) {
+                if (!p.Persist) continue;
+                var serialized = p.SerializeValue();
+                if (serialized != null) dict[prefix + p.Key] = serialized;
+            }
+
+            settings.SavedParameterValues = JsonConvert.SerializeObject(dict);
+            settings.ApplyAndSave();
+        }
+
+        /// <summary>
+        ///     Restores persisted parameter values from <see cref="NT_Settings.SavedParameterValues" />.
+        ///     Only parameters with <see cref="ParameterBase.Persist" /> set are restored.
+        /// </summary>
+        protected void RestoreParameters() {
+            var settings = NetworkToolsMod.Instance?.Settings;
+            if (settings == null) return;
+
+            var dict   = LoadParameterDictionary(settings);
+            var prefix = toolID + ".";
+
+            foreach (var p in Parameters) {
+                if (!p.Persist) continue;
+                if (dict.TryGetValue(prefix + p.Key, out var raw)) p.TryDeserializeValue(raw);
+            }
+        }
+
+        /// <summary>
+        ///     Deserializes the saved parameter dictionary from settings, returning an empty dictionary on failure.
+        /// </summary>
+        private static Dictionary<string, string> LoadParameterDictionary(NT_Settings settings) {
+            try {
+                return JsonConvert.DeserializeObject<Dictionary<string, string>>(settings.SavedParameterValues ?? "{}")
+                       ?? new Dictionary<string, string>();
+            } catch {
+                return new Dictionary<string, string>();
+            }
+        }
     }
 }

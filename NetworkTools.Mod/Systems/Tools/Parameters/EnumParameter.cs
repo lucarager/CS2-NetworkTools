@@ -14,12 +14,22 @@ namespace NetworkTools.Systems.Tools.Parameters {
     /// </summary>
     public class EnumParameter<TEnum> : Parameter<TEnum>, IEnumParameter
         where TEnum : struct, Enum {
-        public EnumParameter(string key, TEnum @default, int modes = 0, string label = null)
-            : base(key, @default, modes, label: label) { }
+        public EnumParameter(string key, TEnum @default, int modes = 0, string label = null, bool persist = true)
+            : base(key, @default, modes, label: label, persist: persist) { }
 
         public int IntValue {
             get => (int)(object)Value;
             set => Value = (TEnum)(object)value;
+        }
+
+        /// <inheritdoc />
+        public override string SerializeValue() => IntValue.ToString();
+
+        /// <inheritdoc />
+        public override bool TryDeserializeValue(string raw) {
+            if (!int.TryParse(raw, out var v)) return false;
+            IntValue = v;
+            return true;
         }
     }
 }

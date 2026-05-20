@@ -1,5 +1,7 @@
 namespace NetworkTools.Systems.Tools.Parameters {
+    using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using NetworkTools.Systems.Tools.Handles;
 
     /// <summary>
@@ -25,9 +27,24 @@ namespace NetworkTools.Systems.Tools.Parameters {
             RaiseChanged(origin);
         }
 
-        protected Parameter(string key, T @default, int modes = 0, bool bindable = true, string label = null) : base(key, modes, bindable, label) {
+        protected Parameter(string key, T @default, int modes = 0, bool bindable = true, string label = null, bool persist = true)
+            : base(key, modes, bindable, label, persist) {
             Default = @default;
             m_Value = @default;
+        }
+
+        /// <inheritdoc />
+        public override string SerializeValue() =>
+            Convert.ToString(Value, CultureInfo.InvariantCulture);
+
+        /// <inheritdoc />
+        public override bool TryDeserializeValue(string raw) {
+            try {
+                Value = (T)Convert.ChangeType(raw, typeof(T), CultureInfo.InvariantCulture);
+                return true;
+            } catch {
+                return false;
+            }
         }
 
         public override void ResetToDefault() {
