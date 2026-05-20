@@ -151,11 +151,11 @@
   "NetworkTools.UI.Generate.AltPrefabZ": "Row - Use alternating asset",
   "NetworkTools.UI.Generate.AltNetPrefabZ": "Asset",
   "NetworkTools.UI.Generate.AltEveryZ": "Alternate every",
-  "NetworkTools.UI.PrefabSearch.None": "None",
-  "NetworkTools.UI.Apply.ShapeSlope": "Apply Slope",
-  "NetworkTools.UI.Apply.ShapeCurve": "Apply Transformation",
-  "NetworkTools.UI.Apply.Connect": "Create Connection",
-  "NetworkTools.UI.Apply.SuperNode": "Create Supernode",
-  "NetworkTools.UI.Apply.Parallel": "Create parallel network",
-  "NetworkTools.UI.Apply.Generate": "Generate"
+  "NetworkTools.UI.PrefabSearch.None": "Aucun",
+  "NetworkTools.UI.Apply.ShapeSlope": "Appliquer la pente",
+  "NetworkTools.UI.Apply.ShapeCurve": "Appliquer la transformation",
+  "NetworkTools.UI.Apply.Connect": "Créer une connexion",
+  "NetworkTools.UI.Apply.SuperNode": "Créer un Super Noeud",
+  "NetworkTools.UI.Apply.Parallel": "Créer un réseau parallèle",
+  "NetworkTools.UI.Apply.Generate": "Générer"
 }
