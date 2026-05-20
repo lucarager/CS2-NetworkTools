@@ -5,6 +5,7 @@ namespace NetworkTools.Systems.Tools.Generate {
     using Game.Tools;
     using NetworkTools.Components.Tools;
     using Unity.Collections;
+    using Unity.Entities;
     using Unity.Mathematics;
 
     /// <summary>
@@ -32,20 +33,27 @@ namespace NetworkTools.Systems.Tools.Generate {
                     RebuildHandlesForActiveMode();
             };
 
+            // Search systems
+            m_NetSearchSystem    = World.GetOrCreateSystemManaged<Game.Net.SearchSystem>();
+            m_ObjectSearchSystem = World.GetOrCreateSystemManaged<Game.Objects.SearchSystem>();
+            m_ZoneSearchSystem   = World.GetOrCreateSystemManaged<Game.Zones.SearchSystem>();
+            m_WaterSystem        = World.GetOrCreateSystemManaged<Game.Simulation.WaterSystem>();
+
             // Data
             m_SelectedControlPoint = new NativeValue<ControlPoint>(Allocator.Persistent);
             m_HoveredControlPoint  = new NativeValue<ControlPoint>(Allocator.Persistent);
+            m_SnappedControlPoint  = new NativeValue<ControlPoint>(Allocator.Persistent);
+            m_SnappedEntity        = new NativeValue<Entity>(Allocator.Persistent);
+            m_SnapLines            = new NativeList<SnapLine>(16, Allocator.Persistent);
         }
 
         /// <inheritdoc />
         protected override void OnDestroy() {
-            if (m_SelectedControlPoint.IsCreated) {
-                m_SelectedControlPoint.Dispose();
-            }
-
-            if (m_HoveredControlPoint.IsCreated) {
-                m_HoveredControlPoint.Dispose();
-            }
+            if (m_SelectedControlPoint.IsCreated) m_SelectedControlPoint.Dispose();
+            if (m_HoveredControlPoint.IsCreated)  m_HoveredControlPoint.Dispose();
+            if (m_SnappedControlPoint.IsCreated)  m_SnappedControlPoint.Dispose();
+            if (m_SnappedEntity.IsCreated)        m_SnappedEntity.Dispose();
+            if (m_SnapLines.IsCreated)            m_SnapLines.Dispose();
 
             base.OnDestroy();
         }

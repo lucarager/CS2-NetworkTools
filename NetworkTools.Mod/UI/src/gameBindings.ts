@@ -31,7 +31,10 @@ export enum SnapOption {
     None = 0,
     ZoneGrid = 1 << 0,
     MidPoint = 1 << 1,
-    All = ZoneGrid | MidPoint,
+    ExistingGeometry = 1 << 2,
+    ObjectSide = 1 << 3,
+    GuideLines = 1 << 4,
+    All = ZoneGrid | MidPoint | ExistingGeometry | ObjectSide | GuideLines,
 }
 
 // Target options (bitflags)

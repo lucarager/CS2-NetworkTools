@@ -11,12 +11,27 @@ const SNAP_FLAGS: { flag: SnapOption; localeKey: string; icon: string }[] = [
     {
         flag: SnapOption.ZoneGrid,
         localeKey: "NetworkTools.UI.Snap.ZoneGrid",
-        icon: "coui://nt/Snap/ZoneGrid.svg",
+        icon: "Media/Tools/Snap Options/ZoneGrid.svg",
     },
     {
         flag: SnapOption.MidPoint,
         localeKey: "NetworkTools.UI.Snap.MidPoint",
         icon: "coui://nt/Snap/MidPoint.svg",
+    },
+    {
+        flag: SnapOption.ExistingGeometry,
+        localeKey: "NetworkTools.UI.Snap.ExistingGeometry",
+        icon: "Media/Tools/Snap Options/ExistingGeometry.svg",
+    },
+    {
+        flag: SnapOption.ObjectSide,
+        localeKey: "NetworkTools.UI.Snap.ObjectSide",
+        icon: "Media/Tools/Snap Options/ObjectSide.svg",
+    },
+    {
+        flag: SnapOption.GuideLines,
+        localeKey: "NetworkTools.UI.Snap.GuideLines",
+        icon: "Media/Tools/Snap Options/GuideLines.svg",
     },
 ];
 

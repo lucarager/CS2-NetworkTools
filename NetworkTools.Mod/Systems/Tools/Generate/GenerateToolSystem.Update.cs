@@ -45,6 +45,15 @@ namespace NetworkTools.Systems.Tools.Generate {
 
             raycastHit = GetRaycastResult(out controlPoint);
             if (raycastHit) {
+                // Snap the control point if any snaps are active
+                if (SelectedSnaps != SnapOption.None && NetPrefab.NetPrefabEntity != Unity.Entities.Entity.Null) {
+                    var snapHandle = ScheduleSnapJob(controlPoint, inputDeps);
+                    snapHandle.Complete();
+                    var snapped = m_SnappedControlPoint.value;
+                    if (snapped.m_OriginalEntity != Unity.Entities.Entity.Null || snapped.m_SnapPriority.x > 0f || snapped.m_SnapPriority.y > 0f)
+                        controlPoint = snapped;
+                }
+
                 hitPosition = controlPoint.m_HitPosition;
                 hasNewHoverTarget = !controlPoint.Equals(lastHoveredControlPoint);
             }

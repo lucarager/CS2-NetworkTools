@@ -191,8 +191,11 @@ namespace NetworkTools.L10N {
 
                 // ## Snap Options
                 { "NetworkTools.UI.Snap.Label", "Snapping" },
-                { "NetworkTools.UI.Snap.ZoneGrid", "Zone Grid" },
-                { "NetworkTools.UI.Snap.MidPoint", "Mid Point" },
+                { "NetworkTools.UI.Snap.ZoneGrid", "Snap to zone grid" },
+                { "NetworkTools.UI.Snap.MidPoint", "Snap to segment mid point" },
+                { "NetworkTools.UI.Snap.ExistingGeometry", "Snap to existing Geometry" },
+                { "NetworkTools.UI.Snap.ObjectSide", "Snap to the side of a building" },
+                { "NetworkTools.UI.Snap.GuideLines", "Snap to guide lines" },
 
                 // ## Slope Tool
                 { "NetworkTools.UI.Slope.Preserve", "Preserve" },

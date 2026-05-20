@@ -8,6 +8,7 @@ namespace NetworkTools.Systems.Tools.Generate {
     using NetworkTools.Systems.Tools.Parameters;
 
     using Unity.Collections;
+    using Unity.Entities;
     using Unity.Mathematics;
 
     /// <summary>
@@ -19,6 +20,10 @@ namespace NetworkTools.Systems.Tools.Generate {
 
         /// <inheritdoc />
         public override TargetOption AvailableTargets => TargetOption.None;
+
+        /// <inheritdoc />
+        // TODO: Unhide once snap job is tested in-game
+        public override SnapOption AvailableSnaps => SnapOption.None;
 
         // Shared
         public NetPrefabParameter NetPrefab = new("generate.netPrefab", modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval);
@@ -62,6 +67,17 @@ namespace NetworkTools.Systems.Tools.Generate {
 
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Mode.Value;
+
+        // Search systems for snap job
+        private Game.Net.SearchSystem m_NetSearchSystem;
+        private Game.Objects.SearchSystem m_ObjectSearchSystem;
+        private Game.Zones.SearchSystem m_ZoneSearchSystem;
+        private Game.Simulation.WaterSystem m_WaterSystem;
+
+        // Snap state
+        private NativeList<SnapLine> m_SnapLines;
+        private NativeValue<ControlPoint> m_SnappedControlPoint;
+        private NativeValue<Entity> m_SnappedEntity;
 
         /// <summary>
         ///     Caches the last hit position for tool-specific use.
