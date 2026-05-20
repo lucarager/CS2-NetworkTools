@@ -96,7 +96,6 @@ namespace NetworkTools.Systems.Tools.Connect {
                     m_Curve = EC.Bezier,
                     m_Length = EC.Length,
                     m_FixedIndex = -1,
-                    m_Elevation = EC.Elevation,
                     m_StartPosition = new CoursePos {
                         m_Entity = EC.StartNodeEntity,
                         m_Position = EC.Bezier.a,

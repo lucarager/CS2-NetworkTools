@@ -101,7 +101,6 @@ namespace NetworkTools.Systems.Tools.Generate {
                 ECB.AddComponent(definitionEntity, creationDefinition);
                 ECB.AddComponent<Updated>(definitionEntity);
 
-                var edgeElevation = new float2(EC.Elevation);
                 var startElevation = new float2(EC.StartNodeElevation);
                 var endElevation = new float2(EC.EndNodeElevation);
 
@@ -109,7 +108,6 @@ namespace NetworkTools.Systems.Tools.Generate {
                     m_Curve = EC.Bezier,
                     m_Length = EC.Length,
                     m_FixedIndex = -1,
-                    m_Elevation = edgeElevation,
                     m_StartPosition = new CoursePos {
                         m_Entity = EC.StartNodeEntity,
                         m_Position = EC.Bezier.a,
