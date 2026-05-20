@@ -67,6 +67,11 @@ namespace NetworkTools.Systems.Tools.Connect {
             loopMidPoint2Position.y  = math.lerp(config.StartPosition.y, config.EndPosition.y, 0.6f);
             loopEndPointPosition.y   = math.lerp(config.StartPosition.y, config.EndPosition.y, 0.8f);
 
+            var elevLoopStart = math.lerp(config.StartElevation, config.EndElevation, 0.2f);
+            var elevMidPoint1 = math.lerp(config.StartElevation, config.EndElevation, 0.4f);
+            var elevMidPoint2 = math.lerp(config.StartElevation, config.EndElevation, 0.6f);
+            var elevLoopEnd   = math.lerp(config.StartElevation, config.EndElevation, 0.8f);
+
             // Compute entry/exit tangent directions for smooth straight segment connections
             var entryTangent = clockwise ? cwTangent : -cwTangent;
 
@@ -88,6 +93,7 @@ namespace NetworkTools.Systems.Tools.Connect {
                 Bezier = firstBezier,
                 Length = MathUtils.Length(firstBezier),
                 StartNodeElevation = config.StartElevation,
+                EndNodeElevation = elevLoopStart,
                 StartNodeFlags = CoursePosFlags.IsFirst | CoursePosFlags.IsRight,
                 EndNodeFlags = CoursePosFlags.IsRight,
                 NetPrefabEntity = config.NetPrefabEntity,
@@ -99,6 +105,8 @@ namespace NetworkTools.Systems.Tools.Connect {
             curves.Add(new EdgeConfig {
                 Bezier = loopBezier1,
                 Length = MathUtils.Length(loopBezier1),
+                StartNodeElevation = elevLoopStart,
+                EndNodeElevation = elevMidPoint1,
                 StartNodeFlags = CoursePosFlags.IsRight,
                 EndNodeFlags = CoursePosFlags.IsRight,
                 NetPrefabEntity = config.NetPrefabEntity,
@@ -108,6 +116,8 @@ namespace NetworkTools.Systems.Tools.Connect {
             curves.Add(new EdgeConfig {
                 Bezier = loopBezier2,
                 Length = MathUtils.Length(loopBezier2),
+                StartNodeElevation = elevMidPoint1,
+                EndNodeElevation = elevMidPoint2,
                 StartNodeFlags = CoursePosFlags.IsRight,
                 EndNodeFlags = CoursePosFlags.IsRight,
                 NetPrefabEntity = config.NetPrefabEntity,
@@ -117,6 +127,8 @@ namespace NetworkTools.Systems.Tools.Connect {
             curves.Add(new EdgeConfig {
                 Bezier = loopBezier3,
                 Length = MathUtils.Length(loopBezier3),
+                StartNodeElevation = elevMidPoint2,
+                EndNodeElevation = elevLoopEnd,
                 StartNodeFlags = CoursePosFlags.IsRight,
                 EndNodeFlags = CoursePosFlags.IsRight,
                 NetPrefabEntity = config.NetPrefabEntity,
@@ -135,6 +147,7 @@ namespace NetworkTools.Systems.Tools.Connect {
             curves.Add(new EdgeConfig {
                 Bezier = endBezier,
                 Length = MathUtils.Length(endBezier),
+                StartNodeElevation = elevLoopEnd,
                 EndNodeElevation = config.EndElevation,
                 StartNodeFlags = CoursePosFlags.IsRight,
                 EndNodeFlags = CoursePosFlags.IsLast | CoursePosFlags.IsRight,
