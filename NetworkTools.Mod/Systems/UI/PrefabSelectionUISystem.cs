@@ -105,8 +105,11 @@
                                    .WithAll<RoadData>()
                                    .Build()
                                    .ToEntityArray(Allocator.Temp);
-            if (entities.Length > 0) {
-                m_DefaultRoadPrefab = m_PrefabSystem.GetPrefab<PrefabBase>(entities[0]);
+            for (int i = 0; i < entities.Length; i++) {
+                if (m_PrefabSystem.TryGetPrefab<PrefabBase>(entities[i], out var prefab)) {
+                    m_DefaultRoadPrefab = prefab;
+                    break;
+                }
             }
 
             return m_DefaultRoadPrefab;
@@ -121,8 +124,7 @@
             m_Log.Debug($"HandleSelect(key: {key}, entity: {entity})");
 
             if (m_ToolSystem.activeTool is NT_BaseToolSystem tool) {
-                var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(entity);
-                if (prefab != null) {
+                if (m_PrefabSystem.TryGetPrefab<PrefabBase>(entity, out var prefab)) {
                     tool.SetNetPrefab(key, prefab);
                 }
             }
@@ -155,12 +157,15 @@
 
         private PrefabSelectionEntry[] GetSortedPrefabs(NativeArray<Entity> entities, PrefabType type) {
             return entities.Select(entity => {
-                               var prefab = m_PrefabSystem.GetPrefab<PrefabBase>(entity);
+                               if (!m_PrefabSystem.TryGetPrefab<PrefabBase>(entity, out var prefab))
+                                   return ((PrefabSelectionEntry entry, int groupPriority, int itemPriority)?)null;
                                var name   = prefab.name;
                                var icon   = ImageSystem.GetThumbnail(prefab);
                                var (groupPriority, itemPriority) = GetPriority(entity);
                                return (entry: new PrefabSelectionEntry(entity, name, icon, type), groupPriority, itemPriority);
                            })
+                           .Where(x => x.HasValue)
+                           .Select(x => x!.Value)
                            .OrderBy(x => x.groupPriority)
                            .ThenBy(x => x.itemPriority)
                            .Select(x => x.entry)
