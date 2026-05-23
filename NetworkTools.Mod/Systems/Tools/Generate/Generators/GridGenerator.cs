@@ -77,16 +77,24 @@ namespace NetworkTools.Systems.Tools.Generate {
                 var prefab  = isAlt ? config.AltNetPrefabXEntity     : config.NetPrefabEntity;
                 var lane    = isAlt ? config.AltNetLanePrefabXEntity : config.NetLanePrefabEntity;
 
-                var isFirstRow = row == 0;
-                var isLastRow  = row == zNum - 1;
+                var isBoundaryRow = row == 0 || row == zNum - 1;
 
                 for (var col = 0; col < xNum - 1; col++) {
-                    var isFirstCol = col == 0;
-                    var isLastCol  = col == xNum - 2; // end node sits at xNum-1
-                    var idxA       = row * xNum + col;
-                    var idxB       = row * xNum + col + 1;
-                    var flagsA     = NodeFlags(isFirstRow, isLastRow, isFirstCol, false);
-                    var flagsB     = NodeFlags(isFirstRow, isLastRow, false, isLastCol);
+                    var idxA = row * xNum + col;
+                    var idxB = row * xNum + col + 1;
+
+                    var flagsA = CoursePosFlags.IsGrid;
+                    var flagsB = CoursePosFlags.IsGrid;
+                    if (row != 0) {
+                        flagsA |= CoursePosFlags.IsParallel;
+                        flagsB |= CoursePosFlags.IsParallel;
+                    }
+                    if (isBoundaryRow) {
+                        flagsA |= CoursePosFlags.IsRight;
+                        flagsB |= CoursePosFlags.IsRight;
+                        if (col == 0)        flagsA |= CoursePosFlags.IsFirst;
+                        if (col == xNum - 2) flagsB |= CoursePosFlags.IsLast;
+                    }
                     var bezier     = NT_EdgeUtils.GenerateStraightEdge(
                         nodes[reverse ? idxB : idxA],
                         nodes[reverse ? idxA : idxB]);
@@ -118,16 +126,24 @@ namespace NetworkTools.Systems.Tools.Generate {
                 var prefab  = isAlt ? config.AltNetPrefabZEntity     : config.NetPrefabEntity;
                 var lane    = isAlt ? config.AltNetLanePrefabZEntity : config.NetLanePrefabEntity;
 
-                var isFirstCol = col == 0;
-                var isLastCol  = col == xNum - 1;
+                var isBoundaryCol = col == 0 || col == xNum - 1;
 
                 for (var row = 0; row < zNum - 1; row++) {
-                    var isFirstRow = row == 0;
-                    var isLastRow  = row == zNum - 2; // end node sits at zNum-1
-                    var idxA       = row * xNum + col;
-                    var idxB       = (row + 1) * xNum + col;
-                    var flagsA     = NodeFlags(isFirstRow, false, isFirstCol, isLastCol);
-                    var flagsB     = NodeFlags(false, isLastRow, isFirstCol, isLastCol);
+                    var idxA = row * xNum + col;
+                    var idxB = (row + 1) * xNum + col;
+
+                    var flagsA = CoursePosFlags.IsGrid;
+                    var flagsB = CoursePosFlags.IsGrid;
+                    if (col != xNum - 1) {
+                        flagsA |= CoursePosFlags.IsParallel;
+                        flagsB |= CoursePosFlags.IsParallel;
+                    }
+                    if (isBoundaryCol) {
+                        flagsA |= CoursePosFlags.IsRight;
+                        flagsB |= CoursePosFlags.IsRight;
+                        if (row == 0)        flagsA |= CoursePosFlags.IsFirst;
+                        if (row == zNum - 2) flagsB |= CoursePosFlags.IsLast;
+                    }
                     var bezier     = NT_EdgeUtils.GenerateStraightEdge(
                         nodes[reverse ? idxB : idxA],
                         nodes[reverse ? idxA : idxB]);
@@ -161,13 +177,5 @@ namespace NetworkTools.Systems.Tools.Generate {
         // so they determine X spacing between adjacent node columns.
         private static float ColZWidth(int col, bool altZActive, float primaryWidth, in GenerateJobConfig config) =>
             altZActive && (col + 1) % config.AltEveryZ == 0 ? config.AltNetPrefabZWidth : primaryWidth;
-
-        private static CoursePosFlags NodeFlags(bool isFirstRow, bool isLastRow, bool isFirstCol, bool isLastCol) {
-            if ((isFirstRow || isLastRow) && (isFirstCol || isLastCol))
-                return CoursePosFlags.IsFirst | CoursePosFlags.IsLast;
-            if (isFirstRow || isLastRow || isFirstCol || isLastCol)
-                return CoursePosFlags.IsRight;
-            return CoursePosFlags.IsParallel;
-        }
     }
 }

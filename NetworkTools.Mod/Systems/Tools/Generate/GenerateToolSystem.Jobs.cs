@@ -28,6 +28,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             [ReadOnly] public required ToolOutputMode    OutputMode;
             [ReadOnly] public required Entity            NetPrefabEntity;
             [ReadOnly] public required Entity            NetLanePrefabEntity;
+            [ReadOnly] public required RandomSeed        Seed;
 
             [ReadOnly] public required ComponentLookup<Node> NodeLookup;
             [ReadOnly] public required ComponentLookup<PrefabRef> PrefabRefLookup;
@@ -81,20 +82,22 @@ namespace NetworkTools.Systems.Tools.Generate {
             }
 
             private void Output(NativeList<EdgeConfig> curves) {
+                var random = Seed.GetRandom(0);
                 for (var i = 0; i < curves.Length; i++)
                 {
                     var curve = curves[i];
-                    OutputPreviewEdge(curve);
+                    OutputPreviewEdge(curve, ref random);
                 }
             }
 
-            private void OutputPreviewEdge(EdgeConfig EC) {
+            private void OutputPreviewEdge(EdgeConfig EC, ref Unity.Mathematics.Random random) {
                 var definitionEntity = ECB.CreateEntity();
 
                 var creationDefinition = new CreationDefinition {
                     m_Original = Entity.Null,
                     m_Prefab = EC.NetPrefabEntity,
                     m_SubPrefab = EC.NetLanePrefabEntity,
+                    m_RandomSeed = random.NextInt(),
                     m_Flags = CreationFlags.SubElevation,
                 };
 

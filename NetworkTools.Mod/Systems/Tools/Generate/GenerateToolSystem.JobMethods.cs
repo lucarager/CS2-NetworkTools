@@ -126,6 +126,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                 NetPrefabEntity        = NetPrefab.NetPrefabEntity,
                 NetLanePrefabEntity    = NetPrefab.NetLanePrefabEntity,
                 OutputMode             = outputMode,
+                Seed                   = RandomSeed.Next(),
 
                 NodeLookup             = SystemAPI.GetComponentLookup<Node>(true),
                 CurveLookup            = SystemAPI.GetComponentLookup<Curve>(true),
