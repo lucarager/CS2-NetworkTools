@@ -82,22 +82,20 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.3.3" />
+  <ModVersion Value="1.3.4" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog># 1.3.3
+  <ChangeLog># 1.3.4
 
-- All tools: Save and restore parameters. Most parameters will now remain the same between game sessions, saves, and tool switches.
-- All tools: Fix error when selecting certain prefabs.
-- Generate, Connect Tools: Improve handling of elevation data
-- Internal: Start working on custom snapping
-- UI: Equalize tab widths
-- Connect: Improve calculation of directionality
-- Parallel: Do not reset options after creating the network
-- Translations: Merged translations by volunteers for Chinese Simplified, Spanish, German, Korean, Polish, French. Thank you to all volunteers for your help!</ChangeLog>
+- Updated translations in Spanish and Chinese Traditional. Thank you volunteers!
+- Generate/Grid: Adjusted algorithm to account for a mix of network asset widths. Will now create perfect zone grids regardless of the mixture of widths.
+- Generate/Grid: Adjust algorithm to use network flags that more accurately reflect the base game grid tool.
+- UI: Add coming soon label in some places that lost them.
+- UI: Fix alignment of the zero mark on float sliders
+- All tools: Correctly restore views like zone grid on tool resume</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
