@@ -575,6 +575,7 @@ namespace NetworkTools.Systems.Tools {
             SelectedViews = settings != null
                                 ? (ViewOption)settings.SavedSelectedViews & AvailableViews
                                 : ViewOption.None;
+            RefreshViews();
             DebugMode = settings?.DebugMode ?? false;
 
             // Restore persisted parameter values
