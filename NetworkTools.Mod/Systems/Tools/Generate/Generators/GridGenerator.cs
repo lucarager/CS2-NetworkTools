@@ -199,9 +199,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             altZActive && (col + 1) % config.AltEveryZ == 0 ? config.AltNetPrefabZWidth : primaryWidth;
 
         private static bool NeedsParityShift(float segmentWidth, float perpWidth) {
-            var isSegmentEvenCells = (int)math.round(segmentWidth / 8f) % 2 == 0;
-            var isPerpOddCells     = (int)math.round(perpWidth / 8f) % 2 != 0;
-            return isSegmentEvenCells && isPerpOddCells;
+            return (int)math.round(segmentWidth / 8f) % 2 != (int)math.round(perpWidth / 8f) % 2;
         }
     }
 }
