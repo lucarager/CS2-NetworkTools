@@ -26,6 +26,14 @@
         public static float2 ForceGroundElevation = new(0f, 0f);
 
         /// <summary>
+        ///     Clamps an elevation value to the appropriate threshold so the game
+        ///     treats the node as free-height rather than terrain-clinging.
+        /// </summary>
+        public static float ClampElevation(float elevation) {
+            return elevation >= 0f ? ElevatedThreshold.x : TunnelThreshold.x;
+        }
+
+        /// <summary>
         /// Gets the height at a given bezier parameter t.
         /// Use this for uniformly-parameterized curves (like linear slopes).
         /// </summary>

@@ -4,6 +4,7 @@ namespace NetworkTools.Systems.Tools.Connect {
     using Game.Net;
     using Game.Tools;
 
+    using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Systems.Tools.Utils;
 
     using Unity.Collections;
@@ -34,8 +35,8 @@ namespace NetworkTools.Systems.Tools.Connect {
             curves.Add(new EdgeConfig {
                 Bezier = curveBezier,
                 Length = MathUtils.Length(curveBezier),
-                StartNodeElevation = config.StartElevation,
-                EndNodeElevation = config.EndElevation,
+                StartNodeElevation = SlopeUtils.ClampElevation(config.StartElevation),
+                EndNodeElevation = SlopeUtils.ClampElevation(config.EndElevation),
                 StartNodeFlags = CoursePosFlags.IsFirst | CoursePosFlags.IsRight,
                 EndNodeFlags = CoursePosFlags.IsLast | CoursePosFlags.IsRight,
                 NetPrefabEntity = config.NetPrefabEntity,

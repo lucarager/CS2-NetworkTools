@@ -3,6 +3,7 @@ namespace NetworkTools.Systems.Tools.Connect {
 
     using Game.Tools;
 
+    using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Systems.Tools.Utils;
 
     using Unity.Collections;
@@ -67,10 +68,10 @@ namespace NetworkTools.Systems.Tools.Connect {
             loopMidPoint2Position.y  = math.lerp(config.StartPosition.y, config.EndPosition.y, 0.6f);
             loopEndPointPosition.y   = math.lerp(config.StartPosition.y, config.EndPosition.y, 0.8f);
 
-            var elevLoopStart = math.lerp(config.StartElevation, config.EndElevation, 0.2f);
-            var elevMidPoint1 = math.lerp(config.StartElevation, config.EndElevation, 0.4f);
-            var elevMidPoint2 = math.lerp(config.StartElevation, config.EndElevation, 0.6f);
-            var elevLoopEnd   = math.lerp(config.StartElevation, config.EndElevation, 0.8f);
+            var elevLoopStart = SlopeUtils.ClampElevation(math.lerp(config.StartElevation, config.EndElevation, 0.2f));
+            var elevMidPoint1 = SlopeUtils.ClampElevation(math.lerp(config.StartElevation, config.EndElevation, 0.4f));
+            var elevMidPoint2 = SlopeUtils.ClampElevation(math.lerp(config.StartElevation, config.EndElevation, 0.6f));
+            var elevLoopEnd   = SlopeUtils.ClampElevation(math.lerp(config.StartElevation, config.EndElevation, 0.8f));
 
             // Compute entry/exit tangent directions for smooth straight segment connections
             var entryTangent = clockwise ? cwTangent : -cwTangent;
@@ -92,7 +93,7 @@ namespace NetworkTools.Systems.Tools.Connect {
             curves.Add(new EdgeConfig {
                 Bezier = firstBezier,
                 Length = MathUtils.Length(firstBezier),
-                StartNodeElevation = config.StartElevation,
+                StartNodeElevation = SlopeUtils.ClampElevation(config.StartElevation),
                 EndNodeElevation = elevLoopStart,
                 StartNodeFlags = CoursePosFlags.IsFirst | CoursePosFlags.IsRight,
                 EndNodeFlags = CoursePosFlags.IsRight,
@@ -148,7 +149,7 @@ namespace NetworkTools.Systems.Tools.Connect {
                 Bezier = endBezier,
                 Length = MathUtils.Length(endBezier),
                 StartNodeElevation = elevLoopEnd,
-                EndNodeElevation = config.EndElevation,
+                EndNodeElevation = SlopeUtils.ClampElevation(config.EndElevation),
                 StartNodeFlags = CoursePosFlags.IsRight,
                 EndNodeFlags = CoursePosFlags.IsLast | CoursePosFlags.IsRight,
                 NetPrefabEntity = config.NetPrefabEntity,
