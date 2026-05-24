@@ -28,6 +28,12 @@ namespace NetworkTools.Systems.Tools.Utils {
 
         // === Geometry ===
 
+        /// <summary>World-space position of the start node (may differ from <see cref="Bezier"/>.a when the bezier is shortened).</summary>
+        public Unity.Mathematics.float3 StartNodePosition;
+
+        /// <summary>World-space position of the end node (may differ from <see cref="Bezier"/>.d when the bezier is shortened).</summary>
+        public Unity.Mathematics.float3 EndNodePosition;
+
         /// <summary>Path-ordered bezier curve of the edge.</summary>
         public Bezier4x3 Bezier;
 

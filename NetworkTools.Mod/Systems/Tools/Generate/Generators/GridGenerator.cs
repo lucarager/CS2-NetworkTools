@@ -76,6 +76,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                 var reverse = rank % 2 != 0;
                 var prefab  = isAlt ? config.AltNetPrefabXEntity     : config.NetPrefabEntity;
                 var lane    = isAlt ? config.AltNetLanePrefabXEntity : config.NetLanePrefabEntity;
+                var xWidth  = RowXWidth(row, altXActive, netWidth, config);
 
                 var isBoundaryRow = row == 0 || row == zNum - 1;
 
@@ -95,10 +96,19 @@ namespace NetworkTools.Systems.Tools.Generate {
                         if (col == 0)        flagsA |= CoursePosFlags.IsFirst;
                         if (col == xNum - 2) flagsB |= CoursePosFlags.IsLast;
                     }
+                    var posA       = nodes[idxA];
+                    var posB       = nodes[idxB];
+                    var shiftStart = NeedsParityShift(xWidth, ColZWidth(col, altZActive, netWidth, config));
+                    var shiftEnd   = NeedsParityShift(xWidth, ColZWidth(col + 1, altZActive, netWidth, config));
+                    if (shiftStart) posA += xDir * 4f;
+                    if (shiftEnd)   posB -= xDir * 4f;
+
                     var bezier     = NT_EdgeUtils.GenerateStraightEdge(
-                        nodes[reverse ? idxB : idxA],
-                        nodes[reverse ? idxA : idxB]);
+                        reverse ? posB : posA,
+                        reverse ? posA : posB);
                     curves.Add(new EdgeConfig {
+                        StartNodePosition   = nodes[reverse ? idxB : idxA],
+                        EndNodePosition     = nodes[reverse ? idxA : idxB],
                         Bezier              = bezier,
                         Length              = MathUtils.Length(bezier),
                         StartNodeElevation  = yOffset,
@@ -125,6 +135,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                 var reverse = rank % 2 == 0;
                 var prefab  = isAlt ? config.AltNetPrefabZEntity     : config.NetPrefabEntity;
                 var lane    = isAlt ? config.AltNetLanePrefabZEntity : config.NetLanePrefabEntity;
+                var zWidth  = ColZWidth(col, altZActive, netWidth, config);
 
                 var isBoundaryCol = col == 0 || col == xNum - 1;
 
@@ -144,10 +155,19 @@ namespace NetworkTools.Systems.Tools.Generate {
                         if (row == 0)        flagsA |= CoursePosFlags.IsFirst;
                         if (row == zNum - 2) flagsB |= CoursePosFlags.IsLast;
                     }
+                    var posA       = nodes[idxA];
+                    var posB       = nodes[idxB];
+                    var shiftStart = NeedsParityShift(zWidth, RowXWidth(row, altXActive, netWidth, config));
+                    var shiftEnd   = NeedsParityShift(zWidth, RowXWidth(row + 1, altXActive, netWidth, config));
+                    if (shiftStart) posA += zDir * 4f;
+                    if (shiftEnd)   posB -= zDir * 4f;
+
                     var bezier     = NT_EdgeUtils.GenerateStraightEdge(
-                        nodes[reverse ? idxB : idxA],
-                        nodes[reverse ? idxA : idxB]);
+                        reverse ? posB : posA,
+                        reverse ? posA : posB);
                     curves.Add(new EdgeConfig {
+                        StartNodePosition   = nodes[reverse ? idxB : idxA],
+                        EndNodePosition     = nodes[reverse ? idxA : idxB],
                         Bezier              = bezier,
                         Length              = MathUtils.Length(bezier),
                         StartNodeElevation  = yOffset,
@@ -177,5 +197,11 @@ namespace NetworkTools.Systems.Tools.Generate {
         // so they determine X spacing between adjacent node columns.
         private static float ColZWidth(int col, bool altZActive, float primaryWidth, in GenerateJobConfig config) =>
             altZActive && (col + 1) % config.AltEveryZ == 0 ? config.AltNetPrefabZWidth : primaryWidth;
+
+        private static bool NeedsParityShift(float segmentWidth, float perpWidth) {
+            var isSegmentEvenCells = (int)math.round(segmentWidth / 8f) % 2 == 0;
+            var isPerpOddCells     = (int)math.round(perpWidth / 8f) % 2 != 0;
+            return isSegmentEvenCells && isPerpOddCells;
+        }
     }
 }

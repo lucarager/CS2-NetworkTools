@@ -113,7 +113,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                     m_FixedIndex = -1,
                     m_StartPosition = new CoursePos {
                         m_Entity = EC.StartNodeEntity,
-                        m_Position = EC.Bezier.a,
+                        m_Position = EC.StartNodePosition,
                         m_Rotation = NetUtils.GetNodeRotation(MathUtils.StartTangent(EC.Bezier)),
                         m_CourseDelta = 0,
                         m_Elevation = startElevation,
@@ -123,7 +123,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                     },
                     m_EndPosition = new CoursePos {
                         m_Entity = EC.EndNodeEntity,
-                        m_Position = EC.Bezier.d,
+                        m_Position = EC.EndNodePosition,
                         m_Rotation = NetUtils.GetNodeRotation(MathUtils.EndTangent(EC.Bezier)),
                         m_CourseDelta = 1,
                         m_Elevation = endElevation,

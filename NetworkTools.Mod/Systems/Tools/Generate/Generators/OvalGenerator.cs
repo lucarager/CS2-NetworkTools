@@ -55,6 +55,8 @@ namespace NetworkTools.Systems.Tools.Generate {
 
                 var bezier = new Bezier4x3(nodes[i], p1, p2, nodes[next]);
                 curves.Add(new EdgeConfig {
+                    StartNodePosition   = bezier.a,
+                    EndNodePosition     = bezier.d,
                     Bezier              = bezier,
                     Length              = MathUtils.Length(bezier),
                     StartNodeElevation  = yOffset,
