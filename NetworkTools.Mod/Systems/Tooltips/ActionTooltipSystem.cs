@@ -4,6 +4,8 @@
 // </copyright>
 
 namespace NetworkTools.Systems.Tooltips {
+    using System.Collections.Generic;
+
     using Game.Input;
     using Game.Tools;
     using Game.UI.Tooltip;
@@ -18,6 +20,8 @@ namespace NetworkTools.Systems.Tooltips {
         private ProxyAction m_ApplyAction;
         private ProxyAction m_SecondaryApplyAction;
         private ProxyAction m_PreciseRotation;
+
+        private readonly Dictionary<ProxyAction, DisplayNameOverride> m_Overrides = new();
 
         /// <inheritdoc />
         protected override void OnCreate() {
@@ -34,13 +38,25 @@ namespace NetworkTools.Systems.Tooltips {
         }
 
         /// <inheritdoc />
+        protected override void OnDestroy() {
+            foreach (var kvp in m_Overrides) {
+                kvp.Value.Dispose();
+            }
+
+            m_Overrides.Clear();
+            base.OnDestroy();
+        }
+
+        /// <inheritdoc />
         protected override void OnUpdate() {
             if (m_ToolSystem.activeTool is not NT_BaseToolSystem activeTool) {
+                DeactivateOverrides();
                 return;
             }
 
             var controlScheme = InputManager.instance.activeControlScheme;
             if (controlScheme is not InputManager.ControlScheme.KeyboardAndMouse) {
+                DeactivateOverrides();
                 return;
             }
 
@@ -53,36 +69,53 @@ namespace NetworkTools.Systems.Tooltips {
             ShowTooltips(tooltipEntries, InputManager.DeviceType.Mouse);
         }
 
-        private void ShowTooltips(System.Collections.Generic.IReadOnlyList<HintTooltipEntry> entries,
-                                  InputManager.DeviceType                                    device) {
-            if (entries == null || entries.Count == 0) {
-                return;
+        private void ShowTooltips(IReadOnlyList<HintTooltipEntry> entries,
+                                  InputManager.DeviceType         device) {
+            var activeActions = new HashSet<ProxyAction>();
+
+            if (entries != null && entries.Count > 0) {
+                for (var i = 0; i < entries.Count; i++) {
+                    var entry = entries[i];
+
+                    if (entry.Action != null) {
+                        activeActions.Add(entry.Action);
+
+                        if (!m_Overrides.TryGetValue(entry.Action, out var dno)) {
+                            dno = new DisplayNameOverride(
+                                "NetworkTools.HintTooltip.Tooltip",
+                                entry.Action,
+                                entry.Text,
+                                1);
+                            m_Overrides[entry.Action] = dno;
+                        }
+
+                        dno.displayName = entry.Text;
+                        dno.active      = true;
+
+                        var inputHint = new InputHintTooltip(entry.Action);
+                        inputHint.Refresh(device);
+
+                        if (inputHint.path != "Tool/Secondary ApplyMouse" &&
+                            inputHint.path != "Tool/ApplyMouse") {
+                            AddMouseTooltip(inputHint);
+                        }
+                    } else {
+                        AddMouseTooltip(new StringTooltip { value = entry.Text });
+                    }
+                }
             }
 
-            for (var i = 0; i < entries.Count; i++) {
-                var entry = entries[i];
+            foreach (var kvp in m_Overrides) {
+                if (!activeActions.Contains(kvp.Key) && kvp.Value.active) {
+                    kvp.Value.active = false;
+                }
+            }
+        }
 
-                if (entry.Action != null) {
-                    var displayOverride = new DisplayNameOverride(
-                        "NetworkTools.HintTooltip.Tooltip",
-                        entry.Action,
-                        entry.Text,
-                        1
-                    );
-                    displayOverride.active = true;
-
-                    var inputHint = new InputHintTooltip(entry.Action);
-                    inputHint.Refresh(device);
-
-                    displayOverride.Dispose();
-
-                    // Add non-apply tooltips manually
-                    if (inputHint.path != "Tool/Secondary ApplyMouse" && 
-                        inputHint.path != "Tool/ApplyMouse") {
-                        AddMouseTooltip(inputHint);
-                    }
-                } else {
-                    AddMouseTooltip(new StringTooltip { value = entry.Text });
+        private void DeactivateOverrides() {
+            foreach (var kvp in m_Overrides) {
+                if (kvp.Value.active) {
+                    kvp.Value.active = false;
                 }
             }
         }
