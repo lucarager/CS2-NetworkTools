@@ -3,6 +3,7 @@ namespace NetworkTools.Systems.Tools.Generate {
 
     using Game.Tools;
 
+    using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Systems.Tools.Utils;
 
     using Unity.Collections;
@@ -27,6 +28,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             var freeHeight = config.FollowTerrain || (yOffset > -config.ElevationLimit && yOffset < config.ElevationLimit)
                 ? CoursePosFlags.FreeHeight
                 : (CoursePosFlags)0;
+            var nodeElevation = config.FollowTerrain ? yOffset : SlopeUtils.ClampElevation(yOffset);
             var rotation = config.StartDirection;
 
             float angleStep = 2f * math.PI / Segments;
@@ -60,8 +62,8 @@ namespace NetworkTools.Systems.Tools.Generate {
                     EndNodePosition     = bezier.d,
                     Bezier              = bezier,
                     Length              = MathUtils.Length(bezier),
-                    StartNodeElevation  = yOffset,
-                    EndNodeElevation    = yOffset,
+                    StartNodeElevation  = nodeElevation,
+                    EndNodeElevation    = nodeElevation,
                     NetPrefabEntity     = config.NetPrefabEntity,
                     NetLanePrefabEntity = config.NetLanePrefabEntity,
                     StartNodeFlags      = CoursePosFlags.IsRight | freeHeight,

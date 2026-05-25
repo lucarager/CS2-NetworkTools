@@ -3,6 +3,7 @@ namespace NetworkTools.Systems.Tools.Generate {
 
     using Game.Tools;
 
+    using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Systems.Tools.Utils;
 
     using Unity.Collections;
@@ -20,6 +21,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             var freeHeight = config.FollowTerrain || (yOffset > -config.ElevationLimit && yOffset < config.ElevationLimit)
                 ? CoursePosFlags.FreeHeight
                 : (CoursePosFlags)0;
+            var nodeElevation = config.FollowTerrain ? yOffset : SlopeUtils.ClampElevation(yOffset);
 
             var origin = config.Position + new float3(0, yOffset, 0);
             var xDir   = math.mul(config.StartDirection, new float3(1, 0, 0));
@@ -111,8 +113,8 @@ namespace NetworkTools.Systems.Tools.Generate {
                         EndNodePosition     = nodes[reverse ? idxA : idxB],
                         Bezier              = bezier,
                         Length              = MathUtils.Length(bezier),
-                        StartNodeElevation  = yOffset,
-                        EndNodeElevation    = yOffset,
+                        StartNodeElevation  = nodeElevation,
+                        EndNodeElevation    = nodeElevation,
                         NetPrefabEntity     = prefab,
                         NetLanePrefabEntity = lane,
                         StartNodeFlags      = (reverse ? flagsB : flagsA) | freeHeight,
@@ -170,8 +172,8 @@ namespace NetworkTools.Systems.Tools.Generate {
                         EndNodePosition     = nodes[reverse ? idxA : idxB],
                         Bezier              = bezier,
                         Length              = MathUtils.Length(bezier),
-                        StartNodeElevation  = yOffset,
-                        EndNodeElevation    = yOffset,
+                        StartNodeElevation  = nodeElevation,
+                        EndNodeElevation    = nodeElevation,
                         NetPrefabEntity     = prefab,
                         NetLanePrefabEntity = lane,
                         StartNodeFlags      = (reverse ? flagsB : flagsA) | freeHeight,
