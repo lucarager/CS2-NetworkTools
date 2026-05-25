@@ -15,7 +15,7 @@ namespace NetworkTools.Systems.Tools.Connect {
         public void InitializeConfig(ref ConnectJobConfig config) {
             var length = math.distance(config.StartPosition, config.EndPosition);
             var dot    = math.dot(config.StartDirection, -config.EndDirection);
-            var factor = math.lerp(0.5f, 1f / 3f, math.saturate((dot + 1f) / 2f));
+            var factor = math.lerp(0.75f, 0.33f, math.saturate((dot + 1f) / 2f));
 
             config.CurveStartPointPosition        = config.StartPosition;
             config.CurveEndPointPosition          = config.EndPosition;
