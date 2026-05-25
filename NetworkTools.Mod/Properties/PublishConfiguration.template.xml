@@ -22,6 +22,8 @@
 	<ModVersion Value="1.1.10" />
 	<!--Recommended version of the base game to use the mod-->
 	<GameVersion Value="1.5.*" />
+	<!--Dependency for the mod, can be set multiple-->
+	<Dependency Id="74417" DisplayName="Unified Icon Library" Version="1.*" />
 	<!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
 	<RequiredDLC Value="" />
 	<!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
