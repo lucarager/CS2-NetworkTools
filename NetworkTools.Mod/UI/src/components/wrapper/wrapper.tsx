@@ -13,7 +13,10 @@ export const Wrapper = () => {
 
     return (
         <>
-            <Tooltip tooltip={translate("NetworkTools.UI.Common.NetworkTools")} delayTime={0} direction="down">
+            <Tooltip
+                tooltip={translate("NetworkTools.UI.Common.NetworkTools")}
+                delayTime={0}
+                direction="down">
                 <Button
                     variant="floating"
                     onSelect={() => GAME_BINDINGS.PANEL_OPEN.set(!panelOpenBinding)}

@@ -20,6 +20,10 @@ export const ToolSelectPanel = () => {
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
     const { translate } = useLocalization();
 
+    /**
+     * Organizes tools into groups based on their category and flattens them into a single list with dividers between categories.
+     * The order of categories is determined by the CATEGORY_ORDER constant. This is memoized to avoid unnecessary recalculations when the tools data changes.
+     */
     const items = useMemo(() => {
         const groups: { category: string; tools: ToolUIData[] }[] = [];
         for (const category of CATEGORY_ORDER) {
@@ -48,8 +52,33 @@ export const ToolSelectPanel = () => {
         return flatItems;
     }, [tools]);
 
+    /**
+     * Closes the panel by setting the PANEL_OPEN binding to false.
+     */
+    const onClose = () => {
+        GAME_BINDINGS.PANEL_OPEN.set(false);
+    };
+
     return (
         <div className={[styles.wrapper, panels.nt_panel].join(" ")}>
+            {/* Header */}
+            <div className={styles.header}>
+                {/* Logo */}
+                {/* <img src="coui://nt/Logo.svg" className={styles.logo} /> */}
+                {/* Close Button */}
+                <Tooltip
+                    tooltip={translate("NetworkTools.UI.Common.Close")}
+                    delayTime={0}
+                    direction="right">
+                    <button className={styles.closeButton} onClick={onClose}>
+                        <img
+                            src={"coui://uil/Standard/XClose.svg"}
+                            className={styles.closeButton__icon}
+                        />
+                    </button>
+                </Tooltip>
+            </div>
+            {/* Tab UI */}
             <div className={styles.column}>
                 {items.map((item) =>
                     item.type === "tool" ? (

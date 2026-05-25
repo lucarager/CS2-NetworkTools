@@ -152,6 +152,7 @@ namespace NetworkTools.L10N {
                 // # UI Strings
                 // ## Common
                 { "NetworkTools.UI.Common.NetworkTools", "Network Tools" },
+                { "NetworkTools.UI.Common.Close", "Close" },
                 { "NetworkTools.UI.Common.Mode", "Mode" },
                 { "NetworkTools.UI.Common.ToggleAll", "Toggle All" },
                 { "NetworkTools.UI.Common.SelectAtLeastTwoNodes", "Select at least two nodes." },

@@ -75,6 +75,7 @@
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]": "Rotate",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]": "Remove placement",
   "NetworkTools.UI.Common.NetworkTools": "Network Tools",
+  "NetworkTools.UI.Common.Close": "Close",
   "NetworkTools.UI.Common.Mode": "Mode",
   "NetworkTools.UI.Common.ToggleAll": "Toggle All",
   "NetworkTools.UI.Common.SelectAtLeastTwoNodes": "Select at least two nodes.",
