@@ -82,20 +82,25 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.3.4" />
+  <ModVersion Value="1.4.0" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
+  <!--Dependency for the mod, can be set multiple-->
+  <Dependency Id="74417" DisplayName="Unified Icon Library" Version="1.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog># 1.3.4
+  <ChangeLog># 1.4.0
 
-- Updated translations in Spanish and Chinese Traditional. Thank you volunteers!
-- Generate/Grid: Adjusted algorithm to account for a mix of network asset widths. Will now create perfect zone grids regardless of the mixture of widths.
-- Generate/Grid: Adjust algorithm to use network flags that more accurately reflect the base game grid tool.
-- UI: Add coming soon label in some places that lost them.
-- UI: Fix alignment of the zero mark on float sliders
-- All tools: Correctly restore views like zone grid on tool resume</ChangeLog>
+- New: Connect Tools. Allows creating networks that connect a start and end node. 
+- Connect Tool: Added simple curve mode. Loop mode and complex curve are still work in progress.
+- Connect Tool/SimpleCurve: More smartly create initial bezier control point positions based on start/end direction.
+- Generate Tool: Added option to follow the terrain and rewrote elevation handling. All generate modes should now allow for fine-tuned precision on elevation and terrain handling.
+- Translations: Updated translations across the board. Thank you volunteers!
+- UI: Added close button to tool panel
+- Tooltips: Fixed bug that would keep stale tooltips without clearing them
+- Internal: Added UIL as dependency
+- Internal: Removed some dead code</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
