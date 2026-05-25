@@ -18,7 +18,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             ref NativeList<EdgeConfig> curves) {
             var netWidth   = config.NetWidth;
             var yOffset    = config.Elevation + config.BaselineElevation;
-            var freeHeight = config.FollowTerrain || (yOffset > -config.ElevationLimit && yOffset < config.ElevationLimit)
+            var freeHeight = config.FollowTerrain
                 ? CoursePosFlags.FreeHeight
                 : (CoursePosFlags)0;
             var nodeElevation = config.FollowTerrain ? yOffset : SlopeUtils.ClampElevation(yOffset);
