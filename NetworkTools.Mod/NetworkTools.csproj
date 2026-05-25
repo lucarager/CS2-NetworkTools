@@ -154,7 +154,7 @@
 	<!--Generate TypeScript parameter definitions from C# source-->
 	<Target Name="GenerateParametersTS" BeforeTargets="BuildUI">
 		<Message Text="[GenerateParametersTS]" Importance="high" />
-		<Exec Command="dotnet run --project &quot;$(SolutionDir)NetworkTools.Codegen&quot; -- &quot;$(ProjectDir)Systems&quot; &quot;$(ProjectDir)UI/src/generated/parameters.generated.ts&quot;" />
+		<Exec Command="dotnet run --project &quot;$(SolutionDir)NetworkTools.Codegen&quot; -- &quot;$(ProjectDir)Systems&quot; &quot;$(ProjectDir)UI/src/generated/parameters.generated.ts&quot; --configuration $(Configuration)" />
 	</Target>
 
 	<!--Build UI-->

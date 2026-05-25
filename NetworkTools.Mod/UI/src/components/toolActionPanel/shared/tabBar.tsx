@@ -1,11 +1,6 @@
 import React from "react";
 import styles from "../toolActionPanel.module.scss";
-import {
-    PARAM_META,
-    PARAM_BINDING,
-    ENUM_OPTIONS,
-    ShapeTransformTemplate,
-} from "generated/parameters.generated";
+import { PARAM_META, PARAM_BINDING, ENUM_OPTIONS } from "generated/parameters.generated";
 import { useValue } from "cs2/api";
 import { useLocalization } from "cs2/l10n";
 
@@ -42,7 +37,7 @@ export const TabBar: React.FC<TabBarProps> = ({ paramKey, group }) => {
                     disabled={option.disabled}>
                     <img src={option.icon} className={styles.tab__icon} />
                     <span className={styles.tab__label}>{translate(option.label)}</span>
-                    {option.value == ShapeTransformTemplate.CurveSmooth && (
+                    {option.disabled && (
                         <span className={styles.tab__label}>
                             ({translate("NetworkTools.UI.Common.ComingSoon")})
                         </span>

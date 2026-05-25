@@ -48,7 +48,7 @@ namespace NetworkTools.Systems.Tools {
                 // We hit something
                 var newEntityWasHit = m_LastHoveredEntity.Value != controlPoint.m_OriginalEntity;
                 var positionChanged = !controlPoint.m_Position.Equals(m_LastControlPoint.m_Position);
-                m_UpdateNeeded = newEntityWasHit || positionChanged;
+                m_UpdateNeeded = true;//newEntityWasHit || positionChanged;
 
                 // Handle hover
                 HandleHover(controlPoint);

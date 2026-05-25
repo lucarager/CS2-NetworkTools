@@ -25,12 +25,16 @@ var enums = new Dictionary<string, EnumDef>();
 var parameters = new List<ParamDef>();
 
 if (args.Length < 2) {
-    Console.Error.WriteLine("Usage: NetworkTools.Codegen <sourceDir> <outputFile>");
+    Console.Error.WriteLine("Usage: NetworkTools.Codegen <sourceDir> <outputFile> [--configuration Debug|Release]");
     return 1;
 }
 
 var sourceDir = Path.GetFullPath(args[0]);
 var outputFile = Path.GetFullPath(args[1]);
+
+var configIdx = Array.IndexOf(args, "--configuration");
+var isDebug = configIdx >= 0 && configIdx + 1 < args.Length
+    && args[configIdx + 1].Equals("Debug", StringComparison.OrdinalIgnoreCase);
 
 if (!Directory.Exists(sourceDir)) {
     Console.Error.WriteLine($"Source directory not found: {sourceDir}");
@@ -546,7 +550,7 @@ string EmitTypeScript() {
                         foreach (var opt in member.Options.Where(o => o.Group == group)) {
                             sb.Append($"        {{ value: {def.Name}.{member.Name}, label: \"{opt.Label}\", icon: \"{opt.Icon}\"");
                             if (!opt.Visible) sb.Append(", visible: false");
-                            if (opt.Disabled) sb.Append(", disabled: true");
+                            if (opt.Disabled && !isDebug) sb.Append(", disabled: true");
                             sb.AppendLine(" },");
                         }
                     }
@@ -559,7 +563,7 @@ string EmitTypeScript() {
                     foreach (var opt in member.Options) {
                         sb.Append($"        {{ value: {def.Name}.{member.Name}, label: \"{opt.Label}\", icon: \"{opt.Icon}\"");
                         if (!opt.Visible) sb.Append(", visible: false");
-                        if (opt.Disabled) sb.Append(", disabled: true");
+                        if (opt.Disabled && !isDebug) sb.Append(", disabled: true");
                         sb.AppendLine(" },");
                     }
                 }
