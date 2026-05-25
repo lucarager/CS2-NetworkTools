@@ -20,18 +20,6 @@ namespace NetworkTools.Systems {
         private static PrefabSystem m_PrefabSystem;
 
         /// <summary>
-        ///     Configuration for vanilla prefabas to load for further processing.
-        /// </summary>
-        private readonly Dictionary<string, PrefabID> m_SourcePrefabsDict = new() {
-            { "marker", new PrefabID("MarkerObjectPrefab", "Pedestrian Access Location") }
-        };
-
-        /// <summary>
-        ///     Cached reference to the handle prefab entity.
-        /// </summary>
-        internal Entity HandlePrefabEntity;
-
-        /// <summary>
         ///     Gets or sets the number of installed tools.
         /// </summary>
         private int m_InstalledTools;
@@ -93,28 +81,15 @@ namespace NetworkTools.Systems {
             // Mark the Install as already _prefabsAreInstalled
             m_PrefabsAreInstalled = true;
 
-            var prefabBaseDict = new Dictionary<string, PrefabBase>();
-
-            foreach (var (key, prefabId) in m_SourcePrefabsDict) {
-                if (!m_PrefabSystem.TryGetPrefab(prefabId, out var prefabBase)) {
-                    m_Log.Error($"{logMethodPrefix} Failed retrieving prefabBase {prefabId} and must exit.");
-                    continue;
-                }
-
-                prefabBaseDict[key] = prefabBase;
-            }
-
             CreateToolPrefab("AddNode",    "add.svg",      "node",       new NT_AddNodeTool(),    IsToolActive(true));
             CreateToolPrefab("RemoveNode", "remove.svg",   "node",       new NT_RemoveNodeTool(), IsToolActive(true));
             CreateToolPrefab("SlideNode",  "move.svg",     "node",       new NT_SlideNodeTool(),  IsToolActive(false));
             CreateToolPrefab("SuperNode",  "super.svg",    "node",       new NT_SuperNodeTool(),  IsToolActive(true));
             CreateToolPrefab("ShapeSlope", "slope.svg",    "shape",      new NT_ShapeSlopeTool(), IsToolActive(true));
             CreateToolPrefab("ShapeCurve", "curve.svg",    "shape",      new NT_ShapeCurveTool(), IsToolActive(true));
-            CreateToolPrefab("Connect",    "connect.svg",  "generative", new NT_ConnectTool(),    IsToolActive(false));
+            CreateToolPrefab("Connect",    "connect.svg",  "generative", new NT_ConnectTool(),    IsToolActive(true));
             CreateToolPrefab("Parallel",   "parallel.svg", "generative", new NT_ParallelTool(),   IsToolActive(true));
             CreateToolPrefab("Generate",   "generate.svg", "generative", new NT_GenerateTool(),   IsToolActive(true));
-
-            CreateHandlePrefab((MarkerObjectPrefab)prefabBaseDict["marker"]);
 
             m_Log.Debug($"{logMethodPrefix} Completed.");
         }
@@ -128,24 +103,6 @@ namespace NetworkTools.Systems {
 #else
             return releaseActive;
 #endif
-        }
-
-        private bool CreateHandlePrefab(MarkerObjectPrefab pedestrianPrefab) {
-            var prefabBase = ScriptableObject.CreateInstance<MarkerObjectPrefab>();
-            prefabBase.name       = "NT_HandleObjectPrefab";
-            prefabBase.m_Circular = true;
-            prefabBase.m_Mesh     = pedestrianPrefab.m_Mesh;
-
-            var success = m_PrefabSystem.AddPrefab(prefabBase);
-
-            if (success) {
-                var prefabEntity = m_PrefabSystem.GetEntity(prefabBase);
-                m_PrefabBases.Add(prefabBase);
-                m_PrefabEntities.Add(prefabBase, prefabEntity);
-                HandlePrefabEntity = prefabEntity;
-            }
-
-            return success;
         }
 
         private bool CreateToolPrefab<T>(string id, string icon, string category, T component,
