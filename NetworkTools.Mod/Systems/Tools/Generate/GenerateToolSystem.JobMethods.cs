@@ -38,6 +38,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                 OvalRadiusX           = OvalRadiusX.Value,
                 OvalRadiusZ           = OvalRadiusZ.Value,
                 Elevation             = Elevation.Value,
+                FollowTerrain         = FollowTerrain.Value,
             };
         }
 

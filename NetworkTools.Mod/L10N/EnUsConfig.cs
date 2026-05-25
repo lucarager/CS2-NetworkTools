@@ -242,6 +242,7 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Generate.RadiusX", "Width Radius" },
                 { "NetworkTools.UI.Generate.RadiusZ", "Depth Radius" },
                 { "NetworkTools.UI.Generate.Elevation", "Elevation" },
+                { "NetworkTools.UI.Generate.FollowTerrain", "Follow Terrain" },
                 { "NetworkTools.UI.Generate.AltPrefabX", "Column - Use alternating asset" },
                 { "NetworkTools.UI.Generate.AltNetPrefabX", "Asset" },
                 { "NetworkTools.UI.Generate.AltEveryX", "Alternate every" },

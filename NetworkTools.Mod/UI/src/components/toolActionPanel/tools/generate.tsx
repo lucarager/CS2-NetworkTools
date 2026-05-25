@@ -24,6 +24,7 @@ export const GenerateControls: React.FC = () => {
                 <div className={styles.section__content}>
                     <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
                     <ParameterField paramKey="generate.elevation" />
+                    <ParameterField paramKey="generate.followTerrain" />
                     <ParameterField paramKey="generate.gridXNum" />
                     <ParameterField paramKey="generate.gridZNum" />
                     <ParameterField paramKey="generate.gridXSpacing" />
@@ -55,6 +56,7 @@ export const GenerateControls: React.FC = () => {
                 <div className={styles.section__content}>
                     <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
                     <ParameterField paramKey="generate.elevation" />
+                    <ParameterField paramKey="generate.followTerrain" />
                     <ParameterField paramKey="generate.circleRadius" />
                 </div>
             )}
@@ -62,6 +64,7 @@ export const GenerateControls: React.FC = () => {
                 <div className={styles.section__content}>
                     <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
                     <ParameterField paramKey="generate.elevation" />
+                    <ParameterField paramKey="generate.followTerrain" />
                     <ParameterField paramKey="generate.ovalRadiusX" />
                     <ParameterField paramKey="generate.ovalRadiusZ" />
                 </div>

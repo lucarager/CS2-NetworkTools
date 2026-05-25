@@ -32,5 +32,6 @@ namespace NetworkTools.Systems.Tools.Generate {
         public float      OvalRadiusZ;
         public float      Elevation;
         public float      BaselineElevation;
+        public bool       FollowTerrain;
     }
 }

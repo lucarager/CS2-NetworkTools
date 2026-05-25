@@ -23,7 +23,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             var radiusZ    = config.OvalRadiusZ + config.NetWidth * 0.5f;
             var yOffset    = config.Elevation + config.BaselineElevation;
             var center     = config.Position + new float3(0, yOffset, 0);
-            var freeHeight = yOffset > -config.ElevationLimit && yOffset < config.ElevationLimit
+            var freeHeight = config.FollowTerrain || (yOffset > -config.ElevationLimit && yOffset < config.ElevationLimit)
                 ? CoursePosFlags.FreeHeight
                 : (CoursePosFlags)0;
             var rotation = config.StartDirection;

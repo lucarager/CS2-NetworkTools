@@ -64,6 +64,7 @@ namespace NetworkTools.Systems.Tools.Generate {
 
         // Elevation (controlled via PageUp/PageDown shortcuts)
         public FloatParameter Elevation = new("generate.elevation", 0f, -100f, 100f, modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.Elevation", fractionDigits: 0, numberType: NumberType.Distance);
+        public BoolParameter FollowTerrain = new("generate.followTerrain", false, modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.FollowTerrain");
 
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Mode.Value;
