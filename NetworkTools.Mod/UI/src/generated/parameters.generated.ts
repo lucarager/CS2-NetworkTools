@@ -95,7 +95,7 @@ export const PARAM_META = {
     "generate.ovalRadiusX": { type: "float", default: 80, min: 4, max: 240, fractionDigits: 0, displayScale: 1, numberType: "distance", modes: 4, label: "NetworkTools.UI.Generate.RadiusX" },
     "generate.ovalRadiusZ": { type: "float", default: 40, min: 4, max: 240, fractionDigits: 0, displayScale: 1, numberType: "distance", modes: 4, label: "NetworkTools.UI.Generate.RadiusZ" },
     "generate.elevation": { type: "float", default: 0, min: -100, max: 100, fractionDigits: 0, displayScale: 1, numberType: "distance", modes: 7, label: "NetworkTools.UI.Generate.Elevation" },
-    "generate.followTerrain": { type: "bool", default: false, modes: 7, label: "NetworkTools.UI.Generate.FollowTerrain" },
+    "generate.followTerrain": { type: "bool", default: true, modes: 7, label: "NetworkTools.UI.Generate.FollowTerrain" },
     "parallel.netPrefab": { type: "netPrefab", modes: 0 },
     "parallel.horizontalOffset": { type: "float", default: 20, min: -80, max: 80, fractionDigits: 0, displayScale: 1, numberType: "distance", modes: 0, label: "NetworkTools.UI.Parallel.HorizontalOffset" },
     "parallel.verticalOffset": { type: "float", default: 0, min: -80, max: 80, fractionDigits: 0, displayScale: 1, numberType: "distance", modes: 0, label: "NetworkTools.UI.Parallel.VerticalOffset" },
@@ -116,7 +116,7 @@ export const ENUM_OPTIONS = {
     ConnectMode: [
         { value: ConnectMode.None, label: "NetworkTools.UI.Connect.None", icon: "coui://nt/Modes/Original.svg", visible: false },
         { value: ConnectMode.SimpleCurve, label: "NetworkTools.UI.Connect.SimpleCurve", icon: "coui://nt/Modes/ConnectSimpleCurve.svg" },
-        { value: ConnectMode.ComplexCurve, label: "NetworkTools.UI.Connect.ComplexCurve", icon: "coui://nt/Modes/ConnectComplexCurve.svg", visible: false },
+        { value: ConnectMode.ComplexCurve, label: "NetworkTools.UI.Connect.ComplexCurve", icon: "coui://nt/Modes/ConnectComplexCurve.svg", disabled: true },
         { value: ConnectMode.Loop, label: "NetworkTools.UI.Connect.Loop", icon: "coui://nt/Modes/ConnectLoop.svg", disabled: true },
     ] as readonly EnumOption[],
     GenerateMode: [
@@ -165,7 +165,7 @@ export const PARAM_BINDINGS = {
         ovalRadiusX: new TwoWayBinding<number>("generate.ovalRadiusX", 80),
         ovalRadiusZ: new TwoWayBinding<number>("generate.ovalRadiusZ", 40),
         elevation: new TwoWayBinding<number>("generate.elevation", 0),
-        followTerrain: new TwoWayBinding<boolean>("generate.followTerrain", false),
+        followTerrain: new TwoWayBinding<boolean>("generate.followTerrain", true),
     },
     parallel: {
         horizontalOffset: new TwoWayBinding<number>("parallel.horizontalOffset", 20),

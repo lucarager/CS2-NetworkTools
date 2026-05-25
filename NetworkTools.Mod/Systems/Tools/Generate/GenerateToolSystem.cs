@@ -62,9 +62,9 @@ namespace NetworkTools.Systems.Tools.Generate {
         public FloatParameter OvalRadiusX = new("generate.ovalRadiusX", 80f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusX", fractionDigits: 0, numberType: NumberType.Distance);
         public FloatParameter OvalRadiusZ = new("generate.ovalRadiusZ", 40f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusZ", fractionDigits: 0, numberType: NumberType.Distance);
 
-        // Elevation (controlled via PageUp/PageDown shortcuts)
+        // Elevation
         public FloatParameter Elevation = new("generate.elevation", 0f, -100f, 100f, modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.Elevation", fractionDigits: 0, numberType: NumberType.Distance);
-        public BoolParameter FollowTerrain = new("generate.followTerrain", false, modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.FollowTerrain");
+        public BoolParameter FollowTerrain = new("generate.followTerrain", true, modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.FollowTerrain");
 
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Mode.Value;
