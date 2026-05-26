@@ -49,13 +49,13 @@ namespace NetworkTools.Systems.Tools.Generate {
             xOffsets[0] = 0f;
             for (var col = 1; col < xNum; col++)
                 xOffsets[col] = xOffsets[col - 1] + config.GridXSpacing
-                    + (ColZWidth(col - 1, altZActive, netWidth, config) + ColZWidth(col, altZActive, netWidth, config)) * 0.5f;
+                    + (ColZWidth(col - 1, altXActive, netWidth, config) + ColZWidth(col, altXActive, netWidth, config)) * 0.5f;
 
             var zOffsets = new NativeArray<float>(zNum, Allocator.Temp);
             zOffsets[0] = 0f;
             for (var row = 1; row < zNum; row++)
                 zOffsets[row] = zOffsets[row - 1] + config.GridZSpacing
-                    + (RowXWidth(row - 1, altXActive, netWidth, config) + RowXWidth(row, altXActive, netWidth, config)) * 0.5f;
+                    + (RowXWidth(row - 1, altZActive, netWidth, config) + RowXWidth(row, altZActive, netWidth, config)) * 0.5f;
 
             // Build the flat node grid.
             var nodes = new NativeArray<float3>(xNum * zNum, Allocator.Temp);
@@ -71,14 +71,14 @@ namespace NetworkTools.Systems.Tools.Generate {
             // own rank so that direction alternation is independent between them.
             // Rank 0 → forward, rank 1 → reversed, rank 2 → forward, …
             var primaryXRank = 0;
-            var altXRank     = 0;
+            var altZRank     = 0;
             for (var row = 0; row < zNum; row++) {
-                var isAlt   = altXActive && (row + 1) % config.AltEveryX == 0;
-                var rank    = isAlt ? altXRank : primaryXRank;
+                var isAlt   = altZActive && (row + 1) % config.AltEveryZ == 0;
+                var rank    = isAlt ? altZRank : primaryXRank;
                 var reverse = rank % 2 != 0;
-                var prefab  = isAlt ? config.AltNetPrefabXEntity     : config.NetPrefabEntity;
-                var lane    = isAlt ? config.AltNetLanePrefabXEntity : config.NetLanePrefabEntity;
-                var xWidth  = RowXWidth(row, altXActive, netWidth, config);
+                var prefab  = isAlt ? config.AltNetPrefabZEntity     : config.NetPrefabEntity;
+                var lane    = isAlt ? config.AltNetLanePrefabZEntity : config.NetLanePrefabEntity;
+                var xWidth  = RowXWidth(row, altZActive, netWidth, config);
 
                 var isBoundaryRow = row == 0 || row == zNum - 1;
 
@@ -100,8 +100,8 @@ namespace NetworkTools.Systems.Tools.Generate {
                     }
                     var posA       = nodes[idxA];
                     var posB       = nodes[idxB];
-                    var shiftStart = NeedsParityShift(xWidth, ColZWidth(col, altZActive, netWidth, config));
-                    var shiftEnd   = NeedsParityShift(xWidth, ColZWidth(col + 1, altZActive, netWidth, config));
+                    var shiftStart = NeedsParityShift(xWidth, ColZWidth(col, altXActive, netWidth, config));
+                    var shiftEnd   = NeedsParityShift(xWidth, ColZWidth(col + 1, altXActive, netWidth, config));
                     if (shiftStart) posA += xDir * 4f;
                     if (shiftEnd)   posB -= xDir * 4f;
 
@@ -122,7 +122,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                     });
                 }
 
-                if (isAlt) altXRank++;
+                if (isAlt) altZRank++;
                 else       primaryXRank++;
             }
 
@@ -130,14 +130,14 @@ namespace NetworkTools.Systems.Tools.Generate {
             // Same rank-per-prefab approach. Rank 0 → reversed to match the original
             // convention where even columns (rank 0, 2, 4…) were reversed.
             var primaryZRank = 0;
-            var altZRank     = 0;
+            var altXRank     = 0;
             for (var col = 0; col < xNum; col++) {
-                var isAlt   = altZActive && (col + 1) % config.AltEveryZ == 0;
-                var rank    = isAlt ? altZRank : primaryZRank;
+                var isAlt   = altXActive && (col + 1) % config.AltEveryX == 0;
+                var rank    = isAlt ? altXRank : primaryZRank;
                 var reverse = rank % 2 == 0;
-                var prefab  = isAlt ? config.AltNetPrefabZEntity     : config.NetPrefabEntity;
-                var lane    = isAlt ? config.AltNetLanePrefabZEntity : config.NetLanePrefabEntity;
-                var zWidth  = ColZWidth(col, altZActive, netWidth, config);
+                var prefab  = isAlt ? config.AltNetPrefabXEntity     : config.NetPrefabEntity;
+                var lane    = isAlt ? config.AltNetLanePrefabXEntity : config.NetLanePrefabEntity;
+                var zWidth  = ColZWidth(col, altXActive, netWidth, config);
 
                 var isBoundaryCol = col == 0 || col == xNum - 1;
 
@@ -159,8 +159,8 @@ namespace NetworkTools.Systems.Tools.Generate {
                     }
                     var posA       = nodes[idxA];
                     var posB       = nodes[idxB];
-                    var shiftStart = NeedsParityShift(zWidth, RowXWidth(row, altXActive, netWidth, config));
-                    var shiftEnd   = NeedsParityShift(zWidth, RowXWidth(row + 1, altXActive, netWidth, config));
+                    var shiftStart = NeedsParityShift(zWidth, RowXWidth(row, altZActive, netWidth, config));
+                    var shiftEnd   = NeedsParityShift(zWidth, RowXWidth(row + 1, altZActive, netWidth, config));
                     if (shiftStart) posA += zDir * 4f;
                     if (shiftEnd)   posB -= zDir * 4f;
 
@@ -181,7 +181,7 @@ namespace NetworkTools.Systems.Tools.Generate {
                     });
                 }
 
-                if (isAlt) altZRank++;
+                if (isAlt) altXRank++;
                 else       primaryZRank++;
             }
 
@@ -189,16 +189,14 @@ namespace NetworkTools.Systems.Tools.Generate {
         }
 
         // Width of the X-direction (horizontal) road at the given row.
-        // These roads run in X and have their physical width in the Z dimension,
-        // so they determine Z spacing between adjacent node rows.
-        private static float RowXWidth(int row, bool altXActive, float primaryWidth, in GenerateJobConfig config) =>
-            altXActive && (row + 1) % config.AltEveryX == 0 ? config.AltNetPrefabXWidth : primaryWidth;
+        // AltPrefabZ alternates rows, so we check AltEveryZ here.
+        private static float RowXWidth(int row, bool altZActive, float primaryWidth, in GenerateJobConfig config) =>
+            altZActive && (row + 1) % config.AltEveryZ == 0 ? config.AltNetPrefabZWidth : primaryWidth;
 
         // Width of the Z-direction (vertical) road at the given column.
-        // These roads run in Z and have their physical width in the X dimension,
-        // so they determine X spacing between adjacent node columns.
-        private static float ColZWidth(int col, bool altZActive, float primaryWidth, in GenerateJobConfig config) =>
-            altZActive && (col + 1) % config.AltEveryZ == 0 ? config.AltNetPrefabZWidth : primaryWidth;
+        // AltPrefabX alternates columns, so we check AltEveryX here.
+        private static float ColZWidth(int col, bool altXActive, float primaryWidth, in GenerateJobConfig config) =>
+            altXActive && (col + 1) % config.AltEveryX == 0 ? config.AltNetPrefabXWidth : primaryWidth;
 
         private static bool NeedsParityShift(float segmentWidth, float perpWidth) {
             return (int)math.round(segmentWidth / 8f) % 2 != (int)math.round(perpWidth / 8f) % 2;
