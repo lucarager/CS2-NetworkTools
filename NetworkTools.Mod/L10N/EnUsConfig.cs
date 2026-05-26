@@ -160,6 +160,8 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Common.Tutorial", "Select the tool to configure it. Adjust snapping, target selection, and view mode using the options in the panel. Each tool provides its own specific parameters below." },
                 { "NetworkTools.UI.Common.ComingSoon", "Coming Soon!" },
                 { "NetworkTools.UI.Common.Advanced", "Advanced" },
+                { "NetworkTools.UI.Common.Decrease", "Decrease" },
+                { "NetworkTools.UI.Common.Increase", "Increase" },
 
                 // ## Prefab Search
                 { "NetworkTools.UI.PrefabSearch.Title", "Select Asset" },
