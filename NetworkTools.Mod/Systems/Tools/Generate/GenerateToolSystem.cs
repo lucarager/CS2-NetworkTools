@@ -50,10 +50,10 @@ namespace NetworkTools.Systems.Tools.Generate {
         public IntParameter   GridZNum     = new("generate.gridZNum", 3, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZCount", numberType: NumberType.Rows);
         public BoolParameter      AlternatingNetworkPrefabX = new("generate.altPrefabX", false, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltPrefabX");
         public NetPrefabParameter AltNetPrefabX             = new("generate.altNetPrefabX", modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltNetPrefabX");
-        public IntParameter       AltEveryX                 = new("generate.altEveryX", 2, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltEveryX");
+        public IntParameter       AltEveryX                 = new("generate.altEveryX", 2, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltEveryX", numberType: NumberType.Columns);
         public BoolParameter      AlternatingNetworkPrefabZ = new("generate.altPrefabZ", false, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltPrefabZ");
         public NetPrefabParameter AltNetPrefabZ             = new("generate.altNetPrefabZ", modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltNetPrefabZ");
-        public IntParameter       AltEveryZ                 = new("generate.altEveryZ", 2, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltEveryZ");
+        public IntParameter       AltEveryZ                 = new("generate.altEveryZ", 2, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltEveryZ", numberType: NumberType.Rows);
 
         // Circle
         public FloatParameter CircleRadius = new("generate.circleRadius", 60f, 4f, 240f, modes: (int)GenerateMode.Circle, label: "NetworkTools.UI.Generate.Radius", fractionDigits: 0, numberType: NumberType.Distance);
