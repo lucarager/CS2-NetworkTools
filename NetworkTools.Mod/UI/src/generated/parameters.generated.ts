@@ -8,6 +8,8 @@ export enum ParallelDirection { Same = 0, Reverse = 1 }
 export enum ParallelOrigin { LeftEdge = 0, Center = 1, RightEdge = 2 }
 export enum ShapeTransformTemplate { Preserve = 0, SlopeLinear = 1, SlopeEaseInOut = 2, SlopeArch = 3, CurveStraighten = 4, CurveSmooth = 5 }
 
+export type NumberType = "none" | "distance" | "percentage" | "rows" | "columns";
+
 export const PARAM_KEYS = {
     common: {
         lastNetPrefab: "common.lastNetPrefab",

@@ -23,6 +23,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 var enums = new Dictionary<string, EnumDef>();
 var parameters = new List<ParamDef>();
+var metadataEnums = new HashSet<string>();
 
 if (args.Length < 2) {
     Console.Error.WriteLine("Usage: NetworkTools.Codegen <sourceDir> <outputFile> [--configuration Debug|Release]");
@@ -67,7 +68,7 @@ Directory.CreateDirectory(Path.GetDirectoryName(outputFile)!);
 var existing = File.Exists(outputFile) ? File.ReadAllText(outputFile) : null;
 if (ts != existing) {
     File.WriteAllText(outputFile, ts);
-    Console.WriteLine($"Generated {outputFile}: {parameters.Count} params, {ReferencedEnumNames().Count} enums.");
+    Console.WriteLine($"Generated {outputFile}: {parameters.Count} params, {ReferencedEnumNames().Count} enums, {metadataEnums.Count} metadata types.");
 } else {
     Console.WriteLine($"No changes to {outputFile}.");
 }
@@ -78,30 +79,30 @@ return 0;
 
 /// <summary>
 /// Walks all <c>enum</c> declarations in a syntax tree, extracting members
-/// that have explicit integer values and any <c>[EnumOption]</c> attributes.
-/// Members without an explicit <c>= value</c> are skipped (mirrors the
-/// regex codegen's <c>(\w+)\s*=\s*(-?\d+)</c> capture group).
+/// with their integer values and any <c>[EnumOption]</c> attributes.
+/// Members without an explicit <c>= value</c> are auto-incremented from the
+/// previous member's value (starting at 0), matching C# semantics.
 /// </summary>
 void ParseEnums(CompilationUnitSyntax root) {
     foreach (var enumDecl in root.DescendantNodes().OfType<EnumDeclarationSyntax>()) {
         var name = enumDecl.Identifier.Text;
         var members = new List<EnumMember>();
+        int nextValue = 0;
 
         foreach (var member in enumDecl.Members) {
-            // Extract the integer value from the EqualsValue clause.
+            // Extract the integer value from the EqualsValue clause if present.
             // Handles both positive literals (e.g. `= 3`) and negated literals (e.g. `= -1`).
             // Members with computed expressions (shifts, casts) are skipped.
-            var memberValue = member.EqualsValue?.Value switch {
+            // Members without an explicit value auto-increment from the previous value.
+            var explicitValue = member.EqualsValue?.Value switch {
                 LiteralExpressionSyntax { Token.Value: int v } => (int?)v,
                 PrefixUnaryExpressionSyntax { Operand: LiteralExpressionSyntax { Token.Value: int v } } neg
                     when neg.IsKind(SyntaxKind.UnaryMinusExpression) => -v,
-                _ => null
+                _ => member.EqualsValue == null ? (int?)nextValue : null
             };
-            if (memberValue is not int value) continue;
+            if (explicitValue is not int value) continue;
+            nextValue = value + 1;
 
-            // A single enum member can have multiple [EnumOption] attributes when it
-            // appears in different groups (e.g. ShapeTransformTemplate.Preserve has both
-            // a "Slope" and a "Curve" option).
             var options = member.AttributeLists
                 .SelectMany(al => al.Attributes)
                 .Where(a => a.Name.ToString() == "EnumOption")
@@ -352,13 +353,18 @@ string? ParseLabel(Dictionary<string, string> args) {
 /// <summary>
 /// Extracts the <c>numberType</c> named argument if present, resolving the
 /// <c>NumberType.XXX</c> enum member to a lowercase string for TypeScript output.
-/// Returns <c>null</c> when absent or when the value is <c>NumberType.None</c>.
+/// Also records the enum type name in <see cref="metadataEnums"/> so the full
+/// type definition is emitted even if not all members are used by parameters.
+/// Returns <c>"none"</c> when absent or when the value is <c>NumberType.None</c>.
 /// </summary>
-string? ParseNumberType(Dictionary<string, string> args) {
+string ParseNumberType(Dictionary<string, string> args) {
     var raw = args.GetValueOrDefault("numberType");
-    if (raw == null) return null;
+    if (raw == null) return "none";
+    if (raw.Contains('.')) {
+        metadataEnums.Add(raw.Split('.').First());
+    }
     var member = raw.Contains('.') ? raw.Split('.').Last() : raw;
-    return member == "None" ? null : CamelCase(member);
+    return CamelCase(member);
 }
 
 string CamelCase(string s) => s.Length == 0 ? s : char.ToLower(s[0]) + s[1..];
@@ -473,6 +479,17 @@ string EmitTypeScript() {
     }
     if (referenced.Count > 0) sb.AppendLine();
 
+    // ── Metadata enum types ──
+    // Enums used as parameter metadata (e.g. NumberType) are emitted as string
+    // union types with all members, not just the ones currently used by parameters.
+    var metaEnumNames = metadataEnums.OrderBy(n => n).ToList();
+    foreach (var enumName in metaEnumNames) {
+        if (!enums.TryGetValue(enumName, out var def)) continue;
+        var members = string.Join(" | ", def.Members.Select(m => $"\"{CamelCase(m.Name)}\""));
+        sb.AppendLine($"export type {def.Name} = {members};");
+    }
+    if (metaEnumNames.Count > 0) sb.AppendLine();
+
     // Parameters grouped by the tool prefix (first segment of the dot-separated key).
     // e.g. "connect.loopRadius" belongs to the "connect" group.
     var groups = parameters
@@ -506,9 +523,9 @@ string EmitTypeScript() {
         sb.Append($"    \"{param.Key}\": {{ ");
         sb.Append(param switch {
             FloatParamDef f =>
-                $"type: \"float\", default: {Fmt(f.Default)}, min: {Fmt(f.Min)}, max: {Fmt(f.Max)}, fractionDigits: {f.FractionDigits}, displayScale: {Fmt(f.DisplayScale ?? 1f)}, numberType: \"{f.NumberType ?? "none"}\", modes: {f.Modes}",
+                $"type: \"float\", default: {Fmt(f.Default)}, min: {Fmt(f.Min)}, max: {Fmt(f.Max)}, fractionDigits: {f.FractionDigits}, displayScale: {Fmt(f.DisplayScale ?? 1f)}, numberType: \"{f.NumberType}\", modes: {f.Modes}",
             IntParamDef i =>
-                $"type: \"int\", default: {i.Default}, min: {i.Min}, max: {i.Max}, displayScale: {Fmt(i.DisplayScale ?? 1f)}, numberType: \"{i.NumberType ?? "none"}\", modes: {i.Modes}",
+                $"type: \"int\", default: {i.Default}, min: {i.Min}, max: {i.Max}, displayScale: {Fmt(i.DisplayScale ?? 1f)}, numberType: \"{i.NumberType}\", modes: {i.Modes}",
             BoolParamDef b =>
                 $"type: \"bool\", default: {(b.Default ? "true" : "false")}, modes: {b.Modes}",
             EnumParamDef e =>
@@ -692,18 +709,13 @@ abstract record ParamDef(string Key, string FieldName, int Modes) {
 /// <param name="Max">Maximum slider/input value.</param>
 record FloatParamDef(string Key, string FieldName, float Default, float Min, float Max, int Modes)
     : ParamDef(Key, FieldName, Modes) {
-    /// <summary>Number of decimal places shown in the UI (default 1).</summary>
     public int FractionDigits { get; init; } = 1;
-    /// <summary>Optional semantic number type (e.g. "distance", "percentage") for UI formatting hints.</summary>
-    public string? NumberType { get; init; }
-    /// <summary>Optional display multiplier for the UI (e.g. 100 to show 0–1 as 0–100). Null when 1 (default).</summary>
+    public string NumberType { get; init; } = "none";
     public float? DisplayScale { get; init; }
 }
 record IntParamDef(string Key, string FieldName, int Default, int Min, int Max, int Modes)
     : ParamDef(Key, FieldName, Modes) {
-    /// <summary>Optional semantic number type (e.g. "rows", "columns") for UI formatting hints.</summary>
-    public string? NumberType { get; init; }
-    /// <summary>Optional display multiplier for the UI. Null when 1 (default).</summary>
+    public string NumberType { get; init; } = "none";
     public float? DisplayScale { get; init; }
 }
 record BoolParamDef(string Key, string FieldName, bool Default, int Modes)
