@@ -23,12 +23,12 @@ export const GenerateControls: React.FC = () => {
             {activeGenerateMode === GenerateMode.Grid && (
                 <div className={styles.section__content}>
                     <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
-                    <ParameterField paramKey="generate.elevation" />
-                    <ParameterField paramKey="generate.followTerrain" />
                     <ParameterField paramKey="generate.gridXNum" />
                     <ParameterField paramKey="generate.gridZNum" />
                     <ParameterField paramKey="generate.gridXSpacing" />
                     <ParameterField paramKey="generate.gridZSpacing" />
+                    <ParameterField paramKey="generate.elevation" />
+                    <ParameterField paramKey="generate.followTerrain" />
                     <div className={styles.sectionDivider}>
                         <div className={styles.sectionDivider__line}></div>
                         <span className={styles.sectionDivider__label}>
@@ -55,18 +55,18 @@ export const GenerateControls: React.FC = () => {
             {activeGenerateMode === GenerateMode.Circle && (
                 <div className={styles.section__content}>
                     <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
+                    <ParameterField paramKey="generate.circleRadius" />
                     <ParameterField paramKey="generate.elevation" />
                     <ParameterField paramKey="generate.followTerrain" />
-                    <ParameterField paramKey="generate.circleRadius" />
                 </div>
             )}
             {activeGenerateMode === GenerateMode.Oval && (
                 <div className={styles.section__content}>
                     <PrefabSelection paramKey={PARAM_KEYS.generate.netPrefab} />
-                    <ParameterField paramKey="generate.elevation" />
-                    <ParameterField paramKey="generate.followTerrain" />
                     <ParameterField paramKey="generate.ovalRadiusX" />
                     <ParameterField paramKey="generate.ovalRadiusZ" />
+                    <ParameterField paramKey="generate.elevation" />
+                    <ParameterField paramKey="generate.followTerrain" />
                 </div>
             )}
         </div>

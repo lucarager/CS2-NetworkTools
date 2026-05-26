@@ -31,10 +31,12 @@ export const PrefabSelection: React.FC<{ paramKey: string }> = ({ paramKey }) =>
     const hasSelection = hasNetPrefabSelection(prefabData);
 
     const meta = PARAM_META[paramKey as keyof typeof PARAM_META];
-    const nullable = meta && "nullable" in meta && (meta as { nullable?: boolean }).nullable === true;
-    const label = (meta && "label" in meta)
-        ? translate(meta.label as string)
-        : translate("NetworkTools.UI.PrefabSearch.NetworkPrefab");
+    const nullable =
+        meta && "nullable" in meta && (meta as { nullable?: boolean }).nullable === true;
+    const label =
+        meta && "label" in meta
+            ? translate(meta.label as string)
+            : translate("NetworkTools.UI.PrefabSearch.NetworkPrefab");
 
     const displayName = hasSelection
         ? (translate(`Assets.NAME[${prefabData.Name}]`, prefabData.Name) ?? prefabData.Name)
@@ -49,7 +51,10 @@ export const PrefabSelection: React.FC<{ paramKey: string }> = ({ paramKey }) =>
                         className={styles.entityPreview}
                         onClick={() => (isThisOpen ? close() : open(paramKey))}>
                         {hasSelection && (
-                            <img src={prefabData.Thumbnail} className={styles.entityPreview__thumbnail} />
+                            <img
+                                src={prefabData.Thumbnail}
+                                className={styles.entityPreview__thumbnail}
+                            />
                         )}
                         <div className={styles.entityPreview__name}>{displayName}</div>
                         <img

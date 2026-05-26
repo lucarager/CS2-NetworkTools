@@ -21,3 +21,8 @@ $color7: $bittersweet-shimmer-3;
 $color-nt-1: rgb(193, 44, 234);
 $color-nt-2: rgb(150, 69, 255);
 $color-nt-3: linear-gradient(to bottom, $color-nt-1 0%, $color-nt-2 100%);
+
+// Inputs
+$input-bg-color: rgba(0, 0, 0, 0.15);
+$input-border-color: rgba(255, 255, 255, 0.2);
+$input-border-hover-color: rgba(255, 255, 255, 0.35);

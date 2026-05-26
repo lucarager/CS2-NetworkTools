@@ -96,7 +96,10 @@
     border-bottom: 2rem solid transparent;
     color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
-    transition: color 0.12s, border-color 0.12s, background 0.12s;
+    transition:
+        color 0.12s,
+        border-color 0.12s,
+        background 0.12s;
 
     &:hover {
         color: rgba(255, 255, 255, 0.8);
@@ -141,12 +144,16 @@
 }
 
 .entityPreview {
-    border: 1rem solid rgba(255, 255, 255, 0.1);
+    $size: 26rem;
+    $padding: 4rem;
+
+    border: 1rem solid $input-border-color;
+    height: $size;
     border-radius: 3rem;
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 0 4rem;
+    padding: 0 $padding;
     flex: 1;
     overflow: hidden;
     background: transparent;
@@ -155,14 +162,13 @@
     position: relative;
 
     &:hover {
-        border-color: rgba(255, 255, 255, 0.25);
-        background: rgba(255, 255, 255, 0.05);
+        border-color: $input-border-hover-color;
     }
 
     &__thumbnail {
-        width: 28rem;
-        height: 28rem;
-        margin-right: 4rem;
+        width: $size - 2rem;
+        height: $size - 2rem;
+        margin-right: $padding;
     }
 
     &__name {
@@ -201,15 +207,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1rem solid rgba(255, 255, 255, 0.1);
+    border: 1rem solid $input-border-color;
     border-radius: 3rem;
     background: transparent;
     cursor: pointer;
     padding: 0;
 
     &:hover {
-        border-color: rgba(255, 255, 255, 0.25);
-        background: rgba(255, 255, 255, 0.05);
+        border-color: $input-border-hover-color;
     }
 
     &__icon {
@@ -261,6 +266,7 @@
             flex-grow: 0;
             flex-basis: auto;
             font-size: var(--fontSizeS);
+            font-weight: 500;
             line-height: 1.25em;
             overflow-x: hidden;
             overflow-y: hidden;
@@ -270,12 +276,63 @@
             opacity: 0.75;
         }
 
+        [class^="item"] > [class^="content"] > * {
+            margin-bottom: 0;
+        }
+
         [class^="row"] {
             justify-content: space-between;
         }
 
+        [class^="slider-input"],
+        [class^="number-field"] {
+            height: 26rem;
+            padding-top: 3rem;
+            padding-left: 5rem;
+            padding-right: 5rem;
+            padding-bottom: 3rem;
+            background-color: $input-bg-color;
+            color: rgba(238, 238, 238, 1);
+            border: 1rem solid $input-border-color;
+
+            &:hover {
+                border-color: $input-border-hover-color;
+            }
+        }
+
         [class^="slider-input"] {
             width: 60rem;
+            border-radius: 3rem;
+        }
+
+        [class*="start-button"],
+        [class*="end-button"] {
+            height: 26rem;
+            background-color: $input-bg-color;
+            color: rgba(238, 238, 238, 1);
+            border: 1rem solid $input-border-color;
+            padding: 4rem;
+
+            & > img {
+                opacity: 0.5;
+            }
+
+
+            &:hover {
+                border-color: $input-border-hover-color;
+
+                & > img {
+                    opacity: 1;
+                }
+            }
+        }
+
+        [class*="start-button"] {
+            border-right-width: 0;
+        }
+
+        [class*="end-button"] {
+            border-left-width: 0;
         }
 
         // Apply flex to the vanilla editor div
@@ -355,7 +412,7 @@
     }
 
     &:hover {
-        background-color: rgba(0, 0, 0, 0.7);
+        background-color: rgba(169, 155, 182, 0.3);
     }
 }
 

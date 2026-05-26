@@ -95,7 +95,7 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabl
             label={label}
             disabled={disabled}
             big={big}
-            onChange={binding.set}
+            onChange={(value) => binding.set(value)}
             translate={translate}
         />
     );
@@ -163,32 +163,44 @@ function IntStepper({ meta, value, label, disabled, onChange, translate }: Field
     const atMax = current >= max;
 
     return (
-        <VC.Section focusKey={VF.FOCUS_DISABLED} title={label}>
-            <VC.ToolButton
-                onSelect={() => {
-                    if (!atMin) onChange(Math.round((current - 1) / m.displayScale));
-                }}
-                src="Media/Glyphs/ThickStrokeArrowDown.svg"
-                focusKey={VF.FOCUS_DISABLED}
-                disabled={disabled || atMin}
-                tooltip={translate("NetworkTools.UI.Common.Decrease")}
-                className={c(VT.toolButton.button, VT.mouseToolOptions.startButton)}
-            />
-            <div className={c(VT.mouseToolOptions.numberField)}>
-                {current}
-                {unitLabel}
+        <div className={styles.controlRow}>
+            <div className={styles.vanillaField}>
+                <VC.Section focusKey={VF.FOCUS_DISABLED} title={label}>
+                    <VC.ToolButton
+                        onSelect={() => {
+                            if (!atMin) onChange(Math.round((current - 1) / m.displayScale));
+                        }}
+                        src="Media/Glyphs/ThickStrokeArrowDown.svg"
+                        focusKey={VF.FOCUS_DISABLED}
+                        disabled={disabled || atMin}
+                        tooltip={translate("NetworkTools.UI.Common.Decrease")}
+                        className={c(
+                            VT.toolButton.button,
+                            styles.iconButton,
+                            VT.mouseToolOptions.startButton,
+                        )}
+                    />
+                    <div className={c(VT.mouseToolOptions.numberField)}>
+                        {current}
+                        {unitLabel}
+                    </div>
+                    <VC.ToolButton
+                        onSelect={() => {
+                            if (!atMax) onChange(Math.round((current + 1) / m.displayScale));
+                        }}
+                        src="Media/Glyphs/ThickStrokeArrowUp.svg"
+                        focusKey={VF.FOCUS_DISABLED}
+                        disabled={disabled || atMax}
+                        tooltip={translate("NetworkTools.UI.Common.Increase")}
+                        className={c(
+                            VT.toolButton.button,
+                            styles.iconButton,
+                            VT.mouseToolOptions.endButton,
+                        )}
+                    />
+                </VC.Section>
             </div>
-            <VC.ToolButton
-                onSelect={() => {
-                    if (!atMax) onChange(Math.round((current + 1) / m.displayScale));
-                }}
-                src="Media/Glyphs/ThickStrokeArrowUp.svg"
-                focusKey={VF.FOCUS_DISABLED}
-                disabled={disabled || atMax}
-                tooltip={translate("NetworkTools.UI.Common.Increase")}
-                className={c(VT.toolButton.button, VT.mouseToolOptions.endButton)}
-            />
-        </VC.Section>
+        </div>
     );
 }
 
