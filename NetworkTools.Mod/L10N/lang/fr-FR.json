@@ -83,6 +83,8 @@
   "NetworkTools.UI.Common.Tutorial": "Sélectionner l'outil pour le configurer. Ajuster l'accrochage, la sélection des cibles et le mode d'affichage à l'aide des options du panneau. Chaque outil fournit ses propres paramètres spécifiques ci-dessous.",
   "NetworkTools.UI.Common.ComingSoon": "Bientôt disponible !",
   "NetworkTools.UI.Common.Advanced": "Advanced",
+  "NetworkTools.UI.Common.Decrease": "Decrease",
+  "NetworkTools.UI.Common.Increase": "Increase",
   "NetworkTools.UI.PrefabSearch.Title": "Sélectionner un asset",
   "NetworkTools.UI.PrefabSearch.Placeholder": "Rechercher des assets...",
   "NetworkTools.UI.PrefabSearch.Empty": "Aucun asset trouvé.",
