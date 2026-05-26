@@ -83,6 +83,8 @@
   "NetworkTools.UI.Common.Tutorial": "选择工具进行配置。使用面板中的选项调整捕捉、目标选择和视图模式。每个工具都有其特定的参数，如下所示。",
   "NetworkTools.UI.Common.ComingSoon": "敬请期待！",
   "NetworkTools.UI.Common.Advanced": "高级设置",
+  "NetworkTools.UI.Common.Decrease": "Decrease",
+  "NetworkTools.UI.Common.Increase": "Increase",
   "NetworkTools.UI.PrefabSearch.Title": "选择资产",
   "NetworkTools.UI.PrefabSearch.Placeholder": "搜索资产...",
   "NetworkTools.UI.PrefabSearch.Empty": "未找到任何资产。",
