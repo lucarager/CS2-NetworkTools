@@ -63,6 +63,9 @@ namespace NetworkTools.Systems.Tools.Generate {
                 for (var col = 0; col < xNum; col++)
                     nodes[row * xNum + col] = origin + xDir * xOffsets[col] + zDir * zOffsets[row];
 
+            xOffsets.Dispose();
+            zOffsets.Dispose();
+
             // ── X-direction edges (horizontal, one row at a time) ──────────────────
             // Alternating prefabs are assigned per-row. Each prefab type maintains its
             // own rank so that direction alternation is independent between them.
@@ -97,11 +100,10 @@ namespace NetworkTools.Systems.Tools.Generate {
                     }
                     var posA       = nodes[idxA];
                     var posB       = nodes[idxB];
-                    var xHalf      = xWidth * 0.5f;
-                    var shiftStart = (8f - (xHalf + xOffsets[col]) % 8f) % 8f;
-                    var shiftEnd   = (xHalf + xOffsets[col + 1]) % 8f;
-                    posA += xDir * shiftStart;
-                    posB -= xDir * shiftEnd;
+                    var shiftStart = NeedsParityShift(xWidth, ColZWidth(col, altXActive, netWidth, config));
+                    var shiftEnd   = NeedsParityShift(xWidth, ColZWidth(col + 1, altXActive, netWidth, config));
+                    if (shiftStart) posA += xDir * 4f;
+                    if (shiftEnd)   posB -= xDir * 4f;
 
                     var bezier     = NT_EdgeUtils.GenerateStraightEdge(
                         reverse ? posB : posA,
@@ -157,11 +159,10 @@ namespace NetworkTools.Systems.Tools.Generate {
                     }
                     var posA       = nodes[idxA];
                     var posB       = nodes[idxB];
-                    var zHalf      = zWidth * 0.5f;
-                    var shiftStart = (8f - (zHalf + zOffsets[row]) % 8f) % 8f;
-                    var shiftEnd   = (zHalf + zOffsets[row + 1]) % 8f;
-                    posA += zDir * shiftStart;
-                    posB -= zDir * shiftEnd;
+                    var shiftStart = NeedsParityShift(zWidth, RowXWidth(row, altZActive, netWidth, config));
+                    var shiftEnd   = NeedsParityShift(zWidth, RowXWidth(row + 1, altZActive, netWidth, config));
+                    if (shiftStart) posA += zDir * 4f;
+                    if (shiftEnd)   posB -= zDir * 4f;
 
                     var bezier     = NT_EdgeUtils.GenerateStraightEdge(
                         reverse ? posB : posA,
@@ -185,8 +186,6 @@ namespace NetworkTools.Systems.Tools.Generate {
             }
 
             nodes.Dispose();
-            xOffsets.Dispose();
-            zOffsets.Dispose();
         }
 
         // Width of the X-direction (horizontal) road at the given row.
@@ -199,5 +198,8 @@ namespace NetworkTools.Systems.Tools.Generate {
         private static float ColZWidth(int col, bool altXActive, float primaryWidth, in GenerateJobConfig config) =>
             altXActive && (col + 1) % config.AltEveryX == 0 ? config.AltNetPrefabXWidth : primaryWidth;
 
+        private static bool NeedsParityShift(float segmentWidth, float perpWidth) {
+            return (int)math.round(segmentWidth / 8f) % 2 != (int)math.round(perpWidth / 8f) % 2;
+        }
     }
 }
