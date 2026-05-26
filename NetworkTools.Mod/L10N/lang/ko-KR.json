@@ -83,6 +83,8 @@
   "NetworkTools.UI.Common.Tutorial": "도구를 선택하여 설정하세요. 패널의 옵션을 사용해 스냅, 대상 선택, 뷰 모드를 조정할 수 있습니다.",
   "NetworkTools.UI.Common.ComingSoon": "곧 출시됩니다!",
   "NetworkTools.UI.Common.Advanced": "고급",
+  "NetworkTools.UI.Common.Decrease": "Decrease",
+  "NetworkTools.UI.Common.Increase": "Increase",
   "NetworkTools.UI.PrefabSearch.Title": "애셋 선택",
   "NetworkTools.UI.PrefabSearch.Placeholder": "애셋을 검색...",
   "NetworkTools.UI.PrefabSearch.Empty": "검색된 애셋이 없습니다.",
