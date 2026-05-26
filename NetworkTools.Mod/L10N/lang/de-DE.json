@@ -83,6 +83,8 @@
   "NetworkTools.UI.Common.Tutorial": "Wähle das Werkzeug aus, um es zu konfigurieren. Passe das Einrasten, die Zielauswahl und den Ansichtsmodus mithilfe der Optionen im Bedienfeld an. Für jedes Werkzeug stehen unten spezifische Parameter zur Verfügung.",
   "NetworkTools.UI.Common.ComingSoon": "Bald verfügbar!",
   "NetworkTools.UI.Common.Advanced": "Erweitert",
+  "NetworkTools.UI.Common.Decrease": "Decrease",
+  "NetworkTools.UI.Common.Increase": "Increase",
   "NetworkTools.UI.PrefabSearch.Title": "Asset Auswählen",
   "NetworkTools.UI.PrefabSearch.Placeholder": "Asset Suchen...",
   "NetworkTools.UI.PrefabSearch.Empty": "Keine Assets gefunden.",
