@@ -83,6 +83,8 @@
   "NetworkTools.UI.Common.Tutorial": "Select the tool to configure it. Adjust snapping, target selection, and view mode using the options in the panel. Each tool provides its own specific parameters below.",
   "NetworkTools.UI.Common.ComingSoon": "近日公開！",
   "NetworkTools.UI.Common.Advanced": "詳細",
+  "NetworkTools.UI.Common.Decrease": "Decrease",
+  "NetworkTools.UI.Common.Increase": "Increase",
   "NetworkTools.UI.PrefabSearch.Title": "アセットを選択",
   "NetworkTools.UI.PrefabSearch.Placeholder": "アセットを検索...",
   "NetworkTools.UI.PrefabSearch.Empty": "アセットが見つかりません。",
