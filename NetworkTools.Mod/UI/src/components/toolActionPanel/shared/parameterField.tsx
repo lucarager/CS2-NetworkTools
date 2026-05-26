@@ -23,6 +23,7 @@ import { Tooltip } from "cs2/ui";
 import { VC, VF, VT } from "components/vanilla/Components";
 import { c } from "utils/classes";
 import { useLocalization } from "cs2/l10n";
+import { DistanceUnits, GAME_BINDINGS } from "gameBindings";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -45,10 +46,28 @@ export interface FieldRenderProps {
 
 // ─── Constants ───────────────────────────────────────────────────────
 
+const METERS_PER_UNIT = 8;
+
 const UNIT_LABELS: Partial<Record<NumberType, string>> = {
     distance: "m",
     percentage: "%",
 };
+
+function useDistanceScale(
+    distanceUnit: DistanceUnits,
+    numberType: NumberType,
+): {
+    scale: number;
+    unitLabel: string | null;
+} {
+    if (numberType !== "distance")
+        return {
+            scale: 1,
+            unitLabel: UNIT_LABELS[numberType] ?? null,
+        };
+    if (distanceUnit === "Units") return { scale: 1 / METERS_PER_UNIT, unitLabel: "U" };
+    return { scale: 1, unitLabel: "m" };
+}
 
 // ─── Renderer map & resolution ───────────────────────────────────────
 
@@ -106,19 +125,21 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabl
 /** Continuous slider for float parameters. Shows a zero-mark when the range spans zero. */
 function FloatSlider({ meta, value, label, disabled, onChange }: FieldRenderProps) {
     const m = meta as FloatMeta;
-    const unitLabel = UNIT_LABELS[m.numberType] ?? null;
+    const distanceUnit = useValue(GAME_BINDINGS.DISTANCE_UNIT.binding);
+    const { scale: distScale, unitLabel } = useDistanceScale(distanceUnit, m.numberType);
+    const totalScale = m.displayScale * distScale;
     const showZeroMark = m.min < 0 && m.max > 0;
     return (
         <div className={styles.controlRow}>
             <div className={styles.vanillaField}>
                 <VC.FloatSliderField
-                    value={(value as number) * m.displayScale}
+                    value={(value as number) * totalScale}
                     label={label}
-                    min={m.min * m.displayScale}
-                    max={m.max * m.displayScale}
+                    min={m.min * totalScale}
+                    max={m.max * totalScale}
                     fractionDigits={m.fractionDigits}
                     disabled={disabled}
-                    onChange={(v: number) => onChange(v / m.displayScale)}
+                    onChange={(v: number) => onChange(v / totalScale)}
                 />
                 {showZeroMark && (
                     <div className={styles.zeroMark}>
@@ -134,17 +155,19 @@ function FloatSlider({ meta, value, label, disabled, onChange }: FieldRenderProp
 /** Continuous slider for integer parameters. Values are rounded on change. */
 function IntSlider({ meta, value, label, disabled, onChange }: FieldRenderProps) {
     const m = meta as IntMeta;
-    const unitLabel = UNIT_LABELS[m.numberType] ?? null;
+    const distanceUnit = useValue(GAME_BINDINGS.DISTANCE_UNIT.binding);
+    const { scale: distScale, unitLabel } = useDistanceScale(distanceUnit, m.numberType);
+    const totalScale = m.displayScale * distScale;
     return (
         <div className={styles.controlRow}>
             <div className={styles.vanillaField}>
                 <VC.IntSliderField
-                    value={(value as number) * m.displayScale}
+                    value={(value as number) * totalScale}
                     label={label}
-                    min={m.min * m.displayScale}
-                    max={m.max * m.displayScale}
+                    min={m.min * totalScale}
+                    max={m.max * totalScale}
                     disabled={disabled}
-                    onChange={(v: number) => onChange(Math.round(v / m.displayScale))}
+                    onChange={(v: number) => onChange(Math.round(v / totalScale))}
                 />
                 {unitLabel && <span className={styles.unitLabel}>{unitLabel}</span>}
             </div>

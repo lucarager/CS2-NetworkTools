@@ -26,7 +26,7 @@ namespace NetworkTools.L10N {
             m_Setting = setting;
 
             m_Localization = new Dictionary<string, string> {
-                { m_Setting.GetSettingsLocaleID(), NetworkToolsMod.Id },
+                { m_Setting.GetSettingsLocaleID(), "Network Tools" },
 
                 // Actions
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.ToggleToolPanelStr), "Toggle Network Tools Panel" },
@@ -55,8 +55,15 @@ namespace NetworkTools.L10N {
                 // Sections
 
                 // Groups
+                { m_Setting.GetOptionGroupLocaleID(NT_Settings.GeneralGroupStr), "General" },
                 { m_Setting.GetOptionGroupLocaleID(NT_Settings.KeybindingsGroupStr), "Key Bindings" },
                 { m_Setting.GetOptionGroupLocaleID(NT_Settings.AboutGroupStr), "About" },
+
+                // General
+                { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.DistanceUnit)), "Distance Unit" },
+                { m_Setting.GetOptionDescLocaleID(nameof(NT_Settings.DistanceUnit)), "Choose whether distance parameters display in meters or units (1 unit = 8 meters)" },
+                { m_Setting.GetOptionLabelLocaleID(NT_Settings.DistanceUnitMeters), "Meters" },
+                { m_Setting.GetOptionLabelLocaleID(NT_Settings.DistanceUnitUnits), "Units (8m)" },
 
                 // About
                 { m_Setting.GetOptionLabelLocaleID(nameof(NT_Settings.Version)), "Version" },

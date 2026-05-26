@@ -50,6 +50,13 @@ namespace NetworkTools.Systems.UI {
                 m_SelectedEntitiesBinding.Value = selectedEntitiesData;
             }
 
+            // Update distance unit binding when the setting changes
+            var currentDistanceUnit = NetworkToolsMod.Instance.Settings.DistanceUnit;
+            if (currentDistanceUnit != m_LastDistanceUnit) {
+                m_LastDistanceUnit          = currentDistanceUnit;
+                m_DistanceUnitBinding.Value = currentDistanceUnit;
+            }
+
             // Update snap/target bindings from the active tool
             var activeTool = m_ToolSystem.activeTool as NT_BaseToolSystem;
 

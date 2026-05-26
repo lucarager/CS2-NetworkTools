@@ -84,11 +84,14 @@ export const EMPTY_NET_PREFAB_DATA: NetPrefabData = {
     Name: "",
 };
 
+export type DistanceUnits = "Meters" | "Units";
+
 export const GAME_BINDINGS = {
     UI_DATA: new TwoWayBinding<ToolUIData[]>("UI_DATA", []),
     SELECTED_ENTITIES: new TwoWayBinding<ToolSelectionData[]>("SELECTED_ENTITIES", []),
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
     PANEL_OPEN: new TwoWayBinding<boolean>("PANEL_OPEN", false),
+    DISTANCE_UNIT: new TwoWayBinding<DistanceUnits>("DISTANCE_UNIT", "Meters"),
     AVAILABLE_SNAPS: new TwoWayBinding<number>("AVAILABLE_SNAPS", SnapOption.None),
     SELECTED_SNAPS: new TwoWayBinding<number>("SELECTED_SNAPS", SnapOption.None),
     AVAILABLE_TARGETS: new TwoWayBinding<number>("AVAILABLE_TARGETS", TargetOption.All),

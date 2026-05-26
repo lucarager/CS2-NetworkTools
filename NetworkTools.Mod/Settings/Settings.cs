@@ -4,6 +4,7 @@ namespace NetworkTools.Settings {
     using Game.Input;
     using Game.Modding;
     using Game.Settings;
+    using Game.UI.Widgets;
     using NetworkTools.Systems.Tools;
     using UnityEngine;
 
@@ -11,8 +12,8 @@ namespace NetworkTools.Settings {
     ///     The mod's settings.
     /// </summary>
     [FileLocation(NetworkToolsMod.ModName)]
-    [SettingsUIGroupOrder(KeybindingsGroupStr, DebugGroupStr, AboutGroupStr)]
-    [SettingsUIShowGroupName(KeybindingsGroupStr, DebugGroupStr, AboutGroupStr)]
+    [SettingsUIGroupOrder(GeneralGroupStr, KeybindingsGroupStr, DebugGroupStr, AboutGroupStr)]
+    [SettingsUIShowGroupName(GeneralGroupStr, KeybindingsGroupStr, DebugGroupStr, AboutGroupStr)]
     [SettingsUIKeyboardAction(ToggleToolPanelStr, ActionType.Button, Usages.kToolUsage)]
     [SettingsUIKeyboardAction(OpenTool1Str, ActionType.Button, Usages.kToolUsage)]
     [SettingsUIKeyboardAction(OpenTool2Str, ActionType.Button, Usages.kToolUsage)]
@@ -26,9 +27,12 @@ namespace NetworkTools.Settings {
     [SettingsUIKeyboardAction(ApplyTransformationStr, ActionType.Button, Usages.kToolUsage)]
     public class NT_Settings : ModSetting {
         private const string CreditStr = "Made with <3 by Luca.";
+        public const string GeneralGroupStr = "GeneralGroupStr";
         public const string KeybindingsGroupStr = "KeybindingsGroupStr";
         public const string AboutGroupStr = "AboutGroupStr";
         public const string DebugGroupStr = "DebugGroupStr";
+        public const string DistanceUnitMeters = "Meters";
+        public const string DistanceUnitUnits = "Units";
         public const string ToggleToolPanelStr = nameof(ToggleToolPanel);
         public const string OpenTool1Str = nameof(OpenTool1);
         public const string OpenTool2Str = nameof(OpenTool2);
@@ -47,6 +51,23 @@ namespace NetworkTools.Settings {
         /// <param name="mod"><see cref="IMod" /> instance.</param>
         public NT_Settings(IMod mod)
             : base(mod) {
+        }
+
+        [SettingsUISection(GeneralGroupStr)]
+        [SettingsUIDropdown(typeof(NT_Settings), nameof(GetDistanceUnitItems))]
+        public string DistanceUnit { get; set; } = DistanceUnitMeters;
+
+        public DropdownItem<string>[] GetDistanceUnitItems() {
+            return new DropdownItem<string>[] {
+                new() {
+                    value = DistanceUnitMeters,
+                    displayName = GetOptionLabelLocaleID(DistanceUnitMeters),
+                },
+                new() {
+                    value = DistanceUnitUnits,
+                    displayName = GetOptionLabelLocaleID(DistanceUnitUnits),
+                },
+            };
         }
 
         [SettingsUISection(KeybindingsGroupStr)]
@@ -167,6 +188,7 @@ namespace NetworkTools.Settings {
         ///     Restores mod settings to default.
         /// </summary>
         public override void SetDefaults() {
+            DistanceUnit = DistanceUnitMeters;
             DebugMode = false;
             SavedSelectedSnaps   = (int)SnapOption.All;
             SavedSelectedTargets = (int)TargetOption.All;

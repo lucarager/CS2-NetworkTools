@@ -31,6 +31,8 @@
             Edge    = 2
         }
 
+        private ValueBindingHelper<string>               m_DistanceUnitBinding;
+        private string                                   m_LastDistanceUnit;
         private ValueBindingHelper<int>                  m_AvailableSnapsBinding;
         private ValueBindingHelper<int>                  m_AvailableTargetsBinding;
         private ValueBindingHelper<int>                  m_AvailableViewsBinding;
@@ -95,6 +97,7 @@
             RegisterToolParameterBindings(m_NtGenerateToolSystem);
             RegisterToolParameterBindings(m_NtConnectToolSystem);
             RegisterToolParameterBindings(m_NtRoadShapeToolSystem);
+            m_DistanceUnitBinding     = CreateBinding("DISTANCE_UNIT",     NT_Settings.DistanceUnitMeters);
             m_AvailableSnapsBinding   = CreateBinding("AVAILABLE_SNAPS",   (int)SnapOption.None);
             m_SelectedSnapsBinding    = CreateBinding("SELECTED_SNAPS",    (int)SnapOption.None, HandleUpdateSelectedSnaps);
             m_AvailableTargetsBinding = CreateBinding("AVAILABLE_TARGETS", (int)TargetOption.All);
