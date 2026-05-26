@@ -3,6 +3,7 @@ namespace NetworkTools.Systems.Tools {
     using Game.Common;
     using Game.Input;
     using Game.Net;
+    using Game.Notifications;
     using Game.Prefabs;
     using Game.Rendering;
     using Game.Simulation;
@@ -657,14 +658,66 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Swaps highlighting between two entities (removes from old, adds to new).
-        ///     Simple single-node highlighting utility.
+        ///     Finds the closest node to a hit position when an edge was hit.
+        ///     Returns Entity.Null if no node is within <see cref="MaxDistanceToSelect" />.
         /// </summary>
-        /// <param name="oldEntity">Entity to remove highlighting from</param>
-        /// <param name="newEntity">Entity to add highlighting to</param>
-        protected virtual void SwapHighlitedEntities(Entity oldEntity, Entity newEntity, NT_Highlighted highlightData) {
-            RemoveHighlight(oldEntity);
-            AddHighlight(newEntity, highlightData);
+        protected Entity FindClosestNodeFromEdgeHit(Entity edgeEntity, float3 hitPosition) {
+            var edge        = EntityManager.GetComponentData<Edge>(edgeEntity);
+            var startPos    = EntityManager.GetComponentData<Node>(edge.m_Start).m_Position;
+            var endPos      = EntityManager.GetComponentData<Node>(edge.m_End).m_Position;
+            var distToStart = math.distance(hitPosition, startPos);
+            var distToEnd   = math.distance(hitPosition, endPos);
+
+            if (distToStart < MaxDistanceToSelect && distToStart < distToEnd) return edge.m_Start;
+            if (distToEnd < MaxDistanceToSelect && distToEnd < distToStart) return edge.m_End;
+            return Entity.Null;
+        }
+
+        /// <summary>
+        ///     Standard raycast filter for node-targeting tools:
+        ///     returns the hit entity if it's a node, or the closest node if an edge was hit.
+        ///     Only returns entities with NT_Eligible.
+        /// </summary>
+        protected ControlPoint FilterRaycastToEligibleNode(Entity entity, RaycastHit hit) {
+            var candidate = EntityManager.HasComponent<Edge>(entity)
+                ? FindClosestNodeFromEdgeHit(entity, hit.m_Position)
+                : entity;
+
+            return candidate != Entity.Null && EntityManager.HasComponent<NT_Eligible>(candidate)
+                ? new ControlPoint(candidate, hit)
+                : default;
+        }
+
+        /// <summary>
+        ///     Standard GetRaycastResult implementation for node-targeting tools.
+        ///     Calls <see cref="FilterRaycastToEligibleNode" /> to resolve edges to closest node.
+        /// </summary>
+        protected bool TryGetNodeRaycast(out ControlPoint controlPoint) {
+            if (base.GetRaycastResult(out var entity, out RaycastHit raycastHit)) {
+                controlPoint = FilterRaycastToEligibleNode(entity, raycastHit);
+                return controlPoint.m_OriginalEntity != Entity.Null;
+            }
+
+            controlPoint = default;
+            return false;
+        }
+
+        /// <summary>
+        ///     Default InitializeRaycast for network tools.
+        ///     Sets standard collision/type/layer masks used by most tools.
+        ///     Override to modify (e.g. add TypeMask.Terrain for Generate).
+        /// </summary>
+        public override void InitializeRaycast() {
+            base.InitializeRaycast();
+
+            m_ToolRaycastSystem.collisionMask   = CollisionMask.OnGround | CollisionMask.Overground | CollisionMask.Underground;
+            m_ToolRaycastSystem.typeMask        = TypeMask.Net;
+            m_ToolRaycastSystem.netLayerMask    = Layer.All;
+            m_ToolRaycastSystem.iconLayerMask   = IconLayerMask.None;
+            m_ToolRaycastSystem.utilityTypeMask = UtilityTypes.None;
+            m_ToolRaycastSystem.raycastFlags    = RaycastFlags.Markers | RaycastFlags.ElevateOffset |
+                                                   RaycastFlags.SubElements |
+                                                   RaycastFlags.Cargo | RaycastFlags.Passenger;
         }
 
         /// <summary>

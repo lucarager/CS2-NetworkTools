@@ -221,13 +221,9 @@ namespace NetworkTools.Systems.Tools.Generate {
         public override void InitializeRaycast() {
             base.InitializeRaycast();
 
-            m_ToolRaycastSystem.collisionMask =
-                CollisionMask.OnGround | CollisionMask.Overground | CollisionMask.Underground;
-            m_ToolRaycastSystem.typeMask       = TypeMask.Terrain | TypeMask.Net;
-            m_ToolRaycastSystem.netLayerMask   = Layer.All;
-            m_ToolRaycastSystem.iconLayerMask  = IconLayerMask.None;
-            m_ToolRaycastSystem.utilityTypeMask = UtilityTypes.None;
-            m_ToolRaycastSystem.raycastFlags    = RaycastFlags.Markers | RaycastFlags.ElevateOffset;
+            // Generate also targets terrain (for free-placement) and doesn't need sub-element raycasts.
+            m_ToolRaycastSystem.typeMask    = TypeMask.Terrain | TypeMask.Net;
+            m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset;
         }
     }
 }

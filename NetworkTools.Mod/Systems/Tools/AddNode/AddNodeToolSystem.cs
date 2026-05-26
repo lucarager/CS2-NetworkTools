@@ -1,4 +1,4 @@
-// <copyright file="NT_CEToolSystem.cs" company="Luca Rager">
+// <copyright file="AddNodeToolSystem.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -21,11 +21,10 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Mathematics;
 
     /// <summary>
-    /// # Remove Node System
+    ///     Add Node tool — splits an edge by inserting a new node at the cursor position.
     /// </summary>
     public partial class NT_AddNodeToolSystem : NT_BaseToolSystem, IToolPrefabProvider {
         private ControlPoint m_LastControlPoint;
-        private bool         m_UpdateNeeded;
 
         public override string toolID => "AddNode Tool";
 
@@ -163,16 +162,5 @@ namespace NetworkTools.Systems.Tools {
             return controlPoint;
         }
 
-        public override void InitializeRaycast() {
-            base.InitializeRaycast();
-
-            m_ToolRaycastSystem.collisionMask   = CollisionMask.OnGround | CollisionMask.Overground | CollisionMask.Underground;
-            m_ToolRaycastSystem.typeMask        = TypeMask.Net;
-            m_ToolRaycastSystem.netLayerMask    = Layer.All;
-            m_ToolRaycastSystem.iconLayerMask   = IconLayerMask.None;
-            m_ToolRaycastSystem.utilityTypeMask = UtilityTypes.None;
-            m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset | RaycastFlags.SubElements |
-                                               RaycastFlags.Cargo   | RaycastFlags.Passenger;
-        }
     }
 }

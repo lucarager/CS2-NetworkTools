@@ -105,7 +105,7 @@
         /// </summary>
         /// <param name="hoveredEntity">The entity being hovered.</param>
         protected void HandleHover(Entity hoveredEntity) {
-            SwapHighlitedEntities(m_LastHoveredEntity.Value, hoveredEntity, NT_Highlighted.DefaultNode);
+            SwapHighlightedEntities(m_LastHoveredEntity.Value, hoveredEntity, NT_Highlighted.DefaultNode);
         }
 
         /// <summary>
@@ -250,67 +250,8 @@
             Phase = OperationPhase.Applying;
         }
 
-        protected override bool GetRaycastResult(out ControlPoint controlPoint) {
-            if (base.GetRaycastResult(out var entity, out RaycastHit raycastHit))
-            {
-                controlPoint = FilterRaycastResult(entity, raycastHit);
-                return controlPoint.m_OriginalEntity != Entity.Null;
-            }
-
-
-            controlPoint = default;
-            return false;
-        }
-
-        private ControlPoint FilterRaycastResult(Entity entity, RaycastHit hit) {
-            var controlPoint = default(ControlPoint);
-            var candidateEntity = Entity.Null;
-
-            // If we hit an edge, find the closest node instead
-            if (EntityManager.HasComponent<Edge>(entity))
-            {
-                // todo make job
-                // Find the closest node to the hit position
-                var edge = EntityManager.GetComponentData<Edge>(entity);
-                var startNode = EntityManager.GetComponentData<Node>(edge.m_Start);
-                var distanceToStart = math.distance(hit.m_Position, startNode.m_Position);
-                var endNode = EntityManager.GetComponentData<Node>(edge.m_End);
-                var distanceToEnd = math.distance(hit.m_Position, endNode.m_Position);
-
-                if (distanceToStart < MaxDistanceToSelect && distanceToStart < distanceToEnd)
-                {
-                    candidateEntity = edge.m_Start;
-                } else if (distanceToEnd < MaxDistanceToSelect && distanceToEnd < distanceToStart)
-                {
-                    candidateEntity = edge.m_End;
-                }
-            } else
-            {
-                candidateEntity = entity;
-            }
-
-            // Check that the entity we're hitting is eligible
-            if (EntityManager.HasComponent<NT_Eligible>(candidateEntity))
-            {
-                controlPoint = new ControlPoint(candidateEntity, hit);
-            }
-
-            return controlPoint;
-        }
-
-        public override void InitializeRaycast() {
-            base.InitializeRaycast();
-
-            m_ToolRaycastSystem.collisionMask =
-                CollisionMask.OnGround | CollisionMask.Overground | CollisionMask.Underground;
-            m_ToolRaycastSystem.typeMask = TypeMask.Net;
-            m_ToolRaycastSystem.netLayerMask = Layer.All;
-            m_ToolRaycastSystem.iconLayerMask = IconLayerMask.None;
-            m_ToolRaycastSystem.utilityTypeMask = UtilityTypes.None;
-            m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset |
-                                               RaycastFlags.SubElements |
-                                               RaycastFlags.Cargo | RaycastFlags.Passenger;
-        }
+        protected override bool GetRaycastResult(out ControlPoint controlPoint) =>
+            TryGetNodeRaycast(out controlPoint);
 
         /// <summary>
         ///     Resets the tool to idle state, clearing all selection.

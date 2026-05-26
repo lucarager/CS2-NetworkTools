@@ -53,7 +53,7 @@ namespace NetworkTools.Systems.Tools {
             switch (CurrentSelectionState) {
                 case SelectionState.NoSelection:
                     m_Log.Debug("[NoSelection] Hovering over potential start point.");
-                    SwapHighlitedEntities(m_LastHoveredEntity.Value, hoveredEntity, NT_Highlighted.DefaultNode);
+                    SwapHighlightedEntities(m_LastHoveredEntity.Value, hoveredEntity, NT_Highlighted.DefaultNode);
                     break;
                 case SelectionState.StartNodeSelected:
                     PreviewPath();

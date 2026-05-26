@@ -193,67 +193,15 @@ namespace NetworkTools.Systems.Tools {
 
         protected override bool GetRaycastResult(out ControlPoint controlPoint) {
             if (base.GetRaycastResult(out var entity, out RaycastHit raycastHit)) {
-                controlPoint = FilterRaycastResult(entity, raycastHit);
+                // During drag, we only need the hit position — the node is already captured
+                controlPoint = m_IsDragging
+                    ? new ControlPoint(m_DragNodeEntity, raycastHit)
+                    : FilterRaycastToEligibleNode(entity, raycastHit);
                 return controlPoint.m_OriginalEntity != Entity.Null || m_IsDragging;
             }
 
             controlPoint = default;
             return m_IsDragging;
-        }
-
-        /// <summary>
-        /// Filters the raycast result to target eligible nodes.
-        /// If an edge is hit, finds the closest eligible node.
-        /// During drag, always returns a valid control point with the hit position.
-        /// </summary>
-        private ControlPoint FilterRaycastResult(Entity entity, RaycastHit hit) {
-            var controlPoint = default(ControlPoint);
-
-            if (m_IsDragging) {
-                // During drag, we only need the hit position — the node is already captured
-                controlPoint = new ControlPoint(m_DragNodeEntity, hit);
-                return controlPoint;
-            }
-
-            var candidateEntity = Entity.Null;
-
-            // If we hit an edge, find the closest eligible node
-            if (EntityManager.HasComponent<Edge>(entity)) {
-                var edge = EntityManager.GetComponentData<Edge>(entity);
-                var startNode = EntityManager.GetComponentData<Node>(edge.m_Start);
-                var distanceToStart = math.distance(hit.m_Position, startNode.m_Position);
-                var endNode = EntityManager.GetComponentData<Node>(edge.m_End);
-                var distanceToEnd = math.distance(hit.m_Position, endNode.m_Position);
-
-                if (distanceToStart < MaxDistanceToSelect && distanceToStart < distanceToEnd) {
-                    candidateEntity = edge.m_Start;
-                } else if (distanceToEnd < MaxDistanceToSelect && distanceToEnd < distanceToStart) {
-                    candidateEntity = edge.m_End;
-                }
-            } else {
-                candidateEntity = entity;
-            }
-
-            // Check eligibility
-            if (EntityManager.HasComponent<NT_Eligible>(candidateEntity)) {
-                controlPoint = new ControlPoint(candidateEntity, hit);
-            }
-
-            return controlPoint;
-        }
-
-        public override void InitializeRaycast() {
-            base.InitializeRaycast();
-
-            m_ToolRaycastSystem.collisionMask =
-                CollisionMask.OnGround | CollisionMask.Overground | CollisionMask.Underground;
-            m_ToolRaycastSystem.typeMask = TypeMask.Net;
-            m_ToolRaycastSystem.netLayerMask = Layer.All;
-            m_ToolRaycastSystem.iconLayerMask = IconLayerMask.None;
-            m_ToolRaycastSystem.utilityTypeMask = UtilityTypes.None;
-            m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset |
-                                               RaycastFlags.SubElements |
-                                               RaycastFlags.Cargo | RaycastFlags.Passenger;
         }
     }
 }

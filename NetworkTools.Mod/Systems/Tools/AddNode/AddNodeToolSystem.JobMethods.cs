@@ -1,4 +1,4 @@
-// <copyright file="NT_NodeSelectionToolSystem.cs" company="Luca Rager">
+// <copyright file="AddNodeToolSystem.JobMethods.cs" company="Luca Rager">
 // Copyright (c) Luca Rager. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license
 // information.
