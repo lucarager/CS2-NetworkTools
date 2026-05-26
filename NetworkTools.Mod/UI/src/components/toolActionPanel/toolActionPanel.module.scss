@@ -172,15 +172,13 @@
     }
 
     &__name {
-        font-size: var(--fontSizeS);
-        line-height: 1.25em;
-        color: rgba(217, 217, 217, 1);
-        font-weight: 600;
-        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         flex: 1;
         text-align: left;
+        font-size: var(--fontSizeS);
+        coh-font-fit-mode: shrink;
+        color: rgba(255, 255, 255, 0.85);
     }
 
     &__chevron {
@@ -260,20 +258,22 @@
         }
 
         [class^="label"] {
-            color: white;
             // Undo some vanilla styles
             flex-shrink: 0;
             flex-grow: 0;
             flex-basis: auto;
-            font-size: var(--fontSizeS);
-            font-weight: 500;
-            line-height: 1.25em;
             overflow-x: hidden;
             overflow-y: hidden;
-            white-space: pre-wrap;
             width: 120rem;
             margin-right: 8rem;
-            opacity: 0.75;
+
+            // Font
+            font-size: var(--fontSizeS);
+            coh-font-fit-mode: shrink;
+            font-weight: 500;
+            line-height: 1.25em;
+            white-space: pre-wrap;
+            color: rgba(255, 255, 255, .85);
         }
 
         [class^="item"] > [class^="content"] > * {
@@ -284,6 +284,15 @@
             justify-content: space-between;
         }
 
+        // Text styles for "values"
+        [class^="slider-input"],
+        [class^="number-field"] {
+            font-size: var(--fontSizeS);
+            coh-font-fit-mode: shrink;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.25em;
+        }
+
         [class^="slider-input"],
         [class^="number-field"] {
             height: 26rem;
@@ -292,7 +301,6 @@
             padding-right: 5rem;
             padding-bottom: 3rem;
             background-color: $input-bg-color;
-            color: rgba(238, 238, 238, 1);
             border: 1rem solid $input-border-color;
 
             &:hover {
@@ -316,7 +324,6 @@
             & > img {
                 opacity: 0.5;
             }
-
 
             &:hover {
                 border-color: $input-border-hover-color;
