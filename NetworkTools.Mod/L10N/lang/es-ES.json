@@ -83,6 +83,8 @@
   "NetworkTools.UI.Common.Tutorial": "Seleccione la herramienta para configurarla. Seleccione el ajuste, el objetivo y modo de visualización usando las opciones en el panel. Cada herramienta proporciona sus propios parámetros específicos a continuación.",
   "NetworkTools.UI.Common.ComingSoon": "¡Muy pronto!",
   "NetworkTools.UI.Common.Advanced": "Avanzado",
+  "NetworkTools.UI.Common.Decrease": "Decrease",
+  "NetworkTools.UI.Common.Increase": "Increase",
   "NetworkTools.UI.PrefabSearch.Title": "Seleccionar activo",
   "NetworkTools.UI.PrefabSearch.Placeholder": "Buscar activos...",
   "NetworkTools.UI.PrefabSearch.Empty": "No se han encontrado activos.",
