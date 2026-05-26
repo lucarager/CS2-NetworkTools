@@ -83,6 +83,8 @@
   "NetworkTools.UI.Common.Tutorial": "Wybierz tryb narzędzia, aby go skonfigurować. Dostosuj przyciąganie, wybór celu i tryb widoku za pomocą opcji w panelu. Każde narzędzie zapewnia własne, specyficzne parametry.",
   "NetworkTools.UI.Common.ComingSoon": "Wkrótce!",
   "NetworkTools.UI.Common.Advanced": "Zaawansowane",
+  "NetworkTools.UI.Common.Decrease": "Decrease",
+  "NetworkTools.UI.Common.Increase": "Increase",
   "NetworkTools.UI.PrefabSearch.Title": "Wybierz sieć",
   "NetworkTools.UI.PrefabSearch.Placeholder": "Szukaj sieci...",
   "NetworkTools.UI.PrefabSearch.Empty": "Nie znaleziono pasujących wyników.",
