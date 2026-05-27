@@ -82,7 +82,7 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.4.0" />
+  <ModVersion Value="1.4.1" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Dependency for the mod, can be set multiple-->
@@ -90,17 +90,16 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog># 1.4.0
+  <ChangeLog># 1.4.1
 
-- New: Connect Tools. Allows creating networks that connect a start and end node. 
-- Connect Tool: Added simple curve mode. Loop mode and complex curve are still work in progress.
-- Connect Tool/SimpleCurve: More smartly create initial bezier control point positions based on start/end direction.
-- Generate Tool: Added option to follow the terrain and rewrote elevation handling. All generate modes should now allow for fine-tuned precision on elevation and terrain handling.
-- Translations: Updated translations across the board. Thank you volunteers!
-- UI: Added close button to tool panel
-- Tooltips: Fixed bug that would keep stale tooltips without clearing them
-- Internal: Added UIL as dependency
-- Internal: Removed some dead code</ChangeLog>
+- Generate/Grid: Fix AltPrefab selection where row and column were swapped.
+- All: Added a setting to the options menu that swaps between Meters and Units for distance-based parameters.
+- UI: Improve text styles for parameters and input fields
+- UI: Add stepper input for some numeric parameters.
+- UI: Added labeling and scale to support the new distance unit setting.
+- Internal: Fully emit enums and string types via codegen.
+- Internal: Remove redundant code and centralize repeated logic.
+- Translations: Updated translations for new features and changes. Thank you volunteers!</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
