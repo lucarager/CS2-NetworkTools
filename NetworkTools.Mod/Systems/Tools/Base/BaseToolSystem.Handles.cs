@@ -3,6 +3,7 @@ namespace NetworkTools.Systems.Tools {
 
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Rendering;
     using NetworkTools.Systems.Tools.Handles;
     using NetworkTools.Systems.Tools.Parameters;
 
@@ -207,7 +208,7 @@ namespace NetworkTools.Systems.Tools {
                 var constraints = param is FloatParameter axFp
                     ? NT_HandleConstraints.AxisWithBounds(axisDir, origin, axFp.Min * pathLen, axFp.Max * pathLen)
                     : NT_HandleConstraints.AxisOnly(axisDir, origin);
-                return CreatePositionHandle(Entity.Null, Entity.Null, 0, position, typeFlags, constraints, radius);
+                return CreatePositionHandle(Entity.Null, Entity.Null, 0, position, typeFlags, constraints, NT_Dimensions.HANDLE_PARAM_RANGE_CIRCLE_RADIUS);
             }
 
             // Position or ComputedPosition

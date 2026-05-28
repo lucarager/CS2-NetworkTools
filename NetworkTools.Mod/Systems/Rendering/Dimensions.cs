@@ -1,0 +1,25 @@
+﻿namespace NetworkTools.Systems.Rendering {
+    public static class NT_Dimensions {
+        // -- Common
+        public static readonly float LINE_WIDTH = 1f;
+
+        // -- Nodes
+        public static readonly float NODE_BORDER_WIDTH_REST = 0f;
+        public static readonly float NODE_BORDER_WIDTH_HOVER = LINE_WIDTH;
+        public static readonly float NODE_BORDER_WIDTH_ACTIVE = LINE_WIDTH;
+
+
+        // -- Handles
+        // ---- Circle Handle
+        public static readonly float HANDLE_CIRCLE_OUTLINE_WIDTH = 1f;
+        
+        // ---- Parameter Range Handle
+        public static readonly float HANDLE_PARAM_RANGE_ORIGIN_RADIUS    = 1f;
+        public static readonly float HANDLE_PARAM_RANGE_ORIGIN_OUTLINE   = 0f;
+        public static readonly float HANDLE_PARAM_RANGE_LINE_WIDTH       = LINE_WIDTH;
+        public static readonly float HANDLE_PARAM_RANGE_LINE_DASH_LENGTH = 2f;
+        public static readonly float HANDLE_PARAM_RANGE_LINE_DASH_GAP    = 2f;
+        public static readonly float HANDLE_PARAM_RANGE_CIRCLE_RADIUS    = 3f;
+        public static readonly float HANDLE_PARAM_RANGE_CIRCLE_OUTLINE   = LINE_WIDTH;
+    }
+}

@@ -2,7 +2,6 @@ namespace NetworkTools.Systems {
     using System.Diagnostics.CodeAnalysis;
     using Colossal.Mathematics;
     using Game.Net;
-    using Game.Rendering;
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
     using NetworkTools.Systems.Rendering;
@@ -22,9 +21,9 @@ namespace NetworkTools.Systems {
         [BurstCompile]
 #endif
         protected struct DrawHandlesJob : IJobChunk {
-            [ReadOnly] public required CustomOverlayRenderSystem.Buffer                m_Buffer;
+            [ReadOnly] public required CustomOverlayRenderSystem.Buffer          m_Buffer;
             [ReadOnly] public required RenderColors                              m_Colors;
-            [ReadOnly] public required RenderDimensions m_Dimensions;
+            [ReadOnly] public required RenderDimensions                          m_Dimensions;
             [ReadOnly] public required ComponentTypeHandle<NT_HandlePosition>    m_NTHandlePositionComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleLink>        m_NTHandleLinkComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_Handle>            m_NTHandleComponentTypeHandle;
@@ -35,7 +34,7 @@ namespace NetworkTools.Systems {
             [ReadOnly] public required ComponentTypeHandle<NT_HandleRotation>    m_HandleRotationComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleConstraints> m_HandleConstraintsComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleParent>      m_HandleParentComponentTypeHandle;
-            [ReadOnly] public required ComponentLookup<NT_HandlePosition>         m_HandlePositionLookup;
+            [ReadOnly] public required ComponentLookup<NT_HandlePosition>        m_HandlePositionLookup;
             [ReadOnly] public required ComponentLookup<Node>                     m_NodeLookup;
             [ReadOnly] public required ComponentLookup<Curve>                    m_CurveLookup;
             [ReadOnly] public required EntityTypeHandle                          m_EntityTypeHandle;
@@ -96,14 +95,19 @@ namespace NetworkTools.Systems {
                         RenderLineHandle(line, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.Circle) && hasCircleComponent) {
                         var circle = circleArray[i];
-                        RenderCircleHandle(position, circle, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
+                        RenderCircleHandle(position, circle, handle, isHighlighted, isSelected, m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.Rotation) && hasRotationComponent) {
                         var rotation = rotationArray[i];
                         RenderRotationHandle(position, rotation, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.ParameterRange) && hasConstraintsComponent) {
                         // Parameter handle with range indicator (origin dot + line to handle)
                         var constraints = constraintsArray[i];
-                        RenderParameterRangeHandle(position, constraints, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
+                        RenderParameterRangeHandle(position,
+                                                   constraints,
+                                                   handle,
+                                                   isHighlighted,
+                                                   isSelected,
+                                                   m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.BezierPoint)) {
                         // Bezier point handles
                         if (m_NodeLookup.HasComponent(link.LinkedEntity) &&
@@ -132,7 +136,11 @@ namespace NetworkTools.Systems {
                         if (parentEntity != Entity.Null && m_HandlePositionLookup.HasComponent(parentEntity)) {
                             var parentPos = m_HandlePositionLookup[parentEntity].Position;
                             var lineColor = (Vector4)m_Colors.HandleSecondaryLineRest;
-                            m_Buffer.DrawDashedLine(lineColor, new Line3.Segment(position.Position, parentPos), 0.3f, 2f, 2f);
+                            m_Buffer.DrawDashedLine(lineColor,
+                                                    new Line3.Segment(position.Position, parentPos),
+                                                    0.3f,
+                                                    2f,
+                                                    2f);
                         }
                     }
                 }
@@ -141,12 +149,18 @@ namespace NetworkTools.Systems {
             /// <summary>
             ///     Renders a simple point handle.
             /// </summary>
-            private static void RenderPointHandle(NT_HandlePosition          position,      NT_Handle handle,
-                                                  bool                       isHighlighted, bool      isSelected,
-                                                  RenderColors               colors,
+            private static void RenderPointHandle(NT_HandlePosition                position,      NT_Handle handle,
+                                                  bool                             isHighlighted, bool      isSelected,
+                                                  RenderColors                     colors,
                                                   CustomOverlayRenderSystem.Buffer buffer) {
                 GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
-                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Size * 2f);
+                buffer.DrawCircle(outlineColor,
+                                  fillColor,
+                                  0.5f,
+                                  0,
+                                  new float2(0, 1),
+                                  position.Position,
+                                  handle.Size * 2f);
             }
 
             /// <summary>
@@ -154,17 +168,37 @@ namespace NetworkTools.Systems {
             /// </summary>
             private static void RenderParameterRangeHandle(NT_HandlePosition position, NT_HandleConstraints constraints,
                                                            NT_Handle handle, bool isHighlighted, bool isSelected,
-                                                           RenderColors colors,
                                                            CustomOverlayRenderSystem.Buffer buffer) {
                 // Draw origin dot (small circle at the start of valid range)
-                buffer.DrawCircle((Vector4)colors.HandleFillRest, (Vector4)colors.HandleOutlineRest, 0.3f, 0, new float2(0, 1), constraints.Origin, 1f);
-
-                // Draw solid line from origin to handle position
-                buffer.DrawDashedLine((Vector4)colors.HandleLineRest, new Line3.Segment(constraints.Origin, position.Position), 0.5f, 2f, 2f);
+                var originColorPair = NT_Colors.HandleParamRangeOrigin.Get(isHighlighted, isSelected);
+                var originRadius    = NT_Dimensions.HANDLE_PARAM_RANGE_ORIGIN_RADIUS;
+                buffer.DrawCircle(originColorPair.Fill,
+                                  constraints.Origin,
+                                  originRadius * 2f);
 
                 // Draw the handle itself (larger circle at current position)
-                GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
-                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Size * 2f);
+                var circleColorPair = NT_Colors.HandleParamRangeCircle.Get(isHighlighted, isSelected);
+                var circleRadius    = handle.Size;
+                buffer.DrawCircle(circleColorPair.Border,
+                                  circleColorPair.Fill,
+                                  NT_Dimensions.HANDLE_PARAM_RANGE_CIRCLE_OUTLINE,
+                                  0,
+                                  new float2(0, 1),
+                                  position.Position,
+                                  circleRadius * 2f);
+
+                // Draw line from origin to handle, shortened by circle radii
+                var lineColorPair  = NT_Colors.HandleParamRangeLine.Get(isHighlighted, isSelected);
+                var originToHandle = position.Position - constraints.Origin;
+                var dist           = math.length(originToHandle);
+
+                if (dist > originRadius + circleRadius) {
+                    var dir = originToHandle / dist;
+                    buffer.DrawLine(lineColorPair.Fill,
+                                          new Line3.Segment(constraints.Origin + dir * originRadius,
+                                                            position.Position  - dir * circleRadius),
+                                          NT_Dimensions.HANDLE_PARAM_RANGE_LINE_WIDTH, true);
+                }
             }
 
             /// <summary>
@@ -176,21 +210,31 @@ namespace NetworkTools.Systems {
                                                         RenderColors colors,
                                                         CustomOverlayRenderSystem.Buffer buffer) {
                 GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
-                buffer.DrawCircle(outlineColor, fillColor, 0.5f, 0, new float2(0, 1), position.Position, handle.Size * 2f);
+                buffer.DrawCircle(outlineColor,
+                                  fillColor,
+                                  0.5f,
+                                  0,
+                                  new float2(0, 1),
+                                  position.Position,
+                                  handle.Size * 2f);
 
                 // If this is a control point, also draw a line to the main point
                 if (isControlPoint) {
                     var otherPoint = link.Key == 1 ? curve.m_Bezier.a : curve.m_Bezier.d;
-                    buffer.DrawDashedLine((Vector4)colors.HandleLineRest, new Line3.Segment(position.Position, otherPoint), 0.5f, 2f, 2f);
+                    buffer.DrawDashedLine((Vector4)colors.HandleLineRest,
+                                          new Line3.Segment(position.Position, otherPoint),
+                                          0.5f,
+                                          2f,
+                                          2f);
                 }
             }
 
             /// <summary>
             ///     Renders a line handle.
             /// </summary>
-            private static void RenderLineHandle(NT_HandleLine              line,          NT_Handle handle,
-                                                 bool                       isHighlighted, bool      isSelected,
-                                                 RenderColors               colors,
+            private static void RenderLineHandle(NT_HandleLine                    line,          NT_Handle handle,
+                                                 bool                             isHighlighted, bool      isSelected,
+                                                 RenderColors                     colors,
                                                  CustomOverlayRenderSystem.Buffer buffer) {
                 //GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
                 //var width = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1.5f : 1f;
@@ -205,38 +249,49 @@ namespace NetworkTools.Systems {
             /// <summary>
             ///     Renders a circle handle.
             /// </summary>
-            private static void RenderCircleHandle(NT_HandlePosition          position,      NT_HandleCircle circle,
-                                                   NT_Handle                  handle,
-                                                   bool                       isHighlighted, bool      isSelected,
-                                                   RenderColors               colors,
+            private static void RenderCircleHandle(NT_HandlePosition                position, NT_HandleCircle circle,
+                                                   NT_Handle                        handle,
+                                                   bool                             isHighlighted, bool isSelected,
                                                    CustomOverlayRenderSystem.Buffer buffer) {
-                GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
-                var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
+                var colors      = NT_Colors.HandleCircle.Get(isHighlighted, isSelected);
+                var borderWidth = NT_Dimensions.HANDLE_CIRCLE_OUTLINE_WIDTH;
 
                 // Draw the circle outline
-                buffer.DrawCircle(outlineColor, new Color(255, 255, 255, 0), borderWidth, 0, new float2(0, 1), position.Position, circle.Radius * 2f);
+                buffer.DrawCircle(colors.Border,
+                                  colors.Fill,
+                                  borderWidth,
+                                  0,
+                                  new float2(0, 1),
+                                  position.Position,
+                                  circle.Radius * 2f);
 
                 // Draw a small center point
-                buffer.DrawCircle(fillColor, fillColor, 0.3f, 0, new float2(0, 1), position.Position, 1f);
+                buffer.DrawCircle(colors.Fill, colors.Fill, 0.3f, 0, new float2(0, 1), position.Position, 1f);
             }
 
             /// <summary>
             ///     Renders a rotation handle: circle outline with an angle indicator line.
             /// </summary>
-            private static void RenderRotationHandle(NT_HandlePosition          position,
-                                                     NT_HandleRotation          rotation,      NT_Handle       handle,
-                                                     bool                       isHighlighted, bool            isSelected,
-                                                     RenderColors               colors,
+            private static void RenderRotationHandle(NT_HandlePosition                position,
+                                                     NT_HandleRotation                rotation,      NT_Handle handle,
+                                                     bool                             isHighlighted, bool isSelected,
+                                                     RenderColors                     colors,
                                                      CustomOverlayRenderSystem.Buffer buffer) {
                 GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
                 var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
-                var center = position.Position;
-                var direction = rotation.GetDirection();
-                var anglePoint = center + direction * rotation.Radius;
+                var center      = position.Position;
+                var direction   = rotation.GetDirection();
+                var anglePoint  = center + direction * rotation.Radius;
 
                 // Draw the circle outline
-                buffer.DrawCircle(outlineColor, new Color(255, 255, 255, 0), borderWidth, 0, new float2(0, 1), position.Position, rotation.Radius * 2f);
-                
+                buffer.DrawCircle(outlineColor,
+                                  new Color(255, 255, 255, 0),
+                                  borderWidth,
+                                  0,
+                                  new float2(0, 1),
+                                  position.Position,
+                                  rotation.Radius * 2f);
+
                 // Draw a thin line from center to angle point
                 buffer.DrawLine(outlineColor, new Line3.Segment(center, anglePoint), 0.5f);
 
@@ -244,18 +299,26 @@ namespace NetworkTools.Systems {
                 buffer.DrawCircle(outlineColor, outlineColor, 0.2f, 0, new float2(0, 1), anglePoint, 1f);
             }
 
+            private static void GetCircleHandleColors(bool      isHighlighted, bool      isSelected,
+                                                      out Color fillColor,     out Color outlineColor) {
+                var pair = NT_Colors.HandleCircle.Get(isHighlighted, isSelected);
+                fillColor    = pair.Fill;
+                outlineColor = pair.Border;
+            }
+
             /// <summary>
             ///     Gets the appropriate color for a handle based on its state.
             /// </summary>
-            private static void GetHandleColors(bool isHighlighted, bool isSelected, RenderColors colors, out Vector4 fillColor, out Vector4 outlineColor) {
+            private static void GetHandleColors(bool        isHighlighted, bool        isSelected, RenderColors colors,
+                                                out Vector4 fillColor,     out Vector4 outlineColor) {
                 if (isSelected) {
-                    fillColor = colors.HandleFillSelected;
+                    fillColor    = colors.HandleFillSelected;
                     outlineColor = colors.HandleOutlineSelected;
                 } else if (isHighlighted) {
-                    fillColor = colors.HandleFillHover;
+                    fillColor    = colors.HandleFillHover;
                     outlineColor = colors.HandleOutlineHover;
                 } else {
-                    fillColor = colors.HandleFillRest;
+                    fillColor    = colors.HandleFillRest;
                     outlineColor = colors.HandleOutlineRest;
                 }
             }

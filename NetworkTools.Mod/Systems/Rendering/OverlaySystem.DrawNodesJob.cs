@@ -73,12 +73,6 @@
                     var ntSelected = isSelected ? ntSelectedArray[i] : default;
                     var renderMode = ntSelected.NodeMode;
 
-                    // Determine visual style based on node state
-                    Color fillColor;
-                    Color borderColor;
-                    float diameter;
-                    float borderWidth;
-
                     var connectedEdges = connectedEdgesArray[i];
                     var edgeNodePositions = float3.zero;
                     var diameterSum = 0f;
@@ -90,15 +84,7 @@
                         var edgeGeometry = m_EdgeGeometryLookup[edgeEntity.m_Edge];
                         var curve = m_CurveLookup[edgeEntity.m_Edge];
 
-                        // Update max edge diameter
                         diameterSum += GetEdgeWidth(entity, edge, edgeGeometry);
-
-                        //m_Buffer.DrawCircle(Color.red, edgeGeometry.m_Start.m_Left.a,  2f);
-                        //m_Buffer.DrawCircle(Color.blue, edgeGeometry.m_Start.m_Right.a, 2f);
-                        //m_Buffer.DrawCircle(Color.yellow, edgeGeometry.m_End.m_Left.a,  2f);
-                        //m_Buffer.DrawCircle(Color.green, edgeGeometry.m_End.m_Right.a, 2f);
-
-                        // Store connected edge node position 
                         edgeNodePositions += GetConnectedEdgeNodePos(entity, edge, curve);
                         edgeNodesCount++;
                     }
@@ -108,45 +94,34 @@
                     var averagedPosition = edgeNodePositions / edgeNodesCount;
                     var averagedSize = diameterSum / edgeNodesCount;
 
-                    // Select
                     var position = averagedPosition;
                     var nodeDiameter = averagedSize * 0.5f;
-                    var nodeBorderWidth = math.max(1f, averagedSize / 3f);
-                    
+                    ColorPair colorPair;
+                    float diameter;
+                    float borderWidth;
+
                     if (isSelectedFirst || isSelectedLast) {
-                        // First or last path node
-                        fillColor   = (Color)(Vector4)m_Colors.NodeSelectedFirstFill;
-                        borderColor = (Color)(Vector4)m_Colors.NodeSelectedFirstBorder;
+                        colorPair   = NT_Colors.NodeSelected.Active;
                         diameter    = nodeDiameter;
-                        borderWidth = nodeBorderWidth;
-                    }
-                    else if (isSelected && (renderMode & NodeRenderMode.RenderSelected) != NodeRenderMode.None) {
-                        fillColor = (Color)(Vector4)m_Colors.NodeSelectedFirstBorder;
-                        borderColor = (Color)(Vector4)m_Colors.NodeSelectedFirstBorder;
-                        diameter = nodeDiameter / 2;
-                        borderWidth = nodeBorderWidth;
-                    }
-                    else if (isHighlighted) {
-                        // Hovered eligible node or path nodes
-                        fillColor   = (Color)(Vector4)m_Colors.NodeHighlightedFill;
-                        borderColor = (Color)(Vector4)m_Colors.NodeHighlightedBorder;
+                        borderWidth = NT_Dimensions.NODE_BORDER_WIDTH_ACTIVE;
+                    } else if (isSelected && (renderMode & NodeRenderMode.RenderSelected) != NodeRenderMode.None) {
+                        colorPair   = NT_Colors.NodeSelected.Active;
+                        diameter    = nodeDiameter / 2;
+                        borderWidth = NT_Dimensions.NODE_BORDER_WIDTH_ACTIVE;
+                    } else if (isHighlighted) {
+                        colorPair   = NT_Colors.NodeEligible.Hover;
                         diameter    = nodeDiameter;
-                        borderWidth = nodeBorderWidth;
-                    }
-                    else if (isEligible) {
-                        // Eligible but not hovered
-                        fillColor   = (Color)(Vector4)m_Colors.NodeEligibleFill;
-                        borderColor = (Color)(Vector4)m_Colors.NodeEligibleBorder;
+                        borderWidth = NT_Dimensions.NODE_BORDER_WIDTH_HOVER;
+                    } else if (isEligible) {
+                        colorPair   = NT_Colors.NodeEligible.Rest;
                         diameter    = nodeDiameter;
-                        borderWidth = nodeBorderWidth;
-                    }
-                    else {
-                        // Not eligible - don't render
+                        borderWidth = NT_Dimensions.NODE_BORDER_WIDTH_REST;
+                    } else {
                         continue;
                     }
 
-                    m_Buffer.DrawCircle(borderColor,
-                        fillColor,
+                    m_Buffer.DrawCircle(colorPair.Border,
+                        colorPair.Fill,
                         borderWidth,
                         0,
                         new float2(0, 1),

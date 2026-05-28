@@ -71,14 +71,14 @@ namespace NetworkTools.Systems {
             }
 
             private void RenderVisibleEdge(in Edge edge, in Curve curve) {
-                m_Buffer.DrawCurve(NT_Colors.EDGE_VISIBLE_FILL, curve.m_Bezier, 1f, true);
+                m_Buffer.DrawCurve(NT_Colors.EdgeVisible.Rest.Fill, curve.m_Bezier, 1f, true);
 
                 if (m_NodeLookup.TryGetComponent(edge.m_Start, out var startNode)) {
-                    m_Buffer.DrawCircle(NT_Colors.NODE_VISIBLE_FILL, startNode.m_Position, 3f);
+                    m_Buffer.DrawCircle(NT_Colors.NodeVisible.Rest.Fill, startNode.m_Position, 3f);
                 }
 
                 if (m_NodeLookup.TryGetComponent(edge.m_End, out var endNode)) {
-                    m_Buffer.DrawCircle(NT_Colors.NODE_VISIBLE_FILL, endNode.m_Position, 3f);
+                    m_Buffer.DrawCircle(NT_Colors.NodeVisible.Rest.Fill, endNode.m_Position, 3f);
                 }
             }
 
@@ -110,31 +110,31 @@ namespace NetworkTools.Systems {
                     var endTrim       = endNodeIsMiddle ? relativeTrim : 0f;
                     var trimmedBezier = MathUtils.Cut(curve.m_Bezier, new Bounds1(startTrim, 1f - endTrim));
 
-                    m_Buffer.DrawCurve(NT_Colors.EDGE_ELIGIBLE_ACTIVE_FILL, trimmedBezier, 1f, true);
+                    m_Buffer.DrawCurve(NT_Colors.EdgeEligible.Active.Fill, trimmedBezier, 1f, true);
 
                     if (startNodeIsMiddle) {
                         var tangent = math.normalize(MathUtils.Tangent(trimmedBezier, 0f));
                         var perp    = new float3(-tangent.z, 0f, tangent.x);
-                        m_Buffer.DrawLine(NT_Colors.EDGE_ELIGIBLE_ACTIVE_FILL, new Line3.Segment(trimmedBezier.a - perp * 2f, trimmedBezier.a + perp * 2f), 1f);
+                        m_Buffer.DrawLine(NT_Colors.EdgeEligible.Active.Fill, new Line3.Segment(trimmedBezier.a - perp * 2f, trimmedBezier.a + perp * 2f), 1f);
                     }
 
                     if (endNodeIsMiddle) {
                         var tangent = math.normalize(MathUtils.Tangent(trimmedBezier, 1f));
                         var perp    = new float3(-tangent.z, 0f, tangent.x);
-                        m_Buffer.DrawLine(NT_Colors.EDGE_ELIGIBLE_ACTIVE_FILL, new Line3.Segment(trimmedBezier.d - perp * 2f, trimmedBezier.d + perp * 2f), 1f);
+                        m_Buffer.DrawLine(NT_Colors.EdgeEligible.Active.Fill, new Line3.Segment(trimmedBezier.d - perp * 2f, trimmedBezier.d + perp * 2f), 1f);
                     }
 
 
                     if (m_TempLookup.TryGetComponent(edge.m_Start, out var startNodeTemp)
                         && (startNodeTemp.m_Flags & TempFlags.Replace) != 0
                         && m_NodeLookup.TryGetComponent(edge.m_Start, out var startNode)) {
-                        m_Buffer.DrawCircle(NT_Colors.NODE_ADDED_FILL, startNode.m_Position, 3f);
+                        m_Buffer.DrawCircle(NT_Colors.NodeAdded.Rest.Fill, startNode.m_Position, 3f);
                     }
 
                     if (m_TempLookup.TryGetComponent(edge.m_End, out var endNodeTemp)
                         && (endNodeTemp.m_Flags & TempFlags.Replace) != 0
                         && m_NodeLookup.TryGetComponent(edge.m_End, out var endNode)) {
-                        m_Buffer.DrawCircle(NT_Colors.NODE_ADDED_FILL, endNode.m_Position, 3f);
+                        m_Buffer.DrawCircle(NT_Colors.NodeAdded.Rest.Fill, endNode.m_Position, 3f);
                     }
                 }
             }
