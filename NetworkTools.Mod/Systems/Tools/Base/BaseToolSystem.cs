@@ -374,11 +374,11 @@ namespace NetworkTools.Systems.Tools {
             m_DefinitionQuery = GetDefinitionQuery();
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
                                                    .WithAll<Node>()
-                                                   .WithNone<NT_Eligible>()
+                                                   .WithNone<NT_Eligible, Temp>()
                                                    .Build();
             m_UnselectedNodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
                                                              .WithAll<Node>()
-                                                             .WithNone<NT_Eligible, NT_Selected>()
+                                                             .WithNone<NT_Eligible, NT_Selected, Temp>()
                                                              .Build();
             m_NodesWithEligibleQuery = SystemAPI.QueryBuilder()
                                                 .WithAll<Node, NT_Eligible>()
@@ -414,26 +414,26 @@ namespace NetworkTools.Systems.Tools {
             // Per-target-flag queries for MarkEligibleNodes
             m_TargetRoadNodesQuery = SystemAPI.QueryBuilder()
                                               .WithAll<Node, Road>()
-                                              .WithNone<NT_Eligible>()
+                                              .WithNone<NT_Eligible, Temp>()
                                               .Build();
             m_TargetPathNodesQuery = SystemAPI.QueryBuilder()
                                               .WithAll<Node, LocalConnect>()
                                               .WithNone<Marker>()
-                                              .WithNone<NT_Eligible>()
+                                              .WithNone<NT_Eligible, Temp>()
                                               .Build();
             m_TargetInvisiblePathNodesQuery = SystemAPI.QueryBuilder()
                                                        .WithAll<Node, LocalConnect>()
                                                        .WithAll<Marker>()
-                                                       .WithNone<NT_Eligible>()
+                                                       .WithNone<NT_Eligible, Temp>()
                                                        .Build();
             m_TargetRailNodesQuery = SystemAPI.QueryBuilder()
                                               .WithAll<Node>()
                                               .WithAny<TrainTrack, TramTrack, SubwayTrack>()
-                                              .WithNone<NT_Eligible>()
+                                              .WithNone<NT_Eligible, Temp>()
                                               .Build();
             m_TargetWaterwayNodesQuery = SystemAPI.QueryBuilder()
                                                   .WithAll<Node, Waterway>()
-                                                  .WithNone<NT_Eligible>()
+                                                  .WithNone<NT_Eligible, Temp>()
                                                   .Build();
 
             // Per-target-flag queries for MarkEligibleEdges
@@ -442,30 +442,30 @@ namespace NetworkTools.Systems.Tools {
                                                 .Build();
             m_EdgesWithoutEligibleQuery = SystemAPI.QueryBuilder()
                                                    .WithAll<Edge>()
-                                                   .WithNone<NT_Eligible>()
+                                                   .WithNone<NT_Eligible, Temp>()
                                                    .Build();
             m_TargetRoadEdgesQuery = SystemAPI.QueryBuilder()
                                               .WithAll<Edge, Road>()
-                                              .WithNone<NT_Eligible>()
+                                              .WithNone<NT_Eligible, Temp>()
                                               .Build();
             m_TargetPathEdgesQuery = SystemAPI.QueryBuilder()
                                               .WithAll<Edge, LocalConnect>()
                                               .WithNone<Marker>()
-                                              .WithNone<NT_Eligible>()
+                                              .WithNone<NT_Eligible, Temp>()
                                               .Build();
             m_TargetInvisiblePathEdgesQuery = SystemAPI.QueryBuilder()
                                                        .WithAll<Edge, LocalConnect>()
                                                        .WithAll<Marker>()
-                                                       .WithNone<NT_Eligible>()
+                                                       .WithNone<NT_Eligible, Temp>()
                                                        .Build();
             m_TargetRailEdgesQuery = SystemAPI.QueryBuilder()
                                               .WithAll<Edge>()
                                               .WithAny<TrainTrack, TramTrack, SubwayTrack>()
-                                              .WithNone<NT_Eligible>()
+                                              .WithNone<NT_Eligible, Temp>()
                                               .Build();
             m_TargetWaterwayEdgesQuery = SystemAPI.QueryBuilder()
                                                   .WithAll<Edge, Waterway>()
-                                                  .WithNone<NT_Eligible>()
+                                                  .WithNone<NT_Eligible, Temp>()
                                                   .Build();
 
             // Vanilla container query
