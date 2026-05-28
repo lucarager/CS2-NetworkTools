@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkTools.Tests", "Netwo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{58F40029-CB2C-44C3-AAFE-8558EA37D1D1}"
 	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		CLAUDE.md = CLAUDE.md
 		crowdin.yaml = crowdin.yaml
 	EndProjectSection
 EndProject
