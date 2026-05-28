@@ -4,6 +4,7 @@
     using Game.Net;
     using Game.Prefabs;
     using Game.Tools;
+    using NetworkTools.Components;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -79,7 +80,13 @@
                         break;
                 }
 
-                // 3. Output
+                // 3. Write slope metadata to edge entities (preview only — Apply resets the tool
+                //    immediately, so ECB additions would outlive the tool session).
+                if (OutputMode == ToolOutputMode.Preview) {
+                    OutputMetadata(edges);
+                }
+
+                // 4. Output
                 if (OutputMode == ToolOutputMode.Preview)
                 {
                     OutputPreview(edges, nodes);
@@ -126,6 +133,30 @@
 
                 var xzDelta = newPosition.xz - node.m_Position.xz;
                 return math.lengthsq(xzDelta) >= XZDeltaSquaredThreshold;
+            }
+
+            /// <summary>
+            ///     Writes NT_Metadata (existing and new slope) to each selected edge entity.
+            /// </summary>
+            private void OutputMetadata(NativeArray<EdgeState> edges) {
+                for (var i = 0; i < edges.Length; i++) {
+                    var edge = edges[i];
+                    var existingDeltaY = math.abs(edge.OriginalBezierD.y - edge.OriginalBezierA.y);
+                    var existingSlope = edge.Length > 0.01f
+                        ? existingDeltaY / edge.Length * 100f
+                        : 0f;
+
+                    var newDeltaY = math.abs(edge.Bezier.d.y - edge.Bezier.a.y);
+                    var newLength = MathUtils.Length(edge.Bezier);
+                    var newSlope = newLength > 0.01f
+                        ? newDeltaY / newLength * 100f
+                        : 0f;
+
+                    ECB.AddComponent(edge.EdgeEntity, new NT_Metadata {
+                        ExistingSlope = existingSlope,
+                        NewSlope = newSlope,
+                    });
+                }
             }
 
             /// <summary>

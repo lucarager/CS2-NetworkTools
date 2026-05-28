@@ -181,9 +181,19 @@ namespace NetworkTools.Systems.Tooltips {
             return contexts;
         }
 
-        private static void AppendSlopeTooltip(TooltipGroup group, EdgeTooltipContext ctx) {
-            var current  = ComputeSlopePercent(ctx.OriginalCurve);
-            var newValue = ctx.HasPreview ? ComputeSlopePercent(ctx.CurrentCurve) : float.NaN;
+        private void AppendSlopeTooltip(TooltipGroup group, EdgeTooltipContext ctx) {
+            float current;
+            float newValue;
+
+            if (EntityManager.HasComponent<NT_Metadata>(ctx.Edge)) {
+                var metadata = EntityManager.GetComponentData<NT_Metadata>(ctx.Edge);
+                current  = metadata.ExistingSlope;
+                newValue = metadata.NewSlope;
+            } else {
+                current  = ComputeSlopePercent(ctx.OriginalCurve);
+                newValue = ctx.HasPreview ? ComputeSlopePercent(ctx.CurrentCurve) : float.NaN;
+            }
+
             group.children.Add(new SlopeTooltip { CurrentSlope = current, NewSlope = newValue });
         }
 

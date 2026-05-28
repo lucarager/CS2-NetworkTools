@@ -53,11 +53,14 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         protected const float MaxDistanceToSelect = 16f;
 
-        protected ComponentTypeSet AllNtComponentsTypeSet = new(typeof(NT_Eligible),
-                                                                typeof(NT_Highlighted),
-                                                                typeof(NT_Selected),
-                                                                typeof(NT_SelectedFirst),
-                                                                typeof(NT_SelectedLast));
+        protected ComponentTypeSet AllNtComponentsTypeSet = new(new ComponentType[] {
+            ComponentType.ReadWrite<NT_Eligible>(),
+            ComponentType.ReadWrite<NT_Highlighted>(),
+            ComponentType.ReadWrite<NT_Metadata>(),
+            ComponentType.ReadWrite<NT_Selected>(),
+            ComponentType.ReadWrite<NT_SelectedFirst>(),
+            ComponentType.ReadWrite<NT_SelectedLast>(),
+        });
 
         /// <summary>
         ///     Global debug mode flag.
@@ -391,8 +394,8 @@ namespace NetworkTools.Systems.Tools {
                                                 .WithAll<Node, NT_Selected>()
                                                 .Build();
             m_AllNtComponentsQuery = SystemAPI.QueryBuilder()
-                                              .WithAny<NT_Eligible, NT_Highlighted, NT_Selected, NT_SelectedFirst,
-                                                  NT_SelectedLast>()
+                                              .WithAny<NT_Eligible, NT_Highlighted, NT_Metadata, NT_Selected,
+                                                  NT_SelectedFirst, NT_SelectedLast>()
                                               .Build();
             m_NodesWithSelectedFirstQuery = SystemAPI.QueryBuilder()
                                                      .WithAll<Node, NT_SelectedFirst>()
