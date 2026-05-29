@@ -87,7 +87,8 @@ namespace NetworkTools.Systems {
                     m_ConnectedEdgeComponentTypeHandle = SystemAPI.GetBufferTypeHandle<ConnectedEdge>(true),
                     m_EdgeLookup                       = SystemAPI.GetComponentLookup<Edge>(true),
                     m_EdgeGeometryLookup               = SystemAPI.GetComponentLookup<EdgeGeometry>(true),
-                    m_CurveLookup                      = SystemAPI.GetComponentLookup<Curve>(true)
+                    m_StartNodeGeometryLookup          = SystemAPI.GetComponentLookup<StartNodeGeometry>(true),
+                    m_EndNodeGeometryLookup            = SystemAPI.GetComponentLookup<EndNodeGeometry>(true)
                 };
 
                 var drawNodesJobHandle = drawNodesJob.ScheduleByRef(m_NodeQuery,
@@ -114,9 +115,7 @@ namespace NetworkTools.Systems {
                     m_HandleRotationComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandleRotation>(),
                     m_HandleConstraintsComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandleConstraints>(),
                     m_HandleParentComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_HandleParent>(),
-                    m_HandlePositionLookup = SystemAPI.GetComponentLookup<NT_HandlePosition>(true),
-                    m_NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
-                    m_CurveLookup = SystemAPI.GetComponentLookup<Curve>(true)
+                    m_HandlePositionLookup = SystemAPI.GetComponentLookup<NT_HandlePosition>(true)
                 };
 
                 var drawHandlesJobHandle = drawHandlesJob.ScheduleByRef(m_HandleQuery,

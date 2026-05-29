@@ -2,6 +2,7 @@ namespace NetworkTools.Systems.Tools.Connect {
     using Game.Prefabs;
 
     using NetworkTools.Components.Handles;
+    using NetworkTools.Systems.Rendering;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Handles;
     using NetworkTools.Systems.Tools.Parameters;
@@ -65,7 +66,7 @@ namespace NetworkTools.Systems.Tools.Connect {
                 new PositionHandle {
                     Style                = HandleTypeFlags.BezierControlPoint,
                     Parent               = nameof(CurveStartPointPosition),
-                    Size                 = NT_Handle.SizeSecondary,
+                    Size                 = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
                     ConstraintAxisFrom   = nameof(StartDirection),
                     ConstraintOriginFrom = nameof(StartPosition),
                 }
@@ -78,7 +79,7 @@ namespace NetworkTools.Systems.Tools.Connect {
                 new PositionHandle {
                     Style                = HandleTypeFlags.BezierControlPoint,
                     Parent               = nameof(CurveEndPointPosition),
-                    Size                 = NT_Handle.SizeSecondary,
+                    Size                 = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
                     ConstraintAxisFrom   = nameof(EndDirection),
                     ConstraintOriginFrom = nameof(EndPosition),
                 }

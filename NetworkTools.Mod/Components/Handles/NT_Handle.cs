@@ -71,8 +71,8 @@ namespace NetworkTools.Components.Handles {
 
         // === Rendering Hints ===
 
-        /// <summary>Render with range indicator (dot at origin, line from origin to handle).</summary>
-        ParameterRange = 1 << 14,
+        /// <summary>Render as an axis handle (origin dot, line from origin to handle, draggable circle).</summary>
+        AxisHandle = 1 << 14,
     }
 
     /// <summary>

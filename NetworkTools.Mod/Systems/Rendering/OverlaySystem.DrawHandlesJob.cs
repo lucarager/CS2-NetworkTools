@@ -1,7 +1,6 @@
 namespace NetworkTools.Systems {
     using System.Diagnostics.CodeAnalysis;
     using Colossal.Mathematics;
-    using Game.Net;
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
     using NetworkTools.Systems.Rendering;
@@ -35,8 +34,6 @@ namespace NetworkTools.Systems {
             [ReadOnly] public required ComponentTypeHandle<NT_HandleConstraints> m_HandleConstraintsComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleParent>      m_HandleParentComponentTypeHandle;
             [ReadOnly] public required ComponentLookup<NT_HandlePosition>        m_HandlePositionLookup;
-            [ReadOnly] public required ComponentLookup<Node>                     m_NodeLookup;
-            [ReadOnly] public required ComponentLookup<Curve>                    m_CurveLookup;
             [ReadOnly] public required EntityTypeHandle                          m_EntityTypeHandle;
 
             /// <inheritdoc />
@@ -89,7 +86,6 @@ namespace NetworkTools.Systems {
                     var isHighlighted = chunk.Has(ref m_HighlightedComponentTypeHandle);
                     var isSelected    = chunk.Has(ref m_SelectedComponentTypeHandle);
 
-                    // Determine handle type and render accordingly
                     if (handle.HasAnyFlag(HandleTypeFlags.Line) && hasLineComponent) {
                         var line = lineArray[i];
                         RenderLineHandle(line, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
@@ -99,39 +95,16 @@ namespace NetworkTools.Systems {
                     } else if (handle.HasAnyFlag(HandleTypeFlags.Rotation) && hasRotationComponent) {
                         var rotation = rotationArray[i];
                         RenderRotationHandle(position, rotation, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
-                    } else if (handle.HasAnyFlag(HandleTypeFlags.ParameterRange) && hasConstraintsComponent) {
-                        // Parameter handle with range indicator (origin dot + line to handle)
+                    } else if ((handle.HasAnyFlag(HandleTypeFlags.AxisHandle) || handle.HasAnyFlag(HandleTypeFlags.BezierControlPoint)) && hasConstraintsComponent) {
                         var constraints = constraintsArray[i];
-                        RenderParameterRangeHandle(position,
-                                                   constraints,
-                                                   handle,
-                                                   isHighlighted,
-                                                   isSelected,
-                                                   m_Buffer);
-                    } else if (handle.HasAnyFlag(HandleTypeFlags.BezierPoint)) {
-                        // Bezier point handles
-                        if (m_NodeLookup.HasComponent(link.LinkedEntity) &&
-                            m_CurveLookup.HasComponent(link.LinkedEdge)) {
-                            var node           = m_NodeLookup[link.LinkedEntity];
-                            var curve          = m_CurveLookup[link.LinkedEdge];
-                            var isControlPoint = handle.HasAnyFlag(HandleTypeFlags.BezierControlPoint);
-                            RenderBezierPointHandle(curve,
-                                                    position,
-                                                    handle,
-                                                    link,
-                                                    isControlPoint,
-                                                    isHighlighted,
-                                                    isSelected,
-                                                    m_Colors,
-                                                    m_Buffer);
-                        }
+                        RenderAxisHandle(position, constraints, handle, isHighlighted, isSelected, m_Buffer);
                     } else {
-                        // Default point handle
                         RenderPointHandle(position, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
                     }
 
-                    // Draw dashed line from child to parent handle
-                    if (hasParentComponent) {
+                    // Draw dashed line from child to parent handle (axis handles draw their own connecting line)
+                    var isAxisRendered = (handle.HasAnyFlag(HandleTypeFlags.AxisHandle) || handle.HasAnyFlag(HandleTypeFlags.BezierControlPoint)) && hasConstraintsComponent;
+                    if (hasParentComponent && !isAxisRendered) {
                         var parentEntity = parentArray[i].Parent;
                         if (parentEntity != Entity.Null && m_HandlePositionLookup.HasComponent(parentEntity)) {
                             var parentPos = m_HandlePositionLookup[parentEntity].Position;
@@ -164,31 +137,28 @@ namespace NetworkTools.Systems {
             }
 
             /// <summary>
-            ///     Renders a parameter range handle with origin dot and line from origin to handle.
+            ///     Renders an axis handle: origin dot, connecting line, and draggable circle.
             /// </summary>
-            private static void RenderParameterRangeHandle(NT_HandlePosition position, NT_HandleConstraints constraints,
-                                                           NT_Handle handle, bool isHighlighted, bool isSelected,
-                                                           CustomOverlayRenderSystem.Buffer buffer) {
-                // Draw origin dot (small circle at the start of valid range)
-                var originColorPair = NT_Colors.HandleParamRangeOrigin.Get(isHighlighted, isSelected);
-                var originRadius    = NT_Dimensions.HANDLE_PARAM_RANGE_ORIGIN_RADIUS;
+            private static void RenderAxisHandle(NT_HandlePosition position, NT_HandleConstraints constraints,
+                                                 NT_Handle handle, bool isHighlighted, bool isSelected,
+                                                 CustomOverlayRenderSystem.Buffer buffer) {
+                var originColorPair = NT_Colors.HandleAxisOrigin.Get(isHighlighted, isSelected);
+                var originRadius    = NT_Dimensions.HANDLE_AXIS_ORIGIN_RADIUS;
                 buffer.DrawCircle(originColorPair.Fill,
                                   constraints.Origin,
                                   originRadius * 2f);
 
-                // Draw the handle itself (larger circle at current position)
-                var circleColorPair = NT_Colors.HandleParamRangeCircle.Get(isHighlighted, isSelected);
+                var circleColorPair = NT_Colors.HandleAxisCircle.Get(isHighlighted, isSelected);
                 var circleRadius    = handle.Size;
                 buffer.DrawCircle(circleColorPair.Border,
                                   circleColorPair.Fill,
-                                  NT_Dimensions.HANDLE_PARAM_RANGE_CIRCLE_OUTLINE,
+                                  NT_Dimensions.HANDLE_AXIS_CIRCLE_OUTLINE,
                                   0,
                                   new float2(0, 1),
                                   position.Position,
                                   circleRadius * 2f);
 
-                // Draw line from origin to handle, shortened by circle radii
-                var lineColorPair  = NT_Colors.HandleParamRangeLine.Get(isHighlighted, isSelected);
+                var lineColorPair  = NT_Colors.HandleAxisLine.Get(isHighlighted, isSelected);
                 var originToHandle = position.Position - constraints.Origin;
                 var dist           = math.length(originToHandle);
 
@@ -197,35 +167,7 @@ namespace NetworkTools.Systems {
                     buffer.DrawLine(lineColorPair.Fill,
                                           new Line3.Segment(constraints.Origin + dir * originRadius,
                                                             position.Position  - dir * circleRadius),
-                                          NT_Dimensions.HANDLE_PARAM_RANGE_LINE_WIDTH, true);
-                }
-            }
-
-            /// <summary>
-            ///     Renders a bezier point handle with connection line for control points.
-            /// </summary>
-            private static void RenderBezierPointHandle(Curve curve, NT_HandlePosition position, NT_Handle handle,
-                                                        NT_HandleLink link, bool isControlPoint, bool isHighlighted,
-                                                        bool isSelected,
-                                                        RenderColors colors,
-                                                        CustomOverlayRenderSystem.Buffer buffer) {
-                GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
-                buffer.DrawCircle(outlineColor,
-                                  fillColor,
-                                  0.5f,
-                                  0,
-                                  new float2(0, 1),
-                                  position.Position,
-                                  handle.Size * 2f);
-
-                // If this is a control point, also draw a line to the main point
-                if (isControlPoint) {
-                    var otherPoint = link.Key == 1 ? curve.m_Bezier.a : curve.m_Bezier.d;
-                    buffer.DrawDashedLine((Vector4)colors.HandleLineRest,
-                                          new Line3.Segment(position.Position, otherPoint),
-                                          0.5f,
-                                          2f,
-                                          2f);
+                                          NT_Dimensions.HANDLE_AXIS_LINE_WIDTH, true);
                 }
             }
 

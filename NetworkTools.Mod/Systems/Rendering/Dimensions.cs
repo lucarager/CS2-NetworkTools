@@ -13,13 +13,13 @@
         // ---- Circle Handle
         public static readonly float HANDLE_CIRCLE_OUTLINE_WIDTH = 1f;
         
-        // ---- Parameter Range Handle
-        public static readonly float HANDLE_PARAM_RANGE_ORIGIN_RADIUS    = 1f;
-        public static readonly float HANDLE_PARAM_RANGE_ORIGIN_OUTLINE   = 0f;
-        public static readonly float HANDLE_PARAM_RANGE_LINE_WIDTH       = LINE_WIDTH;
-        public static readonly float HANDLE_PARAM_RANGE_LINE_DASH_LENGTH = 2f;
-        public static readonly float HANDLE_PARAM_RANGE_LINE_DASH_GAP    = 2f;
-        public static readonly float HANDLE_PARAM_RANGE_CIRCLE_RADIUS    = 3f;
-        public static readonly float HANDLE_PARAM_RANGE_CIRCLE_OUTLINE   = LINE_WIDTH;
+        // ---- Axis Handle
+        public static readonly float HANDLE_AXIS_ORIGIN_RADIUS    = 1f;
+        public static readonly float HANDLE_AXIS_ORIGIN_OUTLINE   = 0f;
+        public static readonly float HANDLE_AXIS_LINE_WIDTH       = LINE_WIDTH;
+        public static readonly float HANDLE_AXIS_LINE_DASH_LENGTH = 2f;
+        public static readonly float HANDLE_AXIS_LINE_DASH_GAP    = 2f;
+        public static readonly float HANDLE_AXIS_CIRCLE_RADIUS    = 3f;
+        public static readonly float HANDLE_AXIS_CIRCLE_OUTLINE   = LINE_WIDTH;
     }
 }

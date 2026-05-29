@@ -10,7 +10,7 @@ namespace NetworkTools.Systems.Tools.Handles {
         public ComputePositionDelegate<float>     ComputePosition     { get; init; }
         public ComputeFromPositionDelegate<float> ComputeFromPosition { get; init; }
 
-        HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Position | HandleTypeFlags.ParameterRange;
+        HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Position | HandleTypeFlags.AxisHandle;
 
         internal Float3Parameter ResolvedParent;
 

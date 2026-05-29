@@ -29,7 +29,7 @@ namespace NetworkTools.Systems.Tools.Handles {
         public NT_HandleConstraints? Constraints => null; // Computed dynamically in CreateHandleFromSpec
         public float                 Size      { get; init; } = NT_Handle.SizePrimary;
 
-        HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Position | HandleTypeFlags.ParameterRange;
+        HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Position | HandleTypeFlags.AxisHandle;
 
         internal Float3Parameter ResolvedParent;
 

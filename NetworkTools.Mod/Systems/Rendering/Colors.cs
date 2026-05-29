@@ -87,18 +87,18 @@ namespace NetworkTools.Systems.Rendering {
                 new ColorPair(new Color(0.788f, 0.545f, 0.873f, 0f), new Color(0.788f, 0.545f, 0.873f, 0.8f)),
                 new ColorPair(new Color(0.788f, 0.545f, 0.873f, 0f), new Color(0.788f, 0.545f, 0.873f, 1f)));
 
-        // ---- Parameter Range Handles
-        public static readonly ColorSet HandleParamRangeOrigin =
+        // ---- Axis Handles
+        public static readonly ColorSet HandleAxisOrigin =
             new(new ColorPair(new Color(1f, 1f, 1f, 1f), new Color(1f, 1f, 1f, 0)),
                 new ColorPair(new Color(1f, 1f, 1f, 1f), new Color(1f, 1f, 1f, 0)),
                 new ColorPair(new Color(1f, 1f, 1f, 1f), new Color(1f, 1f, 1f, 0)));
 
-        public static readonly ColorSet HandleParamRangeLine =
+        public static readonly ColorSet HandleAxisLine =
             new(new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0.5f), new Color(0.310f, 0.794f, 0.873f, 0.5f)),
                 new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0.8f), new Color(0.310f, 0.794f, 0.873f, 0.8f)),
                 new ColorPair(new Color(0.310f, 0.794f, 0.873f, 1f), new Color(0.310f, 0.794f, 0.873f, 1f)));
 
-        public static readonly ColorSet HandleParamRangeCircle =
+        public static readonly ColorSet HandleAxisCircle =
             new(new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0f), new Color(0.310f, 0.794f, 0.873f, 0.5f)),
                 new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0f), new Color(0.310f, 0.794f, 0.873f, 0.8f)),
                 new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0f), new Color(0.310f, 0.794f, 0.873f, 1f)));
