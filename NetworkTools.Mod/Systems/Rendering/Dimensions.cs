@@ -1,7 +1,7 @@
 ﻿namespace NetworkTools.Systems.Rendering {
     public static class NT_Dimensions {
         // -- Common
-        public static readonly float LINE_WIDTH = 1f;
+        public static readonly float LINE_WIDTH = 0.8f;
 
         // -- Nodes
         public static readonly float NODE_BORDER_WIDTH_REST = 0f;
