@@ -82,7 +82,7 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.4.1" />
+  <ModVersion Value="1.4.2" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Dependency for the mod, can be set multiple-->
@@ -90,16 +90,14 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog># 1.4.1
+  <ChangeLog># 1.4.2
 
-- Generate/Grid: Fix AltPrefab selection where row and column were swapped.
-- All: Added a setting to the options menu that swaps between Meters and Units for distance-based parameters.
-- UI: Improve text styles for parameters and input fields
-- UI: Add stepper input for some numeric parameters.
-- UI: Added labeling and scale to support the new distance unit setting.
-- Internal: Fully emit enums and string types via codegen.
-- Internal: Remove redundant code and centralize repeated logic.
-- Translations: Updated translations for new features and changes. Thank you volunteers!</ChangeLog>
+- Slope: Slope tooltips are now calculated more accurately. Constant slope should have less inaccurate variation reported.
+- UI: Started process of polishing the overlay. Node visualization and some handles will have a new look. 
+- UI: Change how node overlay positions are derived. Should now be more accurate especially with intersections. 
+- UI: Minor touchup to NT logo.
+- Connect: Remove debug code that prevented the tool from being used on all network target types. 
+- Translations: Updated. Thank you volunteers!</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
