@@ -32,7 +32,8 @@
             [ReadOnly] public required BufferTypeHandle<ConnectedEdge> m_ConnectedEdgeComponentTypeHandle;
             [ReadOnly] public required ComponentLookup<Edge> m_EdgeLookup;
             [ReadOnly] public required ComponentLookup<EdgeGeometry> m_EdgeGeometryLookup;
-            [ReadOnly] public required ComponentLookup<Curve> m_CurveLookup;
+            [ReadOnly] public required ComponentLookup<StartNodeGeometry> m_StartNodeGeometryLookup;
+            [ReadOnly] public required ComponentLookup<EndNodeGeometry> m_EndNodeGeometryLookup;
             [ReadOnly] public required EntityTypeHandle m_EntityTypeHandle;
 
             public static float GetEdgeWidth(Entity nodeEntity, Edge edge, EdgeGeometry geometry) {
@@ -41,10 +42,6 @@
                 }
 
                 return math.distance(geometry.m_End.m_Left.a, geometry.m_End.m_Right.a);
-            }
-
-            public static float3 GetConnectedEdgeNodePos(Entity node, Edge edge, Curve curve) {
-                return edge.m_Start == node ? curve.m_Bezier.a : curve.m_Bezier.d;
             }
 
             /// <inheritdoc />
@@ -74,7 +71,11 @@
                     var renderMode = ntSelected.NodeMode;
 
                     var connectedEdges = connectedEdgesArray[i];
-                    var edgeNodePositions = float3.zero;
+                    var firstEdge = m_EdgeLookup[connectedEdges[0].m_Edge];
+                    var position = firstEdge.m_Start == entity
+                        ? m_StartNodeGeometryLookup[connectedEdges[0].m_Edge].m_Geometry.m_Middle.d
+                        : m_EndNodeGeometryLookup[connectedEdges[0].m_Edge].m_Geometry.m_Middle.d;
+
                     var diameterSum = 0f;
                     var edgeNodesCount = 0;
 
@@ -82,19 +83,12 @@
                         var edgeEntity = connectedEdges[j];
                         var edge = m_EdgeLookup[edgeEntity.m_Edge];
                         var edgeGeometry = m_EdgeGeometryLookup[edgeEntity.m_Edge];
-                        var curve = m_CurveLookup[edgeEntity.m_Edge];
 
                         diameterSum += GetEdgeWidth(entity, edge, edgeGeometry);
-                        edgeNodePositions += GetConnectedEdgeNodePos(entity, edge, curve);
                         edgeNodesCount++;
                     }
 
-                    // Average the positions of connected edge nodes to get the position for the node overlay,
-                    // so that it is centered in the middle of connected edges
-                    var averagedPosition = edgeNodePositions / edgeNodesCount;
                     var averagedSize = diameterSum / edgeNodesCount;
-
-                    var position = averagedPosition;
                     var nodeDiameter = averagedSize * 0.5f;
                     ColorPair colorPair;
                     float diameter;
@@ -102,7 +96,7 @@
 
                     if (isSelectedFirst || isSelectedLast) {
                         colorPair   = NT_Colors.NodeSelected.Active;
-                        diameter    = nodeDiameter;
+                        diameter    = nodeDiameter / 2;
                         borderWidth = NT_Dimensions.NODE_BORDER_WIDTH_ACTIVE;
                     } else if (isSelected && (renderMode & NodeRenderMode.RenderSelected) != NodeRenderMode.None) {
                         colorPair   = NT_Colors.NodeSelected.Active;
