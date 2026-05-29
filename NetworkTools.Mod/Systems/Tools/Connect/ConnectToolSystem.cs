@@ -17,9 +17,6 @@ namespace NetworkTools.Systems.Tools.Connect {
         /// <inheritdoc />
         public override string toolID => "ConnectTool";
 
-        /// <inheritdoc />
-        public override TargetOption AvailableTargets => TargetOption.Road | TargetOption.Path;
-
         // ── Parameters
 
         public NetPrefabParameter         NetPrefab  = new("connect.netPrefab");
