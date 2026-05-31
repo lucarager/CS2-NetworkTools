@@ -115,9 +115,10 @@ namespace NetworkTools.Systems.Tools {
 
             inputDeps.Complete();
 
-            // Clear state to completely blank
+            // Clear state to completely blank.
+            // Eligibility for the resulting split edges is picked up by the per-frame
+            // MarkEligibleEntities() call in OnUpdate once the net pipeline materializes them.
             Phase = OperationPhase.Idle;
-            MarkEligibleEntities();
 
             return inputDeps;
         }

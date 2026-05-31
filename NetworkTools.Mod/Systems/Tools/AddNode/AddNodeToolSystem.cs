@@ -31,6 +31,11 @@ namespace NetworkTools.Systems.Tools {
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
 
+            // Stateless eligibility: re-mark each frame so edges created by a previous apply
+            // (or any other source) become eligible once the net pipeline materializes them.
+            // The WithNone<NT_Eligible, Temp> queries make this a no-op in steady state.
+            MarkEligibleEntities();
+
             // Right click => Cancel / Deselect
             if (m_SecondaryApplyAction.WasPressedThisFrame())
             {
