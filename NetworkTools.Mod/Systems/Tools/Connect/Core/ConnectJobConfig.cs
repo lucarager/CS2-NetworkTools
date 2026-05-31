@@ -29,7 +29,7 @@ namespace NetworkTools.Systems.Tools.Connect {
         public float3 CurveEndPointPosition;
 
         // Loop
-        public float3 LoopControlPointPosition;
-        public float  LoopRadius;
+        public float LoopRadiusFactor;
+        public LoopArcSide LoopArcSide;
     }
 }

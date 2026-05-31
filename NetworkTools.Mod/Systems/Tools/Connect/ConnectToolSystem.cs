@@ -22,14 +22,6 @@ namespace NetworkTools.Systems.Tools.Connect {
 
         public NetPrefabParameter         NetPrefab  = new("connect.netPrefab");
         public EnumParameter<ConnectMode> Mode       = new("connect.mode", ConnectMode.SimpleCurve, label: "NetworkTools.UI.Common.Mode");
-        public FloatParameter             LoopRadius = new("connect.loopRadius", 50f, 1f, 500f, modes: (int)ConnectMode.Loop, label: "NetworkTools.UI.Connect.LoopRadius", fractionDigits: 0) {
-            Handles = new IHandleSpec<float>[] {
-                new CircleHandle {
-                    Parent = nameof(LoopControlPointPosition),
-                    Size = NT_Handle.SizeSecondary
-                }
-            }
-        };
 
         // Shared (from node selection)
         public Float3Parameter StartPosition  = new("connect.startPosition");
@@ -91,10 +83,37 @@ namespace NetworkTools.Systems.Tools.Connect {
             Handles = new IHandleSpec<float3>[] { new PositionHandle() }
         };
 
-        // Loop (from generator init + handle drags)
-        public Float3Parameter LoopControlPointPosition = new("connect.loopControlPointPosition", modes: (int)ConnectMode.Loop) {
-            Handles = new IHandleSpec<float3>[] { new PositionHandle() }
+        // Loop
+        public FloatParameter LoopRadiusFactor = new("connect.loopRadiusFactor", 0.5f, 0f, 1f,
+            modes: (int)ConnectMode.Loop,
+            label: "NetworkTools.UI.Connect.LoopRadius",
+            fractionDigits: 2) {
+            Handles = new IHandleSpec<float>[] {
+                new AxisHandle {
+                    StartPoint = tool => {
+                        var ct = (NT_ConnectToolSystem)tool;
+                        LoopGenerator.ComputeLoopAxis(
+                            ct.StartPosition.Value, ct.StartDirection.Value,
+                            ct.EndPosition.Value, ct.EndDirection.Value,
+                            out var nc, out _, out _);
+                        return nc;
+                    },
+                    EndPoint = tool => {
+                        var ct = (NT_ConnectToolSystem)tool;
+                        LoopGenerator.ComputeLoopAxis(
+                            ct.StartPosition.Value, ct.StartDirection.Value,
+                            ct.EndPosition.Value, ct.EndDirection.Value,
+                            out var nc, out var axisDir, out _);
+                        return LoopGenerator.ComputeMaxCenter(nc, axisDir,
+                            ct.StartPosition.Value, ct.EndPosition.Value);
+                    },
+                    YOffset = 1f,
+                }
+            }
         };
+        public EnumParameter<LoopArcSide> LoopArc = new("connect.loopArcSide", LoopArcSide.Outer,
+            modes: (int)ConnectMode.Loop,
+            label: "NetworkTools.UI.Connect.LoopArcSide");
 
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Mode.Value;

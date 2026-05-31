@@ -66,8 +66,8 @@ namespace NetworkTools.Systems.Tools.Connect {
             CurveStartControlPointPosition.Value = config.CurveStartControlPointPosition;
             CurveEndControlPointPosition.Value   = config.CurveEndControlPointPosition;
             CurveEndPointPosition.Value          = config.CurveEndPointPosition;
-            LoopControlPointPosition.Value       = config.LoopControlPointPosition;
-            LoopRadius.Value                     = config.LoopRadius;
+            LoopRadiusFactor.Value               = config.LoopRadiusFactor;
+            LoopArc.Value                        = config.LoopArcSide;
 
             RebuildHandlesForActiveMode();
         }
@@ -168,8 +168,9 @@ namespace NetworkTools.Systems.Tools.Connect {
             m_Log.Prefix = nameof(NT_ConnectToolSystem);
 
             // Configuration
-            RenderEligibleNodes      = true;
-            RenderHandles            = true;
+            RenderEligibleNodes       = true;
+            RenderHandles             = true;
+            DisableVanillaCourseSplit = true;
 
             // Mode change reinitializes context and handles
             Mode.OnChanged += _ => {

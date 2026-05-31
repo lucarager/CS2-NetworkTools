@@ -28,8 +28,8 @@ namespace NetworkTools.Systems.Tools.Connect {
                 CurveStartControlPointPosition = CurveStartControlPointPosition.Value,
                 CurveEndControlPointPosition   = CurveEndControlPointPosition.Value,
                 CurveEndPointPosition          = CurveEndPointPosition.Value,
-                LoopControlPointPosition       = LoopControlPointPosition.Value,
-                LoopRadius                     = LoopRadius.Value,
+                LoopRadiusFactor               = LoopRadiusFactor.Value,
+                LoopArcSide                    = LoopArc.Value,
             };
         }
 

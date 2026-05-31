@@ -27,7 +27,7 @@ export const ConnectControls: React.FC<{
                 <div className={styles.section__content}>
                     <PrefabSelection paramKey={PARAM_KEYS.connect.netPrefab} />
                     {activeConnectMode === ConnectMode.Loop && (
-                        <ParameterField paramKey="connect.loopRadius" />
+                        <ParameterField paramKey="connect.loopArcSide" />
                     )}
                 </div>
             </div>

@@ -10,182 +10,261 @@ namespace NetworkTools.Systems.Tools.Connect {
     using Unity.Mathematics;
 
     public struct LoopGenerator : IConnectionGenerator {
-        /// <summary>
-        /// Kappa constant for cubic Bezier approximation of a 90-degree circular arc.
-        /// κ = 4(√2 - 1) / 3
-        /// </summary>
-        private const float Kappa = 0.5522847498f;
-
         public void InitializeConfig(ref ConnectJobConfig config) {
-            var distance = 100f;
-            // Place loop center perpendicular to start direction (to the right)
-            var right = math.cross(config.StartDirection, new float3(0, 1, 0));
-            if (math.lengthsq(right) < 0.0001f)
-                right = math.cross(config.StartDirection, new float3(1, 0, 0));
-            right = math.normalizesafe(right);
-            config.LoopControlPointPosition = config.StartPosition + config.StartDirection * distance + right * distance;
-            config.LoopRadius = distance * 2/3;
+            config.LoopRadiusFactor = 0.5f;
+            config.LoopArcSide     = LoopArcSide.Outer;
         }
 
         public void GenerateConnection(
             in  ConnectJobConfig      config,
             ref NativeList<EdgeConfig> curves) {
-            // We have the following segments:
-            // 1: Start node to loop start point, straight segment
-            // 2: 3 × 90 degree turn segments forming the loop (270° total)
-            // 3: Loop end point to end node, straight segment
+            if (!ComputeLoopAxis(
+                    config.StartPosition, config.StartDirection,
+                    config.EndPosition, config.EndDirection,
+                    out var naturalCenter, out var axisDir, out var isCCW))
+                return;
 
-            var C = config.LoopControlPointPosition;
-            var R = config.LoopRadius;
+            // Convert factor to center position on the axis
+            var maxCenter = ComputeMaxCenter(naturalCenter, axisDir, config.StartPosition, config.EndPosition);
+            var center    = math.lerp(naturalCenter, maxCenter, config.LoopRadiusFactor);
 
-            // Find loop entry: project center onto the start line, then find closest point on circle
-            var tStart          = math.dot(C - config.StartPosition, config.StartDirection);
-            var footOnStartLine = config.StartPosition + tStart * config.StartDirection;
-            var entryOffset     = footOnStartLine - C;
-            entryOffset.y = 0f;
-            var dirToEntry             = math.normalizesafe(entryOffset);
-            var loopStartPointPosition = new float3(C.x + dirToEntry.x * R, C.y, C.z + dirToEntry.z * R);
+            // Compute how far the arc start must shift along start direction
+            float2 c2 = center.xz;
+            float2 d0 = math.normalizesafe(config.StartDirection.xz);
+            float2 d1 = math.normalizesafe(config.EndDirection.xz);
 
-            // Determine loop direction (CW vs CCW) based on entry tangent alignment with StartDirection
-            var cwTangent = new float3(dirToEntry.z, 0f, -dirToEntry.x);
-            var clockwise = math.dot(config.StartDirection, cwTangent) > 0f;
+            float3 startDirXZ = math.normalizesafe(new float3(config.StartDirection.x, 0f, config.StartDirection.z));
+            float3 endDirXZ   = math.normalizesafe(new float3(config.EndDirection.x, 0f, config.EndDirection.z));
 
-            // Compute loop points: 3 × 90° from entry
-            var startAngle = math.atan2(dirToEntry.z, dirToEntry.x);
-            var step       = clockwise ? -math.PI * 0.5f : math.PI * 0.5f;
+            // Arc start: perpendicular foot from center onto the start line
+            float startOffset = math.max(0f, math.dot(c2 - config.StartPosition.xz, d0));
+            float3 arcStart   = config.StartPosition + startDirXZ * startOffset;
 
-            var midAngle1 = startAngle + step;
-            var midAngle2 = startAngle + step * 2f;
-            var exitAngle = startAngle + step * 3f;
+            // Radius from the start tangent point (guaranteed on the circle)
+            float radius = math.distance(c2, arcStart.xz);
+            if (radius < 0.1f) return;
 
-            var loopMidPoint1Position = new float3(C.x + R * math.cos(midAngle1), C.y, C.z + R * math.sin(midAngle1));
-            var loopMidPoint2Position = new float3(C.x + R * math.cos(midAngle2), C.y, C.z + R * math.sin(midAngle2));
-            var loopEndPointPosition  = new float3(C.x + R * math.cos(exitAngle), C.y, C.z + R * math.sin(exitAngle));
+            // Arc end: find where this circle intersects the end line so both
+            // endpoints are at exactly `radius` from center (no overshoot).
+            //   Line: P(λ) = endPos + λ·d1,  |P - center|² = r²
+            //   λ² + 2(v·d1)λ + (|v|² - r²) = 0   where v = endPos - center
+            float  endOffset;
+            float3 arcEnd;
+            {
+                float2 v    = config.EndPosition.xz - c2;
+                float  vd   = math.dot(v, d1);
+                float  disc = vd * vd - (math.dot(v, v) - radius * radius);
 
-            // Interpolate Y across the full path for smooth height transitions
-            loopStartPointPosition.y = math.lerp(config.StartPosition.y, config.EndPosition.y, 0.2f);
-            loopMidPoint1Position.y  = math.lerp(config.StartPosition.y, config.EndPosition.y, 0.4f);
-            loopMidPoint2Position.y  = math.lerp(config.StartPosition.y, config.EndPosition.y, 0.6f);
-            loopEndPointPosition.y   = math.lerp(config.StartPosition.y, config.EndPosition.y, 0.8f);
+                if (disc >= 0f) {
+                    float sqrtDisc = math.sqrt(disc);
+                    float l1       = -vd + sqrtDisc;
+                    float l2       = -vd - sqrtDisc;
+                    // Pick the root closest to the naïve perpendicular projection
+                    float naive = math.max(0f, math.dot(c2 - config.EndPosition.xz, d1));
+                    endOffset = math.abs(l1 - naive) < math.abs(l2 - naive) ? l1 : l2;
+                    endOffset = math.max(0f, endOffset);
+                } else {
+                    // Fallback (shouldn't happen with valid geometry)
+                    endOffset = math.max(0f, math.dot(c2 - config.EndPosition.xz, d1));
+                }
+                arcEnd = config.EndPosition + endDirXZ * endOffset;
+            }
 
-            var elevLoopStart = SlopeUtils.ClampElevation(math.lerp(config.StartElevation, config.EndElevation, 0.2f));
-            var elevMidPoint1 = SlopeUtils.ClampElevation(math.lerp(config.StartElevation, config.EndElevation, 0.4f));
-            var elevMidPoint2 = SlopeUtils.ClampElevation(math.lerp(config.StartElevation, config.EndElevation, 0.6f));
-            var elevLoopEnd   = SlopeUtils.ClampElevation(math.lerp(config.StartElevation, config.EndElevation, 0.8f));
+            // Angles and sweep
+            float startAngle = math.atan2(arcStart.z - center.z, arcStart.x - center.x);
+            float endAngle   = math.atan2(arcEnd.z   - center.z, arcEnd.x   - center.x);
 
-            // Compute entry/exit tangent directions for smooth straight segment connections
-            var entryTangent = clockwise ? cwTangent : -cwTangent;
+            // Compute sweep in the natural winding direction
+            float sweep = endAngle - startAngle;
+            if (isCCW) {
+                if (sweep <= 0f) sweep += 2f * math.PI;
+            } else {
+                if (sweep >= 0f) sweep -= 2f * math.PI;
+            }
 
-            var dirToExit   = new float3(math.cos(exitAngle), 0f, math.sin(exitAngle));
-            var exitTangent = clockwise
-                ? new float3(dirToExit.z, 0f, -dirToExit.x)
-                : new float3(-dirToExit.z, 0f, dirToExit.x);
+            // Toggle between inner (shorter) and outer (longer) arc
+            bool naturallyOuter = math.abs(sweep) > math.PI;
+            bool wantOuter      = config.LoopArcSide == LoopArcSide.Outer;
+            if (wantOuter != naturallyOuter)
+                sweep += (sweep > 0f) ? -2f * math.PI : 2f * math.PI;
 
-            // 1: Start → loop start (tangent-smooth straight segment)
-            var startSegLen    = math.max(math.length(loopStartPointPosition - config.StartPosition), 0.001f);
-            var startTangentLen = startSegLen / 3f;
-            var firstBezier = new Bezier4x3 {
-                a = config.StartPosition,
-                b = config.StartPosition   + config.StartDirection * startTangentLen,
-                c = loopStartPointPosition - entryTangent * startTangentLen,
-                d = loopStartPointPosition
+            // Subdivide arc into bezier segments (each <= 90 degrees)
+            int   arcSegments = math.max(1, (int)math.ceil(math.abs(sweep) / (math.PI / 2f)));
+            float segSweep    = sweep / arcSegments;
+            float k           = (4f / 3f) * math.tan(segSweep / 4f);
+
+            bool hasStartStraight = startOffset > 0.5f;
+            bool hasEndStraight   = endOffset   > 0.5f;
+
+            // ── Distribute height proportionally across total path length ──
+            float startStraightLen = hasStartStraight ? startOffset : 0f;
+            float arcLen           = radius * math.abs(sweep);
+            float endStraightLen   = hasEndStraight ? endOffset : 0f;
+            float totalLen         = startStraightLen + arcLen + endStraightLen;
+
+            float startY = config.StartPosition.y;
+            float endY   = config.EndPosition.y;
+
+            float arcStartY, arcEndY;
+            if (totalLen > 0.01f) {
+                arcStartY = math.lerp(startY, endY, startStraightLen / totalLen);
+                arcEndY   = math.lerp(startY, endY, (startStraightLen + arcLen) / totalLen);
+            } else {
+                arcStartY = startY;
+                arcEndY   = endY;
+            }
+
+            // ── Emit start offset segment ──
+            if (hasStartStraight) {
+                var straightEnd = new float3(arcStart.x, arcStartY, arcStart.z);
+                EmitStraightEdge(in config, ref curves,
+                    config.StartPosition, straightEnd,
+                    isFirst: true, isLast: false,
+                    config.StartElevation, 0f);
+            }
+
+            // ── Emit arc segments (chained for floating-point precision) ──
+            float3 prevEnd = arcStart;
+            for (int i = 0; i < arcSegments; i++) {
+                float a0 = startAngle + i * segSweep;
+                float a1 = a0 + segSweep;
+
+                // Chain positions: first starts at arcStart, last ends at arcEnd,
+                // intermediates chain from the previous segment's exact endpoint.
+                float3 pa = (i == 0)               ? arcStart : prevEnd;
+                float3 pd = (i == arcSegments - 1) ? arcEnd
+                    : new float3(center.x + radius * math.cos(a1), 0f, center.z + radius * math.sin(a1));
+
+                // CCW tangent direction at angle theta: (-sin, cos)
+                var tanA = new float3(-math.sin(a0), 0f, math.cos(a0));
+                var tanD = new float3(-math.sin(a1), 0f, math.cos(a1));
+
+                var pb = pa + k * radius * tanA;
+                var pc = pd - k * radius * tanD;
+
+                // Height interpolated proportionally across total path length
+                float t0 = (float)i / arcSegments;
+                float t1 = (float)(i + 1) / arcSegments;
+                pa.y = math.lerp(arcStartY, arcEndY, t0);
+                pd.y = math.lerp(arcStartY, arcEndY, t1);
+                pb.y = math.lerp(pa.y, pd.y, 1f / 3f);
+                pc.y = math.lerp(pa.y, pd.y, 2f / 3f);
+
+                bool isFirst = !hasStartStraight && i == 0;
+                bool isLast  = !hasEndStraight && i == arcSegments - 1;
+
+                var bezier = new Bezier4x3 { a = pa, b = pb, c = pc, d = pd };
+                curves.Add(new EdgeConfig {
+                    Bezier             = bezier,
+                    Length             = MathUtils.Length(bezier),
+                    StartNodeElevation = isFirst ? SlopeUtils.ClampElevation(config.StartElevation) : 0f,
+                    EndNodeElevation   = isLast  ? SlopeUtils.ClampElevation(config.EndElevation)   : 0f,
+                    StartNodeFlags     = (isFirst ? CoursePosFlags.IsFirst : 0) | CoursePosFlags.IsRight,
+                    EndNodeFlags       = (isLast  ? CoursePosFlags.IsLast  : 0) | CoursePosFlags.IsRight,
+                    NetPrefabEntity     = config.NetPrefabEntity,
+                    NetLanePrefabEntity = config.NetLanePrefabEntity,
+                });
+
+                prevEnd = pd;
+            }
+
+            // ── Emit end offset segment ──
+            if (hasEndStraight) {
+                var straightStart = new float3(arcEnd.x, arcEndY, arcEnd.z);
+                EmitStraightEdge(in config, ref curves,
+                    straightStart, config.EndPosition,
+                    isFirst: false, isLast: true,
+                    0f, config.EndElevation);
+            }
+        }
+
+        // ── Straight edge helper ────────────────────────────────────────────────
+
+        private static void EmitStraightEdge(
+            in  ConnectJobConfig      config,
+            ref NativeList<EdgeConfig> curves,
+            float3 from, float3 to,
+            bool isFirst, bool isLast,
+            float startElev, float endElev) {
+            var dir    = to - from;
+            var bezier = new Bezier4x3 {
+                a = from,
+                b = from + dir * (1f / 3f),
+                c = from + dir * (2f / 3f),
+                d = to
             };
             curves.Add(new EdgeConfig {
-                Bezier = firstBezier,
-                Length = MathUtils.Length(firstBezier),
-                StartNodeElevation = SlopeUtils.ClampElevation(config.StartElevation),
-                EndNodeElevation = elevLoopStart,
-                StartNodeFlags = CoursePosFlags.IsFirst | CoursePosFlags.IsRight,
-                EndNodeFlags = CoursePosFlags.IsRight,
-                NetPrefabEntity = config.NetPrefabEntity,
+                Bezier             = bezier,
+                Length             = MathUtils.Length(bezier),
+                StartNodeElevation = SlopeUtils.ClampElevation(startElev),
+                EndNodeElevation   = SlopeUtils.ClampElevation(endElev),
+                StartNodeFlags     = (isFirst ? CoursePosFlags.IsFirst : 0) | CoursePosFlags.IsRight,
+                EndNodeFlags       = (isLast  ? CoursePosFlags.IsLast  : 0) | CoursePosFlags.IsRight,
+                NetPrefabEntity     = config.NetPrefabEntity,
                 NetLanePrefabEntity = config.NetLanePrefabEntity,
             });
+        }
 
-            // 2: The loop itself (3 × 90° arcs)
-            var loopBezier1 = Calculate90DegreeCurve(C, loopStartPointPosition, loopMidPoint1Position);
-            curves.Add(new EdgeConfig {
-                Bezier = loopBezier1,
-                Length = MathUtils.Length(loopBezier1),
-                StartNodeElevation = elevLoopStart,
-                EndNodeElevation = elevMidPoint1,
-                StartNodeFlags = CoursePosFlags.IsRight,
-                EndNodeFlags = CoursePosFlags.IsRight,
-                NetPrefabEntity = config.NetPrefabEntity,
-                NetLanePrefabEntity = config.NetLanePrefabEntity,
-            });
-            var loopBezier2 = Calculate90DegreeCurve(C, loopMidPoint1Position, loopMidPoint2Position);
-            curves.Add(new EdgeConfig {
-                Bezier = loopBezier2,
-                Length = MathUtils.Length(loopBezier2),
-                StartNodeElevation = elevMidPoint1,
-                EndNodeElevation = elevMidPoint2,
-                StartNodeFlags = CoursePosFlags.IsRight,
-                EndNodeFlags = CoursePosFlags.IsRight,
-                NetPrefabEntity = config.NetPrefabEntity,
-                NetLanePrefabEntity = config.NetLanePrefabEntity,
-            });
-            var loopBezier3 = Calculate90DegreeCurve(C, loopMidPoint2Position, loopEndPointPosition);
-            curves.Add(new EdgeConfig {
-                Bezier = loopBezier3,
-                Length = MathUtils.Length(loopBezier3),
-                StartNodeElevation = elevMidPoint2,
-                EndNodeElevation = elevLoopEnd,
-                StartNodeFlags = CoursePosFlags.IsRight,
-                EndNodeFlags = CoursePosFlags.IsRight,
-                NetPrefabEntity = config.NetPrefabEntity,
-                NetLanePrefabEntity = config.NetLanePrefabEntity,
-            });
+        // ── Static geometry helpers (used by both the generator and AxisHandle) ─
 
-            // 3: Loop end → end (tangent-smooth straight segment)
-            var endSegLen     = math.max(math.length(config.EndPosition - loopEndPointPosition), 0.001f);
-            var endTangentLen = endSegLen / 3f;
-            var endBezier = new Bezier4x3 {
-                a = loopEndPointPosition,
-                b = loopEndPointPosition   + exitTangent          * endTangentLen,
-                c = config.EndPosition     + config.EndDirection  * endTangentLen,
-                d = config.EndPosition
-            };
-            curves.Add(new EdgeConfig {
-                Bezier = endBezier,
-                Length = MathUtils.Length(endBezier),
-                StartNodeElevation = elevLoopEnd,
-                EndNodeElevation = SlopeUtils.ClampElevation(config.EndElevation),
-                StartNodeFlags = CoursePosFlags.IsRight,
-                EndNodeFlags = CoursePosFlags.IsLast | CoursePosFlags.IsRight,
-                NetPrefabEntity = config.NetPrefabEntity,
-                NetLanePrefabEntity = config.NetLanePrefabEntity,
-            });
+        /// <summary>
+        ///     Computes the natural circle center (perpendicular-ray intersection) and the
+        ///     drag-axis direction.  The axis is the direction the center moves when both
+        ///     start/end offsets increase by the same amount — derived by differentiating
+        ///     the ray intersection w.r.t. a shared offset δ applied to both origins.
+        ///     Returns false if degenerate (parallel directions).
+        /// </summary>
+        public static bool ComputeLoopAxis(
+            float3 startPos, float3 startDir,
+            float3 endPos,   float3 endDir,
+            out float3 naturalCenter, out float3 axisDir3D, out bool isCCW) {
+            float2 p0 = startPos.xz;
+            float2 p1 = endPos.xz;
+            float2 d0 = math.normalizesafe(startDir.xz);
+            float2 d1 = math.normalizesafe(endDir.xz);
+
+            // Perpendicular to each direction (left of start, right of end)
+            float2 perp0 = new float2(-d0.y, d0.x);
+            float2 perp1 = new float2(d1.y, -d1.x);
+
+            float2 dp    = p1 - p0;
+            float  cross = perp0.x * perp1.y - perp0.y * perp1.x;
+            float  y     = (startPos.y + endPos.y) * 0.5f;
+
+            if (math.abs(cross) < 0.001f) {
+                naturalCenter = (startPos + endPos) * 0.5f;
+                axisDir3D     = math.normalizesafe(new float3(d0.x + d1.x, 0f, d0.y + d1.y));
+                isCCW         = true;
+                return false;
+            }
+
+            float  t  = (dp.x * perp1.y - dp.y * perp1.x) / cross;
+            float2 nc = p0 + t * perp0;
+            naturalCenter = new float3(nc.x, y, nc.y);
+            isCCW         = t > 0f;
+
+            // Axis direction: d(center)/dδ when both ray origins shift by δ along
+            // their respective directions.  The shifted intersection satisfies
+            //   t'·perp0 - s'·perp1 = dp + δ·(d1 - d0)
+            // so dt/dδ = ((d1-d0)·perp1_y_col - (d1-d0)·perp1_x_col) / cross
+            float2 dDiff   = d1 - d0;
+            float  dtDelta = (dDiff.x * perp1.y - dDiff.y * perp1.x) / cross;
+
+            // center(δ) = p0 + δ·d0 + (t + δ·dtDelta)·perp0
+            // ⇒  d(center)/dδ = d0 + dtDelta·perp0
+            float2 axisDir = math.normalizesafe(d0 + dtDelta * perp0);
+
+            axisDir3D = new float3(axisDir.x, 0f, axisDir.y);
+            return true;
         }
 
         /// <summary>
-        /// Calculates a cubic Bezier approximating a 90-degree circular arc between two points on a circle.
-        /// Uses the standard κ = 4(√2 − 1)/3 approximation for optimal accuracy.
+        ///     Returns the far end of the drag axis, one chord-length out from the
+        ///     natural center along the axis direction.
         /// </summary>
-        private static Bezier4x3 Calculate90DegreeCurve(float3 center, float3 startPosition, float3 endPosition) {
-            var radialStart = startPosition - center;
-            var radialEnd   = endPosition   - center;
-
-            // Determine arc direction from the 2D cross product (Y component of 3D cross)
-            var crossY = radialStart.x * radialEnd.z - radialStart.z * radialEnd.x;
-
-            float3 tangentStart, tangentEnd;
-            if (crossY >= 0f) {
-                // CCW: tangent rotated 90° counter-clockwise from radial
-                tangentStart = new float3(-radialStart.z, 0f, radialStart.x);
-                tangentEnd   = new float3(-radialEnd.z,   0f, radialEnd.x);
-            } else {
-                // CW: tangent rotated 90° clockwise from radial
-                tangentStart = new float3(radialStart.z, 0f, -radialStart.x);
-                tangentEnd   = new float3(radialEnd.z,   0f, -radialEnd.x);
-            }
-
-            return new Bezier4x3 {
-                a = startPosition,
-                b = startPosition + Kappa * tangentStart,
-                c = endPosition   - Kappa * tangentEnd,
-                d = endPosition
-            };
+        public static float3 ComputeMaxCenter(float3 naturalCenter, float3 axisDir, float3 startPos, float3 endPos) {
+            float chordLength = math.distance(startPos.xz, endPos.xz);
+            return naturalCenter + axisDir * math.max(chordLength, 50f);
         }
-
     }
 }

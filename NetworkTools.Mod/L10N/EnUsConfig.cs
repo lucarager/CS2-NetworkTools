@@ -228,6 +228,9 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Connect.ComplexCurve", "Complex Curve" },
                 { "NetworkTools.UI.Connect.Loop", "Loop" },
                 { "NetworkTools.UI.Connect.LoopRadius", "Loop Radius" },
+                { "NetworkTools.UI.Connect.LoopArcSide", "Arc Side" },
+                { "NetworkTools.UI.Connect.LoopOuterArc", "Outer" },
+                { "NetworkTools.UI.Connect.LoopInnerArc", "Inner" },
 
                 // ## Parallel Tool
                 { "NetworkTools.UI.Parallel.HorizontalOffset", "Horizontal Offset" },
