@@ -36,7 +36,7 @@ namespace NetworkTools.Systems {
                                    .WithAll<Node>()
                                    .WithAny<NT_Highlighted, NT_Selected, NT_Eligible, NT_SelectedFirst,
                                        NT_SelectedLast>()
-                                   .WithNone<Deleted>()
+                                   .WithNone<Temp, Deleted>()
                                    .Build();
 
             m_EdgeQuery = SystemAPI.QueryBuilder()

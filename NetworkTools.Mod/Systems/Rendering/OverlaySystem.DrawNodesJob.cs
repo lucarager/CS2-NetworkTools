@@ -71,6 +71,10 @@
                     var renderMode = ntSelected.NodeMode;
 
                     var connectedEdges = connectedEdgesArray[i];
+
+                    if (connectedEdges.Length == 0 || !m_EdgeLookup.HasComponent(connectedEdges[0].m_Edge))
+                        continue;
+
                     var firstEdge = m_EdgeLookup[connectedEdges[0].m_Edge];
                     var position = firstEdge.m_Start == entity
                         ? m_StartNodeGeometryLookup[connectedEdges[0].m_Edge].m_Geometry.m_Middle.d
@@ -81,12 +85,18 @@
 
                     for (var j = 0; j < connectedEdges.Length; j++) {
                         var edgeEntity = connectedEdges[j];
+                        if (!m_EdgeGeometryLookup.HasComponent(edgeEntity.m_Edge))
+                            continue;
+
                         var edge = m_EdgeLookup[edgeEntity.m_Edge];
                         var edgeGeometry = m_EdgeGeometryLookup[edgeEntity.m_Edge];
 
                         diameterSum += GetEdgeWidth(entity, edge, edgeGeometry);
                         edgeNodesCount++;
                     }
+
+                    if (edgeNodesCount == 0)
+                        continue;
 
                     var averagedSize = diameterSum / edgeNodesCount;
                     var nodeDiameter = averagedSize * 0.5f;
