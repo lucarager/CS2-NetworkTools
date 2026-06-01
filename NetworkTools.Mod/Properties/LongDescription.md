@@ -2,7 +2,7 @@
 
 # Network Tools: The Network Manipulation Toolkit
 
-The spiritual successor to the beloved [Network Multitool](https://steamcommunity.com/sharedfiles/filedetails/?id=2560782729) for Cities: Skylines 1, rebuilt from the ground up for CS2. 
+The spiritual successor to the popular [Network Multitool](https://steamcommunity.com/sharedfiles/filedetails/?id=2560782729) for Cities: Skylines 1, rebuilt from the ground up for CS2. 
 
 With both familiar tools returning as well as exciting new features, NetworkTools gives you precise control over any networks like roads, paths, rail, and waterways. 
 Add or remove nodes, reshape slopes and curves, generate grids, and more -- all with interactive 3D handles and real-time previews.
