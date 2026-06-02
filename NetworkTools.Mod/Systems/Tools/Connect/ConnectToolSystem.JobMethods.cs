@@ -28,6 +28,12 @@ namespace NetworkTools.Systems.Tools.Connect {
                 CurveStartControlPointPosition = CurveStartControlPointPosition.Value,
                 CurveEndControlPointPosition   = CurveEndControlPointPosition.Value,
                 CurveEndPointPosition          = CurveEndPointPosition.Value,
+                ComplexStartPointPosition        = ComplexStartPointPosition.Value,
+                ComplexStartControlPointPosition = ComplexStartControlPointPosition.Value,
+                ComplexEndControlPointPosition   = ComplexEndControlPointPosition.Value,
+                ComplexEndPointPosition          = ComplexEndPointPosition.Value,
+                ComplexMidPosition               = ComplexMidPosition.Value,
+                ComplexMidRotation               = ComplexMidRotation.Value,
                 LoopRadiusFactor               = LoopRadiusFactor.Value,
                 LoopArcSide                    = LoopArc.Value,
             };

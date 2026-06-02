@@ -58,6 +58,9 @@ namespace NetworkTools.Systems.Tools.Connect {
                     case ConnectMode.SimpleCurve:
                         new SimpleCurveGenerator().GenerateConnection(config, ref curves);
                         break;
+                    case ConnectMode.ComplexCurve:
+                        new ComplexCurveGenerator().GenerateConnection(config, ref curves);
+                        break;
                     case ConnectMode.Loop:
                         new LoopGenerator().GenerateConnection(config, ref curves);
                         break;

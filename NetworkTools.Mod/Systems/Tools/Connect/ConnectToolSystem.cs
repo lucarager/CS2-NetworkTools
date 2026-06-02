@@ -45,15 +45,15 @@ namespace NetworkTools.Systems.Tools.Connect {
             }
         };
 
-        // Curve (from generator init + handle drags)
+        // Simple Curve (from generator init + handle drags)
         public Float3Parameter CurveStartPointPosition = new(
             "connect.curveStartPointPosition",
-            modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve) {
+            modes: (int)ConnectMode.SimpleCurve) {
             Handles = new IHandleSpec<float3>[] { new PositionHandle() }
         };
         public Float3Parameter CurveStartControlPointPosition = new(
             "connect.curveStartControlPointPosition",
-            modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve) {
+            modes: (int)ConnectMode.SimpleCurve) {
             Handles = new IHandleSpec<float3>[] {
                 new PositionHandle {
                     Style                = HandleTypeFlags.BezierControlPoint,
@@ -66,7 +66,7 @@ namespace NetworkTools.Systems.Tools.Connect {
         };
         public Float3Parameter CurveEndControlPointPosition = new(
             "connect.curveEndControlPointPosition",
-            modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve) {
+            modes: (int)ConnectMode.SimpleCurve) {
             Handles = new IHandleSpec<float3>[] {
                 new PositionHandle {
                     Style                = HandleTypeFlags.BezierControlPoint,
@@ -79,8 +79,62 @@ namespace NetworkTools.Systems.Tools.Connect {
         };
         public Float3Parameter CurveEndPointPosition = new(
             "connect.curveEndPointPosition",
-            modes: (int)ConnectMode.SimpleCurve | (int)ConnectMode.ComplexCurve) {
+            modes: (int)ConnectMode.SimpleCurve) {
             Handles = new IHandleSpec<float3>[] { new PositionHandle() }
+        };
+
+        // Complex Curve
+        public Float3Parameter ComplexStartPointPosition = new(
+            "connect.complexStartPointPosition",
+            modes: (int)ConnectMode.ComplexCurve) {
+            Handles = new IHandleSpec<float3>[] { new PositionHandle() }
+        };
+        public Float3Parameter ComplexStartControlPointPosition = new(
+            "connect.complexStartControlPointPosition",
+            modes: (int)ConnectMode.ComplexCurve) {
+            Handles = new IHandleSpec<float3>[] {
+                new PositionHandle {
+                    Style                = HandleTypeFlags.BezierControlPoint,
+                    Parent               = nameof(ComplexStartPointPosition),
+                    Size                 = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
+                    ConstraintAxisFrom   = nameof(StartDirection),
+                    ConstraintOriginFrom = nameof(StartPosition),
+                }
+            }
+        };
+        public Float3Parameter ComplexEndControlPointPosition = new(
+            "connect.complexEndControlPointPosition",
+            modes: (int)ConnectMode.ComplexCurve) {
+            Handles = new IHandleSpec<float3>[] {
+                new PositionHandle {
+                    Style                = HandleTypeFlags.BezierControlPoint,
+                    Parent               = nameof(ComplexEndPointPosition),
+                    Size                 = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
+                    ConstraintAxisFrom   = nameof(EndDirection),
+                    ConstraintOriginFrom = nameof(EndPosition),
+                }
+            }
+        };
+        public Float3Parameter ComplexEndPointPosition = new(
+            "connect.complexEndPointPosition",
+            modes: (int)ConnectMode.ComplexCurve) {
+            Handles = new IHandleSpec<float3>[] { new PositionHandle() }
+        };
+        public Float3Parameter ComplexMidPosition = new(
+            "connect.complexMidPosition",
+            modes: (int)ConnectMode.ComplexCurve) {
+            Handles = new IHandleSpec<float3>[] { new PositionHandle() }
+        };
+        public Float3Parameter ComplexMidRotation = new(
+            "connect.complexMidRotation",
+            modes: (int)ConnectMode.ComplexCurve) {
+            Handles = new IHandleSpec<float3>[] {
+                new RotationHandle {
+                    Parent = nameof(ComplexMidPosition),
+                    Style = HandleTypeFlags.Primary,
+                    ReferenceDirectionFrom = nameof(ComplexMidRotation)
+                }
+            }
         };
 
         // Loop

@@ -52,6 +52,9 @@ namespace NetworkTools.Systems.Tools.Connect {
                 case ConnectMode.SimpleCurve:
                     new SimpleCurveGenerator().InitializeConfig(ref config);
                     break;
+                case ConnectMode.ComplexCurve:
+                    new ComplexCurveGenerator().InitializeConfig(ref config);
+                    break;
                 case ConnectMode.Loop:
                     new LoopGenerator().InitializeConfig(ref config);
                     break;
@@ -66,6 +69,12 @@ namespace NetworkTools.Systems.Tools.Connect {
             CurveStartControlPointPosition.Value = config.CurveStartControlPointPosition;
             CurveEndControlPointPosition.Value   = config.CurveEndControlPointPosition;
             CurveEndPointPosition.Value          = config.CurveEndPointPosition;
+            ComplexStartPointPosition.Value        = config.ComplexStartPointPosition;
+            ComplexStartControlPointPosition.Value = config.ComplexStartControlPointPosition;
+            ComplexEndControlPointPosition.Value   = config.ComplexEndControlPointPosition;
+            ComplexEndPointPosition.Value          = config.ComplexEndPointPosition;
+            ComplexMidPosition.Value               = config.ComplexMidPosition;
+            ComplexMidRotation.Value               = config.ComplexMidRotation;
             LoopRadiusFactor.Value               = config.LoopRadiusFactor;
             LoopArc.Value                        = config.LoopArcSide;
 
@@ -170,7 +179,7 @@ namespace NetworkTools.Systems.Tools.Connect {
             // Configuration
             RenderEligibleNodes       = true;
             RenderHandles             = true;
-            DisableVanillaCourseSplit = true;
+            //DisableVanillaCourseSplit = true;
 
             // Mode change reinitializes context and handles
             Mode.OnChanged += _ => {

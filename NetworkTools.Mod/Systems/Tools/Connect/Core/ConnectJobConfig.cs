@@ -28,6 +28,14 @@ namespace NetworkTools.Systems.Tools.Connect {
         public float3 CurveEndControlPointPosition;
         public float3 CurveEndPointPosition;
 
+        // Complex Curve
+        public float3 ComplexStartPointPosition;
+        public float3 ComplexStartControlPointPosition;
+        public float3 ComplexEndControlPointPosition;
+        public float3 ComplexEndPointPosition;
+        public float3 ComplexMidPosition;
+        public float3 ComplexMidRotation;
+
         // Loop
         public float LoopRadiusFactor;
         public LoopArcSide LoopArcSide;
