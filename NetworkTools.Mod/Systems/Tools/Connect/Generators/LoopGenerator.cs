@@ -159,8 +159,8 @@ namespace NetworkTools.Systems.Tools.Connect {
                     Length             = MathUtils.Length(bezier),
                     StartNodeElevation = isFirst ? SlopeUtils.ClampElevation(config.StartElevation) : 0f,
                     EndNodeElevation   = isLast  ? SlopeUtils.ClampElevation(config.EndElevation)   : 0f,
-                    StartNodeFlags     = (isFirst ? CoursePosFlags.IsFirst : 0) | CoursePosFlags.IsRight,
-                    EndNodeFlags       = (isLast  ? CoursePosFlags.IsLast  : 0) | CoursePosFlags.IsRight,
+                    StartNodeFlags     = (isFirst ? CoursePosFlags.IsFirst : CoursePosFlags.DisableMerge) | CoursePosFlags.IsRight,
+                    EndNodeFlags       = (isLast  ? CoursePosFlags.IsLast  : CoursePosFlags.DisableMerge) | CoursePosFlags.IsRight,
                     NetPrefabEntity     = config.NetPrefabEntity,
                     NetLanePrefabEntity = config.NetLanePrefabEntity,
                 });
@@ -198,8 +198,8 @@ namespace NetworkTools.Systems.Tools.Connect {
                 Length             = MathUtils.Length(bezier),
                 StartNodeElevation = SlopeUtils.ClampElevation(startElev),
                 EndNodeElevation   = SlopeUtils.ClampElevation(endElev),
-                StartNodeFlags     = (isFirst ? CoursePosFlags.IsFirst : 0) | CoursePosFlags.IsRight,
-                EndNodeFlags       = (isLast  ? CoursePosFlags.IsLast  : 0) | CoursePosFlags.IsRight,
+                StartNodeFlags     = (isFirst ? CoursePosFlags.IsFirst : CoursePosFlags.DisableMerge) | CoursePosFlags.IsRight,
+                EndNodeFlags       = (isLast  ? CoursePosFlags.IsLast  : CoursePosFlags.DisableMerge) | CoursePosFlags.IsRight,
                 NetPrefabEntity     = config.NetPrefabEntity,
                 NetLanePrefabEntity = config.NetLanePrefabEntity,
             });
