@@ -1,4 +1,5 @@
 namespace NetworkTools.Systems.Rendering {
+    using NetworkTools.Extensions;
     using UnityEngine;
 
     public readonly struct ColorPair {
@@ -41,6 +42,15 @@ namespace NetworkTools.Systems.Rendering {
     }
 
     public static class NT_Colors {
+        // -- Colors
+        public static readonly Color Teal        = new Color(0.5f,  0.9f,  0.7f,  1f);
+        public static readonly Color Blue        = new Color(0.3f,  0.8f,  0.9f,  1f);
+        public static readonly Color Purple      = new Color(0.7f,  0.35f, 1f,    1f);
+        public static readonly Color PurpleLight = new Color(0.8f,  0.55f, 0.85f, 1f);
+        public static readonly Color Gray        = new Color(0.75f, 0.75f, 0.8f,  1f);
+        public static readonly Color White       = new Color(1f,    1f,    1f,    1f);
+
+
         // -- Node colors
         // ---- Visible Nodes (Visible but cannot be interacted with)
         public static readonly ColorSet NodeVisible = ColorSet.FromPair(new Color(0.788f, 0.776f, 0.824f, 0.8f),
@@ -48,15 +58,15 @@ namespace NetworkTools.Systems.Rendering {
 
         // ---- Eligible Nodes (Can be interacted with)
         public static readonly ColorSet NodeEligible =
-            new(new ColorPair(new Color(0.745f, 0.733f, 0.784f, 0.8f), new Color(0f, 0f, 0f, 0f)),
-                new ColorPair(new Color(0.745f, 0.733f, 0.784f, 0.8f), new Color(1f, 1f, 1f, 1f)),
-                new ColorPair(new Color(1f,     1f,     1f,     0.8f), new Color(1f, 1f, 1f, 1f)));
+            new(new ColorPair(Gray.WithAlpha(0.8f), Gray.WithAlpha(0f)),
+                new ColorPair(Gray.WithAlpha(0.8f), White),
+                new ColorPair(White.WithAlpha(0.8f), White));
 
         // ---- Selected Nodes
         public static readonly ColorSet NodeSelected =
-            new(new ColorPair(new Color(0.702f, 0.365f, 1f, 0.8f), new Color(0f,     0f,     0f, 0f)),
-                new ColorPair(new Color(0.702f, 0.365f, 1f, 0.8f), new Color(0.788f, 0.545f, 1f, 1f)),
-                new ColorPair(new Color(0.769f, 0.510f, 1f, 0.8f), new Color(0.788f, 0.545f, 1f, 1f)));
+            new(new ColorPair(Purple.WithAlpha(0.8f), PurpleLight.WithAlpha(0f)),
+                new ColorPair(Purple.WithAlpha(0.8f), PurpleLight.WithAlpha(1f)),
+                new ColorPair(Purple.Lighten(0.1f).WithAlpha(0.8f), PurpleLight.WithAlpha(1f)));
 
         // ---- Added Nodes
         public static readonly ColorSet NodeAdded = ColorSet.FromPair(new Color(0.310f, 0.894f, 0.573f, 0.8f),
@@ -74,8 +84,8 @@ namespace NetworkTools.Systems.Rendering {
         // ---- Eligible Edges (Can be interacted with)
         public static readonly ColorSet EdgeEligible =
             new(new ColorPair(new Color(0.745f, 0.733f, 0.784f, 0.8f), new Color(0f, 0f, 0f, 0f)),
-                new ColorPair(new Color(0.745f, 0.733f, 0.784f, 0.8f), new Color(1f, 1f, 1f, 1f)),
-                new ColorPair(new Color(1f,     1f,     1f,     0.8f), new Color(1f, 1f, 1f, 1f)));
+                new ColorPair(new Color(0.745f, 0.733f, 0.784f, 0.8f), White),
+                new ColorPair(new Color(1f,     1f,     1f,     0.8f), White));
 
         // -- Handle Colors
         // ---- Line Handles
@@ -83,30 +93,37 @@ namespace NetworkTools.Systems.Rendering {
 
         // ---- Circle Handles
         public static readonly ColorSet HandleCircle =
-            new(new ColorPair(new Color(0.788f, 0.545f, 0.873f, 0f), new Color(0.788f, 0.545f, 0.873f, 0.5f)),
-                new ColorPair(new Color(0.788f, 0.545f, 0.873f, 0f), new Color(0.788f, 0.545f, 0.873f, 0.8f)),
-                new ColorPair(new Color(0.788f, 0.545f, 0.873f, 0f), new Color(0.788f, 0.545f, 0.873f, 1f)));
+            new(new ColorPair(PurpleLight.WithAlpha(0f), PurpleLight.WithAlpha(0.5f)),
+                new ColorPair(PurpleLight.WithAlpha(0f), PurpleLight.WithAlpha(0.8f)),
+                new ColorPair(PurpleLight.WithAlpha(0f), PurpleLight.WithAlpha(1f)));
+
+
+        // ---- Rotation Handles
+        public static readonly ColorSet HandleRotation =
+            new(new ColorPair(Teal.WithAlpha(0f), Teal.WithAlpha(0.5f)),
+                new ColorPair(Teal.WithAlpha(0f), Teal.WithAlpha(0.8f)),
+                new ColorPair(Teal.WithAlpha(0f), Teal.WithAlpha(1f)));
 
         // ---- Axis Handles
         public static readonly ColorSet HandleAxisOrigin =
-            new(new ColorPair(new Color(1f, 1f, 1f, 1f), new Color(1f, 1f, 1f, 0)),
-                new ColorPair(new Color(1f, 1f, 1f, 1f), new Color(1f, 1f, 1f, 0)),
-                new ColorPair(new Color(1f, 1f, 1f, 1f), new Color(1f, 1f, 1f, 0)));
+            new(new ColorPair(White, White.WithAlpha(0f)),
+                new ColorPair(White, White.WithAlpha(0f)),
+                new ColorPair(White, White.WithAlpha(0f)));
 
         public static readonly ColorSet HandleAxisLine =
-            new(new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0.5f), new Color(0.310f, 0.794f, 0.873f, 0.5f)),
-                new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0.8f), new Color(0.310f, 0.794f, 0.873f, 0.8f)),
-                new ColorPair(new Color(0.310f, 0.794f, 0.873f, 1f), new Color(0.310f, 0.794f, 0.873f, 1f)));
+            new(new ColorPair(Blue.WithAlpha(0.5f), Blue.WithAlpha(0.5f)),
+                new ColorPair(Blue.WithAlpha(0.8f), Blue.WithAlpha(0.8f)),
+                new ColorPair(Blue.WithAlpha(1f), Blue.WithAlpha(1f)));
 
         public static readonly ColorSet HandleAxisCircle =
-            new(new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0f), new Color(0.310f, 0.794f, 0.873f, 0.5f)),
-                new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0f), new Color(0.310f, 0.794f, 0.873f, 0.8f)),
-                new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0f), new Color(0.310f, 0.794f, 0.873f, 1f)));
+            new(new ColorPair(Blue.WithAlpha(0f), Blue.WithAlpha(0.5f)),
+                new ColorPair(Blue.WithAlpha(0f), Blue.WithAlpha(0.8f)),
+                new ColorPair(Blue.WithAlpha(0f), Blue.WithAlpha(1f)));
 
-        // ---- Point Range Handles
+        // ---- Point Handles
         public static readonly ColorSet HandlePoint =
-            new(new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0f), new Color(0.310f, 0.794f, 0.873f, 0.5f)),
-                new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0f), new Color(0.310f, 0.794f, 0.873f, 0.8f)),
-                new ColorPair(new Color(0.310f, 0.794f, 0.873f, 0f), new Color(0.310f, 0.794f, 0.873f, 1f)));
+            new(new ColorPair(Blue.WithAlpha(0f), Blue.WithAlpha(0.5f)),
+                new ColorPair(Blue.WithAlpha(0f), Blue.WithAlpha(0.8f)),
+                new ColorPair(Blue.WithAlpha(0f), Blue.WithAlpha(1f)));
     }
 }

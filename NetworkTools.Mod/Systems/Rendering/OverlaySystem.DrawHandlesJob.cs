@@ -94,12 +94,12 @@ namespace NetworkTools.Systems {
                         RenderCircleHandle(position, circle, handle, isHighlighted, isSelected, m_Buffer);
                     } else if (handle.HasAnyFlag(HandleTypeFlags.Rotation) && hasRotationComponent) {
                         var rotation = rotationArray[i];
-                        RenderRotationHandle(position, rotation, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
+                        RenderRotationHandle(position, rotation, handle, isHighlighted, isSelected, m_Buffer);
                     } else if ((handle.HasAnyFlag(HandleTypeFlags.AxisHandle) || handle.HasAnyFlag(HandleTypeFlags.BezierControlPoint)) && hasConstraintsComponent) {
                         var constraints = constraintsArray[i];
                         RenderAxisHandle(position, constraints, handle, isHighlighted, isSelected, m_Buffer);
                     } else {
-                        RenderPointHandle(position, handle, isHighlighted, isSelected, m_Colors, m_Buffer);
+                        RenderPointHandle(position, handle, isHighlighted, isSelected, m_Buffer);
                     }
 
                     // Draw dashed line from child to parent handle (axis handles draw their own connecting line)
@@ -124,16 +124,16 @@ namespace NetworkTools.Systems {
             /// </summary>
             private static void RenderPointHandle(NT_HandlePosition                position,      NT_Handle handle,
                                                   bool                             isHighlighted, bool      isSelected,
-                                                  RenderColors                     colors,
                                                   CustomOverlayRenderSystem.Buffer buffer) {
-                GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
-                buffer.DrawCircle(outlineColor,
-                                  fillColor,
-                                  0.5f,
+                var circleColorPair = NT_Colors.HandlePoint.Get(isHighlighted, isSelected);
+                var circleRadius = handle.Size;
+                buffer.DrawCircle(circleColorPair.Border,
+                                  circleColorPair.Fill,
+                                  NT_Dimensions.HANDLE_POINT_OUTLINE_WIDTH,
                                   0,
                                   new float2(0, 1),
                                   position.Position,
-                                  handle.Size * 2f);
+                                  circleRadius * 2f);
             }
 
             /// <summary>
@@ -212,40 +212,55 @@ namespace NetworkTools.Systems {
             }
 
             /// <summary>
-            ///     Renders a rotation handle: circle outline with an angle indicator line.
+            ///     Renders a rotation handle: circle outline with a tangential arrow at the angle point.
             /// </summary>
             private static void RenderRotationHandle(NT_HandlePosition                position,
                                                      NT_HandleRotation                rotation,      NT_Handle handle,
                                                      bool                             isHighlighted, bool isSelected,
-                                                     RenderColors                     colors,
                                                      CustomOverlayRenderSystem.Buffer buffer) {
-                GetHandleColors(isHighlighted, isSelected, colors, out var fillColor, out var outlineColor);
-                var borderWidth = handle.HasAnyFlag(HandleTypeFlags.Primary) ? 1f : 0.5f;
-                var center      = position.Position;
+                var colors      = NT_Colors.HandleRotation.Get(isHighlighted, isSelected);
+                var borderWidth = NT_Dimensions.HANDLE_ROTATION_OUTLINE_WIDTH;
                 var direction   = rotation.GetDirection();
-                var anglePoint  = center + direction * rotation.Radius;
+                var anglePoint  = position.Position + direction * rotation.Radius;
 
-                // Draw the circle outline
-                buffer.DrawCircle(outlineColor,
-                                  new Color(255, 255, 255, 0),
+                buffer.DrawCircle(colors.Border,
+                                  colors.Fill,
                                   borderWidth,
                                   0,
                                   new float2(0, 1),
                                   position.Position,
                                   rotation.Radius * 2f);
 
-                // Draw a thin line from center to angle point
-                buffer.DrawLine(outlineColor, new Line3.Segment(center, anglePoint), 0.5f);
-
-                // Draw a small handle dot at the angle point
-                buffer.DrawCircle(outlineColor, outlineColor, 0.2f, 0, new float2(0, 1), anglePoint, 1f);
+                DrawLineArrow(anglePoint,
+                              direction,
+                              rotation.Normal,
+                              NT_Dimensions.HANDLE_ROTATION_ARROW_LENGTH,
+                              NT_Dimensions.HANDLE_ROTATION_ARROW_HEAD,
+                              colors.Border,
+                              NT_Dimensions.HANDLE_ROTATION_ARROW_WIDTH,
+                              buffer);
             }
 
-            private static void GetCircleHandleColors(bool      isHighlighted, bool      isSelected,
-                                                      out Color fillColor,     out Color outlineColor) {
-                var pair = NT_Colors.HandleCircle.Get(isHighlighted, isSelected);
-                fillColor    = pair.Fill;
-                outlineColor = pair.Border;
+            private static void DrawLineArrow(float3                           start,
+                                               float3                           direction,
+                                               float3                           planeNormal,
+                                               float                            shaftLength,
+                                               float                            headLength,
+                                               Color                            color,
+                                               float                            lineWidth,
+                                               CustomOverlayRenderSystem.Buffer buffer) {
+                var tip = start + direction * shaftLength;
+
+                buffer.DrawLine(color, new Line3.Segment(start, tip), lineWidth);
+
+                var perp = math.normalize(math.cross(planeNormal, direction));
+                const float halfAngle = 0.4363f; // ~25 degrees
+                var cosA    = math.cos(halfAngle);
+                var sinA    = math.sin(halfAngle);
+                var backDir = -direction;
+
+                buffer.DrawLine(color, new Line3.Segment(tip, tip + (backDir * cosA + perp * sinA) * headLength), lineWidth);
+                buffer.DrawLine(color, new Line3.Segment(tip, tip + (backDir * cosA - perp * sinA) * headLength), lineWidth);
             }
 
             /// <summary>
