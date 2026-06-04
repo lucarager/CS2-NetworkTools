@@ -826,10 +826,12 @@ namespace NetworkTools.Systems.Tools {
         /// <summary>
         ///     Applies the current anarchy state by enabling or disabling the vanilla validation system.
         ///     Only takes effect when the tool supports anarchy and doesn't unconditionally disable validation.
+        ///     Marks an update as needed so temp entities are re-generated and validation errors appear/disappear.
         /// </summary>
         public void RefreshAnarchy() {
             if (!SupportsAnarchy || DisableVanillaValidation) return;
             m_ValidationSystem.Enabled = !AnarchyEnabled;
+            m_UpdateNeeded = true;
         }
 
         /// <summary>
