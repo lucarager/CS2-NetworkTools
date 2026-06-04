@@ -29,7 +29,6 @@ namespace NetworkTools.Systems.Tools.Parallel {
             // Configuration
             RenderEligibleNodes         = true;
             RenderHandles               = true;
-            DisableVanillaValidation    = true;
             DisableVanillaNodeReduction = true;
 
 

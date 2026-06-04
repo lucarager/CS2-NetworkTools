@@ -10,6 +10,7 @@ import { ConnectControls } from "./tools/connect";
 import { useLocalization } from "cs2/l10n";
 import { SnapSelection } from "./shared/snapSelection";
 import { TargetSelection } from "./shared/targetSelection";
+import { AnarchySelection } from "./shared/anarchySelection";
 import { ViewSelection } from "./shared/viewSelection";
 import { SuperNodeControls } from "./tools/superNode";
 import { ParallelControls } from "./tools/parallel";
@@ -81,6 +82,7 @@ const ToolActionPanelInner = () => {
                             <ViewSelection />
                             <TargetSelection />
                             <SnapSelection />
+                            <AnarchySelection />
                         </div>
                     </div>
                     {ToolComponent && (

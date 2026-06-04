@@ -21,13 +21,9 @@ namespace NetworkTools.Systems.UI {
             }
 
             // Update selected prefab binding when it changes
-            var currentPrefab = m_ToolSystem.activePrefab != null
-                                    ? m_ToolSystem.activePrefab.GetPrefabID().GetName()
-                                    : "";
-            if (currentPrefab != m_LastSelectedPrefab) {
-                m_LastSelectedPrefab          = currentPrefab;
-                m_SelectedPrefabBinding.Value = currentPrefab;
-            }
+            m_SelectedPrefabBinding.Value = m_ToolSystem.activePrefab != null
+                                                ? m_ToolSystem.activePrefab.GetPrefabID().GetName()
+                                                : "";
 
             // Update selected entities binding when selection changes
             var selectedNodes = m_ToolSystem.activeTool is INodeSelectionProvider selectionProvider
@@ -51,50 +47,19 @@ namespace NetworkTools.Systems.UI {
             }
 
             // Update distance unit binding when the setting changes
-            var currentDistanceUnit = NetworkToolsMod.Instance.Settings.DistanceUnit;
-            if (currentDistanceUnit != m_LastDistanceUnit) {
-                m_LastDistanceUnit          = currentDistanceUnit;
-                m_DistanceUnitBinding.Value = currentDistanceUnit;
-            }
+            m_DistanceUnitBinding.Value = NetworkToolsMod.Instance.Settings.DistanceUnit;
 
-            // Update snap/target bindings from the active tool
+            // Update snap/target/anarchy/view bindings from the active tool
             var activeTool = m_ToolSystem.activeTool as NT_BaseToolSystem;
 
-            var currentAvailableSnaps = activeTool != null ? (int)activeTool.AvailableSnaps : (int)SnapOption.None;
-            if (currentAvailableSnaps != m_LastAvailableSnaps) {
-                m_LastAvailableSnaps          = currentAvailableSnaps;
-                m_AvailableSnapsBinding.Value = currentAvailableSnaps;
-            }
-
-            var currentSelectedSnaps = activeTool != null ? (int)activeTool.SelectedSnaps : (int)SnapOption.None;
-            if (currentSelectedSnaps != m_LastSelectedSnaps) {
-                m_LastSelectedSnaps          = currentSelectedSnaps;
-                m_SelectedSnapsBinding.Value = currentSelectedSnaps;
-            }
-
-            var currentAvailableTargets = activeTool != null ? (int)activeTool.AvailableTargets : (int)TargetOption.All;
-            if (currentAvailableTargets != m_LastAvailableTargets) {
-                m_LastAvailableTargets          = currentAvailableTargets;
-                m_AvailableTargetsBinding.Value = currentAvailableTargets;
-            }
-
-            var currentSelectedTargets = activeTool != null ? (int)activeTool.SelectedTargets : (int)TargetOption.All;
-            if (currentSelectedTargets != m_LastSelectedTargets) {
-                m_LastSelectedTargets          = currentSelectedTargets;
-                m_SelectedTargetsBinding.Value = currentSelectedTargets;
-            }
-
-            var currentAvailableViews = activeTool != null ? (int)activeTool.AvailableViews : (int)ViewOption.All;
-            if (currentAvailableViews != m_LastAvailableViews) {
-                m_LastAvailableViews          = currentAvailableViews;
-                m_AvailableViewsBinding.Value = currentAvailableViews;
-            }
-
-            var currentSelectedViews = activeTool != null ? (int)activeTool.SelectedViews : (int)ViewOption.None;
-            if (currentSelectedViews != m_LastSelectedViews) {
-                m_LastSelectedViews          = currentSelectedViews;
-                m_SelectedViewsBinding.Value = currentSelectedViews;
-            }
+            m_AvailableSnapsBinding.Value   = activeTool != null ? (int)activeTool.AvailableSnaps   : (int)SnapOption.None;
+            m_SelectedSnapsBinding.Value    = activeTool != null ? (int)activeTool.SelectedSnaps    : (int)SnapOption.None;
+            m_AvailableTargetsBinding.Value = activeTool != null ? (int)activeTool.AvailableTargets : (int)TargetOption.All;
+            m_SelectedTargetsBinding.Value  = activeTool != null ? (int)activeTool.SelectedTargets  : (int)TargetOption.All;
+            m_AnarchyAvailableBinding.Value = activeTool != null && activeTool.SupportsAnarchy;
+            m_AnarchyEnabledBinding.Value   = activeTool != null && activeTool.AnarchyEnabled;
+            m_AvailableViewsBinding.Value   = activeTool != null ? (int)activeTool.AvailableViews   : (int)ViewOption.All;
+            m_SelectedViewsBinding.Value    = activeTool != null ? (int)activeTool.SelectedViews    : (int)ViewOption.None;
 
             if (m_ToggleToolPanelAction.WasPerformedThisFrame()) {
                 m_PanelOpenBinding.Value = true;

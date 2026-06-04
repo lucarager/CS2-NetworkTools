@@ -32,18 +32,12 @@
         }
 
         private ValueBindingHelper<string>               m_DistanceUnitBinding;
-        private string                                   m_LastDistanceUnit;
+        private ValueBindingHelper<bool>                 m_AnarchyAvailableBinding;
+        private ValueBindingHelper<bool>                 m_AnarchyEnabledBinding;
         private ValueBindingHelper<int>                  m_AvailableSnapsBinding;
         private ValueBindingHelper<int>                  m_AvailableTargetsBinding;
         private ValueBindingHelper<int>                  m_AvailableViewsBinding;
-        private int                                      m_LastAvailableSnaps;
-        private int                                      m_LastAvailableTargets;
-        private int                                      m_LastAvailableViews;
         private int                                      m_LastSelectedNodesHash;
-        private string                                   m_LastSelectedPrefab;
-        private int                                      m_LastSelectedSnaps;
-        private int                                      m_LastSelectedTargets;
-        private int                                      m_LastSelectedViews;
         private int                                      m_LastToolPrefabCount;
         private PrefixedLogger                           m_Log;
         private NameSystem                               m_NameSystem;
@@ -98,6 +92,8 @@
             RegisterToolParameterBindings(m_NtConnectToolSystem);
             RegisterToolParameterBindings(m_NtRoadShapeToolSystem);
             m_DistanceUnitBinding     = CreateBinding("DISTANCE_UNIT",     NT_Settings.DistanceUnitMeters);
+            m_AnarchyAvailableBinding = CreateBinding("ANARCHY_AVAILABLE", false);
+            m_AnarchyEnabledBinding   = CreateBinding("ANARCHY_ENABLED",   false, HandleUpdateAnarchyEnabled);
             m_AvailableSnapsBinding   = CreateBinding("AVAILABLE_SNAPS",   (int)SnapOption.None);
             m_SelectedSnapsBinding    = CreateBinding("SELECTED_SNAPS",    (int)SnapOption.None, HandleUpdateSelectedSnaps);
             m_AvailableTargetsBinding = CreateBinding("AVAILABLE_TARGETS", (int)TargetOption.All);

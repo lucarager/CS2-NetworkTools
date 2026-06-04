@@ -289,6 +289,18 @@ namespace NetworkTools.Systems.Tools {
         public ViewOption SelectedViews { get; set; } = ViewOption.None;
 
         /// <summary>
+        ///     Whether this tool supports the anarchy toggle (disabling vanilla validation at runtime).
+        ///     Override to return true in tools that want to expose this option to the player.
+        /// </summary>
+        public virtual bool SupportsAnarchy => false;
+
+        /// <summary>
+        ///     Whether anarchy mode is currently enabled by the player.
+        ///     Only meaningful when <see cref="SupportsAnarchy" /> is true.
+        /// </summary>
+        public bool AnarchyEnabled { get; set; }
+
+        /// <summary>
         ///     The parameter bound to PageUp/PageDown elevation shortcuts.
         ///     Null (default) means elevation shortcuts are disabled for this tool.
         ///     Set in derived tool's OnStartRunning to opt in.
@@ -580,6 +592,8 @@ namespace NetworkTools.Systems.Tools {
                                 ? (ViewOption)settings.SavedSelectedViews & AvailableViews
                                 : ViewOption.None;
             RefreshViews();
+            AnarchyEnabled = SupportsAnarchy && (settings?.SavedAnarchyEnabled ?? false);
+            RefreshAnarchy();
             DebugMode = settings?.DebugMode ?? false;
 
             // Restore persisted parameter values
@@ -807,6 +821,15 @@ namespace NetworkTools.Systems.Tools {
             requireUnderground               = (SelectedViews & ViewOption.Underground)       != 0;
             requireZones                     = (SelectedViews & ViewOption.ZoneGrid)          != 0;
             m_RenderingSystem.markersVisible = (SelectedViews & ViewOption.InvisibleNetworks) != 0;
+        }
+
+        /// <summary>
+        ///     Applies the current anarchy state by enabling or disabling the vanilla validation system.
+        ///     Only takes effect when the tool supports anarchy and doesn't unconditionally disable validation.
+        /// </summary>
+        public void RefreshAnarchy() {
+            if (!SupportsAnarchy || DisableVanillaValidation) return;
+            m_ValidationSystem.Enabled = !AnarchyEnabled;
         }
 
         /// <summary>

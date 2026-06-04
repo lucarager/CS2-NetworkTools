@@ -83,6 +83,21 @@ namespace NetworkTools.Systems.UI {
             }
         }
 
+        private void HandleUpdateAnarchyEnabled(bool value) {
+            if (m_ToolSystem.activeTool is not NT_BaseToolSystem activeTool || !activeTool.SupportsAnarchy) {
+                return;
+            }
+
+            activeTool.AnarchyEnabled = value;
+            activeTool.RefreshAnarchy();
+
+            var settings = NetworkToolsMod.Instance?.Settings;
+            if (settings != null) {
+                settings.SavedAnarchyEnabled = value;
+                settings.ApplyAndSave();
+            }
+        }
+
         private void HandleUpdateSelectedViews(int value) {
             if (m_ToolSystem.activeTool is not NT_BaseToolSystem activeTool) {
                 return;

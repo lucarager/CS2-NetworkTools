@@ -92,6 +92,8 @@ export const GAME_BINDINGS = {
     SELECTED_PREFAB: new TwoWayBinding<string>("SELECTED_PREFAB", ""),
     PANEL_OPEN: new TwoWayBinding<boolean>("PANEL_OPEN", false),
     DISTANCE_UNIT: new TwoWayBinding<DistanceUnits>("DISTANCE_UNIT", "Meters"),
+    ANARCHY_AVAILABLE: new TwoWayBinding<boolean>("ANARCHY_AVAILABLE", false),
+    ANARCHY_ENABLED: new TwoWayBinding<boolean>("ANARCHY_ENABLED", false),
     AVAILABLE_SNAPS: new TwoWayBinding<number>("AVAILABLE_SNAPS", SnapOption.None),
     SELECTED_SNAPS: new TwoWayBinding<number>("SELECTED_SNAPS", SnapOption.None),
     AVAILABLE_TARGETS: new TwoWayBinding<number>("AVAILABLE_TARGETS", TargetOption.All),

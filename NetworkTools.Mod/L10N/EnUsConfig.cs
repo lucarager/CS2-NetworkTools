@@ -30,26 +30,37 @@ namespace NetworkTools.L10N {
 
                 // Actions
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.ToggleToolPanelStr), "Toggle Network Tools Panel" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.ToggleToolPanelStr), "Toggle Network Tools Panel" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.ToggleToolPanelStr), "Opens the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool1Str), "Open Add Node" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.OpenTool1Str), "Open Add Node" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool1Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool2Str), "Open Remove Node" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.OpenTool2Str), "Open Remove Node" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool2Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool3Str), "Open Slide Node" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.OpenTool3Str), "Open Slide Node" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool3Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool4Str), "Open Super Node" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.OpenTool4Str), "Open Super Node" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool4Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool5Str), "Open Slope Tools" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.OpenTool5Str), "Open Slope Tools" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool5Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool6Str), "Open Curve Tools" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.OpenTool6Str), "Open Curve Tools" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool6Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool7Str), "Open Connect Tools" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.OpenTool7Str), "Open Connect Tools" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool7Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool8Str), "Open Parallel Tool" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.OpenTool8Str), "Open Parallel Tool" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool8Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.OpenTool9Str), "Open Generate Tool" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.OpenTool9Str), "Open Generate Tool" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.OpenTool9Str), "Shortcut to open a specific Network Tools tool, use it after opening the NT panel" },
                 { m_Setting.GetOptionLabelLocaleID(NT_Settings.ApplyTransformationStr), "Apply Tool" },
+                { m_Setting.GetBindingKeyLocaleID(NT_Settings.ApplyTransformationStr), "Apply Tool" },
                 { m_Setting.GetOptionDescLocaleID(NT_Settings.ApplyTransformationStr), "Applies the current tool's action" },
 
                 // Sections
@@ -198,6 +209,10 @@ namespace NetworkTools.L10N {
                 { "NetworkTools.UI.Target.Rail", "Rail" },
                 { "NetworkTools.UI.Target.Waterway", "Waterway" },
                 { "NetworkTools.UI.Target.InvisiblePath", "InvisiblePath" },
+
+                // ## Anarchy
+                { "NetworkTools.UI.Anarchy.Label", "Anarchy" },
+                { "NetworkTools.UI.Anarchy.Toggle", "Disable validation" },
 
                 // ## Snap Options
                 { "NetworkTools.UI.Snap.Label", "Snapping" },

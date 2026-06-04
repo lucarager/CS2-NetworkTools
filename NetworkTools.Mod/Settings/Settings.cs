@@ -178,6 +178,12 @@ namespace NetworkTools.Settings {
         public int SavedSelectedViews { get; set; } = (int)ViewOption.None;
 
         /// <summary>
+        ///     Persisted anarchy toggle state (hidden from UI).
+        /// </summary>
+        [SettingsUIHidden]
+        public bool SavedAnarchyEnabled { get; set; }
+
+        /// <summary>
         ///     Persisted tool parameter values (hidden from UI).
         ///     JSON-encoded dictionary keyed by "toolID.paramKey".
         /// </summary>
@@ -193,6 +199,7 @@ namespace NetworkTools.Settings {
             SavedSelectedSnaps   = (int)SnapOption.All;
             SavedSelectedTargets = (int)TargetOption.All;
             SavedSelectedViews   = (int)ViewOption.None;
+            SavedAnarchyEnabled  = false;
             SavedParameterValues = "{}";
         }
     }
