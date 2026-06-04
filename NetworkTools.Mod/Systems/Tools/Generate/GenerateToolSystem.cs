@@ -19,6 +19,9 @@ namespace NetworkTools.Systems.Tools.Generate {
         public override string toolID => "GenerateTool";
 
         /// <inheritdoc />
+        public override bool SupportsAnarchy => true;
+
+        /// <inheritdoc />
         public override TargetOption AvailableTargets => TargetOption.None;
 
         /// <inheritdoc />

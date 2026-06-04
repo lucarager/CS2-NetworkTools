@@ -24,8 +24,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             m_Log.Prefix = nameof(NT_GenerateToolSystem);
 
             // Configuration
-            RenderHandles            = true;
-            //DisableVanillaValidation = true;
+            RenderHandles = true;
 
             // Mode change additionally reinitializes handles
             Mode.OnChanged += _ => {

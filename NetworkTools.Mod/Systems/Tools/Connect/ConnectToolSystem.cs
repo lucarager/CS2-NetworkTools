@@ -18,6 +18,9 @@ namespace NetworkTools.Systems.Tools.Connect {
         /// <inheritdoc />
         public override string toolID => "ConnectTool";
 
+        /// <inheritdoc />
+        public override bool SupportsAnarchy => true;
+
         // ── Parameters
 
         public NetPrefabParameter         NetPrefab  = new("connect.netPrefab");
