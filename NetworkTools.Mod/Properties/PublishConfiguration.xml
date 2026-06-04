@@ -82,7 +82,7 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.4.4" />
+  <ModVersion Value="1.4.5" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Dependency for the mod, can be set multiple-->
@@ -90,9 +90,13 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog># 1.4.4
+  <ChangeLog># 1.4.5
 
-- Bug fixes and improvements.</ChangeLog>
+- All Tools: Add explicity anarchy toggle to parallel, connect, and generate. This allows players to choose if the validation system is enabled or not, which determines if roads cost money to build.
+- UI: Further refine the look and feel of handles, such as the rotation and position handles
+- Translations: Updated all languages, thank you volunteers!
+- Connect: Fix a bug that would add an additional invalid handle when creating curves
+- Various bug fixes and improvements</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
