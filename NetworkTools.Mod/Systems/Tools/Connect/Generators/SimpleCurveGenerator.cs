@@ -12,15 +12,15 @@ namespace NetworkTools.Systems.Tools.Connect {
     using Unity.Mathematics;
 
     public struct SimpleCurveGenerator : IConnectionGenerator {
-        public void InitializeConfig(ref ConnectJobConfig config) {
-            var length = math.distance(config.StartPosition, config.EndPosition);
-            var dot    = math.dot(config.StartDirection, -config.EndDirection);
+        public static void Initialize(NT_ConnectToolSystem tool) {
+            var length = math.distance(tool.StartPosition.Value, tool.EndPosition.Value);
+            var dot    = math.dot(tool.StartDirection.Value, -tool.EndDirection.Value);
             var factor = math.lerp(0.75f, 0.33f, math.saturate((dot + 1f) / 2f));
 
-            config.CurveStartPointPosition        = config.StartPosition;
-            config.CurveEndPointPosition          = config.EndPosition;
-            config.CurveStartControlPointPosition = config.StartPosition + config.StartDirection * (length * factor);
-            config.CurveEndControlPointPosition   = config.EndPosition   + config.EndDirection   * (length * factor);
+            tool.CurveStartPointPosition.Value        = tool.StartPosition.Value;
+            tool.CurveEndPointPosition.Value          = tool.EndPosition.Value;
+            tool.CurveStartControlPointPosition.Value = tool.StartPosition.Value + tool.StartDirection.Value * (length * factor);
+            tool.CurveEndControlPointPosition.Value   = tool.EndPosition.Value   + tool.EndDirection.Value   * (length * factor);
         }
 
         public void GenerateConnection(

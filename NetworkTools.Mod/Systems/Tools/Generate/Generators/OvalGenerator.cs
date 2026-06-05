@@ -14,13 +14,14 @@ namespace NetworkTools.Systems.Tools.Generate {
         private const int   Segments = 4;
         private const float Kappa    = 0.5522847498f; // 4 * (sqrt(2) - 1) / 3
 
-        public void InitializeConfig(ref GenerateJobConfig config) {
-            var dir = config.SecondPosition - config.Position;
+        public static void Initialize(NT_GenerateToolSystem tool, float3 secondPos) {
+            var dir = secondPos - tool.Position.Value;
             var dist = math.length(dir.xz);
             if (dist > 0.001f)
-                config.StartDirection = quaternion.LookRotationSafe(
-                    math.normalizesafe(new float3(dir.x, 0, dir.z)), math.up());
-            config.OvalRadiusZ = math.max(4f, dist);
+                tool.Rotation.Value = math.mul(
+                    quaternion.LookRotationSafe(math.normalizesafe(new float3(dir.x, 0, dir.z)), math.up()),
+                    new float3(0, 0, 1));
+            tool.OvalRadiusZ.Value = math.clamp(dist, tool.OvalRadiusZ.Min, tool.OvalRadiusZ.Max);
         }
 
         public void Generate(

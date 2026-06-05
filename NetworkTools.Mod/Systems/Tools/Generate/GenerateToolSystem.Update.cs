@@ -114,26 +114,13 @@ namespace NetworkTools.Systems.Tools.Generate {
             }
         }
 
-        /// <summary>
-        ///     Derives mode-specific parameters from a second control point position
-        ///     using the generator's <see cref="IGenerator.InitializeConfig"/>.
-        /// </summary>
         private void InitializeFromSecondPoint(float3 secondPos) {
-            var config = BuildJobConfig();
-            config.SecondPosition = secondPos;
-
             switch (Mode.Value) {
-                case GenerateMode.Grid:   new GridGenerator().InitializeConfig(ref config);   break;
-                case GenerateMode.Circle: new CircleGenerator().InitializeConfig(ref config); break;
-                case GenerateMode.Oval:   new OvalGenerator().InitializeConfig(ref config);   break;
+                case GenerateMode.Grid:   GridGenerator.Initialize(this, secondPos);   break;
+                case GenerateMode.Circle: CircleGenerator.Initialize(this, secondPos); break;
+                case GenerateMode.Oval:   OvalGenerator.Initialize(this, secondPos);   break;
             }
 
-            // Copy derived values back to parameters
-            Rotation.Value     = math.mul(config.StartDirection, new float3(0, 0, 1));
-            CircleRadius.Value = math.clamp(config.CircleRadius, CircleRadius.Min, CircleRadius.Max);
-            OvalRadiusZ.Value  = math.clamp(config.OvalRadiusZ, OvalRadiusZ.Min, OvalRadiusZ.Max);
-
-            // Handle-target parameters track the second CP's world position
             GridDirectionPoint.Value = secondPos;
             OvalAxisPoint.Value      = secondPos;
         }

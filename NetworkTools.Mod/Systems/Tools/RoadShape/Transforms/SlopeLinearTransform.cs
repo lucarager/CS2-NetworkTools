@@ -10,10 +10,6 @@
     public struct SlopeLinearTransform : IPathTransformation {
         public Bezier4x3 ReferenceBezier;
 
-        public void InitializeConfig(in ShapeTransformContext ctx, ref ShapeJobConfig config) {
-            // No initialization needed - linear slope uses path endpoints directly
-        }
-
         public void PreProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config) {
             // Construct a reference bezier that goes directly from path start to path end,
             // with control points at 1/3 and 2/3 of the way along the line. 

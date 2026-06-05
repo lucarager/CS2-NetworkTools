@@ -64,7 +64,6 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             Template.OnChanged += _ => {
                 ApplyTemplatePreset(Template.Value);
                 if (Phase == OperationPhase.Ready) {
-                    InitializeCurrentTransform();
                     RefreshTransformHandles();
                 }
             };

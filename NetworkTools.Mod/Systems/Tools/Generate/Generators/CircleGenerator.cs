@@ -14,9 +14,10 @@ namespace NetworkTools.Systems.Tools.Generate {
         private const int   Segments = 4;
         private const float Kappa    = 0.5522847498f; // 4 * (sqrt(2) - 1) / 3
 
-        public void InitializeConfig(ref GenerateJobConfig config) {
-            config.CircleRadius = math.max(4f,
-                math.distance(config.Position.xz, config.SecondPosition.xz));
+        public static void Initialize(NT_GenerateToolSystem tool, float3 secondPos) {
+            tool.CircleRadius.Value = math.clamp(
+                math.distance(tool.Position.Value.xz, secondPos.xz),
+                tool.CircleRadius.Min, tool.CircleRadius.Max);
         }
 
         public void Generate(

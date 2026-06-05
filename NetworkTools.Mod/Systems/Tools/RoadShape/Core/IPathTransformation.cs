@@ -17,15 +17,6 @@
     /// </summary>
     public interface IPathTransformation {
         /// <summary>
-        /// Called once when the template is selected or path changes.
-        /// Use to compute initial values that need to be stored in config
-        /// for both handle creation and transform execution.
-        /// </summary>
-        /// <param name="ctx">The transform context (path geometry).</param>
-        /// <param name="config">The transform configuration (can be modified to store computed values).</param>
-        void InitializeConfig(in ShapeTransformContext ctx, ref ShapeJobConfig config);
-
-        /// <summary>
         /// Called before processing edges. Use for per-frame calculations
         /// that require access to all edges (e.g., calculating reference bezier from config values).
         /// </summary>

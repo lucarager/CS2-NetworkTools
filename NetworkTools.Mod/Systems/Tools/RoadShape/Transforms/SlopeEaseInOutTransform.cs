@@ -18,11 +18,6 @@
         /// </summary>
         public Bezier4x3 ReferenceBezier;
 
-        public void InitializeConfig(in ShapeTransformContext ctx, ref ShapeJobConfig config) {
-            // EaseInOut uses simple normalized parameters (0-0.5) stored in config.
-            // No additional computed state needed - handles read directly from config.EaseInLength/EaseOutLength
-        }
-
         public void PreProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config) {
             // Build a 2D height curve where x = path ratio (0-1) and y = height.
             // We solve for t where x(t) = pathRatio to get the correct height.

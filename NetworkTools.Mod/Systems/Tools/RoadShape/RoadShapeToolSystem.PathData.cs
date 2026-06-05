@@ -100,8 +100,6 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             m_PathDataValid = true;
             m_Log.Debug($"RefreshPathData: Gathered {m_EdgeStates.Length} edges, TotalLength={m_ShapeTransformContext.TotalLength:F2}");
 
-            // InitializeConfig the current transform with the new path data
-            InitializeCurrentTransform();
         }
 
         /// <summary>
@@ -109,45 +107,6 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         /// </summary>
         private void InvalidatePathData() {
             m_PathDataValid = false;
-        }
-
-        /// <summary>
-        /// Calls InitializeConfig on the current transform to compute initial values.
-        /// Called after path data is gathered or when template changes.
-        /// </summary>
-        private void InitializeCurrentTransform() {
-            if (!m_PathDataValid) {
-                m_Log.Debug("InitializeCurrentTransform: Path data not valid, skipping");
-                return;
-            }
-
-            var config = BuildJobConfig();
-            m_Log.Debug($"InitializeCurrentTransform: Initializing {config.Template}");
-
-            switch (config.Template) {
-                case ShapeTransformTemplate.SlopeLinear:
-                    new SlopeLinearTransform().InitializeConfig(in m_ShapeTransformContext, ref config);
-                    break;
-                case ShapeTransformTemplate.SlopeEaseInOut:
-                    new SlopeEaseInOutTransform().InitializeConfig(in m_ShapeTransformContext, ref config);
-                    break;
-                case ShapeTransformTemplate.SlopeArch:
-                    // TODO: Add when implemented
-                    break;
-                case ShapeTransformTemplate.CurveStraighten:
-                    new CurveStraightenTransform().InitializeConfig(in m_ShapeTransformContext, ref config);
-                    break;
-                case ShapeTransformTemplate.CurveSmooth:
-                    new CurveSmoothTransform().InitializeConfig(in m_ShapeTransformContext, ref config);
-                    break;
-            }
-
-            // Copy any values computed by InitializeConfig back to parameters
-            EaseInLength.Value    = config.EaseInLength;
-            EaseOutLength.Value   = config.EaseOutLength;
-            ArchHeight.Value      = config.ArchHeight;
-            ArchPosition.Value    = config.ArchPosition;
-            SmoothingFactor.Value = config.SmoothingFactor;
         }
 
         #endregion

@@ -10,9 +10,9 @@ namespace NetworkTools.Systems.Tools.Connect {
     using Unity.Mathematics;
 
     public struct LoopGenerator : IConnectionGenerator {
-        public void InitializeConfig(ref ConnectJobConfig config) {
-            config.LoopRadiusFactor = 0.5f;
-            config.LoopArcSide     = LoopArcSide.Outer;
+        public static void Initialize(NT_ConnectToolSystem tool) {
+            tool.LoopRadiusFactor.Value = 0.5f;
+            tool.LoopArc.Value          = LoopArcSide.Outer;
         }
 
         public void GenerateConnection(

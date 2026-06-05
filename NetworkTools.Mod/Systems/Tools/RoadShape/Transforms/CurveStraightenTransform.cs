@@ -10,10 +10,6 @@
     /// at its corresponding path ratio.
     /// </summary>
     public struct CurveStraightenTransform : IPathTransformation {
-        public void InitializeConfig(in ShapeTransformContext ctx, ref ShapeJobConfig config) {
-            // No initialization needed - straighten uses path endpoints directly
-        }
-
         public void PreProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config) {
             // No global pre-processing needed - each edge is independently placed on the line
         }

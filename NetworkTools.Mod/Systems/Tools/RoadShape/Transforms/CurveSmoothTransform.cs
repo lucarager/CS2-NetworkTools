@@ -7,11 +7,6 @@
     /// Smooths curves by fitting edges to a smooth Bezier curve.
     /// </summary>
     public struct CurveSmoothTransform : IPathTransformation {
-        public void InitializeConfig(in ShapeTransformContext ctx, ref ShapeJobConfig config) {
-            // TODO: Compute ideal bezier and store control points in config
-            // This allows GetHandleDefinitions to position handles correctly
-        }
-
         public void PreProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config) {
             // TODO: Implement curve smoothing using config.ControlPointB/C
         }

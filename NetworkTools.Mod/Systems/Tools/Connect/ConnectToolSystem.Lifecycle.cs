@@ -18,13 +18,9 @@ namespace NetworkTools.Systems.Tools.Connect {
             return m_PrefabSystem.HasComponent<NT_ConnectTool>(prefab);
         }
 
-        /// <summary>
-        ///     Calls InitializeConfig on the current generator to compute initial values.
-        /// </summary>
         private void InitializeConfig() {
             m_Log.Debug($"InitializeConfig: Initializing {Mode.Value}");
 
-            // Only initialize config when we have 2 valid nodes selected (Ready phase)
             if (Phase != OperationPhase.Ready) {
                 return;
             }
@@ -38,45 +34,16 @@ namespace NetworkTools.Systems.Tools.Connect {
             var startPosition       = startNode.m_Position;
             var endPosition         = endNode.m_Position;
 
-            var startDirection = ComputeNodeDirection(startNodeEntity, startConnectedEdges, startPosition, endPosition);
-            var endDirection   = ComputeNodeDirection(endNodeEntity, endConnectedEdges, endPosition, startPosition);
-
-            var config = new ConnectJobConfig {
-                StartPosition  = startPosition,
-                EndPosition    = endPosition,
-                StartDirection = startDirection,
-                EndDirection   = endDirection,
-            };
+            StartPosition.Value  = startPosition;
+            EndPosition.Value    = endPosition;
+            StartDirection.Value = ComputeNodeDirection(startNodeEntity, startConnectedEdges, startPosition, endPosition);
+            EndDirection.Value   = ComputeNodeDirection(endNodeEntity, endConnectedEdges, endPosition, startPosition);
 
             switch (Mode.Value) {
-                case ConnectMode.SimpleCurve:
-                    new SimpleCurveGenerator().InitializeConfig(ref config);
-                    break;
-                case ConnectMode.ComplexCurve:
-                    new ComplexCurveGenerator().InitializeConfig(ref config);
-                    break;
-                case ConnectMode.Loop:
-                    new LoopGenerator().InitializeConfig(ref config);
-                    break;
+                case ConnectMode.SimpleCurve:  SimpleCurveGenerator.Initialize(this);  break;
+                case ConnectMode.ComplexCurve: ComplexCurveGenerator.Initialize(this); break;
+                case ConnectMode.Loop:         LoopGenerator.Initialize(this);         break;
             }
-
-            // Copy snapshot back to parameters
-            StartPosition.Value                  = config.StartPosition;
-            EndPosition.Value                    = config.EndPosition;
-            StartDirection.Value                 = config.StartDirection;
-            EndDirection.Value                   = config.EndDirection;
-            CurveStartPointPosition.Value        = config.CurveStartPointPosition;
-            CurveStartControlPointPosition.Value = config.CurveStartControlPointPosition;
-            CurveEndControlPointPosition.Value   = config.CurveEndControlPointPosition;
-            CurveEndPointPosition.Value          = config.CurveEndPointPosition;
-            ComplexStartPointPosition.Value        = config.ComplexStartPointPosition;
-            ComplexStartControlPointPosition.Value = config.ComplexStartControlPointPosition;
-            ComplexEndControlPointPosition.Value   = config.ComplexEndControlPointPosition;
-            ComplexEndPointPosition.Value          = config.ComplexEndPointPosition;
-            ComplexMidPosition.Value               = config.ComplexMidPosition;
-            ComplexMidRotation.Value               = config.ComplexMidRotation;
-            LoopRadiusFactor.Value               = config.LoopRadiusFactor;
-            LoopArc.Value                        = config.LoopArcSide;
 
             RebuildHandlesForActiveMode();
         }

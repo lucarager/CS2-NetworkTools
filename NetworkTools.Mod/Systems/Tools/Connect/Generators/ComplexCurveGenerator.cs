@@ -11,24 +11,24 @@ namespace NetworkTools.Systems.Tools.Connect {
     using Unity.Mathematics;
 
     public struct ComplexCurveGenerator : IConnectionGenerator {
-        public void InitializeConfig(ref ConnectJobConfig config) {
-            var length = math.distance(config.StartPosition, config.EndPosition);
-            var dot    = math.dot(config.StartDirection, -config.EndDirection);
+        public static void Initialize(NT_ConnectToolSystem tool) {
+            var length = math.distance(tool.StartPosition.Value, tool.EndPosition.Value);
+            var dot    = math.dot(tool.StartDirection.Value, -tool.EndDirection.Value);
             var factor = math.lerp(0.75f, 0.33f, math.saturate((dot + 1f) / 2f));
 
-            config.ComplexStartPointPosition        = config.StartPosition;
-            config.ComplexEndPointPosition          = config.EndPosition;
-            config.ComplexStartControlPointPosition = config.StartPosition + config.StartDirection * (length * factor);
-            config.ComplexEndControlPointPosition   = config.EndPosition   + config.EndDirection   * (length * factor);
+            tool.ComplexStartPointPosition.Value        = tool.StartPosition.Value;
+            tool.ComplexEndPointPosition.Value          = tool.EndPosition.Value;
+            tool.ComplexStartControlPointPosition.Value = tool.StartPosition.Value + tool.StartDirection.Value * (length * factor);
+            tool.ComplexEndControlPointPosition.Value   = tool.EndPosition.Value   + tool.EndDirection.Value   * (length * factor);
 
             var simpleBezier = new Bezier4x3 {
-                a = config.ComplexStartPointPosition,
-                b = config.ComplexStartControlPointPosition,
-                c = config.ComplexEndControlPointPosition,
-                d = config.ComplexEndPointPosition
+                a = tool.ComplexStartPointPosition.Value,
+                b = tool.ComplexStartControlPointPosition.Value,
+                c = tool.ComplexEndControlPointPosition.Value,
+                d = tool.ComplexEndPointPosition.Value
             };
-            config.ComplexMidPosition = MathUtils.Position(simpleBezier, 0.5f);
-            config.ComplexMidRotation = math.normalizesafe(MathUtils.Tangent(simpleBezier, 0.5f));
+            tool.ComplexMidPosition.Value = MathUtils.Position(simpleBezier, 0.5f);
+            tool.ComplexMidRotation.Value = math.normalizesafe(MathUtils.Tangent(simpleBezier, 0.5f));
         }
 
         public void GenerateConnection(

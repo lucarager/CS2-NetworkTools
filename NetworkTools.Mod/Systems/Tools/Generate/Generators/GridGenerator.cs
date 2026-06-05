@@ -11,11 +11,12 @@ namespace NetworkTools.Systems.Tools.Generate {
     using Unity.Mathematics;
 
     public struct GridGenerator : IGenerator {
-        public void InitializeConfig(ref GenerateJobConfig config) {
-            var dir = config.SecondPosition - config.Position;
+        public static void Initialize(NT_GenerateToolSystem tool, float3 secondPos) {
+            var dir = secondPos - tool.Position.Value;
             if (math.lengthsq(dir.xz) > 0.001f)
-                config.StartDirection = quaternion.LookRotationSafe(
-                    math.normalizesafe(new float3(dir.x, 0, dir.z)), math.up());
+                tool.Rotation.Value = math.mul(
+                    quaternion.LookRotationSafe(math.normalizesafe(new float3(dir.x, 0, dir.z)), math.up()),
+                    new float3(0, 0, 1));
         }
 
         public void Generate(
