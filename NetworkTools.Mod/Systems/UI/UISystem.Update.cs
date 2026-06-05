@@ -60,6 +60,7 @@ namespace NetworkTools.Systems.UI {
             m_AnarchyEnabledBinding.Value   = activeTool != null && activeTool.AnarchyEnabled;
             m_AvailableViewsBinding.Value   = activeTool != null ? (int)activeTool.AvailableViews   : (int)ViewOption.All;
             m_SelectedViewsBinding.Value    = activeTool != null ? (int)activeTool.SelectedViews    : (int)ViewOption.None;
+            m_OperationPhaseBinding.Value   = activeTool != null ? (int)activeTool.Phase            : (int)OperationPhase.Idle;
 
             if (m_ToggleToolPanelAction.WasPerformedThisFrame()) {
                 m_PanelOpenBinding.Value = true;

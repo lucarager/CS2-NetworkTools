@@ -48,6 +48,14 @@ export enum TargetOption {
     All = Road | Path | Rail | Waterway | InvisiblePath,
 }
 
+// Operation phase
+export enum OperationPhase {
+    Idle = 0,
+    Configuring = 1,
+    Ready = 2,
+    Applying = 3,
+}
+
 // View options (bitflags)
 export enum ViewOption {
     None = 0,
@@ -100,6 +108,7 @@ export const GAME_BINDINGS = {
     SELECTED_TARGETS: new TwoWayBinding<number>("SELECTED_TARGETS", TargetOption.All),
     AVAILABLE_VIEWS: new TwoWayBinding<number>("AVAILABLE_VIEWS", ViewOption.All),
     SELECTED_VIEWS: new TwoWayBinding<number>("SELECTED_VIEWS", ViewOption.None),
+    OPERATION_PHASE: new TwoWayBinding<number>("OPERATION_PHASE", OperationPhase.Idle),
     PS_SELECTED_TYPE: new TwoWayBinding<number>("PS:SELECTED_TYPE", PrefabType.Road),
     PS_DATA: new TwoWayBinding<PrefabSelectionEntry[]>("PS:DATA", []),
     PS_CACHED_PREFAB: new TwoWayBinding<PrefabSelectionEntry[]>("PS:CACHED_PREFAB", []),

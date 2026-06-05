@@ -37,6 +37,7 @@
         private ValueBindingHelper<int>                  m_AvailableSnapsBinding;
         private ValueBindingHelper<int>                  m_AvailableTargetsBinding;
         private ValueBindingHelper<int>                  m_AvailableViewsBinding;
+        private ValueBindingHelper<int>                  m_OperationPhaseBinding;
         private int                                      m_LastSelectedNodesHash;
         private int                                      m_LastToolPrefabCount;
         private PrefixedLogger                           m_Log;
@@ -100,6 +101,7 @@
             m_SelectedTargetsBinding  = CreateBinding("SELECTED_TARGETS",  (int)TargetOption.All, HandleUpdateSelectedTargets);
             m_AvailableViewsBinding   = CreateBinding("AVAILABLE_VIEWS",   (int)ViewOption.All);
             m_SelectedViewsBinding    = CreateBinding("SELECTED_VIEWS",    (int)ViewOption.None, HandleUpdateSelectedViews);
+            m_OperationPhaseBinding   = CreateBinding("OPERATION_PHASE",   (int)OperationPhase.Idle);
 
             CreateTrigger<string>("SELECT_TOOL", HandleSelectTool);
             CreateTrigger("REQUEST_APPLY", HandleRequestApply);
