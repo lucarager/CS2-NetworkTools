@@ -15,6 +15,12 @@ namespace NetworkTools.Systems.Tools.Generate {
         private const float Kappa    = 0.5522847498f; // 4 * (sqrt(2) - 1) / 3
 
         public void InitializeConfig(ref GenerateJobConfig config) {
+            var dir = config.SecondPosition - config.Position;
+            var dist = math.length(dir.xz);
+            if (dist > 0.001f)
+                config.StartDirection = quaternion.LookRotationSafe(
+                    math.normalizesafe(new float3(dir.x, 0, dir.z)), math.up());
+            config.OvalRadiusZ = math.max(4f, dist);
         }
 
         public void Generate(

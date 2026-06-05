@@ -11,7 +11,12 @@ namespace NetworkTools.Systems.Tools.Generate {
     using Unity.Mathematics;
 
     public struct GridGenerator : IGenerator {
-        public void InitializeConfig(ref GenerateJobConfig config) { }
+        public void InitializeConfig(ref GenerateJobConfig config) {
+            var dir = config.SecondPosition - config.Position;
+            if (math.lengthsq(dir.xz) > 0.001f)
+                config.StartDirection = quaternion.LookRotationSafe(
+                    math.normalizesafe(new float3(dir.x, 0, dir.z)), math.up());
+        }
 
         public void Generate(
             in  GenerateJobConfig      config,

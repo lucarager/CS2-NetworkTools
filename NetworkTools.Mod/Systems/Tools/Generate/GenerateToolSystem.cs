@@ -25,28 +25,26 @@ namespace NetworkTools.Systems.Tools.Generate {
         public override TargetOption AvailableTargets => TargetOption.None;
 
         /// <inheritdoc />
-        // TODO: Unhide once snap job is tested in-game
-        public override SnapOption AvailableSnaps => SnapOption.None;
+        public override SnapOption AvailableSnaps => SnapOption.AllUsual;
 
-        // Shared
+        // ── Parameters: Shared ──────────────────────────────────────────────
+        public EnumParameter<GenerateMode> Mode = new("generate.mode", GenerateMode.Grid, label: "NetworkTools.UI.Common.Mode");
         public NetPrefabParameter NetPrefab = new("generate.netPrefab", modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval);
         public Float3Parameter Position = new("generate.position", modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval) {
             Handles = new IHandleSpec<float3>[] { new PositionHandle() }
         };
 
         public Float3Parameter Rotation = new("generate.rotation", new float3(0, 0, 1),
-            modes: (int)GenerateMode.Grid | (int)GenerateMode.Oval) {
+            modes: (int)GenerateMode.Grid | (int)GenerateMode.Oval);
+
+        // ── Parameters: Grid ────────────────────────────────────────────────
+        public Float3Parameter GridDirectionPoint = new("generate.gridDirPoint",
+            modes: (int)GenerateMode.Grid) {
             Handles = new IHandleSpec<float3>[] {
-                new RotationHandle {
-                    Parent = nameof(Position),
-                    Normal = new float3(0, 1, 0),
-                    ReferenceDirection = new float3(0, 0, 1),
-                }
+                new PositionHandle { Parent = nameof(Position) }
             }
         };
 
-        // Grid
-        public EnumParameter<GenerateMode> Mode         = new("generate.mode", GenerateMode.Grid, label: "NetworkTools.UI.Common.Mode");
         public FloatParameter GridXSpacing = new("generate.gridXSpacing", 60f, 0f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XSpacing", fractionDigits: 0, numberType: NumberType.Distance);
         public FloatParameter GridZSpacing = new("generate.gridZSpacing", 60f, 0f, 240f, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.ZSpacing", fractionDigits: 0, numberType: NumberType.Distance);
         public IntParameter   GridXNum     = new("generate.gridXNum", 3, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.XCount", numberType: NumberType.Columns);
@@ -58,14 +56,40 @@ namespace NetworkTools.Systems.Tools.Generate {
         public NetPrefabParameter AltNetPrefabZ             = new("generate.altNetPrefabZ", modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltNetPrefabZ");
         public IntParameter       AltEveryZ                 = new("generate.altEveryZ", 2, 2, 20, modes: (int)GenerateMode.Grid, label: "NetworkTools.UI.Generate.AltEveryZ", numberType: NumberType.Rows);
 
-        // Circle
-        public FloatParameter CircleRadius = new("generate.circleRadius", 60f, 4f, 240f, modes: (int)GenerateMode.Circle, label: "NetworkTools.UI.Generate.Radius", fractionDigits: 0, numberType: NumberType.Distance);
+        // ── Parameters: Circle ──────────────────────────────────────────────
+        public FloatParameter CircleRadius = new("generate.circleRadius", 60f, 4f, 240f, modes: (int)GenerateMode.Circle, label: "NetworkTools.UI.Generate.Radius", fractionDigits: 0, numberType: NumberType.Distance) {
+            Handles = new IHandleSpec<float>[] {
+                new CircleHandle {
+                    Parent = nameof(Position),
+                    Normal = new float3(0, 1, 0),
+                }
+            }
+        };
 
-        // Oval
+        // ── Parameters: Oval ────────────────────────────────────────────────
+        public Float3Parameter OvalAxisPoint = new("generate.ovalAxisPoint",
+            modes: (int)GenerateMode.Oval) {
+            Handles = new IHandleSpec<float3>[] {
+                new PositionHandle { Parent = nameof(Position) }
+            }
+        };
+
         public FloatParameter OvalRadiusX = new("generate.ovalRadiusX", 80f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusX", fractionDigits: 0, numberType: NumberType.Distance);
-        public FloatParameter OvalRadiusZ = new("generate.ovalRadiusZ", 40f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusZ", fractionDigits: 0, numberType: NumberType.Distance);
+        public FloatParameter OvalRadiusZ = new("generate.ovalRadiusZ", 40f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusZ", fractionDigits: 0, numberType: NumberType.Distance) {
+            Handles = new IHandleSpec<float>[] {
+                new AxisHandle {
+                    Parent = nameof(Position),
+                    StartPoint = tool => ((NT_GenerateToolSystem)tool).Position.Value,
+                    EndPoint = tool => {
+                        var t = (NT_GenerateToolSystem)tool;
+                        var perp = math.cross(new float3(0, 1, 0), math.normalizesafe(t.Rotation.Value));
+                        return t.Position.Value + perp;
+                    },
+                }
+            }
+        };
 
-        // Elevation
+        // ── Parameters: Elevation ───────────────────────────────────────────
         public FloatParameter Elevation = new("generate.elevation", 0f, -100f, 100f, modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.Elevation", fractionDigits: 0, numberType: NumberType.Distance);
         public BoolParameter FollowTerrain = new("generate.followTerrain", true, modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.FollowTerrain");
 
@@ -84,18 +108,14 @@ namespace NetworkTools.Systems.Tools.Generate {
         private NativeValue<Entity> m_SnappedEntity;
 
         /// <summary>
-        ///     Caches the last hit position for tool-specific use.
+        ///     Canonical control point storage. Count determines phase:
+        ///     0 = Idle, 1 = Configuring, 2 = Ready.
         /// </summary>
-        private float3 m_LastHitPosition;
+        private NativeList<ControlPoint> m_ControlPoints;
 
         /// <summary>
-        ///     Hovered control point
+        ///     Baseline elevation from the first control point's terrain hit.
         /// </summary>
-        protected NativeValue<ControlPoint> m_HoveredControlPoint;
-
-        /// <summary>
-        ///     Selected control point
-        /// </summary>
-        protected NativeValue<ControlPoint> m_SelectedControlPoint;
+        private float m_BaselineElevation;
     }
 }

@@ -16,8 +16,11 @@ namespace NetworkTools.Systems.Tools.Generate {
                     new("NetworkTools.HintTooltip.Generate.Rotate", preciseRotationAction),
                     new("NetworkTools.HintTooltip.Common.Exit", secondaryApplyAction)
                 },
+                OperationPhase.Configuring => new HintTooltipEntry[] {
+                    new("NetworkTools.HintTooltip.Generate.SetDirection", applyAction),
+                    new("NetworkTools.HintTooltip.Generate.RemovePlacement", secondaryApplyAction)
+                },
                 OperationPhase.Ready => new HintTooltipEntry[] {
-                    new("NetworkTools.HintTooltip.Generate.Rotate", preciseRotationAction),
                     new("NetworkTools.HintTooltip.Generate.RemovePlacement", secondaryApplyAction)
                 },
                 _ => System.Array.Empty<HintTooltipEntry>()

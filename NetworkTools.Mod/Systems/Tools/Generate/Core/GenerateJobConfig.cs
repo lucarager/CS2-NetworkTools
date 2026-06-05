@@ -8,6 +8,7 @@ namespace NetworkTools.Systems.Tools.Generate {
     /// </summary>
     public struct GenerateJobConfig {
         public float3     Position;
+        public float3     SecondPosition;
         public quaternion StartDirection;
         public Entity     NetPrefabEntity;
         public Entity     NetLanePrefabEntity;

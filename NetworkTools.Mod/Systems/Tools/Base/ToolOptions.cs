@@ -12,7 +12,8 @@ namespace NetworkTools.Systems.Tools {
         ExistingGeometry = 1 << 2,
         ObjectSide       = 1 << 3,
         GuideLines       = 1 << 4,
-        All              = ZoneGrid | MidPoint | ExistingGeometry | ObjectSide | GuideLines
+        AllUsual = ZoneGrid | ExistingGeometry | ObjectSide | GuideLines,
+        All = ZoneGrid | MidPoint | ExistingGeometry | ObjectSide | GuideLines
     }
 
     /// <summary>

@@ -14,103 +14,142 @@ namespace NetworkTools.Systems.Tools.Generate {
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
 
-            // ═══════════════════════════════════════════════════════════════════════════
-            // HANDLE INTERACTION PIPELINE
-            // ═══════════════════════════════════════════════════════════════════════════
-
-            if (Phase == OperationPhase.Ready && ProcessHandleInput()) {
-                return HandleTempEntities(inputDeps);
+            // ── Right-click pops a control point in any phase ─────────────────
+            if (m_SecondaryApplyAction.WasPressedThisFrame()) {
+                PopControlPoint();
+                return HandleOutput(inputDeps);
             }
 
-            // ═══════════════════════════════════════════════════════════════════════════
-            // PRECISE ROTATION (shift + scrollwheel)
-            // ═══════════════════════════════════════════════════════════════════════════
+            // ── Handle interactions (Ready only) ─────────────────────────────
+            if (Phase == OperationPhase.Ready && ProcessHandleInput()) {
+                return HandleOutput(inputDeps);
+            }
 
-            if (m_PreciseRotation.IsInProgress()) {
+            // ── Precise rotation (Idle only) ─────────────────────────────────
+            if (Phase == OperationPhase.Idle && m_PreciseRotation.IsInProgress()) {
                 ApplyPreciseRotation();
             }
 
-            // ═══════════════════════════════════════════════════════════════════════════
-            // CONTROL POINT PLACEMENT: Input Detection
-            // ═══════════════════════════════════════════════════════════════════════════
-
-            var          rightClickPressed       = m_SecondaryApplyAction.WasPressedThisFrame();
-            var          leftClickPressed        = m_ApplyAction.WasPressedThisFrame();
-            var          raycastHit              = false;
-            var          hitPosition             = float3.zero;
-            var          lastHoveredControlPoint = m_HoveredControlPoint.value;
-            var          hasSelectedControlPoint = !m_SelectedControlPoint.value.Equals(default);
-            var          hasNewHoverTarget       = false;
-            ControlPoint controlPoint            = default;
-
-            raycastHit = GetRaycastResult(out controlPoint);
-            if (raycastHit) {
-                // Snap the control point if any snaps are active
-                if (SelectedSnaps != SnapOption.None && NetPrefab.NetPrefabEntity != Unity.Entities.Entity.Null) {
-                    var snapHandle = ScheduleSnapJob(controlPoint, inputDeps);
-                    snapHandle.Complete();
-                    var snapped = m_SnappedControlPoint.value;
-                    if (snapped.m_OriginalEntity != Unity.Entities.Entity.Null || snapped.m_SnapPriority.x > 0f || snapped.m_SnapPriority.y > 0f)
-                        controlPoint = snapped;
-                }
-
-                hitPosition = controlPoint.m_HitPosition;
-                hasNewHoverTarget = !controlPoint.Equals(lastHoveredControlPoint);
-            }
-
-            // ═══════════════════════════════════════════════════════════════════════════
-            // CONTROL POINT PLACEMENT: State Mutation
-            // ═══════════════════════════════════════════════════════════════════════════
-
-            if (rightClickPressed) {
-                HandleRemoveControlPoint();
-                m_UpdateNeeded = true;
-            } else if (raycastHit && !hasSelectedControlPoint) {
-                if (leftClickPressed) {
-                    HandleAddControlPoint(controlPoint);
-                    m_UpdateNeeded = true;
-                } else if (hasNewHoverTarget) {
-                    HandleHoverControlPoint(controlPoint);
-                    m_UpdateNeeded = true;
+            // ── Raycast + input (Idle and Configuring) ───────────────────────
+            if (Phase != OperationPhase.Ready) {
+                var controlPoint = Raycast(inputDeps);
+                if (controlPoint.HasValue) {
+                    if (m_ApplyAction.WasPressedThisFrame())
+                        PushControlPoint(controlPoint.Value);
+                    else
+                        UpdateHover(controlPoint.Value);
                 }
             }
 
-            // ═══════════════════════════════════════════════════════════════════════════
-            // OUTPUT
-            // ═══════════════════════════════════════════════════════════════════════════
-
-            return HandleTempEntities(inputDeps);
+            // ── Output ───────────────────────────────────────────────────────
+            return HandleOutput(inputDeps);
         }
 
         /// <summary>
-        ///     Adds a control point at the given position. Transitions phase accordingly.
+        ///     Performs a raycast and applies snap if enabled. Returns null if no hit.
         /// </summary>
-        /// <returns>True if the control point was added.</returns>
-        protected bool HandleAddControlPoint(ControlPoint controlPoint) {
-            if (!m_SelectedControlPoint.value.Equals(default)) {
-                return false;
+        private ControlPoint? Raycast(JobHandle inputDeps) {
+            if (!GetRaycastResult(out var controlPoint))
+                return null;
+
+            if (SelectedSnaps != SnapOption.None && NetPrefab.NetPrefabEntity != Unity.Entities.Entity.Null) {
+                var snapHandle = ScheduleSnapJob(controlPoint, inputDeps);
+                snapHandle.Complete();
+                var snapped = m_SnappedControlPoint.value;
+                if (snapped.m_OriginalEntity != Unity.Entities.Entity.Null || snapped.m_SnapPriority.x > 0f || snapped.m_SnapPriority.y > 0f)
+                    controlPoint = snapped;
             }
 
-            m_Log.Debug($"Adding control point at {controlPoint.m_Position}");
-
-            m_SelectedControlPoint.value = controlPoint;
-            UpdatePhaseFromSelection();
-
-            Position.Value = controlPoint.m_Position;
-
-            if (Phase == OperationPhase.Ready) {
-                RebuildHandlesForActiveMode();
-            }
-
-            return true;
+            return controlPoint;
         }
 
-        protected bool HandleHoverControlPoint(ControlPoint controlPoint) {
-            m_HoveredControlPoint.value = controlPoint;
+        /// <summary>
+        ///     Adds a permanent control point. Transitions phase forward.
+        /// </summary>
+        private void PushControlPoint(ControlPoint cp) {
+            m_ControlPoints.Add(cp);
+            Phase = DerivePhase();
+            SyncFromControlPoints();
 
-            Position.Value = controlPoint.m_Position;
+            if (Phase == OperationPhase.Ready)
+                RebuildHandlesForActiveMode();
 
-            return true;
+            m_UpdateNeeded = true;
+        }
+
+        /// <summary>
+        ///     Removes the last control point. Transitions phase backward.
+        ///     If no control points remain, exits the tool.
+        /// </summary>
+        private void PopControlPoint() {
+            if (m_ControlPoints.Length == 0) {
+                RequestDisable();
+                return;
+            }
+
+            if (Phase == OperationPhase.Ready)
+                DestroyAllHandles();
+
+            m_ControlPoints.Length--;
+            Phase = DerivePhase();
+            SyncFromControlPoints();
+            m_UpdateNeeded = true;
+        }
+
+        /// <summary>
+        ///     Updates transient hover state. In Idle, sets origin position.
+        ///     In Configuring, derives mode-specific parameters from the cursor.
+        /// </summary>
+        private void UpdateHover(ControlPoint cp) {
+            switch (Phase) {
+                case OperationPhase.Idle:
+                    Position.Value      = cp.m_Position;
+                    m_BaselineElevation = cp.m_Elevation;
+                    m_UpdateNeeded      = true;
+                    break;
+                case OperationPhase.Configuring:
+                    InitializeFromSecondPoint(cp.m_Position);
+                    m_UpdateNeeded = true;
+                    break;
+            }
+        }
+
+        /// <summary>
+        ///     Derives mode-specific parameters from a second control point position
+        ///     using the generator's <see cref="IGenerator.InitializeConfig"/>.
+        /// </summary>
+        private void InitializeFromSecondPoint(float3 secondPos) {
+            var config = BuildJobConfig();
+            config.SecondPosition = secondPos;
+
+            switch (Mode.Value) {
+                case GenerateMode.Grid:   new GridGenerator().InitializeConfig(ref config);   break;
+                case GenerateMode.Circle: new CircleGenerator().InitializeConfig(ref config); break;
+                case GenerateMode.Oval:   new OvalGenerator().InitializeConfig(ref config);   break;
+            }
+
+            // Copy derived values back to parameters
+            Rotation.Value     = math.mul(config.StartDirection, new float3(0, 0, 1));
+            CircleRadius.Value = math.clamp(config.CircleRadius, CircleRadius.Min, CircleRadius.Max);
+            OvalRadiusZ.Value  = math.clamp(config.OvalRadiusZ, OvalRadiusZ.Min, OvalRadiusZ.Max);
+
+            // Handle-target parameters track the second CP's world position
+            GridDirectionPoint.Value = secondPos;
+            OvalAxisPoint.Value      = secondPos;
+        }
+
+        /// <summary>
+        ///     Syncs all parameters from the current control point state.
+        ///     Called after push/pop.
+        /// </summary>
+        private void SyncFromControlPoints() {
+            if (m_ControlPoints.Length == 0) return;
+
+            Position.Value      = m_ControlPoints[0].m_Position;
+            m_BaselineElevation = m_ControlPoints[0].m_Elevation;
+
+            if (m_ControlPoints.Length >= 2)
+                InitializeFromSecondPoint(m_ControlPoints[1].m_Position);
         }
 
         private void ApplyPreciseRotation() {
@@ -123,67 +162,11 @@ namespace NetworkTools.Systems.Tools.Generate {
         }
 
         /// <summary>
-        ///     Removes the control point. Transitions phase accordingly.
-        /// </summary>
-        /// <returns>True if a control point was removed.</returns>
-        protected bool HandleRemoveControlPoint() {
-            if (m_SelectedControlPoint.value.Equals(default)) {
-                m_Log.Debug("Cancel pressed, exiting tool.");
-                RequestDisable();
-                return false;
-            }
-
-            m_Log.Debug($"Removing last control point");
-
-            m_SelectedControlPoint.Clear();
-            UpdatePhaseFromSelection();
-
-            // Destroy handles when moving out of Ready
-            if (Phase != OperationPhase.Ready)
-            {
-                DestroyAllHandles();
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        ///     Updates the OperationPhase based on the selected control point.
-        /// </summary>
-        /// <returns>The previous phase before the update.</returns>
-        private OperationPhase UpdatePhaseFromSelection() {
-            var previousPhase = Phase;
-
-            Phase = m_SelectedControlPoint.value.Equals(default) switch {
-                true => OperationPhase.Idle,
-                false => OperationPhase.Ready
-            };
-
-            return previousPhase;
-        }
-
-        /// <summary>
-        ///     Dispatches temp entity handling based on current phase.
-        ///     For Generate, we use:
-        ///     - OperationPhase.Idle: No control point, player will see hover preview
-        ///     - OperationPhase.Ready: Control point was set, player can use handles +  UI to configure
-        ///     - OperationPhase.Applying: Player requested apply, show final preview and apply 
-        /// </summary>
-        private JobHandle HandleTempEntities(JobHandle inputDeps) {
-            return Phase switch {
-                OperationPhase.Idle or OperationPhase.Ready => Update(inputDeps),
-                OperationPhase.Applying                     => Apply(inputDeps),
-                _                                           => Clear(inputDeps)
-            };
-        }
-
-        /// <summary>
-        ///     Requests the tool to apply the current grid.
+        ///     Requests the tool to apply the current network.
         /// </summary>
         public void RequestApply() {
-            if (Phase != OperationPhase.Ready) {
+            if (Phase != OperationPhase.Ready)
                 return;
-            }
 
             Phase = OperationPhase.Applying;
         }
@@ -194,16 +177,18 @@ namespace NetworkTools.Systems.Tools.Generate {
         public void ResetToIdle() {
             Phase = OperationPhase.Idle;
             DestroyAllHandles();
-            ClearSelectionState();
+            m_ControlPoints.Clear();
+            ClearAllHighlights();
         }
 
         /// <summary>
-        ///     Clears all control point state.
+        ///     Dispatches output based on current phase.
         /// </summary>
-        protected void ClearSelectionState() {
-            m_SelectedControlPoint.Clear();
-            m_HoveredControlPoint.Clear();
-            ClearAllHighlights();
+        private JobHandle HandleOutput(JobHandle inputDeps) {
+            return Phase switch {
+                OperationPhase.Applying => Apply(inputDeps),
+                _                       => Update(inputDeps)
+            };
         }
 
         /// <inheritdoc />
@@ -221,7 +206,6 @@ namespace NetworkTools.Systems.Tools.Generate {
         public override void InitializeRaycast() {
             base.InitializeRaycast();
 
-            // Generate also targets terrain (for free-placement) and doesn't need sub-element raycasts.
             m_ToolRaycastSystem.typeMask    = TypeMask.Terrain | TypeMask.Net;
             m_ToolRaycastSystem.raycastFlags = RaycastFlags.Markers | RaycastFlags.ElevateOffset;
         }

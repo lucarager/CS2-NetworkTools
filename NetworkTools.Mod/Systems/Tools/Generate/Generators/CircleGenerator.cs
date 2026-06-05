@@ -15,6 +15,8 @@ namespace NetworkTools.Systems.Tools.Generate {
         private const float Kappa    = 0.5522847498f; // 4 * (sqrt(2) - 1) / 3
 
         public void InitializeConfig(ref GenerateJobConfig config) {
+            config.CircleRadius = math.max(4f,
+                math.distance(config.Position.xz, config.SecondPosition.xz));
         }
 
         public void Generate(

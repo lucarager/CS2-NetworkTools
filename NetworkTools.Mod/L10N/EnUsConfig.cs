@@ -165,6 +165,7 @@ namespace NetworkTools.L10N {
                 // ### Generate - Hint Tooltips
                 { "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]", "Place network origin" },
                 { "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]", "Rotate" },
+                { "Common.ACTION[NetworkTools.HintTooltip.Generate.SetDirection]", "Set direction" },
                 { "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]", "Remove placement" },
 
                 // # UI Strings

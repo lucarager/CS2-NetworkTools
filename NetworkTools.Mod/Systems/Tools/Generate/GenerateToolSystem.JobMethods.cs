@@ -19,8 +19,14 @@ namespace NetworkTools.Systems.Tools.Generate {
         ///     Builds a Burst-compatible snapshot struct from the current parameter values.
         /// </summary>
         internal GenerateJobConfig BuildJobConfig() {
+            // Default SecondPosition: forward from origin along current rotation
+            var secondPos = m_ControlPoints.IsCreated && m_ControlPoints.Length >= 2
+                ? m_ControlPoints[1].m_Position
+                : Position.Value + Rotation.Value * 30f;
+
             return new GenerateJobConfig {
                 Position              = Position.Value,
+                SecondPosition        = secondPos,
                 StartDirection        = quaternion.LookRotationSafe(Rotation.Value, math.up()),
                 GridXSpacing          = GridXSpacing.Value,
                 GridZSpacing          = GridZSpacing.Value,
@@ -109,17 +115,8 @@ namespace NetworkTools.Systems.Tools.Generate {
 
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
 
-            var isHoverPreview = m_SelectedControlPoint.value.Equals(default);
-            var controlPoint = isHoverPreview ? m_HoveredControlPoint.value : m_SelectedControlPoint.value;
-
-            if (controlPoint.Equals(default))
-            {
-                m_Log.Debug("No valid control point for definition generation. Skipping job scheduling.");
-                return inputDeps;
-            }
-
             var config = BuildJobConfig();
-            config.BaselineElevation = controlPoint.m_Elevation;
+            config.BaselineElevation = m_BaselineElevation;
 
             var jobHandle = new CreateDefinitionsJob {
                 Mode                   = Mode.Value,
@@ -146,8 +143,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         }
 
         private JobHandle Update(JobHandle inputDeps) {
-            if (!m_UpdateNeeded)
-            {
+            if (!m_UpdateNeeded) {
                 applyMode = ApplyMode.None;
                 return inputDeps;
             }
