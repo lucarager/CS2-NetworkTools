@@ -89,7 +89,7 @@
   "NetworkTools.Tools.Generate.Description": "可以生成各种网络，例如完美的道路网格和环形网络。",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]": "设置网络源",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]": "旋转",
-  "Common.ACTION[NetworkTools.HintTooltip.Generate.SetDirection]": "Set direction",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.SetDirection]": "设定方向",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]": "移除放置",
   "NetworkTools.UI.Common.NetworkTools": "Network Tools",
   "NetworkTools.UI.Common.Close": "关闭",
