@@ -1,5 +1,3 @@
-**The mod is available as an UNLISTED mod on PDXMods. We will be on the honor system. Please do NOT publicly share the direct link to the mod. This is both to safeguard players and myself. Keeping the link private helps me manage the stress and workload. It ensures that only people that have read this disclaimer and know what they are doing are using the mod. Be cool!**
-
 # Network Tools: The Network Manipulation Toolkit
 
 The spiritual successor to the popular [Network Multitool](https://steamcommunity.com/sharedfiles/filedetails/?id=2560782729) for Cities: Skylines 1, rebuilt from the ground up for CS2. 
@@ -8,6 +6,16 @@ With both familiar tools returning as well as exciting new features, NetworkTool
 Add or remove nodes, reshape slopes and curves, generate grids, and more -- all with interactive 3D handles and real-time previews.
 
 Whether you're smoothing out a janky interchange, building a perfectly graded highway, or laying out a neighborhood street grid from scratch, NetworkTools has you covered.
+
+### Early Access Warning
+**This mod is currently in EARLY ACCESS stage.**
+Early access helps me gather feedback and prioritize development while allowing you to use and benefit from the mod sooner.
+However, please be aware of the following:
+- Not all features are complete. 
+- Feature updates may be frequent and cause intermittent issues.
+- While it is generally considered stable for use, unexpected issues may occur.
+- It is recommended to **backup your save** before using this mod.
+- Join the [CS2 Modding Discord](https://discord.gg/C2XQUYHwuV) for support and feedback!
 
 ### Tools
 Note: Tools are still in development. Features may be missing or be incomplete.
@@ -25,18 +33,9 @@ Stay tuned!
 * **Curve** -- Straighten or reshape the horizontal curve of a path.
 
 **Creation Tools**
-* **Connect** *(coming soon)* -- Connect two nodes with adjustable segments
+* **Connect**  -- Connect two nodes with adjustable networks
 * **Parallel** -- Create parallel networks based on existing segments
-* **Generate** -- Place new customizable networks like grids
-
-### Early Access Warning
-This mod is currently in EARLY ACCESS stage. 
-Early access helps me gather feedback and prioritize development while allowing you to use and benefit from the mod sooner.
-However, please be aware of the following:
-- Not all features are complete. 
-- Feature updates may be frequent and cause intermittent issues.
-- While it is generally considered stable for use, unexpected issues may occur.
-- It is recommended to **backup your save** before using this mod.
+* **Generate** -- Place new customizable networks like grids and circles
 
 ### Features
 * **Real-Time Preview** -- See the result of every transformation before you apply it.
