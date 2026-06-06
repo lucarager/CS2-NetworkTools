@@ -8,6 +8,7 @@ namespace NetworkTools.Systems {
     using NetworkTools.Components;
     using NetworkTools.Systems.Rendering;
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Utils;
     using Unity.Collections;
     using Unity.Entities;
@@ -30,6 +31,12 @@ namespace NetworkTools.Systems {
         // AddNode query: edges that are either NT-tagged or Temp
         private EntityQuery m_AddNodeQuery;
 
+        // RemoveNode query: eligible nodes and temp-deleted nodes
+        private EntityQuery m_RemoveNodeQuery;
+
+        // Stateful nodes query: eligible/highlighted/selected nodes (shared across tools)
+        private EntityQuery m_StatefulNodeQuery;
+
         // Narrow query for temp edges only, used by CollectTempOriginalsJob
         private EntityQuery m_TempEdgeQuery;
 
@@ -45,6 +52,19 @@ namespace NetworkTools.Systems {
                                           .WithAny<NT_Eligible, NT_Highlighted, NT_Selected, Temp>()
                                           .WithNone<Deleted, Hidden>()
                                           .Build();
+
+            m_RemoveNodeQuery = SystemAPI.QueryBuilder()
+                                        .WithAll<Node>()
+                                        .WithAny<NT_Eligible, Temp>()
+                                        .WithNone<Deleted, Hidden>()
+                                        .Build();
+
+            m_StatefulNodeQuery = SystemAPI.QueryBuilder()
+                                         .WithAll<Node, ConnectedEdge>()
+                                         .WithAny<NT_Eligible, NT_Highlighted, NT_Selected,
+                                             NT_SelectedFirst, NT_SelectedLast>()
+                                         .WithNone<Temp, Deleted>()
+                                         .Build();
 
             m_TempEdgeQuery = SystemAPI.QueryBuilder()
                                        .WithAll<Edge, Temp>()
@@ -132,7 +152,11 @@ namespace NetworkTools.Systems {
         /// </summary>
         private EntityQuery? GetQueryForTool(NT_BaseToolSystem tool) {
             return tool switch {
-                NT_AddNodeToolSystem => m_AddNodeQuery,
+                NT_AddNodeToolSystem        => m_AddNodeQuery,
+                NT_RemoveNodeToolSystem     => m_RemoveNodeQuery,
+                NT_SuperNodeToolSystem      => m_StatefulNodeQuery,
+                NT_ConnectToolSystem        => m_StatefulNodeQuery,
+                NT_PathSelectionToolSystem  => m_StatefulNodeQuery,
                 _ => null
             };
         }
@@ -147,7 +171,11 @@ namespace NetworkTools.Systems {
             NativeParallelHashSet<Entity> visibleEntities,
             CustomOverlayRenderSystem.Buffer overlayBuffer) {
             return tool switch {
-                NT_AddNodeToolSystem => ScheduleAddNodeRender(inputDeps, tempOriginals, visibleEntities, overlayBuffer),
+                NT_AddNodeToolSystem       => ScheduleAddNodeRender(inputDeps, tempOriginals, visibleEntities, overlayBuffer),
+                NT_RemoveNodeToolSystem    => ScheduleRemoveNodeRender(inputDeps, visibleEntities, overlayBuffer),
+                NT_SuperNodeToolSystem     => ScheduleStatefulNodesRender(inputDeps, visibleEntities, overlayBuffer),
+                NT_ConnectToolSystem       => ScheduleStatefulNodesRender(inputDeps, visibleEntities, overlayBuffer),
+                NT_PathSelectionToolSystem => ScheduleStatefulNodesRender(inputDeps, visibleEntities, overlayBuffer),
                 _ => throw new NotImplementedException($"No render job implemented for tool type: {tool.GetType().Name}")
             };
         }
@@ -178,6 +206,51 @@ namespace NetworkTools.Systems {
             };
 
             return renderJob.Schedule(m_AddNodeQuery, inputDeps);
+        }
+
+        /// <summary>
+        ///     Schedules the sequential render job for the RemoveNode tool overlay.
+        /// </summary>
+        private JobHandle ScheduleRemoveNodeRender(
+            JobHandle inputDeps,
+            NativeParallelHashSet<Entity> visibleEntities,
+            CustomOverlayRenderSystem.Buffer overlayBuffer) {
+            var renderJob = new RenderRemoveNodeOverlayJob {
+                m_EntityTypeHandle        = SystemAPI.GetEntityTypeHandle(),
+                m_NodeComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Node>(),
+                m_TempComponentTypeHandle = SystemAPI.GetComponentTypeHandle<Temp>(),
+                m_VisibleEntities         = visibleEntities,
+                m_Buffer                  = overlayBuffer,
+            };
+
+            return renderJob.Schedule(m_RemoveNodeQuery, inputDeps);
+        }
+
+        /// <summary>
+        ///     Schedules the shared stateful nodes render job used by multiple tools.
+        /// </summary>
+        private JobHandle ScheduleStatefulNodesRender(
+            JobHandle inputDeps,
+            NativeParallelHashSet<Entity> visibleEntities,
+            CustomOverlayRenderSystem.Buffer overlayBuffer) {
+            var renderJob = new RenderStatefulNodesOverlayJob {
+                m_EntityTypeHandle               = SystemAPI.GetEntityTypeHandle(),
+                m_NodeComponentTypeHandle        = SystemAPI.GetComponentTypeHandle<Node>(),
+                m_EligibleComponentTypeHandle    = SystemAPI.GetComponentTypeHandle<NT_Eligible>(),
+                m_HighlightedComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_Highlighted>(),
+                m_SelectedComponentTypeHandle      = SystemAPI.GetComponentTypeHandle<NT_Selected>(),
+                m_SelectedFirstComponentTypeHandle = SystemAPI.GetComponentTypeHandle<NT_SelectedFirst>(),
+                m_SelectedLastComponentTypeHandle  = SystemAPI.GetComponentTypeHandle<NT_SelectedLast>(),
+                m_ConnectedEdgeBufferTypeHandle  = SystemAPI.GetBufferTypeHandle<ConnectedEdge>(true),
+                m_EdgeLookup                     = SystemAPI.GetComponentLookup<Edge>(true),
+                m_EdgeGeometryLookup             = SystemAPI.GetComponentLookup<EdgeGeometry>(true),
+                m_StartNodeGeometryLookup        = SystemAPI.GetComponentLookup<StartNodeGeometry>(true),
+                m_EndNodeGeometryLookup          = SystemAPI.GetComponentLookup<EndNodeGeometry>(true),
+                m_VisibleEntities                = visibleEntities,
+                m_Buffer                         = overlayBuffer,
+            };
+
+            return renderJob.Schedule(m_StatefulNodeQuery, inputDeps);
         }
     }
 }

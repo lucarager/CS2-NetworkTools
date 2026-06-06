@@ -27,7 +27,6 @@ namespace NetworkTools.Systems.Tools.Parallel {
             m_Log.Prefix = nameof(NT_ParallelToolSystem);
 
             // Configuration
-            RenderEligibleNodes         = true;
             RenderHandles               = true;
             DisableVanillaNodeReduction = true;
 

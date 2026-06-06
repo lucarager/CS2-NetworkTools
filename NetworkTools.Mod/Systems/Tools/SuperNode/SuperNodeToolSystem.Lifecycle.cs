@@ -19,7 +19,6 @@ namespace NetworkTools.Systems.Tools {
             m_Log.Prefix = nameof(NT_SuperNodeToolSystem);
 
             // Configuration
-            RenderEligibleNodes        = true;
             DisableVanillaValidation   = true;
             UseCustomEligibilityFilter = true;
 

@@ -56,7 +56,6 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             m_Log.Prefix = nameof(NT_RoadShapeToolSystem);
 
             // Configuration
-            RenderEligibleNodes      = true;
             RenderHandles            = true;
             DisableVanillaValidation = true;
 

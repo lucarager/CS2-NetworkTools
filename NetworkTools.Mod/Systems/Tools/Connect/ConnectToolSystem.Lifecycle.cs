@@ -144,7 +144,6 @@ namespace NetworkTools.Systems.Tools.Connect {
             m_Log.Prefix = nameof(NT_ConnectToolSystem);
 
             // Configuration
-            RenderEligibleNodes       = true;
             RenderHandles             = true;
             //DisableVanillaCourseSplit = true;
 
