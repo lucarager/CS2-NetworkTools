@@ -22,7 +22,7 @@
             // HANDLE INTERACTION PIPELINE 
             // ═══════════════════════════════════════════════════════════════════════════
 
-            if (Phase == OperationPhase.Ready && ProcessHandleInput()) {
+            if (Phase == OperationPhase.Ready && ProcessHandleInput(inputDeps)) {
                 // Handle consumed input this frame:
                 // - OnHandleDragging() may have updated parameters
                 // - m_UpdateNeeded was set to true

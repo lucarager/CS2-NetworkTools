@@ -13,6 +13,9 @@ namespace NetworkTools.Systems.Tools.Handles {
         NT_HandleConstraints? Constraints  { get; }
         float                 Size         { get; }
 
+        /// <summary>Declarative snap behavior for this handle (default <see cref="HandleSnap.None" />).</summary>
+        HandleSnap            Snap         { get; }
+
         void SyncToEntity(NT_BaseToolSystem tool, Entity entity, ParameterBase param);
     }
 

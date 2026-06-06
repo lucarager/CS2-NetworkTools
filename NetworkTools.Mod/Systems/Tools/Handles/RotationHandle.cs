@@ -13,6 +13,7 @@ namespace NetworkTools.Systems.Tools.Handles {
         public string                ReferenceDirectionFrom { get; init; }
         public NT_HandleConstraints? Constraints         { get; init; }
         public float                 Size                { get; init; } = 16f;
+        public HandleSnap            Snap                { get; init; } = HandleSnap.None;
         public ComputePositionDelegate<float3>     ComputePosition     { get; init; }
         public ComputeFromPositionDelegate<float3> ComputeFromPosition { get; init; }
 

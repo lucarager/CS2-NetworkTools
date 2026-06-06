@@ -28,6 +28,7 @@ namespace NetworkTools.Systems.Tools.Handles {
         public string                Parent      { get; init; }
         public NT_HandleConstraints? Constraints => null; // Computed dynamically in CreateHandleFromSpec
         public float                 Size      { get; init; } = NT_Handle.SizePrimary;
+        public HandleSnap            Snap      { get; init; } = HandleSnap.None;
 
         HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Position | HandleTypeFlags.AxisHandle;
 

@@ -28,7 +28,7 @@
             // HANDLE INTERACTION PIPELINE 
             // ═══════════════════════════════════════════════════════════════════════════
 
-            if (Phase == OperationPhase.Ready && ProcessHandleInput())
+            if (Phase == OperationPhase.Ready && ProcessHandleInput(inputDeps))
             {
                 // Handle consumed input this frame:
                 // - OnHandleDragging() may have updated parameters
@@ -237,6 +237,12 @@
                 _ => Clear(inputDeps)
             };
         }
+
+        /// <inheritdoc />
+        public int ApplyMinNodeCount => 2;
+
+        /// <inheritdoc />
+        public bool CanApply => Phase == OperationPhase.Ready && Mode.Value != ConnectMode.None;
 
         /// <summary>
         ///     Requests the tool to apply the current transformation.

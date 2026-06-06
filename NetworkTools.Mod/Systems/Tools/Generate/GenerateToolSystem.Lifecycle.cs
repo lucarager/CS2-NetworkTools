@@ -64,25 +64,13 @@ namespace NetworkTools.Systems.Tools.Generate {
                 UpdateControlPointPosition(1, Position.Value + normalizedDir * CircleRadius.Value);
             };
 
-            // Search systems
-            m_NetSearchSystem    = World.GetOrCreateSystemManaged<Game.Net.SearchSystem>();
-            m_ObjectSearchSystem = World.GetOrCreateSystemManaged<Game.Objects.SearchSystem>();
-            m_ZoneSearchSystem   = World.GetOrCreateSystemManaged<Game.Zones.SearchSystem>();
-            m_WaterSystem        = World.GetOrCreateSystemManaged<Game.Simulation.WaterSystem>();
-
-            // Data
-            m_ControlPoints       = new NativeList<ControlPoint>(2, Allocator.Persistent);
-            m_SnappedControlPoint = new NativeValue<ControlPoint>(Allocator.Persistent);
-            m_SnappedEntity       = new NativeValue<Entity>(Allocator.Persistent);
-            m_SnapLines           = new NativeList<SnapLine>(16, Allocator.Persistent);
+            // Data (snap storage + search systems live on the base tool now)
+            m_ControlPoints = new NativeList<ControlPoint>(2, Allocator.Persistent);
         }
 
         /// <inheritdoc />
         protected override void OnDestroy() {
-            if (m_ControlPoints.IsCreated)       m_ControlPoints.Dispose();
-            if (m_SnappedControlPoint.IsCreated) m_SnappedControlPoint.Dispose();
-            if (m_SnappedEntity.IsCreated)       m_SnappedEntity.Dispose();
-            if (m_SnapLines.IsCreated)           m_SnapLines.Dispose();
+            if (m_ControlPoints.IsCreated) m_ControlPoints.Dispose();
 
             base.OnDestroy();
         }

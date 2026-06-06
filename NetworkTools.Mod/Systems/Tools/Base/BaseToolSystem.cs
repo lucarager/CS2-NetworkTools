@@ -393,6 +393,9 @@ namespace NetworkTools.Systems.Tools {
             // Initialize handle management
             InitializeHandles();
 
+            // Initialize shared snapping (search systems + native storage)
+            InitializeSnap();
+
             // Queries
             m_DefinitionQuery = GetDefinitionQuery();
             m_NodesWithoutEligibleQuery = SystemAPI.QueryBuilder()
@@ -498,6 +501,9 @@ namespace NetworkTools.Systems.Tools {
         protected override void OnDestroy() {
             // Dispose handle management
             DisposeHandles();
+
+            // Dispose shared snapping resources
+            DisposeSnap();
 
             // Dispose native collections
             if (m_LastHoveredEntity.IsCreated) {

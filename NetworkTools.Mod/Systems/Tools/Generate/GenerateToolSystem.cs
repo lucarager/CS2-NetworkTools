@@ -31,7 +31,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         public EnumParameter<GenerateMode> Mode = new("generate.mode", GenerateMode.Grid, label: "NetworkTools.UI.Common.Mode");
         public NetPrefabParameter NetPrefab = new("generate.netPrefab", modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval);
         public Float3Parameter Position = new("generate.position", modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval) {
-            Handles = new IHandleSpec<float3>[] { new PositionHandle() }
+            Handles = new IHandleSpec<float3>[] { new PositionHandle { Snap = HandleSnap.WorldSnap() } }
         };
 
         public Float3Parameter Rotation = new("generate.rotation", new float3(0, 0, 1),
@@ -41,7 +41,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         public Float3Parameter GridDirectionPoint = new("generate.gridDirPoint",
             modes: (int)GenerateMode.Grid) {
             Handles = new IHandleSpec<float3>[] {
-                new PositionHandle { Parent = nameof(Position) }
+                new PositionHandle { Parent = nameof(Position), Snap = HandleSnap.WorldSnap() }
             }
         };
 
@@ -70,7 +70,7 @@ namespace NetworkTools.Systems.Tools.Generate {
         public Float3Parameter OvalAxisPoint = new("generate.ovalAxisPoint",
             modes: (int)GenerateMode.Oval) {
             Handles = new IHandleSpec<float3>[] {
-                new PositionHandle { Parent = nameof(Position) }
+                new PositionHandle { Parent = nameof(Position), Snap = HandleSnap.WorldSnap() }
             }
         };
 
@@ -96,16 +96,11 @@ namespace NetworkTools.Systems.Tools.Generate {
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Mode.Value;
 
-        // Search systems for snap job
-        private Game.Net.SearchSystem m_NetSearchSystem;
-        private Game.Objects.SearchSystem m_ObjectSearchSystem;
-        private Game.Zones.SearchSystem m_ZoneSearchSystem;
-        private Game.Simulation.WaterSystem m_WaterSystem;
+        /// <inheritdoc />
+        protected override Entity GetSnapPrefab() => NetPrefab.NetPrefabEntity;
 
-        // Snap state
-        private NativeList<SnapLine> m_SnapLines;
-        private NativeValue<ControlPoint> m_SnappedControlPoint;
-        private NativeValue<Entity> m_SnappedEntity;
+        /// <inheritdoc />
+        protected override float GetSnapElevation() => Elevation.Value;
 
         /// <summary>
         ///     Canonical control point storage. Count determines phase:

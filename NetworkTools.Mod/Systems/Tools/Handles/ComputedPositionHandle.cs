@@ -7,6 +7,7 @@ namespace NetworkTools.Systems.Tools.Handles {
         public string                Parent          { get; init; }
         public NT_HandleConstraints? Constraints     { get; set; }
         public float                 Size          { get; init; } = NT_Handle.SizePrimary;
+        public HandleSnap            Snap          { get; init; } = HandleSnap.None;
         public ComputePositionDelegate<float>     ComputePosition     { get; init; }
         public ComputeFromPositionDelegate<float> ComputeFromPosition { get; init; }
 

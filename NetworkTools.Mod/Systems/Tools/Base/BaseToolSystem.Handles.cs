@@ -1,6 +1,10 @@
 namespace NetworkTools.Systems.Tools {
     using System.Collections.Generic;
 
+    using Colossal.Mathematics;
+
+    using Game.Tools;
+
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
     using NetworkTools.Systems.Rendering;
@@ -9,6 +13,7 @@ namespace NetworkTools.Systems.Tools {
 
     using Unity.Collections;
     using Unity.Entities;
+    using Unity.Jobs;
     using Unity.Mathematics;
 
     using UnityEngine;
@@ -1153,7 +1158,7 @@ namespace NetworkTools.Systems.Tools {
         ///     Processes handle input for the current frame.
         /// </summary>
         /// <returns>True if input was consumed by handle interaction.</returns>
-        protected bool ProcessHandleInput() {
+        protected bool ProcessHandleInput(JobHandle inputDeps) {
             if (!ShouldRaycastHandles) return false;
 
             switch (m_HandleInputState) {
@@ -1164,7 +1169,7 @@ namespace NetworkTools.Systems.Tools {
                     return ProcessHandlePendingState();
 
                 case HandleInputState.Dragging:
-                    return ProcessHandleDraggingState();
+                    return ProcessHandleDraggingState(inputDeps);
             }
 
             return false;
@@ -1250,7 +1255,7 @@ namespace NetworkTools.Systems.Tools {
             return true;
         }
 
-        private bool ProcessHandleDraggingState() {
+        private bool ProcessHandleDraggingState(JobHandle inputDeps) {
             if (m_ApplyAction.WasReleasedThisFrame()) {
                 // Drag ended
                 if (EntityManager.HasComponent<NT_Selected>(m_DraggedHandle)) {
@@ -1267,23 +1272,110 @@ namespace NetworkTools.Systems.Tools {
             // Update position (skipped for circle and rotation handles)
             UpdateHandleDragPosition(m_DraggedHandle);
 
+            // Resolve the declared snap behavior for this handle (None when undeclared).
+            var snap = m_HandleEntries.TryGetValue(m_DraggedHandle, out var entry)
+                ? entry.Spec.Snap
+                : HandleSnap.None;
+
             var handleData = EntityManager.GetComponentData<NT_Handle>(m_DraggedHandle);
 
             if (handleData.HasAnyFlag(HandleTypeFlags.Rotation)
                     && EntityManager.HasComponent<NT_HandleRotation>(m_DraggedHandle)) {
-                var newAngle  = ComputeRotationHandleAngle(m_DraggedHandle);
-                var rotation  = EntityManager.GetComponentData<NT_HandleRotation>(m_DraggedHandle);
+                var newAngle = ComputeRotationHandleAngle(m_DraggedHandle);
+                if (snap.Increment > 0f) {
+                    // Angle increment is in radians; quantize and write back so the direction matches.
+                    newAngle = MathUtils.Snap(newAngle, snap.Increment, snap.IncrementOffset);
+                    var r = EntityManager.GetComponentData<NT_HandleRotation>(m_DraggedHandle);
+                    r.Angle = newAngle;
+                    EntityManager.SetComponentData(m_DraggedHandle, r);
+                }
+                var rotation = EntityManager.GetComponentData<NT_HandleRotation>(m_DraggedHandle);
                 DispatchRotationDrag(m_DraggedHandle, newAngle, rotation.GetDirection());
             } else if (handleData.HasAnyFlag(HandleTypeFlags.Circle)) {
                 var newRadius = ComputeCircleHandleRadius(m_DraggedHandle);
+                if (snap.Increment > 0f) {
+                    newRadius = MathUtils.Snap(newRadius, snap.Increment, snap.IncrementOffset);
+                    var c = EntityManager.GetComponentData<NT_HandleCircle>(m_DraggedHandle);
+                    c.Radius = newRadius;
+                    EntityManager.SetComponentData(m_DraggedHandle, c);
+                }
                 DispatchCircleDrag(m_DraggedHandle, newRadius);
             } else {
-                var handlePos = EntityManager.GetComponentData<NT_HandlePosition>(m_DraggedHandle).Position;
-                DispatchDrag(m_DraggedHandle, handlePos);
+                var pos = ResolveSnappedHandlePosition(m_DraggedHandle, snap, inputDeps);
+                EntityManager.SetComponentData(m_DraggedHandle, new NT_HandlePosition { Position = pos });
+                DispatchDrag(m_DraggedHandle, pos);
             }
 
             m_UpdateNeeded = true;
             return true;
+        }
+
+        /// <summary>
+        ///     Resolves a position handle's world position for the current drag frame, applying
+        ///     world snapping and/or value-space increments declared on the handle. The starting
+        ///     position is whatever <see cref="UpdateHandleDragPosition" /> already wrote (a plane
+        ///     or axis projection of the mouse). Flow: resolve raw candidate → world snap →
+        ///     increment.
+        /// </summary>
+        private float3 ResolveSnappedHandlePosition(Entity handle, HandleSnap snap, JobHandle inputDeps) {
+            var pos = EntityManager.GetComponentData<NT_HandlePosition>(handle).Position;
+
+            // Axis-constrained handles (bezier control points, axis sliders) can't accept an
+            // off-axis world snap — they keep their projected position and only quantize.
+            var isAxisConstrained = EntityManager.HasComponent<NT_HandleConstraints>(handle)
+                && EntityManager.GetComponentData<NT_HandleConstraints>(handle).HasFlag(ConstraintFlags.SnapToAxis);
+
+            // (1)+(2) World snap — free position handles only. Reuses the frame's raycast hit
+            // (no new raycast) as the candidate, then runs the shared spatial snap job.
+            var worldSnapWon = false;
+            if (snap.World && !isAxisConstrained && TryGetRawWorldHit(out var rawCp)) {
+                pos = rawCp.m_HitPosition;
+                if (SelectedSnaps != SnapOption.None) {
+                    TrySnapWorld(rawCp, SelectedSnaps & snap.WorldMask, GetSnapPrefab(), GetSnapElevation(),
+                                 inputDeps, out var snapped, out worldSnapWon);
+                    if (worldSnapWon) pos = snapped.m_Position;
+                }
+            }
+
+            // (3) Value snap — suppressed when a world snap already locked us to geometry/zone.
+            if (snap.Increment > 0f && !worldSnapWon)
+                pos = ApplyIncrement(handle, pos, snap);
+
+            return pos;
+        }
+
+        /// <summary>
+        ///     Quantizes a handle position in its natural space: distance along the constraint
+        ///     axis for axis-constrained handles, or the XZ grid for free position handles.
+        /// </summary>
+        private float3 ApplyIncrement(Entity handle, float3 pos, HandleSnap snap) {
+            if (EntityManager.HasComponent<NT_HandleConstraints>(handle)) {
+                var c = EntityManager.GetComponentData<NT_HandleConstraints>(handle);
+                if (c.HasFlag(ConstraintFlags.SnapToAxis)) {
+                    var dist = math.dot(pos - c.Origin, c.SnapAxis);
+                    dist = MathUtils.Snap(dist, snap.Increment, snap.IncrementOffset);
+                    return c.Origin + c.SnapAxis * dist;
+                }
+            }
+
+            pos.x = MathUtils.Snap(pos.x, snap.Increment, snap.IncrementOffset);
+            pos.z = MathUtils.Snap(pos.z, snap.Increment, snap.IncrementOffset);
+            return pos;
+        }
+
+        /// <summary>
+        ///     Reads the current frame's tool raycast hit (terrain/net under the cursor) as a
+        ///     <see cref="ControlPoint" />. Reuses the existing per-frame raycast result; it does
+        ///     not trigger a new raycast.
+        /// </summary>
+        protected bool TryGetRawWorldHit(out ControlPoint cp) {
+            if (base.GetRaycastResult(out var entity, out Game.Common.RaycastHit hit)) {
+                cp = new ControlPoint(entity, hit);
+                return true;
+            }
+
+            cp = default;
+            return false;
         }
 
         /// <summary>

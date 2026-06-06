@@ -21,7 +21,7 @@ namespace NetworkTools.Systems.Tools.Generate {
             }
 
             // ── Handle interactions (Ready only) ─────────────────────────────
-            if (Phase == OperationPhase.Ready && ProcessHandleInput()) {
+            if (Phase == OperationPhase.Ready && ProcessHandleInput(inputDeps)) {
                 return HandleOutput(inputDeps);
             }
 
@@ -53,11 +53,9 @@ namespace NetworkTools.Systems.Tools.Generate {
                 return null;
 
             if (SelectedSnaps != SnapOption.None && NetPrefab.NetPrefabEntity != Unity.Entities.Entity.Null) {
-                var snapHandle = ScheduleSnapJob(controlPoint, inputDeps);
-                snapHandle.Complete();
-                var snapped = m_SnappedControlPoint.value;
-                if (snapped.m_OriginalEntity != Unity.Entities.Entity.Null || snapped.m_SnapPriority.x > 0f || snapped.m_SnapPriority.y > 0f)
-                    controlPoint = snapped;
+                TrySnapWorld(controlPoint, SelectedSnaps, GetSnapPrefab(), GetSnapElevation(), inputDeps,
+                             out var snapped, out var won);
+                if (won) controlPoint = snapped;
             }
 
             return controlPoint;

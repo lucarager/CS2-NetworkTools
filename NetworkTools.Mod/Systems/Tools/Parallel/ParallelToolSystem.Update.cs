@@ -25,7 +25,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
             // HANDLE INTERACTION PIPELINE 
             // ═══════════════════════════════════════════════════════════════════════════
 
-            if (Phase == OperationPhase.Ready && ProcessHandleInput()) {
+            if (Phase == OperationPhase.Ready && ProcessHandleInput(inputDeps)) {
                 // Handle consumed input (e.g., adjusting offset)
                 return HandleTempEntities(inputDeps);
             }
