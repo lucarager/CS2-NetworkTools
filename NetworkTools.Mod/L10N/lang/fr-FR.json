@@ -89,6 +89,7 @@
   "NetworkTools.Tools.Generate.Description": "Permet de générer une variété de réseaux tels que des grilles routières et des cercles.",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]": "Place network origin",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]": "Pivoter",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.SetDirection]": "Set direction",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]": "Remove placement",
   "NetworkTools.UI.Common.NetworkTools": "Network Tools",
   "NetworkTools.UI.Common.Close": "Close",
