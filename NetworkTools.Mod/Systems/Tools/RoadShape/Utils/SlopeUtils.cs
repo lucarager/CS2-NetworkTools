@@ -13,17 +13,17 @@
         /// <summary>
         ///     Height thresholds that forces a road to be a tunnel
         /// </summary>
-        public static float2 TunnelThreshold = new(-12f, -12f);
+        public static readonly float2 TunnelThreshold = new(-12f, -12f);
 
         /// <summary>
         ///     Height thresholds that forces a road to be elevated. 
         /// </summary>
-        public static float2 ElevatedThreshold = new(8f, 8f);
+        public static readonly float2 ElevatedThreshold = new(8f, 8f);
 
         /// <summary>
         ///     Height that places road on at ground level.
         /// </summary>
-        public static float2 ForceGroundElevation = new(0f, 0f);
+        public static readonly float2 ForceGroundElevation = new(0f, 0f);
 
         /// <summary>
         ///     Clamps an elevation value to the appropriate threshold so the game

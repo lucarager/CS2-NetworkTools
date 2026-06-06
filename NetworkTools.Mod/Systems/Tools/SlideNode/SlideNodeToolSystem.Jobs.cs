@@ -12,13 +12,14 @@ namespace NetworkTools.Systems.Tools {
     using Game.Simulation;
     using Game.Tools;
     using NetworkTools.Systems.Tools.Utils;
+    using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
 
     public partial class NT_SlideNodeToolSystem {
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         /// <summary>
@@ -87,7 +88,7 @@ namespace NetworkTools.Systems.Tools {
             }
         }
 
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         /// <summary>

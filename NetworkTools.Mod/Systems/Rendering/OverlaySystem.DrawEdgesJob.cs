@@ -4,6 +4,7 @@
     using Game.Rendering;
     using NetworkTools.Components;
     using NetworkTools.Systems.Rendering;
+    using Unity.Burst;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
     using Unity.Entities;
@@ -14,7 +15,7 @@
         ///     Job to draw edge overlays.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         protected struct DrawEdgesJob : IJobChunk {

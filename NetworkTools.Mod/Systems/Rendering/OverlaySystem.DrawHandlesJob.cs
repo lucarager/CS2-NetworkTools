@@ -4,6 +4,7 @@ namespace NetworkTools.Systems {
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
     using NetworkTools.Systems.Rendering;
+    using Unity.Burst;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
     using Unity.Entities;
@@ -16,7 +17,7 @@ namespace NetworkTools.Systems {
         ///     Supports point, line, circle, and rotation handle types.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         protected struct DrawHandlesJob : IJobChunk {

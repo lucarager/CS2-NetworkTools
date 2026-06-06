@@ -3,6 +3,7 @@ namespace NetworkTools.Systems {
     using Game.Net;
     using NetworkTools.Components;
     using NetworkTools.Systems.Rendering;
+    using Unity.Burst;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
     using Unity.Entities;
@@ -16,7 +17,7 @@ namespace NetworkTools.Systems {
         ///     <see cref="FrustumCullEntitiesJob"/>.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         protected struct RenderStatefulNodesOverlayJob : IJobChunk {

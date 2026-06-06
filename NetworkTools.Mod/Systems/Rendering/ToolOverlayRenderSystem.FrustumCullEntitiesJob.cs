@@ -3,6 +3,7 @@ namespace NetworkTools.Systems {
     using Colossal.Mathematics;
     using Game.Net;
     using Game.Rendering;
+    using Unity.Burst;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
     using Unity.Entities;
@@ -19,7 +20,7 @@ namespace NetworkTools.Systems {
         ///     </para>
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         protected struct FrustumCullEntitiesJob : IJobChunk {

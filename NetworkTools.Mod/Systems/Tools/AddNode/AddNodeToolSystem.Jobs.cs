@@ -14,6 +14,7 @@ namespace NetworkTools.Systems.Tools {
     using Game.Simulation;
     using Game.Tools;
     using NetworkTools.Systems.Tools.Utils;
+    using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -42,7 +43,7 @@ namespace NetworkTools.Systems.Tools {
         /// </summary>
         private const float SnapThreshold = 0.05f; // 5% of curve length
 
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         private struct SnapControlPointJob : IJob {
@@ -147,7 +148,7 @@ namespace NetworkTools.Systems.Tools {
         }
 
 
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         private struct CreateDefinitionJob : IJob {

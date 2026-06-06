@@ -10,6 +10,7 @@ namespace NetworkTools.Systems.Tools.Generate {
     using Game.Tools;
     using Game.Zones;
     using NetworkTools.Systems.Tools.Utils;
+    using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -19,7 +20,7 @@ namespace NetworkTools.Systems.Tools.Generate {
     ///     Job definitions for <see cref="NT_GenerateToolSystem" />.
     /// </summary>
     public partial class NT_GenerateToolSystem {
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         internal struct CreateDefinitionsJob : IJob {

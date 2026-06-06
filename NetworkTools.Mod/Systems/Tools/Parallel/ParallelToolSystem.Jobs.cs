@@ -5,13 +5,14 @@
     using Game.Prefabs;
     using Game.Tools;
     using NetworkTools.Systems.Tools.Utils;
+    using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
 
     public partial class NT_ParallelToolSystem {
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         internal struct CreateDefinitionsJob : IJob {
@@ -36,12 +37,12 @@
             /// <summary>
             ///     Height thresholds that forces a road to be a tunnel
             /// </summary>
-            public static float2 TunnelThreshold = new(-11f, -11f);
+            public static readonly float2 TunnelThreshold = new(-11f, -11f);
 
             /// <summary>
             ///     Height thresholds that forces a road to be elevated.
             /// </summary>
-            public static float2 ElevatedThreshold = new(11f, 11f);
+            public static readonly float2 ElevatedThreshold = new(11f, 11f);
 
             public void Execute() {
                 var signedDistance = Config.HorizontalOffset;

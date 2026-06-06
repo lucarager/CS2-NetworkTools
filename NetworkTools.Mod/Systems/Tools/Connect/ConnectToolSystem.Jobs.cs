@@ -8,14 +8,14 @@ namespace NetworkTools.Systems.Tools.Connect {
     using Game.Tools;
 
     using NetworkTools.Systems.Tools.Utils;
-
+    using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
 
     public partial class NT_ConnectToolSystem {
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         internal struct CreateDefinitionsJob : IJob {

@@ -1,6 +1,7 @@
 namespace NetworkTools.Systems {
     using System.Diagnostics.CodeAnalysis;
     using Game.Tools;
+    using Unity.Burst;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
     using Unity.Entities;
@@ -11,7 +12,7 @@ namespace NetworkTools.Systems {
         ///     so the render job can skip those originals when rendering eligible edges.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         protected struct CollectTempOriginalsJob : IJobChunk {

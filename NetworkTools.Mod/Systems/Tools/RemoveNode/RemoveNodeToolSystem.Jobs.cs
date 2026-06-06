@@ -7,6 +7,7 @@
     using Game.Simulation;
     using Game.Tools;
     using NetworkTools.Systems.Tools.Utils;
+    using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -14,7 +15,7 @@
     using UnityEngine;
 
     public partial class NT_RemoveNodeToolSystem {
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         /// <summary>

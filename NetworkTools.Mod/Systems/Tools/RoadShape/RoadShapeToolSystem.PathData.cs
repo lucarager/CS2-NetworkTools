@@ -135,7 +135,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         /// Burst-compiled job that gathers edge states and creates transform context.
         /// Runs synchronously on main thread via .Run() for immediate availability.
         /// </summary>
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         internal struct GatherPathDataJob : IJob {

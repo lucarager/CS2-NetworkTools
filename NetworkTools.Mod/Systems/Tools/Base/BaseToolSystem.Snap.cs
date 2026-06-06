@@ -8,7 +8,7 @@ namespace NetworkTools.Systems.Tools {
     using Game.Simulation;
     using Game.Tools;
     using Game.Zones;
-    using NetworkTools.Systems.Tools.Generate;
+    using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
@@ -29,7 +29,6 @@ namespace NetworkTools.Systems.Tools {
 
         // Snap output storage, reused across calls.
         private NativeValue<ControlPoint> m_SnappedControlPoint;
-        private NativeValue<Entity>       m_SnappedEntity;
         private WaterSystem               m_WaterSystem;
         private Game.Zones.SearchSystem   m_ZoneSearchSystem;
 
@@ -47,7 +46,6 @@ namespace NetworkTools.Systems.Tools {
             m_WaterSystem        = World.GetOrCreateSystemManaged<WaterSystem>();
 
             m_SnappedControlPoint = new NativeValue<ControlPoint>(Allocator.Persistent);
-            m_SnappedEntity       = new NativeValue<Entity>(Allocator.Persistent);
             m_SnapLines           = new NativeList<SnapLine>(16, Allocator.Persistent);
         }
 
@@ -55,10 +53,6 @@ namespace NetworkTools.Systems.Tools {
         protected void DisposeSnap() {
             if (m_SnappedControlPoint.IsCreated) {
                 m_SnappedControlPoint.Dispose();
-            }
-
-            if (m_SnappedEntity.IsCreated) {
-                m_SnappedEntity.Dispose();
             }
 
             if (m_SnapLines.IsCreated) {
@@ -153,7 +147,6 @@ namespace NetworkTools.Systems.Tools {
                 m_PrefabCompositionAreas = SystemAPI.GetBufferLookup<NetCompositionArea>(true),
 
                 m_SnappedControlPoint = m_SnappedControlPoint,
-                m_SnappedEntity       = m_SnappedEntity,
                 m_SnapLines           = m_SnapLines
             };
 
@@ -184,18 +177,17 @@ namespace NetworkTools.Systems.Tools {
         ///     chains, no replace mode, no shoreline snap).
         ///     <para>
         ///         Each snap type is gated by a <see cref="SnapOption" /> flag so the player can
-        ///         toggle them independently from the UI.  The job runs on a single thread before
-        ///         <see cref="CreateDefinitionsJob" /> and writes the winning snap candidate into
-        ///         <see cref="m_SnappedControlPoint" />.
+        ///         toggle them independently from the UI.  The job runs on a single thread and
+        ///         writes the winning snap candidate into <see cref="m_SnappedControlPoint" />.
         ///     </para>
         /// </summary>
-#if BURST
+#if USE_BURST
     [BurstCompile]
 #endif
         internal struct SnapPlacementJob : IJob {
             // ── Inputs ───────────────────────────────────────────────────────────
 
-            /// <summary>Raw raycast hit point from <see cref="NT_GenerateToolSystem.GetRaycastResult" />.</summary>
+            /// <summary>Raw raycast hit point to snap from (cursor or constrained projection).</summary>
             [ReadOnly] public ControlPoint m_ControlPoint;
 
             /// <summary>Bitfield of active snap options chosen by the player.</summary>
@@ -251,9 +243,6 @@ namespace NetworkTools.Systems.Tools {
             /// <summary>Best snap candidate. If no snap wins, this holds the raw hit position.</summary>
             public NativeValue<ControlPoint> m_SnappedControlPoint;
 
-            /// <summary>Entity of the snap target, or <see cref="Entity.Null" /> if no snap.</summary>
-            public NativeValue<Entity> m_SnappedEntity;
-
             /// <summary>Accumulated snap lines for visual feedback rendering.</summary>
             public NativeList<SnapLine> m_SnapLines;
 
@@ -305,7 +294,6 @@ namespace NetworkTools.Systems.Tools {
                 }
 
                 m_SnappedControlPoint.value = bestSnapPosition;
-                m_SnappedEntity.value       = bestSnapPosition.m_OriginalEntity;
             }
 
             /// <summary>

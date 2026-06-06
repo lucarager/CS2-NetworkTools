@@ -5,13 +5,14 @@
     using Game.Prefabs;
     using Game.Tools;
     using NetworkTools.Components;
+    using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
     using Unity.Mathematics;
 
     public partial class NT_RoadShapeToolSystem {
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         internal struct ShapeTransformJob : IJob {

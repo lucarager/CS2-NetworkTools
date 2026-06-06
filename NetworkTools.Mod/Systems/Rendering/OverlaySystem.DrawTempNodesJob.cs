@@ -4,6 +4,7 @@ namespace NetworkTools.Systems {
     using Game.Rendering;
     using Game.Tools;
     using NetworkTools.Systems.Rendering;
+    using Unity.Burst;
     using Unity.Burst.Intrinsics;
     using Unity.Collections;
     using Unity.Entities;
@@ -15,7 +16,7 @@ namespace NetworkTools.Systems {
         ///     Job to draw temp node overlays.
         /// </summary>
         [SuppressMessage("ReSharper", "ForCanBeConvertedToForeach")]
-#if BURST
+#if USE_BURST
         [BurstCompile]
 #endif
         protected struct DrawTempNodesJob : IJobChunk {
