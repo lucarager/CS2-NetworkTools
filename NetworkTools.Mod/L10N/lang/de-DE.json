@@ -89,6 +89,7 @@
   "NetworkTools.Tools.Generate.Description": "Ermöglicht die Erstellung verschiedener Networks, wie beispielsweise perfekte Straßennetze und Kreise.",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]": "Netzwerkursprung festlegen",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]": "Rotieren",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.SetDirection]": "Set direction",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]": "Platzierung entfernen",
   "NetworkTools.UI.Common.NetworkTools": "Network Tools",
   "NetworkTools.UI.Common.Close": "Close",
