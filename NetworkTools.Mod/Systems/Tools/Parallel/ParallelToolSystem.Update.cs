@@ -91,6 +91,12 @@ namespace NetworkTools.Systems.Tools.Parallel {
             };
         }
 
+        /// <inheritdoc />
+        public int ApplyMinNodeCount => 2;
+
+        /// <inheritdoc />
+        public bool CanApply => Phase == OperationPhase.Ready;
+
         /// <summary>
         ///     Requests the tool to apply the current transformation.
         /// </summary>

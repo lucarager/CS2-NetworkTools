@@ -1,8 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import styles from "../toolActionPanel.module.scss";
 import { GenerateMode, PARAM_BINDINGS, PARAM_KEYS } from "generated/parameters.generated";
 import { useValue } from "cs2/api";
-import { GAME_BINDINGS, OperationPhase } from "gameBindings";
 import { PrefabSelection } from "../shared/prefabSelection";
 import { ParameterField } from "../shared/parameterField";
 import { TabBar } from "../shared/tabBar";
@@ -10,19 +9,11 @@ import { useLocalization } from "cs2/l10n";
 
 const G = PARAM_BINDINGS.generate;
 
-export const GenerateControls: React.FC<{
-    toolId: number;
-    onApplyDisabledChange?: (disabled: boolean) => void;
-}> = ({ onApplyDisabledChange }) => {
+export const GenerateControls: React.FC = () => {
     const activeGenerateMode = useValue(G.mode.binding) as GenerateMode;
     const altPrefabX = useValue(G.altPrefabX.binding) as boolean;
     const altPrefabZ = useValue(G.altPrefabZ.binding) as boolean;
-    const operationPhase = useValue(GAME_BINDINGS.OPERATION_PHASE.binding) as OperationPhase;
     const { translate } = useLocalization();
-
-    useEffect(() => {
-        onApplyDisabledChange?.(operationPhase !== OperationPhase.Ready);
-    }, [operationPhase, onApplyDisabledChange]);
 
     return (
         <div className={styles.section}>

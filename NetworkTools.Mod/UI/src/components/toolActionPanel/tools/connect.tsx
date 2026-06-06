@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import styles from "../toolActionPanel.module.scss";
 import { ConnectMode, PARAM_KEYS, PARAM_BINDINGS } from "generated/parameters.generated";
 import { useValue } from "cs2/api";
@@ -8,15 +8,8 @@ import { TabBar } from "../shared/tabBar";
 
 const C = PARAM_BINDINGS.connect;
 
-export const ConnectControls: React.FC<{
-    toolId: number;
-    onApplyDisabledChange?: (disabled: boolean) => void;
-}> = ({ onApplyDisabledChange }) => {
+export const ConnectControls: React.FC = () => {
     const activeConnectMode = useValue(C.mode.binding) as ConnectMode;
-
-    useEffect(() => {
-        onApplyDisabledChange?.(activeConnectMode === ConnectMode.None);
-    }, [activeConnectMode, onApplyDisabledChange]);
 
     return (
         <>

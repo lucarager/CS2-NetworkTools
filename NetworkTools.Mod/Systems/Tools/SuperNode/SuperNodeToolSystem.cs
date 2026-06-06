@@ -26,13 +26,19 @@ namespace NetworkTools.Systems.Tools {
         public override string             toolID => "SuperNode Tool";
 
 
+        /// <inheritdoc />
+        public int ApplyMinNodeCount => 2;
+
+        /// <inheritdoc />
+        public bool CanApply => Phase == OperationPhase.Ready;
+
         /// <summary>
         ///     Requests the tool to apply the current transformation.
         /// </summary>
         public void RequestApply() {
             m_Log.Debug($"RequestApply() -- Selected Nodes: {m_SelectedNodes.Length}");
 
-            if (m_SelectedNodes.Length < 2) {
+            if (Phase != OperationPhase.Ready) {
                 return;
             }
 

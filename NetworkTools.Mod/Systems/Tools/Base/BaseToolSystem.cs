@@ -30,6 +30,17 @@ namespace NetworkTools.Systems.Tools {
     }
 
     /// <summary>
+    ///     State of the manual Apply button, computed entirely on the C# side and
+    ///     consumed passively by the UI.
+    /// </summary>
+    public enum ApplyState {
+        Hidden            = 0, // The active tool exposes no manual apply action
+        InsufficientNodes = 1, // Not enough nodes are selected yet
+        Disabled          = 2, // Apply exists but is currently blocked
+        Enabled           = 3 // Apply is available
+    }
+
+    /// <summary>
     ///     Determines how the transformation job outputs its results.
     /// </summary>
     public enum ToolOutputMode : byte {
@@ -1006,6 +1017,14 @@ namespace NetworkTools.Systems.Tools {
             }
 
             entities.Dispose();
+        }
+
+        /// <summary>
+        /// Overrides base GetAllowApply and simplifies it to just check the error query
+        /// </summary>
+        /// <returns>Boolean indicating if apply is allowed</returns>
+        public new bool GetAllowApply() {
+            return m_ErrorQuery.IsEmptyIgnoreFilter;
         }
     }
 }

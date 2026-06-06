@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./toolActionPanel.module.scss";
 import panels from "../shared/panels.module.scss";
-import { GAME_BINDINGS, GAME_TRIGGERS } from "gameBindings";
+import { GAME_BINDINGS, GAME_TRIGGERS, ApplyState } from "gameBindings";
 import { useValue } from "cs2/api";
 import { Button } from "cs2/ui";
 import { ShapeSlopeControls } from "./tools/shapeSlope";
@@ -18,33 +18,28 @@ import { GenerateControls } from "./tools/generate";
 import { PrefabSearchProvider, usePrefabSearch } from "./prefabSearchPanel/prefabSearchContext";
 import { PrefabSearchPanel } from "./prefabSearchPanel/prefabSearchPanel";
 
-interface ToolConfig {
-    component: React.ComponentType<any>;
-    applyMinEntities?: number;
-}
-
-const TOOL_COMPONENTS: Record<string, ToolConfig> = {
-    ShapeSlope: { component: ShapeSlopeControls, applyMinEntities: 2 },
-    ShapeCurve: { component: ShapeCurveControls, applyMinEntities: 2 },
-    Connect: { component: ConnectControls, applyMinEntities: 2 },
-    SuperNode: { component: SuperNodeControls, applyMinEntities: 2 },
-    Parallel: { component: ParallelControls, applyMinEntities: 2 },
-    Generate: { component: GenerateControls, applyMinEntities: 0 },
+// Maps a tool's Id to its parameter-controls component. Whether the Apply button
+// shows / is enabled is decided entirely on the C# side via the APPLY_STATE binding.
+const TOOL_COMPONENTS: Record<string, React.ComponentType<any>> = {
+    ShapeSlope: ShapeSlopeControls,
+    ShapeCurve: ShapeCurveControls,
+    Connect: ConnectControls,
+    SuperNode: SuperNodeControls,
+    Parallel: ParallelControls,
+    Generate: GenerateControls,
 };
 
 const ToolActionPanelInner = () => {
     const selectedBinding = useValue(GAME_BINDINGS.SELECTED_PREFAB.binding);
     const toolUIDataBinding = useValue(GAME_BINDINGS.UI_DATA.binding);
-    const selectedEntities = useValue(GAME_BINDINGS.SELECTED_ENTITIES.binding);
+    const applyState = useValue(GAME_BINDINGS.APPLY_STATE.binding) as ApplyState;
     const activeTool = toolUIDataBinding.find((t) => t.PrefabId === selectedBinding);
     const { translate } = useLocalization();
     const [showTutorial, setShowTutorial] = useState(false);
-    const [applyDisabled, setApplyDisabled] = useState(false);
     const { isOpen: prefabSearchOpen, close: closePrefabSearch } = usePrefabSearch();
 
     useEffect(() => {
         setShowTutorial(false);
-        setApplyDisabled(false);
         closePrefabSearch();
     }, [closePrefabSearch, selectedBinding]);
 
@@ -52,9 +47,7 @@ const ToolActionPanelInner = () => {
         return <div className={styles.wrapper}></div>;
     }
 
-    const toolConfig = TOOL_COMPONENTS[activeTool.Id];
-    const ToolComponent = toolConfig?.component;
-    const applyMinEntities = toolConfig?.applyMinEntities;
+    const ToolComponent = TOOL_COMPONENTS[activeTool.Id];
 
     return (
         <div className={styles.wrapper}>
@@ -85,17 +78,11 @@ const ToolActionPanelInner = () => {
                             <AnarchySelection />
                         </div>
                     </div>
-                    {ToolComponent && (
-                        <ToolComponent
-                            toolId={selectedBinding}
-                            onApplyDisabledChange={setApplyDisabled}
-                        />
-                    )}
-                    {applyMinEntities !== undefined && (
+                    {ToolComponent && <ToolComponent />}
+                    {applyState !== ApplyState.Hidden && (
                         <div className={styles.row}>
                             <div className={styles.actions}>
-                                {applyMinEntities > 0 &&
-                                selectedEntities.length < applyMinEntities ? (
+                                {applyState === ApplyState.InsufficientNodes ? (
                                     <span className={styles.helper}>
                                         {translate("NetworkTools.UI.Common.SelectAtLeastTwoNodes")}
                                     </span>
@@ -103,7 +90,7 @@ const ToolActionPanelInner = () => {
                                     <Button
                                         variant="primary"
                                         className={styles.applyButton}
-                                        disabled={applyDisabled}
+                                        disabled={applyState === ApplyState.Disabled}
                                         onSelect={() => GAME_TRIGGERS.REQUEST_APPLY()}>
                                         {translate(`NetworkTools.UI.Apply.${activeTool.Id}`)}
                                     </Button>

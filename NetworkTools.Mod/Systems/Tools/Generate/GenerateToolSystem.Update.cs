@@ -148,6 +148,12 @@ namespace NetworkTools.Systems.Tools.Generate {
             m_UpdateNeeded = true;
         }
 
+        /// <inheritdoc />
+        public int ApplyMinNodeCount => 0;
+
+        /// <inheritdoc />
+        public bool CanApply => Phase == OperationPhase.Ready;
+
         /// <summary>
         ///     Requests the tool to apply the current network.
         /// </summary>

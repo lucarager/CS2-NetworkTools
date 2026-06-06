@@ -47,9 +47,12 @@ namespace NetworkTools.Systems.UI {
         }
 
         private void HandleRequestApply() {
-            m_Log.Debug($"HandleRequestApply() -- validRequest={m_ToolSystem.activeTool is IManualApplyProvider}");
+            var applyState = GetCurrentApplyState();
+            m_Log.Debug($"HandleRequestApply() -- applyState={applyState}");
 
-            if (m_ToolSystem.activeTool is IManualApplyProvider activeTool) {
+            // Gate the apply trigger (button and hotkey both route here) on the same state
+            // the UI consumes, so the hotkey cannot bypass validation or readiness checks.
+            if (applyState == ApplyState.Enabled && m_ToolSystem.activeTool is IManualApplyProvider activeTool) {
                 activeTool.RequestApply();
             }
         }

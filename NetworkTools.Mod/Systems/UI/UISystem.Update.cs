@@ -60,7 +60,7 @@ namespace NetworkTools.Systems.UI {
             m_AnarchyEnabledBinding.Value   = activeTool != null && activeTool.AnarchyEnabled;
             m_AvailableViewsBinding.Value   = activeTool != null ? (int)activeTool.AvailableViews   : (int)ViewOption.All;
             m_SelectedViewsBinding.Value    = activeTool != null ? (int)activeTool.SelectedViews    : (int)ViewOption.None;
-            m_OperationPhaseBinding.Value   = activeTool != null ? (int)activeTool.Phase            : (int)OperationPhase.Idle;
+            m_ApplyStateBinding.Value       = (int)ComputeApplyState(activeTool, selectedNodes.Length);
 
             if (m_ToggleToolPanelAction.WasPerformedThisFrame()) {
                 m_PanelOpenBinding.Value = true;
@@ -110,6 +110,40 @@ namespace NetworkTools.Systems.UI {
             }
 
             base.OnUpdate();
+        }
+
+        /// <summary>
+        ///     Gathers the inputs for and returns the current <see cref="ApplyState" /> of the
+        ///     active tool. Used outside the per-frame update (e.g. the apply hotkey) so the
+        ///     keyboard path is gated identically to the UI button.
+        /// </summary>
+        private ApplyState GetCurrentApplyState() {
+            var activeTool = m_ToolSystem.activeTool as NT_BaseToolSystem;
+            var selectedNodeCount = m_ToolSystem.activeTool is INodeSelectionProvider selectionProvider
+                                        ? selectionProvider.GetSelectedNodes().Length
+                                        : 0;
+            return ComputeApplyState(activeTool, selectedNodeCount);
+        }
+
+        /// <summary>
+        ///     Computes the state of the manual Apply button for the active tool. The UI
+        ///     consumes the resulting <see cref="ApplyState" /> passively and does not
+        ///     replicate any of this gating logic.
+        /// </summary>
+        private ApplyState ComputeApplyState(NT_BaseToolSystem activeTool, int selectedNodeCount) {
+            if (activeTool is not IManualApplyProvider applyProvider) {
+                return ApplyState.Hidden;
+            }
+
+            if (selectedNodeCount < applyProvider.ApplyMinNodeCount) {
+                return ApplyState.InsufficientNodes;
+            }
+
+            if (!applyProvider.CanApply || !activeTool.GetAllowApply()) {
+                return ApplyState.Disabled;
+            }
+
+            return ApplyState.Enabled;
         }
     }
 }
