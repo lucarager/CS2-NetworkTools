@@ -11,7 +11,7 @@ namespace NetworkTools.Systems.Tools.Connect {
         [EnumOption("NetworkTools.UI.Connect.SimpleCurve", "coui://nt/Modes/ConnectSimpleCurve.svg")]
         SimpleCurve = 1,
 
-        [EnumOption("NetworkTools.UI.Connect.ComplexCurve", "coui://nt/Modes/ConnectComplexCurve.svg")]
+        [EnumOption("NetworkTools.UI.Connect.ComplexCurve", "coui://nt/Modes/ConnectComplexCurve.svg", Disabled = true)]
         ComplexCurve = 2,
 
         [EnumOption("NetworkTools.UI.Connect.Loop", "coui://nt/Modes/ConnectLoop.svg", Disabled = true)]
