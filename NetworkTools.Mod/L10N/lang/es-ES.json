@@ -89,6 +89,7 @@
   "NetworkTools.Tools.Generate.Description": "Permite generar una variedad de redes tales como redes de cuadrículas perfectas y círculos.",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]": "Coloca el origen de la red",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]": "Rotar",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.SetDirection]": "Set direction",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]": "Eliminar posición",
   "NetworkTools.UI.Common.NetworkTools": "Network Tools",
   "NetworkTools.UI.Common.Close": "Cerrar",

@@ -89,6 +89,7 @@
   "NetworkTools.Tools.Generate.Description": "Allows generating a variety of networks such as perfect road grids and circles.",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]": "Place network origin",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]": "Rotate",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.SetDirection]": "Set direction",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]": "Remove placement",
   "NetworkTools.UI.Common.NetworkTools": "Network Tools",
   "NetworkTools.UI.Common.Close": "Close",
