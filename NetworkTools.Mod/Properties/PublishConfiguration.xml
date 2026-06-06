@@ -82,7 +82,7 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.4.6" />
+  <ModVersion Value="1.4.7" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Dependency for the mod, can be set multiple-->
@@ -90,12 +90,10 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog># 1.4.6
+  <ChangeLog># 1.4.7
 
-- Generate: Refactored generate tool to use two control points rather than one. The tool now requires players to click twice to select two points. This enables more control over the generated network and most importantly allows snapping to work intuitively.
-- Generate: Added snapping.
-- Internal changes and improvements.
-- Updated Polish translations, thank you volunteers.</ChangeLog>
+- Disable Complex Curve which was accidentally enabled.
+- Update Spanish and Chinese translation files, thank you volunteers!</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
