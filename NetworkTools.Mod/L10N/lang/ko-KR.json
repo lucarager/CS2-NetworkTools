@@ -89,6 +89,7 @@
   "NetworkTools.Tools.Generate.Description": "완벽한 도로 그리드나 원형 등 다양한 네트워크를 생성할 수 있습니다.",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Place]": "네트워크 원점 배치",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.Rotate]": "회전",
+  "Common.ACTION[NetworkTools.HintTooltip.Generate.SetDirection]": "Set direction",
   "Common.ACTION[NetworkTools.HintTooltip.Generate.RemovePlacement]": "배치 제거",
   "NetworkTools.UI.Common.NetworkTools": "네트워크 도구(Network Tools)",
   "NetworkTools.UI.Common.Close": "닫기",
