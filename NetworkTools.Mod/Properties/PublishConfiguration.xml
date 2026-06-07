@@ -81,7 +81,7 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.5.0" />
+  <ModVersion Value="1.5.1" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Dependency for the mod, can be set multiple-->
@@ -89,15 +89,12 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog># 1.5.0
+  <ChangeLog># 1.5.1
 
-- Performance: Greatly improved performance when using tools by optimizing various jobs.
-- Performance: Greatly improved performance of the overlay rendering.
-- All tools: Snapping pipeline reworked, handles now also have the ability to snap.
-- Generate: Enabled snapping for all handles.
-- UI: Refactored apply state system - Apply button now is disabled appropriately depending on tool state.
-- All Tools: Do not allow applying when errors exist.
-- Translations: Updated. Thank you volunteers!</ChangeLog>
+- PathSelection Tools (Slope, Shape, Parallel, etc.) now allow selecting the contiguous path without having to go intersection by intersection. The algorithm will try to predict the path you want to select.
+- Translations: Updated Spanish, Korean. Thank you volunteers!
+- Internal: Refactored NetworkTools to consume my new Common mod library.
+- Internal: Bug fixes and improvements.</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
