@@ -693,17 +693,25 @@ namespace NetworkTools.Systems.Tools {
 
         /// <summary>
         ///     Finds the closest node to a hit position when an edge was hit.
-        ///     Returns Entity.Null if no node is within <see cref="MaxDistanceToSelect" />.
+        ///     When <paramref name="requireWithinMaxDistance" /> is true, returns Entity.Null if the
+        ///     nearest node is farther than <see cref="MaxDistanceToSelect" />. When false, always
+        ///     returns the nearest of the edge's two endpoints regardless of distance — used by
+        ///     path-selection tools so hovering anywhere on a road snaps to a node on it.
         /// </summary>
-        protected Entity FindClosestNodeFromEdgeHit(Entity edgeEntity, float3 hitPosition) {
+        protected Entity FindClosestNodeFromEdgeHit(Entity edgeEntity, float3 hitPosition, bool requireWithinMaxDistance = true) {
             var edge        = EntityManager.GetComponentData<Edge>(edgeEntity);
             var startPos    = EntityManager.GetComponentData<Node>(edge.m_Start).m_Position;
             var endPos      = EntityManager.GetComponentData<Node>(edge.m_End).m_Position;
             var distToStart = math.distance(hitPosition, startPos);
             var distToEnd   = math.distance(hitPosition, endPos);
 
-            if (distToStart < MaxDistanceToSelect && distToStart < distToEnd) return edge.m_Start;
-            if (distToEnd < MaxDistanceToSelect && distToEnd < distToStart) return edge.m_End;
+            var closest         = distToStart <= distToEnd ? edge.m_Start : edge.m_End;
+            var closestDistance = math.min(distToStart, distToEnd);
+
+            if (!requireWithinMaxDistance || closestDistance < MaxDistanceToSelect) {
+                return closest;
+            }
+
             return Entity.Null;
         }
 
@@ -712,9 +720,12 @@ namespace NetworkTools.Systems.Tools {
         ///     returns the hit entity if it's a node, or the closest node if an edge was hit.
         ///     Only returns entities with NT_Eligible.
         /// </summary>
-        protected ControlPoint FilterRaycastToEligibleNode(Entity entity, RaycastHit hit) {
+        /// <param name="requireWithinMaxDistance">
+        ///     When false, an edge hit always resolves to its nearest node regardless of distance.
+        /// </param>
+        protected ControlPoint FilterRaycastToEligibleNode(Entity entity, RaycastHit hit, bool requireWithinMaxDistance = true) {
             var candidate = EntityManager.HasComponent<Edge>(entity)
-                ? FindClosestNodeFromEdgeHit(entity, hit.m_Position)
+                ? FindClosestNodeFromEdgeHit(entity, hit.m_Position, requireWithinMaxDistance)
                 : entity;
 
             return candidate != Entity.Null && EntityManager.HasComponent<NT_Eligible>(candidate)
@@ -726,9 +737,13 @@ namespace NetworkTools.Systems.Tools {
         ///     Standard GetRaycastResult implementation for node-targeting tools.
         ///     Calls <see cref="FilterRaycastToEligibleNode" /> to resolve edges to closest node.
         /// </summary>
-        protected bool TryGetNodeRaycast(out ControlPoint controlPoint) {
+        /// <param name="requireWithinMaxDistance">
+        ///     When false, an edge hit always resolves to its nearest node regardless of distance.
+        ///     Path-selection tools pass false so hovering anywhere on a road targets a node on it.
+        /// </param>
+        protected bool TryGetNodeRaycast(out ControlPoint controlPoint, bool requireWithinMaxDistance = true) {
             if (base.GetRaycastResult(out var entity, out RaycastHit raycastHit)) {
-                controlPoint = FilterRaycastToEligibleNode(entity, raycastHit);
+                controlPoint = FilterRaycastToEligibleNode(entity, raycastHit, requireWithinMaxDistance);
                 return controlPoint.m_OriginalEntity != Entity.Null;
             }
 

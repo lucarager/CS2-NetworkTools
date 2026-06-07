@@ -111,7 +111,7 @@ namespace NetworkTools.Systems.Tools.Parallel {
 
         /// <inheritdoc />
         protected override bool GetRaycastResult(out ControlPoint controlPoint) =>
-            TryGetNodeRaycast(out controlPoint);
+            TryGetNodeRaycast(out controlPoint, requireWithinMaxDistance: false);
 
         /// <summary>
         ///     Resets the tool to idle state.
