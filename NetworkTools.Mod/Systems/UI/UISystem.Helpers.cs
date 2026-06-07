@@ -12,7 +12,7 @@ namespace NetworkTools.Systems.UI {
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
     using NetworkTools.Systems.Tools.RoadShape;
-    using NetworkTools.Utils;
+    using LucaModsCommon.Utils;
     using Unity.Entities;
     using Colossal.UI.Binding;
     using Game.Input;
@@ -26,7 +26,7 @@ namespace NetworkTools.Systems.UI {
     using NetworkTools.Systems.Tools.Generate;
     using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
-    using NetworkTools.Utils;
+    using LucaModsCommon.Utils;
     using Unity.Entities;
 
     public partial class NT_UISystem {

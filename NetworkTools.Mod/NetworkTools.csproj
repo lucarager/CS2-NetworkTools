@@ -1,129 +1,46 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
-		<Configurations>Debug;Release;I18N</Configurations>
 		<Title>NetworkTools</Title>
 		<AssemblyTitle>$(Title)</AssemblyTitle>
 		<Description>A Cities: Skylines 2 mod.</Description>
 		<Authors>Luca Rager</Authors>
 		<Product>$(Title)</Product>
-		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 		<PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
-		<DebugType>portable</DebugType>
-		<DebugSymbols>true</DebugSymbols>
-		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 		<Version>1.5.0</Version>
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<FileVersion>$(Version).0</FileVersion>
 	</PropertyGroup>
 
-	<!--Imports must be after PropertyGroup block-->
+	<!-- Don't compile the submodule's own build output -->
+	<PropertyGroup>
+		<DefaultItemExcludes>$(DefaultItemExcludes);Common\obj\**;Common\bin\**</DefaultItemExcludes>
+	</PropertyGroup>
+
+	<!-- Shared build config: package refs, LangVersion, configs (Debug;Release;I18N), DefineConstants, <Reference> list -->
+	<Import Project="Common\LucaModsCommon.props" />
+
+	<!-- CSII toolchain -->
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.props" />
 	<Import Project="$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))\Mod.targets" />
 
+	<!-- Shared build steps (BuildUI / CopyIcons / CustomModPostProcessorConfig / GeneratePublishConfiguration).
+	     MUST be imported AFTER Mod.targets so the shared CustomModPostProcessorConfig overrides the stub. -->
+	<Import Project="Common\LucaModsCommon.targets" />
+
+	<!-- Re-assert language/unsafe settings AFTER the CSII toolchain imports, which reset LangVersion
+	     (LucaModsCommon.props sets these too, but Mod.props/Mod.targets override them; NetworkTools
+	     uses C# 11 'required' members so this must win). -->
 	<PropertyGroup>
-		<Configurations>Debug;Release;I18N</Configurations>
 		<LangVersion>11.0</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="UI\node_modules\**" />
-	  <EmbeddedResource Remove="UI\node_modules\**" />
-	  <None Remove="UI\node_modules\**" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
-		<PackageReference Include="PolySharp" Version="1.15.0">
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
-	</ItemGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<DefineConstants>$(DefineConstants);USE_BURST</DefineConstants>
-		<WarningLevel>4</WarningLevel>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<DefineConstants>$(DefineConstants);ENABLE_PROFILER;IS_DEBUG;</DefineConstants>
-		<WarningLevel>4</WarningLevel>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='I18N|AnyCPU'">
-		<DefineConstants>$(DefineConstants);ENABLE_PROFILER;IS_DEBUG;EXPORT_EN_US;</DefineConstants>
-		<WarningLevel>4</WarningLevel>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<Reference Include="Game">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.Core">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.TestFramework">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.Collections">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.Logging">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.IO.AssetDatabase">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.UI">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.UI.Binding">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.Localization">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Colossal.Mathematics">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Unity.InputSystem">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="UnityEngine.CoreModule">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Unity.RenderPipelines.HighDefinition.Runtime">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Unity.Burst">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Unity.Collections">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Unity.Entities">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Unity.Mathematics">
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Newtonsoft.Json">
-			<Private>false</Private>
-		</Reference>
-	</ItemGroup>
-
-	<ItemGroup>
-		<Reference Update="System">
-			<Private>false</Private>
-		</Reference>
-		<Reference Update="System.Core">
-			<Private>false</Private>
-		</Reference>
-		<Reference Update="System.Data">
-			<Private>false</Private>
-		</Reference>
+		<Compile Remove="UI\node_modules\**" />
+		<EmbeddedResource Remove="UI\node_modules\**" />
+		<None Remove="UI\node_modules\**" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -133,73 +50,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="L10N\lang\" />
-		<Content Include="L10N\lang\**">
+		<Folder Include="L10n\lang\" />
+		<Content Include="L10n\lang\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
-		<EmbeddedResource Include="L10N\lang\de-DE.json" />
-		<EmbeddedResource Include="L10N\lang\en-US.json" />
-		<EmbeddedResource Include="L10N\lang\es-ES.json" />
-		<EmbeddedResource Include="L10N\lang\fr-FR.json" />
-		<EmbeddedResource Include="L10N\lang\it-IT.json" />
-		<EmbeddedResource Include="L10N\lang\ja-JP.json" />
-		<EmbeddedResource Include="L10N\lang\ko-KR.json" />
-		<EmbeddedResource Include="L10N\lang\pl-PL.json" />
-		<EmbeddedResource Include="L10N\lang\pt-PT.json" />
-		<EmbeddedResource Include="L10N\lang\ru-RU.json" />
-		<EmbeddedResource Include="L10N\lang\zh-HANS.json" />
-		<EmbeddedResource Include="L10N\lang\zh-HANT.json" />
+		<EmbeddedResource Include="L10n\lang\*.json" Exclude="L10n\lang\en-US.json" />
 	</ItemGroup>
 
-	<!--Generate TypeScript parameter definitions from C# source-->
+	<!--Generate TypeScript parameter definitions from C# source (NT-specific; runs before the shared BuildUI)-->
 	<Target Name="GenerateParametersTS" BeforeTargets="BuildUI">
 		<Message Text="[GenerateParametersTS]" Importance="high" />
 		<Exec Command="dotnet run --project &quot;$(SolutionDir)NetworkTools.Codegen&quot; -- &quot;$(ProjectDir)Systems&quot; &quot;$(ProjectDir)UI/src/generated/parameters.generated.ts&quot; --configuration $(Configuration)" />
-	</Target>
-
-	<!--Build UI-->
-	<Target Name="BuildUI" AfterTargets="DeployWIP" DependsOnTargets="GenerateParametersTS">
-		<Message Text="[BuildUI]" Importance="high" />
-		<Exec Command="npm run build" WorkingDirectory="$(ProjectDir)/UI" />
-	</Target>
-
-	<!--Copy Assets-->
-	<Target Name="CopyIcons" AfterTargets="DeployWIP">
-		<Message Text="[CopyIcons]" Importance="high" />
-		<ItemGroup>
-			<_AssetsDir Include="$(ProjectDir)/Assets/**/*.*" />
-		</ItemGroup>
-		<Copy SourceFiles="@(_AssetsDir)" DestinationFolder="$(DeployDir)/Assets/%(RecursiveDir)" />
-	</Target>
-
-	<!--Override ModPostProcessorArgs to disable Mac/Linux for speed-->
-	<Target Name="CustomModPostProcessorConfig" AfterTargets="ModPostProcessorConfig">
-		<PropertyGroup>
-			<ModPostProcessorArgs>"$(ModPostProcessorFullPath)" PostProcess "$(TargetPath)" -u "$(UnityModProjectFullPath)" @(ReferencePath->'-r "%(Identity)"', ' ') -p Windows -d -v</ModPostProcessorArgs>
-		</PropertyGroup>
-	</Target>
-
-	<!--Custom Build step to assemble the PublishConfiguration.xml-->
-	<Target Name="GeneratePublishConfiguration" AfterTargets="ModPublisherConfig">
-		<PropertyGroup>
-			<TargetConfigXml>$(ProjectDir)Properties\PublishConfiguration.xml</TargetConfigXml>
-			<ModVersion>$(Version)</ModVersion>
-			<LongDescFile>$(ProjectDir)Properties\LongDescription.md</LongDescFile>
-			<ChangelogFile>$(ProjectDir)Properties\Changelog\$(ModVersion).md</ChangelogFile>
-		</PropertyGroup>
-
-		<PropertyGroup>
-			<LongDescText Condition="Exists('$(LongDescFile)')">$([System.IO.File]::ReadAllText('$(LongDescFile)'))</LongDescText>
-			<ChangelogText Condition="Exists('$(ChangelogFile)')">$([System.IO.File]::ReadAllText('$(ChangelogFile)'))</ChangelogText>
-		</PropertyGroup>
-
-		<Copy SourceFiles="$(ProjectDir)Properties/PublishConfiguration.template.xml" DestinationFiles="$(TargetConfigXml)" />
-
-		<XmlPoke XmlInputPath="$(TargetConfigXml)" Query="/Publish/ModVersion/@Value" Value="$(ModVersion)" />
-		<XmlPoke XmlInputPath="$(TargetConfigXml)" Query="/Publish/LongDescription" Value="$(LongDescText)" />
-		<XmlPoke XmlInputPath="$(TargetConfigXml)" Query="/Publish/ChangeLog" Value="$(ChangelogText)" />
-
-		<Message Text="Updated $(TargetConfigXml) with Version $(ModVersion)" Importance="High" />
 	</Target>
 
 </Project>

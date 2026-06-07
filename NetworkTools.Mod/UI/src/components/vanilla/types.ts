@@ -1,68 +1,13 @@
-import React, { PropsWithChildren } from "react";
-import { LocalizedString, UniqueFocusKey } from "cs2/bindings";
-import { HTMLAttributes } from "react";
-import { InfoRowProps, InfoSectionProps } from "cs2/ui";
-import { LocalizedNumberProps, LocComponent } from "cs2/l10n";
+import { LocalizedString } from "cs2/bindings";
 
-export interface IVanillaComponents {
-    Section: React.FC<VanillaSectionProps>;
-    StepToolButton: React.FC<VanillaStepToolButtonProps>;
-    TabBar: React.FC<VanillaTabBarProps>;
-    Checkbox: React.FC<VanillaCheckboxProps>;
-    ToolButton: React.FC<VanillaToolButtonProps>;
-    InfoSection: React.FC<PropsWithChildren<InfoSectionProps>>;
-    InfoRow: React.FC<PropsWithChildren<InfoRowProps>>;
-    InfoLink: React.FC<PropsWithChildren<VanillaInfoLinkProps>>;
-    PageSelector: React.FC<PageSelectorProps>;
-    Page: React.FC<any>;
-    PageSwitcher: React.FC<PropsWithChildren<PageSwitcherProps>>;
-    ValueField: React.FC<ValueFieldProps>;
-    LocalizedValueField: React.FC<any>;
-    ToggleField: React.FC<ToggleFieldProps>;
-    IntInputField: React.FC<IntInputFieldProps>;
-    IntSliderField: React.FC<IntSliderFieldProps>;
-    Int2InputField: React.FC<VectorInputFieldProps>;
-    Int3InputField: React.FC<VectorInputFieldProps>;
-    Int4InputField: React.FC<VectorInputFieldProps>;
-    UIntInputField: React.FC<IntInputFieldProps>;
-    UIntSliderField: React.FC<IntSliderFieldProps>;
-    TimeSliderField: React.FC<IntSliderFieldProps>;
-    TimeBoundsSliderField: React.FC<BoundsFieldProps>;
-    FloatInputField: React.FC<FloatInputFieldProps>;
-    FloatSliderField: React.FC<FloatSliderFieldProps>;
-    Float2InputField: React.FC<VectorInputFieldProps>;
-    Float2SliderField: React.FC<VectorSliderFieldProps>;
-    Float3InputField: React.FC<VectorInputFieldProps>;
-    Float3SliderField: React.FC<VectorSliderFieldProps>;
-    Float4InputField: React.FC<VectorInputFieldProps>;
-    Float4SliderField: React.FC<VectorSliderFieldProps>;
-    Bounds1InputField: React.FC<BoundsFieldProps>;
-    Bounds1SliderField: React.FC<BoundsFieldProps>;
-    Bounds2InputField: React.FC<BoundsFieldProps>;
-    Bounds3InputField: React.FC<BoundsFieldProps>;
-    Bezier4x3Field: React.FC<any>;
-    RangedSliderField: React.FC<RangedSliderFieldProps>;
-    StringInputField: React.FC<StringInputFieldProps>;
-    ColorField: React.FC<ColorFieldProps>;
-    GradientSliderField: React.FC<GradientSliderFieldProps>;
-    AnimationCurveField: React.FC<AnimationCurveFieldProps>;
-    EnumField: React.FC<EnumFieldProps>;
-    FlagsField: React.FC<FlagsFieldProps>;
-    PopupValueField: React.FC<PropsWithChildren<PopupValueFieldProps>>;
-    DropdownField: React.FC<DropdownFieldProps>;
-    DirectoryPickerButton: React.FC<DirectoryPickerButtonProps>;
-    SeasonsField: React.FC<SeasonsFieldProps>;
-    ImageField: React.FC<ImageFieldProps>;
-    focusEntity: any;
-    tooltipComponents: {
-        [x in TooltipType]: {
-            ({ props }: { props: any }): any;
-            displayName: any;
-        };
-    };
-    LocalizedNumber: LocComponent<LocalizedNumberProps>;
-    [key: string]: React.FC<any> | any;
-}
+// Re-export the shared vanilla base types (IVanillaComponents/Themes/Focus, Vanilla*Props,
+// Page*Props) so existing NetworkTools imports keep resolving. The shared IVanillaComponents
+// carries an index signature, so the NetworkTools-only components registered in Components.tsx
+// (ToggleField, EnumField, tooltipComponents, ...) remain accessible through VC without needing
+// to be declared here.
+export * from "vanilla/types";
+
+// --- NetworkTools-specific types (not part of the shared base) ---
 
 export type Widget = {
     path: string;
@@ -331,79 +276,3 @@ export interface ImageFieldProps {
     label?: string;
     tooltip?: string | null;
 }
-
-export interface PageSelectorProps {
-    pages: number;
-    selected: number;
-    onSelect?: (x: number) => any;
-}
-
-export interface PageSwitcherProps {
-    activePage: number;
-    transitionStyles?: any;
-    className?: any;
-}
-
-export interface IVanillaThemes {
-    toolButtonTheme: Record<"button", string>;
-    mouseToolOptionsTheme: Record<"startButton" | "numberField" | "endButton", string>;
-    dropdownTheme: Record<"dropdownItem" | "dropdownToggle", string>;
-    checkboxTheme: Record<"label", string>;
-    toolbarFeatureButton: Record<"toolbarFeatureButton" | "button", string>;
-    panel: Record<string, string>;
-    pageSelector: Record<string, string>;
-    whatsNewPage: Record<string, string>;
-    [key: string]: Record<string, string>;
-}
-
-export interface IVanillaFocus {
-    FOCUS_DISABLED: UniqueFocusKey;
-    FOCUS_AUTO: UniqueFocusKey;
-}
-
-export type VanillaToolButtonProps = {
-    focusKey?: UniqueFocusKey | null;
-    src: string;
-    selected?: boolean;
-    multiSelect?: boolean;
-    disabled?: boolean;
-    tooltip?: string | JSX.Element | null;
-    selectSound?: any;
-    uiTag?: string;
-    className?: string;
-    children?: string | JSX.Element | JSX.Element[];
-    onSelect?: (x: any) => any;
-} & HTMLAttributes<any>;
-
-export type VanillaStepToolButtonProps = {
-    focusKey?: UniqueFocusKey | null;
-    selectedValue: number;
-    values: number[];
-    tooltip?: string | null;
-    uiTag?: string;
-    onSelect?: (x: any) => any;
-} & HTMLAttributes<any>;
-
-export type VanillaTabBarProps = any;
-
-export type VanillaSectionProps = {
-    title?: string | null;
-    uiTag?: string;
-    children: string | JSX.Element | JSX.Element[];
-    focusKey?: UniqueFocusKey | null;
-};
-
-export type VanillaCheckboxProps = {
-    checked?: boolean;
-    disabled?: boolean;
-    theme?: any;
-    className?: string;
-    [key: string]: any;
-};
-
-export type VanillaInfoLinkProps = {
-    icon?: string;
-    tooltip: string;
-    uppercase?: boolean;
-    onSelect?: (x: any) => any;
-};

@@ -5,17 +5,21 @@
     using Game.Prefabs;
     using Game.Tools;
     using Game.UI;
-    using NetworkTools.Extensions;
+    using LucaModsCommon.Extensions;
+    using LucaModsCommon.Systems;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Parameters;
-    using NetworkTools.Utils;
+    using LucaModsCommon.Utils;
     using Unity.Collections;
     using Unity.Entities;
 
     /// <summary>
     ///     System responsible for UI Bindings & Lookup Handling.
     /// </summary>
-    public partial class NT_PrefabSelectionUISystem : ExtendedUISystemBase {
+    public partial class NT_PrefabSelectionUISystem : CommonUISystemBase {
+        /// <inheritdoc />
+        protected override string ModId => NetworkToolsMod.Instance.Id;
+
         /// <summary>
         ///     Enum to represent the type of selected entity.
         /// </summary>
@@ -33,7 +37,6 @@
         private PrefabBase                m_DefaultRoadPrefab;
         private Entity                    m_LastCachedEntity;
         private int                       m_LastPrefabType = -1;
-        private PrefixedLogger            m_Log;
         private NT_PrefabCacheToolSystem  m_PrefabCacheSystem;
         private PrefabSystem              m_PrefabSystem;
         private ToolSystem                m_ToolSystem;
@@ -43,8 +46,6 @@
         protected override void OnCreate() {
             base.OnCreate();
 
-            m_Log = new PrefixedLogger(nameof(NT_PrefabSelectionUISystem));
-            m_Log.Debug("OnCreate()");
 
             m_PrefabSystem      = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_PrefabCacheSystem = World.GetOrCreateSystemManaged<NT_PrefabCacheToolSystem>();

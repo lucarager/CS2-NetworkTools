@@ -4,7 +4,8 @@
     using Game.Prefabs;
     using Game.Tools;
     using Game.UI;
-    using NetworkTools.Extensions;
+    using LucaModsCommon.Extensions;
+    using LucaModsCommon.Systems;
     using NetworkTools.Settings;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
@@ -12,13 +13,16 @@
     using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.Parameters;
     using NetworkTools.Systems.Tools.RoadShape;
-    using NetworkTools.Utils;
+    using LucaModsCommon.Utils;
     using Unity.Entities;
 
     /// <summary>
     ///     System responsible for UI Bindings & Lookup Handling.
     /// </summary>
-    public partial class NT_UISystem : ExtendedUISystemBase {
+    public partial class NT_UISystem : CommonUISystemBase {
+        /// <inheritdoc />
+        protected override string ModId => NetworkToolsMod.Instance.Id;
+
         /// <summary>
         ///     Enum to represent the type of selected entity.
         /// </summary>
@@ -57,7 +61,6 @@
 
         private int                                     m_LastSelectedNodesHash;
         private int                                     m_LastToolPrefabCount;
-        private PrefixedLogger                          m_Log;
         private NameSystem                              m_NameSystem;
         private NT_ConnectToolSystem                    m_NtConnectToolSystem;
         private NT_GenerateToolSystem                   m_NtGenerateToolSystem;
@@ -71,8 +74,6 @@
         protected override void OnCreate() {
             base.OnCreate();
 
-            m_Log = new PrefixedLogger(nameof(NT_UISystem));
-            m_Log.Debug("OnCreate()");
 
             m_PrefabSystem          = World.GetOrCreateSystemManaged<PrefabSystem>();
             m_ToolSystem            = World.GetOrCreateSystemManaged<ToolSystem>();

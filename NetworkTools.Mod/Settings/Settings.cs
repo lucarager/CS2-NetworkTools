@@ -11,7 +11,7 @@ namespace NetworkTools.Settings {
     /// <summary>
     ///     The mod's settings.
     /// </summary>
-    [FileLocation(NetworkToolsMod.ModName)]
+    [FileLocation("NetworkTools")]
     [SettingsUIGroupOrder(GeneralGroupStr, KeybindingsGroupStr, DebugGroupStr, AboutGroupStr)]
     [SettingsUIShowGroupName(GeneralGroupStr, KeybindingsGroupStr, DebugGroupStr, AboutGroupStr)]
     [SettingsUIKeyboardAction(ToggleToolPanelStr, ActionType.Button, Usages.kToolUsage)]
@@ -146,9 +146,9 @@ namespace NetworkTools.Settings {
 
         [SettingsUISection(AboutGroupStr)] public string Credits => CreditStr;
 
-        [SettingsUISection(AboutGroupStr)] public string InformationalVersion => NetworkToolsMod.InformationalVersion;
+        [SettingsUISection(AboutGroupStr)] public string InformationalVersion => NetworkToolsMod.Instance.InformationalVersion;
 
-        [SettingsUISection(AboutGroupStr)] public string Version => NetworkToolsMod.Version;
+        [SettingsUISection(AboutGroupStr)] public string Version => NetworkToolsMod.Instance.Version;
 
         /// <summary>
         ///     Enables debug mode on the active tool system.

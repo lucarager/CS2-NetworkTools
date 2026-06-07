@@ -14,7 +14,7 @@
     using NetworkTools.Systems.Tools.Generate;
     using NetworkTools.Systems.Tools.Parameters;
 
-    using NetworkTools.Utils;
+    using LucaModsCommon.Utils;
 
     using Unity.Collections;
     using Unity.Entities;

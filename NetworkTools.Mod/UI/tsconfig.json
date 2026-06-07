@@ -13,7 +13,11 @@
         "typeRoots": [ "./types", "node_modules/@types" ],
         "resolveJsonModule": true,
         "paths": {
-            "mod.json": [ "../mod.json" ]
+            "mod.json":  [ "../mod.json" ],
+            "utils/*":   [ "utils/*", "../../Common/ui/utils/*" ],
+            "vanilla/*": [ "vanilla/*", "../../Common/ui/vanilla/*" ],
+            "react":     [ "../node_modules/@types/react" ],
+            "react/*":   [ "../node_modules/@types/react/*" ]
         },
         "sourceMap": true
     },

@@ -4,7 +4,7 @@ namespace NetworkTools.Systems {
     using Game;
     using Game.Prefabs;
     using NetworkTools.Components.Tools;
-    using NetworkTools.Utils;
+    using LucaModsCommon.Utils;
     using Unity.Entities;
     using UnityEngine;
 

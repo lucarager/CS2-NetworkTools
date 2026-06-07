@@ -11,7 +11,7 @@ namespace NetworkTools.Systems.Tooltips {
 
     using NetworkTools.Components;
     using NetworkTools.Systems.Tools;
-    using NetworkTools.Utils;
+    using LucaModsCommon.Utils;
 
     using Unity.Collections;
     using Unity.Entities;

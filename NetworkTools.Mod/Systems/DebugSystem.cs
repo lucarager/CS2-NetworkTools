@@ -9,7 +9,7 @@
     using Game.Serialization;
     using Game.Simulation;
 
-    using NetworkTools.Utils;
+    using LucaModsCommon.Utils;
 
     using Unity.Collections;
     using Unity.Entities;

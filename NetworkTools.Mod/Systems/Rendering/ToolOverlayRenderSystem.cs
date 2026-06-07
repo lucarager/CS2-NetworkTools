@@ -1,4 +1,5 @@
 namespace NetworkTools.Systems {
+    using LucaModsCommon.Rendering;
     using System;
     using Game;
     using Game.Common;
@@ -9,7 +10,7 @@ namespace NetworkTools.Systems {
     using NetworkTools.Systems.Rendering;
     using NetworkTools.Systems.Tools;
     using NetworkTools.Systems.Tools.Connect;
-    using NetworkTools.Utils;
+    using LucaModsCommon.Utils;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;

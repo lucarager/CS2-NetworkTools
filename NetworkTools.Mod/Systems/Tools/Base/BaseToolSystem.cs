@@ -13,7 +13,7 @@ namespace NetworkTools.Systems.Tools {
     using NetworkTools.Components.Handles;
     using NetworkTools.Systems.Tools.Parameters;
 
-    using NetworkTools.Utils;
+    using LucaModsCommon.Utils;
     using Unity.Collections;
     using Unity.Entities;
     using Unity.Jobs;
