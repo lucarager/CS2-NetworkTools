@@ -1,0 +1,3 @@
+[submodule "NetworkTools.Mod/Common"]
+	path = NetworkTools.Mod/Common
+	url = https://github.com/lucarager/CS2-LucaModsCommon.git
