@@ -1,12 +1,15 @@
-# Network Tools: The Network Manipulation Toolkit
+# Network Tools: The Network Manipulation and Generation Toolkit
 
 The spiritual successor to the popular [Network Multitool](https://steamcommunity.com/sharedfiles/filedetails/?id=2560782729) for Cities: Skylines 1, rebuilt from the ground up for CS2. 
 
-With both familiar tools returning as well as new features, Network Tools gives you precise control over any networks. 
+Now in public early access!
+
+With both familiar tools returning as well as new features, Network Tools gives you precise control over any network (From Roads to Paths to Rail and even Waterways) in your city.
+
 Add or remove nodes, reshape slopes and curves, generate grids, and more -- all with interactive 3D handles and real-time previews.
 
 ### Early Access Warning
-**This mod is currently in EARLY ACCESS stage.**
+**This mod is currently in EARLY ACCESS.**
 Early access helps me gather feedback and prioritize development while allowing you to use and benefit from the mod sooner.
 However, please be aware of the following:
 - Not all features are complete. 
@@ -17,8 +20,6 @@ However, please be aware of the following:
 
 ### Tools
 Note: Tools are still in development. Features may be missing or be incomplete.
-More tools and more functions and options will be added to existing tools in future updates.
-Stay tuned!
 
 **Node Tools**
 * **Add Node** -- Click on any edge to insert a new intermediate node.
@@ -33,7 +34,7 @@ Stay tuned!
 **Creation Tools**
 * **Connect**  -- Connect two nodes with adjustable networks
 * **Parallel** -- Create parallel networks based on existing segments
-* **Generate** -- Place new customizable networks like grids and circles
+* **Generate** -- Create customizable networks like grids and circles
 
 ### Features
 * **Real-Time Preview** -- See the result of every transformation before you apply it.

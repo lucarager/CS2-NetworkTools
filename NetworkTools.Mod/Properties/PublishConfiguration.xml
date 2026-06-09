@@ -7,17 +7,18 @@
   <ShortDescription Value="Add, remove, reshape, and generate network nodes and segments with precision." />
   <!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
   <!--LongDescription Value="This is a long description" /-->
-  <LongDescription># Network Tools: The Network Manipulation Toolkit
+  <LongDescription># Network Tools: The Network Manipulation and Generation Toolkit
 
 The spiritual successor to the popular [Network Multitool](https://steamcommunity.com/sharedfiles/filedetails/?id=2560782729) for Cities: Skylines 1, rebuilt from the ground up for CS2. 
 
-With both familiar tools returning as well as exciting new features, NetworkTools gives you precise control over any networks like roads, paths, rail, and waterways. 
+Now in public early access!
+
+With both familiar tools returning as well as new features, Network Tools gives you precise control over any network (From Roads to Paths to Rail and even Waterways) in your city.
+
 Add or remove nodes, reshape slopes and curves, generate grids, and more -- all with interactive 3D handles and real-time previews.
 
-Whether you're smoothing out a janky interchange, building a perfectly graded highway, or laying out a neighborhood street grid from scratch, NetworkTools has you covered.
-
 ### Early Access Warning
-**This mod is currently in EARLY ACCESS stage.**
+**This mod is currently in EARLY ACCESS.**
 Early access helps me gather feedback and prioritize development while allowing you to use and benefit from the mod sooner.
 However, please be aware of the following:
 - Not all features are complete. 
@@ -28,8 +29,6 @@ However, please be aware of the following:
 
 ### Tools
 Note: Tools are still in development. Features may be missing or be incomplete.
-More tools and more functions and options will be added to existing tools in future updates.
-Stay tuned!
 
 **Node Tools**
 * **Add Node** -- Click on any edge to insert a new intermediate node.
@@ -44,15 +43,13 @@ Stay tuned!
 **Creation Tools**
 * **Connect**  -- Connect two nodes with adjustable networks
 * **Parallel** -- Create parallel networks based on existing segments
-* **Generate** -- Place new customizable networks like grids and circles
+* **Generate** -- Create customizable networks like grids and circles
 
 ### Features
 * **Real-Time Preview** -- See the result of every transformation before you apply it.
 * **Interactive Handles and Parameters** -- Drag handles in the world or adjust parameters in the sidebar to fine-tune your edits.
 * **Network Filtering** -- Choose which network types to target: roads, paths, rail, waterways, or invisible paths.
-* **Snap Options** -- Snap to the zone grid or edge midpoints.
 * **View Options** -- Toggle underground view, zone grid display, and invisible network visibility.
-* **Asset Selector** -- Search and pick any network prefab when creating new segments.
 * **Keyboard Shortcuts** -- Quick-select tools with `Shift+1` through `Shift+9`, toggle the panel with `Shift+T`, and apply with `Enter`. All rebindable in settings.
 
 ### How to Use
@@ -81,7 +78,7 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="" />
   <!--Version of the mod-->
-  <ModVersion Value="1.5.2" />
+  <ModVersion Value="1.5.3" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Dependency for the mod, can be set multiple-->
@@ -89,9 +86,10 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog># 1.5.2
+  <ChangeLog># 1.5.3
 
-- Update translation files</ChangeLog>
+- Update translations
+- Update description</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
