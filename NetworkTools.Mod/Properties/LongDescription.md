@@ -2,10 +2,8 @@
 
 The spiritual successor to the popular [Network Multitool](https://steamcommunity.com/sharedfiles/filedetails/?id=2560782729) for Cities: Skylines 1, rebuilt from the ground up for CS2. 
 
-With both familiar tools returning as well as exciting new features, NetworkTools gives you precise control over any networks like roads, paths, rail, and waterways. 
+With both familiar tools returning as well as new features, Network Tools gives you precise control over any networks. 
 Add or remove nodes, reshape slopes and curves, generate grids, and more -- all with interactive 3D handles and real-time previews.
-
-Whether you're smoothing out a janky interchange, building a perfectly graded highway, or laying out a neighborhood street grid from scratch, NetworkTools has you covered.
 
 ### Early Access Warning
 **This mod is currently in EARLY ACCESS stage.**
@@ -41,9 +39,7 @@ Stay tuned!
 * **Real-Time Preview** -- See the result of every transformation before you apply it.
 * **Interactive Handles and Parameters** -- Drag handles in the world or adjust parameters in the sidebar to fine-tune your edits.
 * **Network Filtering** -- Choose which network types to target: roads, paths, rail, waterways, or invisible paths.
-* **Snap Options** -- Snap to the zone grid or edge midpoints.
 * **View Options** -- Toggle underground view, zone grid display, and invisible network visibility.
-* **Asset Selector** -- Search and pick any network prefab when creating new segments.
 * **Keyboard Shortcuts** -- Quick-select tools with `Shift+1` through `Shift+9`, toggle the panel with `Shift+T`, and apply with `Enter`. All rebindable in settings.
 
 ### How to Use
