@@ -2,9 +2,9 @@
   <!--Id must be set in order to update existed mod. it is not required for publishing mod for the first time-->
   <ModId Value="133736" />
   <!--Name of the mod to display to players-->
-  <DisplayName Value="NetworkTools [Early Access]" />
+  <DisplayName Value="Network Tools [Early Access]" />
   <!--Short description of the mod-->
-  <ShortDescription Value="Add, remove, reshape, and generate network nodes and segments with precision." />
+  <ShortDescription Value="Reshape and generate network nodes and segments with precision." />
   <!--Long description of the mod. Single line or multi line. Supports minimal markdown subset-->
   <!--LongDescription Value="This is a long description" /-->
   <LongDescription># Network Tools: The Network Manipulation and Generation Toolkit
@@ -76,9 +76,9 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Tag, can be set multiple times-->
   <Tag Value="Code Mod" />
   <!--Link to the forum post where the mod can be discussed-->
-  <ForumLink Value="" />
+  <ForumLink Value="https://forum.paradoxplaza.com/forum/threads/network-tools-early-access.1927685/" />
   <!--Version of the mod-->
-  <ModVersion Value="1.5.3" />
+  <ModVersion Value="1.5.4" />
   <!--Recommended version of the base game to use the mod-->
   <GameVersion Value="1.5.*" />
   <!--Dependency for the mod, can be set multiple-->
@@ -86,10 +86,9 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog># 1.5.3
+  <ChangeLog># 1.5.4
 
-- Update translations
-- Update description</ChangeLog>
+Public release</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
@@ -97,5 +96,5 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <ExternalLink Type="twitch" Url="https://twitch.tv/lucadevdesign" />
   <ExternalLink Type="crowdin" Url="https://crowdin.com/project/networktools-cs2" />
   <!--Supported values Public, Private, Unlisted-->
-  <AccessLevel Value="Unlisted" />
+  <AccessLevel Value="Public" />
 </Publish>
