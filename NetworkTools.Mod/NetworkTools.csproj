@@ -8,7 +8,7 @@
 		<Authors>Luca Rager</Authors>
 		<Product>$(Title)</Product>
 		<PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
-		<Version>1.5.3</Version>
+		<Version>1.5.4</Version>
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<FileVersion>$(Version).0</FileVersion>
 	</PropertyGroup>
