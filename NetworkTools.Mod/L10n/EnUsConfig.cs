@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace NetworkTools.L10N {
+namespace NetworkTools.L10n {
     using System.Collections.Generic;
 
     using Colossal;

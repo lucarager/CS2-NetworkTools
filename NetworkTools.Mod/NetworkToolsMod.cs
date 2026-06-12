@@ -11,7 +11,7 @@ namespace NetworkTools {
     using LucaModsCommon.Mod;
     using LucaModsCommon.Rendering;
 
-    using NetworkTools.L10N;
+    using NetworkTools.L10n;
     using NetworkTools.Settings;
     using NetworkTools.Systems;
     using NetworkTools.Systems.Rendering;
