@@ -67,9 +67,6 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 }
             };
 
-            // Initialize selection state (base class NativeLists)
-            InitializeSelectionState();
-
             // Cached path data for handles and jobs
             m_EdgeStates = new NativeList<EdgeState>(32, Allocator.Persistent);
             m_NodeStates = new NativeList<NodeState>(33, Allocator.Persistent);
@@ -77,9 +74,6 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         }
 
         protected override void OnDestroy() {
-            // Dispose selection state (base class NativeLists)
-            DisposeSelectionState();
-
             // Dispose cached path data
             if (m_EdgeStates.IsCreated) {
                 m_EdgeStates.Dispose();
@@ -98,16 +92,10 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             // Reset internal state
             m_LastHitPosition = default;
             Phase = OperationPhase.Idle;
-
-            // Initialize selection state (makes all nodes eligible)
-            ResetToNoSelection();
         }
 
         protected override void OnStopRunning() {
             base.OnStopRunning();
-
-            // Clear selection state
-            ClearSelectionState(false);
 
             // Invalidate cached path data
             InvalidatePathData();

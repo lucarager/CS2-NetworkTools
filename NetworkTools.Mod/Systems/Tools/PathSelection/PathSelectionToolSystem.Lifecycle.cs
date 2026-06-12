@@ -11,11 +11,34 @@ namespace NetworkTools.Systems.Tools {
     ///     Partial class containing lifecycle methods for selection state management.
     /// </summary>
     public abstract partial class NT_PathSelectionToolSystem {
+        /// <inheritdoc />
+        protected override void OnCreate() {
+            base.OnCreate();
+            InitializeSelectionState();
+        }
+
+        /// <inheritdoc />
+        protected override void OnDestroy() {
+            DisposeSelectionState();
+            base.OnDestroy();
+        }
+
+        /// <inheritdoc />
+        protected override void OnStartRunning() {
+            base.OnStartRunning();
+            ResetToNoSelection();
+        }
+
+        /// <inheritdoc />
+        protected override void OnStopRunning() {
+            base.OnStopRunning();
+            ClearSelectionState(false);
+        }
+
         /// <summary>
-        ///     Initializes the selection state NativeLists.
-        ///     Call from derived class OnCreate after base.OnCreate.
+        ///     Allocates the selection-state NativeLists.
         /// </summary>
-        protected void InitializeSelectionState() {
+        private void InitializeSelectionState() {
             m_SelectedNodes = new NativeList<Entity>(32, Allocator.Persistent);
             m_EligibleNodes = new NativeList<Entity>(64, Allocator.Persistent);
             m_CurrentPathNodes = new NativeList<Entity>(32, Allocator.Persistent);
@@ -25,10 +48,9 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Disposes the selection state NativeLists.
-        ///     Call from derived class OnDestroy before base.OnDestroy.
+        ///     Disposes the selection-state NativeLists.
         /// </summary>
-        protected void DisposeSelectionState() {
+        private void DisposeSelectionState() {
             if (m_SelectedNodes.IsCreated) m_SelectedNodes.Dispose();
             if (m_EligibleNodes.IsCreated) m_EligibleNodes.Dispose();
             if (m_CurrentPathNodes.IsCreated) m_CurrentPathNodes.Dispose();

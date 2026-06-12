@@ -29,18 +29,6 @@ namespace NetworkTools.Systems.Tools.Parallel {
             // Configuration
             RenderHandles               = true;
             DisableVanillaNodeReduction = true;
-
-
-            // Initialize selection state (base class NativeLists)
-            InitializeSelectionState();
-        }
-
-        /// <inheritdoc />
-        protected override void OnDestroy() {
-            // Dispose selection state (base class NativeLists)
-            DisposeSelectionState();
-
-            base.OnDestroy();
         }
 
         /// <inheritdoc />
@@ -51,9 +39,6 @@ namespace NetworkTools.Systems.Tools.Parallel {
             Phase = OperationPhase.Idle;
             base.requireNetArrows = true;
             ElevationBoundParameter = VerticalOffset;
-
-            // Initialize selection state (makes all nodes eligible)
-            ResetToNoSelection();
         }
 
         /// <inheritdoc />
@@ -62,9 +47,6 @@ namespace NetworkTools.Systems.Tools.Parallel {
             base.requireNetArrows = false;
 
             base.OnStopRunning();
-
-            // Clear selection state
-            ClearSelectionState(false);
         }
     }
 }
