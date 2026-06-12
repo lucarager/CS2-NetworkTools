@@ -44,9 +44,11 @@ semantics differ on purpose** (Parallel re-applies → `Phase=Ready`; RoadShape/
 
 ---
 
-## Phase 0 — Correctness (ship and verify before any refactor)
+## Phase 0 — Correctness (ship and verify before any refactor) · ✅ Done (2026-06-12)
 
-### NT-011 · High · handle parent-follow skips Axis/Position children
+### NT-011 · High · handle parent-follow skips Axis/Position children · ✅ Done
+- **✅ Done (2026-06-12):** shipped with NT-012. Behavior fix — verified via in-game repro
+  (Generate → Oval → drag Position handle), not unit-tested.
 - **Where:** `Base/BaseToolSystem.Handles.cs` `SyncParentPositionToChildHandles` (~469–485);
   reverse-sync subscriber in `Base/BaseToolSystem.Parameters.cs` (~91–96); manifests on
   `Generate/GenerateToolSystem.cs` `OvalRadiusZ` AxisHandle (~78–90, `Parent = nameof(Position)`).
@@ -69,7 +71,9 @@ semantics differ on purpose** (Parallel re-applies → `Phase=Ready`; RoadShape/
   the OvalRadiusZ handle must track the new center and stay on the correct axis. Can't be
   unit-tested — provide repro steps, don't claim verified.
 
-### NT-012 · Medium · constraints never refreshed by SyncToEntity (enables NT-011)
+### NT-012 · Medium · constraints never refreshed by SyncToEntity (enables NT-011) · ✅ Done
+- **✅ Done (2026-06-12):** shipped with NT-011. `AxisHandle.SyncToEntity` now rebuilds
+  `NT_HandleConstraints` from the live endpoint delegates alongside the position.
 - **Where:** `Handles/AxisHandle.cs` `SyncToEntity` (~46–50); constraint creation in
   `Base/BaseToolSystem.Handles.cs` `CreateHandleFromSpec` (~211–217) and
   `ResolvePositionConstraintFields` (~338–366).
@@ -82,9 +86,11 @@ semantics differ on purpose** (Parallel re-applies → `Phase=Ready`; RoadShape/
 
 ---
 
-## Phase 1 — Base-contract changes (behavior-preserving)
+## Phase 1 — Base-contract changes (behavior-preserving) · ✅ Done (2026-06-12)
 
-### NT-002 · PathSelection self-managing lifecycle
+### NT-002 · PathSelection self-managing lifecycle · ✅ Done
+- **✅ Done (2026-06-12):** `NT_PathSelectionToolSystem` now overrides the four lifecycle methods
+  and self-manages init/reset/clear/dispose; the RoadShape/Parallel hand-calls are gone.
 - **Where:** `PathSelection/PathSelectionToolSystem.Lifecycle.cs` (`InitializeSelectionState` 18,
   `DisposeSelectionState` 31); hand-calls in `RoadShape/…Lifecycle.cs` (71, 81, 103, 110) and
   `Parallel/…Lifecycle.cs` (35, 41, 56, 67).
@@ -92,7 +98,7 @@ semantics differ on purpose** (Parallel re-applies → `Phase=Ready`; RoadShape/
   init/dispose/reset/clear. Asymmetric with the base (which self-manages Handles/Snap).
 - **Target:** have `NT_PathSelectionToolSystem` override the four lifecycle methods, call `base.*`,
   and run its own init/reset/clear/dispose; delete the now-redundant hand-calls in RoadShape/Parallel.
-  Do this first in the phase — it's isolated and unblocks NT-001's shared input skeleton.
+  Isolated and self-contained.
 
 ```csharp
 protected override void OnCreate()       { base.OnCreate();        InitializeSelectionState(); }
@@ -101,26 +107,16 @@ protected override void OnStartRunning() { base.OnStartRunning();  ResetToNoSele
 protected override void OnStopRunning()  { base.OnStopRunning();   ClearSelectionState(false); }
 ```
 
-### NT-001 · template-method `OnUpdate`
-- **Where:** `Base/BaseToolSystem.cs` `OnUpdate` (no-op, 583–585); per-tool copies in
-  `RoadShape/…Update.cs`, `Parallel/…Update.cs`, `Generate/…Update.cs` (+ the 5 out-of-scope tools).
-- **Problem:** all 8 tools re-implement the same skeleton
-  (`UpdateActions` → Ready-handle-short-circuit → raycast/selection → phase dispatch). 8-file
-  parallel edit for any shared change.
-- **Target:** hoist the skeleton into the base with two hooks; keep each tool's `Apply()` distinct.
-  RoadShape and Parallel's input bodies are near-verbatim — put the shared path-tool input in
-  `NT_PathSelectionToolSystem.HandleToolInput` (depends on NT-002 being done first).
+> **NT-001 (template-method `OnUpdate`) — dropped.** Investigated and reverted: only RoadShape and
+> Parallel actually share the skeleton. Generate and the five node tools have genuinely different
+> update loops (right-click handled before the handle short-circuit, cancel returning raw
+> `inputDeps` without dispatch, no handle short-circuit at all, bespoke selection state), so the
+> template would change their behavior. Not worth a base abstraction for two tools. See *Decisions*.
 
-```csharp
-protected override JobHandle OnUpdate(JobHandle deps) {
-    UpdateActions();
-    if (RenderHandles && Phase == OperationPhase.Ready && ProcessHandleInput(deps)) return Dispatch(deps);
-    HandleToolInput(deps);        // abstract: per-tool raycast + selection / control-point mutation
-    return Dispatch(deps);        // abstract: tool's Update/Apply/Clear phase switch
-}
-```
-
-### NT-007 · eligibility query table
+### NT-007 · eligibility query table · ✅ Done
+- **✅ Done (2026-06-12):** built the `(flag, node query, edge query)` table in `OnCreate`; the four
+  `Add…ByTargets` variants collapsed into `MarkEligibleByTargets` + a `MarkEligible` helper, with the
+  `All` short-circuit preserved.
 - **Where:** `Base/BaseToolSystem.cs` `AddEligibleNodesByTargets` (901), `AddEligibleEdgesByTargets`
   (931), and the two `…Filtered` variants (972, 1002).
 - **Problem:** the same `TargetOption → query` mapping is duplicated across four methods; adding a
@@ -223,11 +219,16 @@ Low-risk polish. The intent questions that used to live here are now resolved �
 | 3 | Newton-Raphson convergence | **Add a gate.** Clamp `EaseInLength + EaseOutLength ≤ 1` before the solve (simple clamp). |
 | 4 | `config.ElevationLimit` | **Keep for completeness.** Not dead data; don't remove. |
 | 5 | Anarchy vs apply-gating (NT-006) | **Intended — keep behavior.** NT's simplified `GetAllowApply` is correct (anarchy disables the `ValidationSystem` upstream). NT-006 is doc-only. |
+| 6 | NT-001 template-method `OnUpdate` | **Dropped (2026-06-12).** Implemented, then reverted. Only RoadShape + Parallel share the skeleton; Generate and the 5 node tools have genuinely different loops (right-click before the handle short-circuit, cancel returning raw `inputDeps`, no handle short-circuit, bespoke selection) that a base template would change. Not worth a base abstraction for two tools. Reconciling the other six is a behavior-changing effort — a separate future task if ever wanted. |
 
 ---
 
-## Suggested first session
+## Progress
 
-Phase 0 only: **NT-011 + NT-012** on a branch, build via the solution, then hand back in-game repro
-steps. Land and verify that before starting Phase 1, so a behavior change in the refactor can't be
-confused with this pre-existing bug.
+- **Phase 0 — ✅ Done (2026-06-12).** NT-011 + NT-012 shipped together (behavior fix; verified via
+  in-game repro, not unit-tested).
+- **Phase 1 — ✅ Done (2026-06-12).** NT-002 + NT-007 landed, both behavior-preserving and built
+  clean. NT-001 was implemented, then dropped and reverted (see *Decisions*).
+- **Next — Phase 2 (De-duplication):** NT-004, NT-013, NT-015, NT-016. NT-016 needs an in-game check.
+
+Build via the solution after each step and confirm no regression before starting the next.
