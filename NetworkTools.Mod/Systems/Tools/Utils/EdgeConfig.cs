@@ -40,10 +40,14 @@ namespace NetworkTools.Systems.Tools.Utils {
         /// <summary>Arc length of <see cref="Bezier"/>.</summary>
         public float Length;
 
-        /// <summary>
-        /// Elevation
-        /// </summary>
-        public float Elevation;
+        /// <summary>Node rotation applied to the start <c>CoursePos</c> during output.</summary>
+        public Unity.Mathematics.quaternion StartNodeRotation;
+
+        /// <summary>Node rotation applied to the end <c>CoursePos</c> during output.</summary>
+        public Unity.Mathematics.quaternion EndNodeRotation;
+
+        /// <summary>Course-level elevation written to <c>NetCourse.m_Elevation</c> (defaults to zero).</summary>
+        public Unity.Mathematics.float2 CourseElevation;
 
         public float StartNodeElevation;
         public float EndNodeElevation;
@@ -57,6 +61,9 @@ namespace NetworkTools.Systems.Tools.Utils {
         public Entity NetLanePrefabEntity;
 
         // === Output hints ===
+
+        /// <summary>Random seed written to the edge's <c>CreationDefinition</c> (defaults to zero).</summary>
+        public int RandomSeed;
 
         /// <summary>Course position flags applied to the start node during output.</summary>
         public CoursePosFlags StartNodeFlags;

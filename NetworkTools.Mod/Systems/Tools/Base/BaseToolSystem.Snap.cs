@@ -984,165 +984,58 @@ namespace NetworkTools.Systems.Tools {
                     // Emit guide lines from start node
                     if (hasStart) {
                         var startPos = curve.m_Bezier.a;
-                        var segment  = new Line3.Segment(startPos, startPos);
-                        segment.b.xz += startDir * m_GuideLength;
-
-                        float t;
-                        if (MathUtils.Distance(segment.xz, m_ControlPoint.m_HitPosition.xz, out t) < m_SnapDistance) {
-                            var candidate = m_ControlPoint;
-                            candidate.m_OriginalEntity = Entity.Null;
-                            candidate.m_Position       = MathUtils.Position(segment, t);
-                            candidate.m_Direction      = startDir;
-                            candidate.m_SnapPriority =
-                                ToolUtils.CalculateSnapPriority(0f,
-                                                                1f,
-                                                                0.1f,
-                                                                m_ControlPoint.m_HitPosition,
-                                                                candidate.m_Position,
-                                                                candidate.m_Direction);
-                            ToolUtils.AddSnapPosition(ref m_BestSnapPosition, candidate);
-                            ToolUtils.AddSnapLine(ref m_BestSnapPosition,
-                                                  m_SnapLines,
-                                                  new SnapLine(candidate,
-                                                               NetUtils.StraightCurve(segment.a, segment.b),
-                                                               SnapLineFlags.GuideLine,
-                                                               0.1f));
-                        }
+                        EmitGuideLine(startPos, startDir, SnapLineFlags.GuideLine);
 
                         // Perpendicular guides at dead-end start nodes
                         if (startDeadEnd) {
-                            var perpRight = new Line3.Segment(startPos, startPos);
-                            perpRight.b.xz += MathUtils.Right(startDir) * m_GuideLength;
-                            float tR;
-                            if (MathUtils.Distance(perpRight.xz, m_ControlPoint.m_HitPosition.xz, out tR) <
-                                m_SnapDistance) {
-                                var c = m_ControlPoint;
-                                c.m_OriginalEntity = Entity.Null;
-                                c.m_Position       = MathUtils.Position(perpRight, tR);
-                                c.m_Direction      = MathUtils.Right(startDir);
-                                c.m_SnapPriority =
-                                    ToolUtils.CalculateSnapPriority(0f,
-                                                                    1f,
-                                                                    0.1f,
-                                                                    m_ControlPoint.m_HitPosition,
-                                                                    c.m_Position,
-                                                                    c.m_Direction);
-                                ToolUtils.AddSnapPosition(ref m_BestSnapPosition, c);
-                                ToolUtils.AddSnapLine(ref m_BestSnapPosition,
-                                                      m_SnapLines,
-                                                      new SnapLine(c,
-                                                                   NetUtils.StraightCurve(perpRight.a, perpRight.b),
-                                                                   SnapLineFlags.GuideLine,
-                                                                   0.1f));
-                            }
-
-                            var perpLeft = new Line3.Segment(startPos, startPos);
-                            perpLeft.b.xz += MathUtils.Left(startDir) * m_GuideLength;
-                            float tL;
-                            if (MathUtils.Distance(perpLeft.xz, m_ControlPoint.m_HitPosition.xz, out tL) <
-                                m_SnapDistance) {
-                                var c = m_ControlPoint;
-                                c.m_OriginalEntity = Entity.Null;
-                                c.m_Position       = MathUtils.Position(perpLeft, tL);
-                                c.m_Direction      = MathUtils.Left(startDir);
-                                c.m_SnapPriority =
-                                    ToolUtils.CalculateSnapPriority(0f,
-                                                                    1f,
-                                                                    0.1f,
-                                                                    m_ControlPoint.m_HitPosition,
-                                                                    c.m_Position,
-                                                                    c.m_Direction);
-                                ToolUtils.AddSnapPosition(ref m_BestSnapPosition, c);
-                                ToolUtils.AddSnapLine(ref m_BestSnapPosition,
-                                                      m_SnapLines,
-                                                      new SnapLine(c,
-                                                                   NetUtils.StraightCurve(perpLeft.a, perpLeft.b),
-                                                                   SnapLineFlags.GuideLine,
-                                                                   0.1f));
-                            }
+                            EmitGuideLine(startPos, MathUtils.Right(startDir), SnapLineFlags.GuideLine);
+                            EmitGuideLine(startPos, MathUtils.Left(startDir), SnapLineFlags.GuideLine);
                         }
                     }
 
                     // Emit guide lines from end node
                     if (hasEnd) {
-                        var endPos  = curve.m_Bezier.d;
-                        var segment = new Line3.Segment(endPos, endPos);
-                        segment.b.xz += endDir * m_GuideLength;
-
-                        float t;
-                        if (MathUtils.Distance(segment.xz, m_ControlPoint.m_HitPosition.xz, out t) < m_SnapDistance) {
-                            var candidate = m_ControlPoint;
-                            candidate.m_OriginalEntity = Entity.Null;
-                            candidate.m_Position       = MathUtils.Position(segment, t);
-                            candidate.m_Direction      = endDir;
-                            candidate.m_SnapPriority =
-                                ToolUtils.CalculateSnapPriority(0f,
-                                                                1f,
-                                                                0.1f,
-                                                                m_ControlPoint.m_HitPosition,
-                                                                candidate.m_Position,
-                                                                candidate.m_Direction);
-                            ToolUtils.AddSnapPosition(ref m_BestSnapPosition, candidate);
-                            ToolUtils.AddSnapLine(ref m_BestSnapPosition,
-                                                  m_SnapLines,
-                                                  new SnapLine(candidate,
-                                                               NetUtils.StraightCurve(segment.a, segment.b),
-                                                               SnapLineFlags.GuideLine,
-                                                               0.1f));
-                        }
+                        var endPos = curve.m_Bezier.d;
+                        EmitGuideLine(endPos, endDir, SnapLineFlags.GuideLine);
 
                         if (endDeadEnd) {
-                            var perpRight = new Line3.Segment(endPos, endPos);
-                            perpRight.b.xz += MathUtils.Right(endDir) * m_GuideLength;
-                            float tR;
-                            if (MathUtils.Distance(perpRight.xz, m_ControlPoint.m_HitPosition.xz, out tR) <
-                                m_SnapDistance) {
-                                var c = m_ControlPoint;
-                                c.m_OriginalEntity = Entity.Null;
-                                c.m_Position       = MathUtils.Position(perpRight, tR);
-                                c.m_Direction      = MathUtils.Right(endDir);
-                                c.m_SnapPriority =
-                                    ToolUtils.CalculateSnapPriority(0f,
-                                                                    1f,
-                                                                    0.1f,
-                                                                    m_ControlPoint.m_HitPosition,
-                                                                    c.m_Position,
-                                                                    c.m_Direction);
-                                ToolUtils.AddSnapPosition(ref m_BestSnapPosition, c);
-                                ToolUtils.AddSnapLine(ref m_BestSnapPosition,
-                                                      m_SnapLines,
-                                                      new SnapLine(c,
-                                                                   NetUtils.StraightCurve(perpRight.a, perpRight.b),
-                                                                   SnapLineFlags.GuideLine,
-                                                                   0.1f));
-                            }
-
-                            var perpLeft = new Line3.Segment(endPos, endPos);
-                            perpLeft.b.xz += MathUtils.Left(endDir) * m_GuideLength;
-                            float tL;
-                            if (MathUtils.Distance(perpLeft.xz, m_ControlPoint.m_HitPosition.xz, out tL) <
-                                m_SnapDistance) {
-                                var c = m_ControlPoint;
-                                c.m_OriginalEntity = Entity.Null;
-                                c.m_Position       = MathUtils.Position(perpLeft, tL);
-                                c.m_Direction      = MathUtils.Left(endDir);
-                                c.m_SnapPriority =
-                                    ToolUtils.CalculateSnapPriority(0f,
-                                                                    1f,
-                                                                    0.1f,
-                                                                    m_ControlPoint.m_HitPosition,
-                                                                    c.m_Position,
-                                                                    c.m_Direction);
-                                ToolUtils.AddSnapPosition(ref m_BestSnapPosition, c);
-                                ToolUtils.AddSnapLine(ref m_BestSnapPosition,
-                                                      m_SnapLines,
-                                                      new SnapLine(c,
-                                                                   NetUtils.StraightCurve(perpLeft.a, perpLeft.b),
-                                                                   SnapLineFlags.GuideLine,
-                                                                   0.1f));
-                            }
+                            EmitGuideLine(endPos, MathUtils.Right(endDir), SnapLineFlags.GuideLine);
+                            EmitGuideLine(endPos, MathUtils.Left(endDir), SnapLineFlags.GuideLine);
                         }
                     }
+                }
+
+                /// <summary>
+                ///     Emits a single directional guide-line ray of length <see cref="m_GuideLength" />
+                ///     from <paramref name="origin" /> along <paramref name="dir" />, adding a snap
+                ///     candidate + snap line when the current hit lands within <see cref="m_SnapDistance" />.
+                /// </summary>
+                private void EmitGuideLine(float3 origin, float2 dir, SnapLineFlags flags) {
+                    var segment = new Line3.Segment(origin, origin);
+                    segment.b.xz += dir * m_GuideLength;
+
+                    if (MathUtils.Distance(segment.xz, m_ControlPoint.m_HitPosition.xz, out var t) >= m_SnapDistance) {
+                        return;
+                    }
+
+                    var candidate = m_ControlPoint;
+                    candidate.m_OriginalEntity = Entity.Null;
+                    candidate.m_Position       = MathUtils.Position(segment, t);
+                    candidate.m_Direction      = dir;
+                    candidate.m_SnapPriority =
+                        ToolUtils.CalculateSnapPriority(0f,
+                                                        1f,
+                                                        0.1f,
+                                                        m_ControlPoint.m_HitPosition,
+                                                        candidate.m_Position,
+                                                        candidate.m_Direction);
+                    ToolUtils.AddSnapPosition(ref m_BestSnapPosition, candidate);
+                    ToolUtils.AddSnapLine(ref m_BestSnapPosition,
+                                          m_SnapLines,
+                                          new SnapLine(candidate,
+                                                       NetUtils.StraightCurve(segment.a, segment.b),
+                                                       flags,
+                                                       0.1f));
                 }
             }
 

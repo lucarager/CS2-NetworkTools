@@ -27,8 +27,23 @@ namespace NetworkTools.Systems.Tools.Generate {
         public void Generate(
             in  GenerateJobConfig      config,
             ref NativeList<EdgeConfig> curves) {
-            var radiusX    = config.OvalRadiusX + config.NetWidth * 0.5f;
-            var radiusZ    = config.OvalRadiusZ + config.NetWidth * 0.5f;
+            // User-facing radii are inner-edge; shift out by half the prefab width to
+            // get the centerline radii the geometry needs.
+            var radiusX = config.OvalRadiusX + config.NetWidth * 0.5f;
+            var radiusZ = config.OvalRadiusZ + config.NetWidth * 0.5f;
+            GenerateEllipse(in config, radiusX, radiusZ, ref curves);
+        }
+
+        /// <summary>
+        ///     Emits a closed ellipse of <see cref="Segments"/> bezier edges centred on the
+        ///     config origin. A circle is the special case <c>radiusX == radiusZ</c>
+        ///     (see <see cref="CircleGenerator"/>).
+        /// </summary>
+        internal static void GenerateEllipse(
+            in  GenerateJobConfig      config,
+            float                      radiusX,
+            float                      radiusZ,
+            ref NativeList<EdgeConfig> curves) {
             var yOffset    = config.Elevation + config.BaselineElevation;
             var center     = config.Position + new float3(0, yOffset, 0);
             var freeHeight = config.FollowTerrain

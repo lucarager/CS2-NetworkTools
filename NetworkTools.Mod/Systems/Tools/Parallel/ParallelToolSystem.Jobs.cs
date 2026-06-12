@@ -265,54 +265,27 @@
                                            quaternion startNodeRotation, quaternion endNodeRotation,
                                            Bezier4x3  existingBezier,    float      existingLength, float2 elevation
             ) {
-                var definitionEntity = ECB.CreateEntity();
+                var nodeFlags = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge | CoursePosFlags.IsParallel;
 
-                var creationDefinition = new CreationDefinition {
-                    m_Original  = Entity.Null,
-                    m_Prefab    = NetPrefabEntity,
-                    m_SubPrefab = NetLanePrefabEntity,
-                    m_Flags     = CreationFlags.SubElevation
+                var edge = new EdgeConfig {
+                    Bezier              = existingBezier,
+                    Length              = existingLength,
+                    StartNodeEntity     = Entity.Null,
+                    EndNodeEntity       = Entity.Null,
+                    StartNodePosition   = startNodePosition,
+                    EndNodePosition     = endNodePosition,
+                    StartNodeRotation   = startNodeRotation,
+                    EndNodeRotation     = endNodeRotation,
+                    StartNodeElevation  = elevation.x,
+                    EndNodeElevation    = elevation.x,
+                    CourseElevation     = elevation,
+                    StartNodeFlags      = nodeFlags,
+                    EndNodeFlags        = nodeFlags,
+                    NetPrefabEntity     = NetPrefabEntity,
+                    NetLanePrefabEntity = NetLanePrefabEntity,
                 };
 
-                ECB.AddComponent(definitionEntity, creationDefinition);
-                ECB.AddComponent<Updated>(definitionEntity);
-
-                var startNodeFlags = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge | CoursePosFlags.IsParallel;
-                var endNodeFlags   = CoursePosFlags.IsLeft | CoursePosFlags.IsRight | CoursePosFlags.DisableMerge | CoursePosFlags.IsParallel;
-
-                var startElevation  = elevation;
-                var endElevation    = elevation;
-                var courseElevation = elevation;
-
-
-                var netCourse = new NetCourse {
-                    m_Curve      = existingBezier,
-                    m_Length     = existingLength,
-                    m_FixedIndex = -1,
-                    m_Elevation  = courseElevation,
-                    m_StartPosition = new CoursePos {
-                        m_Entity        = Entity.Null,
-                        m_Position      = startNodePosition,
-                        m_Rotation      = startNodeRotation,
-                        m_CourseDelta   = 0,
-                        m_Elevation     = startElevation,
-                        m_Flags         = startNodeFlags,
-                        m_ParentMesh    = -1,
-                        m_SplitPosition = 0
-                    },
-                    m_EndPosition = new CoursePos {
-                        m_Entity        = Entity.Null,
-                        m_Position      = endNodePosition,
-                        m_Rotation      = endNodeRotation,
-                        m_CourseDelta   = 1,
-                        m_Elevation     = endElevation,
-                        m_Flags         = endNodeFlags,
-                        m_ParentMesh    = -1,
-                        m_SplitPosition = 0
-                    }
-                };
-
-                ECB.AddComponent(definitionEntity, netCourse);
+                NetCourseEmitter.EmitPreview(ref ECB, in edge, CreationFlags.SubElevation);
             }
         }
     }

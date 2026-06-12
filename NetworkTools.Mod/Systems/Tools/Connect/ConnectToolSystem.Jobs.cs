@@ -78,50 +78,13 @@ namespace NetworkTools.Systems.Tools.Connect {
                 for (var i = 0; i < curves.Length; i++)
                 {
                     var curve = curves[i];
-                    OutputPreviewEdge(curve);
+                    // Connect generators leave node positions at the bezier endpoints.
+                    curve.StartNodePosition = curve.Bezier.a;
+                    curve.EndNodePosition   = curve.Bezier.d;
+                    curve.StartNodeRotation = NetUtils.GetNodeRotation(MathUtils.StartTangent(curve.Bezier));
+                    curve.EndNodeRotation   = NetUtils.GetNodeRotation(MathUtils.EndTangent(curve.Bezier));
+                    NetCourseEmitter.EmitPreview(ref ECB, in curve, CreationFlags.SubElevation);
                 }
-            }
-
-            private void OutputPreviewEdge(EdgeConfig EC) {
-                var definitionEntity = ECB.CreateEntity();
-
-                var creationDefinition = new CreationDefinition {
-                    m_Original = Entity.Null,
-                    m_Prefab = EC.NetPrefabEntity,
-                    m_SubPrefab = EC.NetLanePrefabEntity,
-                    m_Flags = CreationFlags.SubElevation,
-                };
-
-                ECB.AddComponent(definitionEntity, creationDefinition);
-                ECB.AddComponent<Updated>(definitionEntity);
-
-                var netCourse = new NetCourse {
-                    m_Curve = EC.Bezier,
-                    m_Length = EC.Length,
-                    m_FixedIndex = -1,
-                    m_StartPosition = new CoursePos {
-                        m_Entity = EC.StartNodeEntity,
-                        m_Position = EC.Bezier.a,
-                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.StartTangent(EC.Bezier)),
-                        m_CourseDelta = 0,
-                        m_Elevation = EC.StartNodeElevation,
-                        m_Flags = EC.StartNodeFlags,
-                        m_ParentMesh = -1,
-                        m_SplitPosition = 0
-                    },
-                    m_EndPosition = new CoursePos {
-                        m_Entity = EC.EndNodeEntity,
-                        m_Position = EC.Bezier.d,
-                        m_Rotation = NetUtils.GetNodeRotation(MathUtils.EndTangent(EC.Bezier)),
-                        m_CourseDelta = 1,
-                        m_Elevation = EC.EndNodeElevation,
-                        m_Flags = EC.EndNodeFlags,
-                        m_ParentMesh = -1,
-                        m_SplitPosition = 0
-                    }
-                };
-
-                ECB.AddComponent(definitionEntity, netCourse);
             }
         }
     }
