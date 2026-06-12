@@ -44,9 +44,17 @@ namespace NetworkTools.Systems.Tools.Handles {
             m_ComputeFromPosition ??= ComputeValueFromPosition;
 
         public void SyncToEntity(NT_BaseToolSystem tool, Entity entity, ParameterBase param) {
-            var value = ((FloatParameter)param).Value;
-            var pos   = ComputeWorldPosition(tool, value);
+            var fp  = (FloatParameter)param;
+            var pos = ComputeWorldPosition(tool, fp.Value);
             tool.EntityManager.SetComponentData(entity, new NT_HandlePosition { Position = pos });
+
+            GetAxisInfo(tool, out var origin, out var axisDir, out var pathLength);
+            var constraints = NT_HandleConstraints.AxisWithBounds(axisDir, origin, fp.Min * pathLength, fp.Max * pathLength);
+            if (tool.EntityManager.HasComponent<NT_HandleConstraints>(entity)) {
+                tool.EntityManager.SetComponentData(entity, constraints);
+            } else {
+                tool.EntityManager.AddComponentData(entity, constraints);
+            }
         }
 
         /// <summary>

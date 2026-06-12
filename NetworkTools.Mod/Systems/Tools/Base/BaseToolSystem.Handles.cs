@@ -471,16 +471,21 @@ namespace NetworkTools.Systems.Tools {
 
             var pos = parent.Value;
             foreach (var (entity, entry) in m_HandleEntries) {
-                Float3Parameter resolvedParent = entry.Spec switch {
-                    CircleHandle ch         => ch.ResolvedParent,
-                    RotationHandle rh       => rh.ResolvedParent,
-                    _                       => null
-                };
-                if (resolvedParent != parent) continue;
                 if (!EntityManager.Exists(entity)) continue;
 
-                EntityManager.SetComponentData(entity,
-                    new NT_HandlePosition { Position = pos });
+                switch (entry.Spec) {
+                    // Circle/rotation handles are centred on the parent — move the entity directly.
+                    case CircleHandle ch when ch.ResolvedParent == parent:
+                    case RotationHandle rh when rh.ResolvedParent == parent:
+                        EntityManager.SetComponentData(entity,
+                            new NT_HandlePosition { Position = pos });
+                        break;
+
+                    case AxisHandle ax when ax.ResolvedParent == parent:
+                    case ComputedPositionHandle cp when cp.ResolvedParent == parent:
+                        entry.Spec.SyncToEntity(this, entity, entry.Parameter);
+                        break;
+                }
             }
         }
 
