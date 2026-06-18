@@ -34,7 +34,8 @@ namespace NetworkTools.Systems.Tools.Connect {
         public float3 ComplexEndControlPointPosition;
         public float3 ComplexEndPointPosition;
         public float3 ComplexMidPosition;
-        public float3 ComplexMidRotation;
+        public float3 ComplexMidStartControlPointPosition;
+        public float3 ComplexMidEndControlPointPosition;
 
         // Loop
         public float LoopRadiusFactor;

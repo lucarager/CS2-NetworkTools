@@ -130,15 +130,38 @@ namespace NetworkTools.Systems.Tools.Connect {
             modes: (int)ConnectMode.ComplexCurve) {
             Handles = new IHandleSpec<float3>[] { new PositionHandle() }
         };
-        public Float3Parameter ComplexMidRotation = new(
-            "connect.complexMidRotation",
+
+        // Inner control points (points 3 and 5 of the two-bezier chain). Free position handles that
+        // replace the mid rotation handle. Each translates rigidly when the mid node moves (bare
+        // anchor) and mirrors the other through the node when dragged (custom MirrorMidControlPoint),
+        // so the two beziers always join smoothly while the player positions each side independently.
+        public Float3Parameter ComplexMidStartControlPointPosition = new(
+            "connect.complexMidStartControlPointPosition",
             modes: (int)ConnectMode.ComplexCurve) {
             Handles = new IHandleSpec<float3>[] {
-                new RotationHandle {
-                    DependsOn                   = new Dependency[] { nameof(ComplexMidPosition) },
-                    RenderConnectionTo          = nameof(ComplexMidPosition),
-                    Style                       = HandleTypeFlags.Primary,
-                    ReferenceDirectionFromValue = true
+                new PositionHandle {
+                    Style              = HandleTypeFlags.BezierControlPoint,
+                    Size               = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
+                    RenderConnectionTo = nameof(ComplexMidPosition),
+                    DependsOn          = new Dependency[] {
+                        nameof(ComplexMidPosition),
+                        new(nameof(ComplexMidEndControlPointPosition), MirrorMidControlPoint),
+                    },
+                }
+            }
+        };
+        public Float3Parameter ComplexMidEndControlPointPosition = new(
+            "connect.complexMidEndControlPointPosition",
+            modes: (int)ConnectMode.ComplexCurve) {
+            Handles = new IHandleSpec<float3>[] {
+                new PositionHandle {
+                    Style              = HandleTypeFlags.BezierControlPoint,
+                    Size               = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
+                    RenderConnectionTo = nameof(ComplexMidPosition),
+                    DependsOn          = new Dependency[] {
+                        nameof(ComplexMidPosition),
+                        new(nameof(ComplexMidStartControlPointPosition), MirrorMidControlPoint),
+                    },
                 }
             }
         };
@@ -174,6 +197,30 @@ namespace NetworkTools.Systems.Tools.Connect {
         public EnumParameter<LoopArcSide> LoopArc = new("connect.loopArcSide", LoopArcSide.Outer,
             modes: (int)ConnectMode.Loop,
             label: "NetworkTools.UI.Connect.LoopArcSide");
+
+        /// <summary>
+        ///     Custom dependency reaction shared by the two inner control points. When the sibling
+        ///     <paramref name="source" /> is dragged, this point is placed on the opposite ray through
+        ///     the mid node so the two beziers stay tangent-continuous (G1). It keeps its own arm
+        ///     length — only its direction flips — so each side is positioned independently. Computed
+        ///     in the XZ plane and preserving this point's own height, so a horizontal drag of one
+        ///     handle never drags the other vertically.
+        /// </summary>
+        private static void MirrorMidControlPoint(NT_BaseToolSystem tool, ParameterBase owner, ParameterBase source) {
+            var ct  = (NT_ConnectToolSystem)tool;
+            var mid = ct.ComplexMidPosition.Value;
+            var own = (Float3Parameter)owner;
+
+            var toSibling = ((Float3Parameter)source).Value - mid;
+            toSibling.y = 0f;
+            if (math.lengthsq(toSibling) < 1e-6f) return; // sibling over the node: axis undefined
+
+            var axis     = math.normalize(toSibling);
+            var armLen   = math.distance(own.Value.xz, mid.xz); // preserve this point's own distance
+            var mirrored = mid - axis * armLen;
+            mirrored.y   = own.Value.y;                          // keep our own height
+            own.SetValue(mirrored, ChangeOrigin.Dependency);
+        }
 
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Mode.Value;

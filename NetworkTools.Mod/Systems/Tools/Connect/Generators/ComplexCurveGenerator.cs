@@ -27,27 +27,28 @@ namespace NetworkTools.Systems.Tools.Connect {
                 c = tool.ComplexEndControlPointPosition.Value,
                 d = tool.ComplexEndPointPosition.Value
             };
-            tool.ComplexMidPosition.Value = MathUtils.Position(simpleBezier, 0.5f);
-            tool.ComplexMidRotation.Value = math.normalizesafe(MathUtils.Tangent(simpleBezier, 0.5f));
+            var midPos = MathUtils.Position(simpleBezier, 0.5f);
+            var midDir = math.normalizesafe(MathUtils.Tangent(simpleBezier, 0.5f));
+
+            var distToStart = math.distance(midPos, tool.ComplexStartPointPosition.Value);
+            var distToEnd   = math.distance(midPos, tool.ComplexEndPointPosition.Value);
+
+            const float kInnerFactor = 1f / 3f;
+
+            tool.ComplexMidPosition.Value                  = midPos;
+            tool.ComplexMidStartControlPointPosition.Value = midPos - midDir * (distToStart * kInnerFactor);
+            tool.ComplexMidEndControlPointPosition.Value   = midPos + midDir * (distToEnd   * kInnerFactor);
         }
 
         public void GenerateConnection(
             in  ConnectJobConfig      config,
             ref NativeList<EdgeConfig> curves) {
             var midPos = config.ComplexMidPosition;
-            var midDir = math.normalizesafe(config.ComplexMidRotation);
-
-            var distToStart = math.distance(midPos, config.ComplexStartPointPosition);
-            var distToEnd   = math.distance(midPos, config.ComplexEndPointPosition);
-
-            const float kInnerFactor = 1f / 3f;
-            var innerCP1 = midPos - midDir * (distToStart * kInnerFactor);
-            var innerCP2 = midPos + midDir * (distToEnd   * kInnerFactor);
 
             var bezier1 = new Bezier4x3 {
                 a = config.ComplexStartPointPosition,
                 b = config.ComplexStartControlPointPosition,
-                c = innerCP1,
+                c = config.ComplexMidStartControlPointPosition,
                 d = midPos
             };
             curves.Add(new EdgeConfig {
@@ -63,7 +64,7 @@ namespace NetworkTools.Systems.Tools.Connect {
 
             var bezier2 = new Bezier4x3 {
                 a = midPos,
-                b = innerCP2,
+                b = config.ComplexMidEndControlPointPosition,
                 c = config.ComplexEndControlPointPosition,
                 d = config.ComplexEndPointPosition
             };

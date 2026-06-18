@@ -32,8 +32,9 @@ namespace NetworkTools.Systems.Tools.Connect {
                 ComplexStartControlPointPosition = ComplexStartControlPointPosition.Value,
                 ComplexEndControlPointPosition   = ComplexEndControlPointPosition.Value,
                 ComplexEndPointPosition          = ComplexEndPointPosition.Value,
-                ComplexMidPosition               = ComplexMidPosition.Value,
-                ComplexMidRotation               = ComplexMidRotation.Value,
+                ComplexMidPosition                  = ComplexMidPosition.Value,
+                ComplexMidStartControlPointPosition = ComplexMidStartControlPointPosition.Value,
+                ComplexMidEndControlPointPosition   = ComplexMidEndControlPointPosition.Value,
                 LoopRadiusFactor               = LoopRadiusFactor.Value,
                 LoopArcSide                    = LoopArc.Value,
             };

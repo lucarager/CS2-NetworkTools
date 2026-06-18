@@ -110,9 +110,9 @@ namespace NetworkTools.Systems.Tools {
                 };
 
                 // Dependency propagation: when this parameter changes, update every handle that
-                // declared it as a source. Does not filter by origin — dependents track their
-                // source whether it moved by drag or by code.
-                param.OnChanged += _ => PropagateDependencies(param);
+                // declared it as a source. The origin is forwarded so custom (delegate) reactions
+                // can fire on first-class edits but not on propagation's own bookkeeping writes.
+                param.OnChanged += origin => PropagateDependencies(param, origin);
             }
         }
 
@@ -122,8 +122,17 @@ namespace NetworkTools.Systems.Tools {
         ///     spec-type default (<see cref="IHandleSpec.OnDependencyChanged" />). Dependency-driven
         ///     writes re-enter this method (cascading to grandchildren); a per-pass visited set
         ///     seeded with the root parameter bounds cascades and cycles to one update per parameter.
+        ///     <para>
+        ///     Custom (delegate) reactions express a relationship to a first-class edit of the source
+        ///     (a user drag or code seed), so they are skipped when the source itself changed via
+        ///     <see cref="ChangeOrigin.Dependency" /> — i.e. it merely co-moved under another
+        ///     dependency. The owner handles that co-movement through its own bare follow instead.
+        ///     This is what keeps two mirrored control points from re-mirroring when their shared node
+        ///     translates both of them. The skip happens before the visited-set add so the owner's
+        ///     bare link still claims its once-per-pass slot. Bare follows cascade on any origin.
+        ///     </para>
         /// </summary>
-        private void PropagateDependencies(ParameterBase source) {
+        private void PropagateDependencies(ParameterBase source, ChangeOrigin origin) {
             if (m_Dependencies == null || !m_Dependencies.TryGetValue(source, out var links)) return;
 
             var isRoot = m_DependencyPass == null;
@@ -131,6 +140,9 @@ namespace NetworkTools.Systems.Tools {
 
             try {
                 foreach (var link in links) {
+                    // A custom reaction fires on edits, not on a source's dependency-driven co-move.
+                    if (origin == ChangeOrigin.Dependency && link.Update != null) continue;
+
                     // Re-base the remembered source value and compute the delta (used by delta-follow
                     // specs; ignored by recenter/re-resolve specs). Only Float3 sources have a delta.
                     var delta = float3.zero;
