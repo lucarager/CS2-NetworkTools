@@ -8,7 +8,6 @@ namespace NetworkTools.Systems.Tools.Handles {
         public Dependency[]          DependsOn          { get; init; }
         public string                RenderConnectionTo { get; init; }
         public float3                Normal          { get; init; } = new(0, 1, 0);
-        public string                NormalFrom      { get; init; }
         public NT_HandleConstraints? Constraints     { get; init; }
         public float                 Size          { get; init; } = NT_Handle.SizePrimary;
         public HandleSnap            Snap          { get; init; } = HandleSnap.None;

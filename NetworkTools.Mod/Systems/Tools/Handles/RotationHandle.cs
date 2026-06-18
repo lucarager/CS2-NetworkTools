@@ -9,9 +9,14 @@ namespace NetworkTools.Systems.Tools.Handles {
         public Dependency[]          DependsOn              { get; init; }
         public string                RenderConnectionTo     { get; init; }
         public float3                Normal              { get; init; } = new(0, 1, 0);
-        public string                NormalFrom          { get; init; }
         public float3                ReferenceDirection  { get; init; } = new(1, 0, 0);
-        public string                ReferenceDirectionFrom { get; init; }
+
+        /// <summary>
+        ///     When true, the reference direction (zero-angle) is seeded from the owner parameter's
+        ///     own value at build time, so dragging is relative to the current direction. When false,
+        ///     the static <see cref="ReferenceDirection"/> is used.
+        /// </summary>
+        public bool                  ReferenceDirectionFromValue { get; init; }
         public NT_HandleConstraints? Constraints         { get; init; }
         public float                 Size                { get; init; } = 16f;
         public HandleSnap            Snap                { get; init; } = HandleSnap.None;

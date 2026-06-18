@@ -181,8 +181,8 @@
             // Recalculate eligible nodes
             UpdateEligibleNodesByState();
 
-            // Re-initialize config
-            InitializeConfig();
+            // Re-initialize parameters
+            InitializeParameters();
 
             return true;
         }

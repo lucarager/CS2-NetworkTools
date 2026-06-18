@@ -233,24 +233,28 @@ namespace NetworkTools.Systems.Tools {
                 return CreatePositionHandle(Entity.Null, Entity.Null, 0, position, typeFlags, constraints, NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS);
             }
 
-            // Position or ComputedPosition
-            return CreatePositionHandle(Entity.Null, Entity.Null, 0, position, typeFlags, spec.Constraints, radius);
+            // Position or ComputedPosition. A bezier position handle resolves its axis-lock
+            // constraint from the spec's origin/axis delegates (same mechanism as AxisHandle);
+            // sources are static during editing, so this build-time resolution needs no DependsOn.
+            var posConstraints = spec.Constraints;
+            if (spec is PositionHandle ph && ph.ConstraintOrigin != null && ph.ConstraintAxis != null) {
+                var axisDir = ph.ConstraintAxis(this);
+                if (math.lengthsq(axisDir) >= 0.0001f) {
+                    posConstraints = NT_HandleConstraints.AxisOnly(axisDir, ph.ConstraintOrigin(this));
+                }
+            }
+            return CreatePositionHandle(Entity.Null, Entity.Null, 0, position, typeFlags, posConstraints, radius);
         }
 
         /// <summary>
-        ///     Resolves <c>ReferenceDirectionFrom</c>, <c>NormalFrom</c>, and constraint name
-        ///     references on typed handles, and stamps the render-only connector component from
-        ///     <see cref="IHandleSpec.RenderConnectionTo"/>.
+        ///     Resolves the rotation handle reference frame and stamps the render-only connector
+        ///     component from <see cref="IHandleSpec.RenderConnectionTo"/>. (Position-handle axis
+        ///     constraints are resolved at creation in <see cref="CreateHandleFromSpec"/>.)
         /// </summary>
         private void ResolveHandleReferences(Dictionary<string, ParameterBase> nameToParam) {
             foreach (var (entity, entry) in m_HandleEntries) {
-                // Resolve dynamic field references on typed handles
                 if (entry.Spec is RotationHandle rot) {
-                    ResolveRotationFields(entity, rot, nameToParam);
-                } else if (entry.Spec is CircleHandle circ) {
-                    ResolveCircleFields(entity, circ, nameToParam);
-                } else if (entry.Spec is PositionHandle ph) {
-                    ResolvePositionConstraintFields(entity, ph, nameToParam);
+                    ResolveRotationFields(entity, rot, entry.Parameter);
                 }
 
                 // Resolve the render-only connector: a view tether to another parameter's primary
@@ -266,25 +270,16 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Resolves <c>ReferenceDirectionFrom</c> and <c>NormalFrom</c> on a rotation handle.
-        ///     Reads the referenced parameter's current value and updates the ECS components.
+        ///     Resolves a rotation handle's reference frame: optionally seeds the reference direction
+        ///     (zero-angle) from the owner's own value, then computes the initial angle from it.
         /// </summary>
-        private void ResolveRotationFields(Entity entity, RotationHandle rot, Dictionary<string, ParameterBase> nameToParam) {
-            var refDir = rot.ReferenceDirection;
-            var normal = rot.Normal;
+        private void ResolveRotationFields(Entity entity, RotationHandle rot, ParameterBase owner) {
+            var refDir         = rot.ReferenceDirection;
+            var normal         = rot.Normal;
+            var ownerDirection = owner is Float3Parameter ownerF3 ? ownerF3.Value : float3.zero;
 
-            if (!string.IsNullOrEmpty(rot.ReferenceDirectionFrom)
-                && nameToParam.TryGetValue(rot.ReferenceDirectionFrom, out var refParam)
-                && refParam is Float3Parameter refF3) {
-                var v = refF3.Value;
-                if (math.lengthsq(v) > 0.0001f) refDir = math.normalizesafe(v);
-            }
-
-            if (!string.IsNullOrEmpty(rot.NormalFrom)
-                && nameToParam.TryGetValue(rot.NormalFrom, out var normParam)
-                && normParam is Float3Parameter normF3) {
-                var v = normF3.Value;
-                if (math.lengthsq(v) > 0.0001f) normal = math.normalizesafe(v);
+            if (rot.ReferenceDirectionFromValue && math.lengthsq(ownerDirection) > 0.0001f) {
+                refDir = math.normalizesafe(ownerDirection);
             }
 
             refDir = math.lengthsq(refDir) > 0f ? math.normalizesafe(refDir) : new float3(1f, 0f, 0f);
@@ -292,12 +287,9 @@ namespace NetworkTools.Systems.Tools {
 
             // Recompute initial angle from the owning parameter's current value
             float angle = 0f;
-            if (m_HandleEntries.TryGetValue(entity, out var he) && he.Parameter is Float3Parameter f3p) {
-                var direction = f3p.Value;
-                if (math.lengthsq(direction) > 0.0001f) {
-                    var perp = math.cross(normal, refDir);
-                    angle = math.atan2(math.dot(direction, perp), math.dot(direction, refDir));
-                }
+            if (math.lengthsq(ownerDirection) > 0.0001f) {
+                var perp = math.cross(normal, refDir);
+                angle = math.atan2(math.dot(ownerDirection, perp), math.dot(ownerDirection, refDir));
             }
 
             // Update ECS component with resolved values
@@ -306,58 +298,6 @@ namespace NetworkTools.Systems.Tools {
             rotData.ReferenceDirection = refDir;
             rotData.Angle              = angle;
             EntityManager.SetComponentData(entity, rotData);
-        }
-
-        /// <summary>
-        ///     Resolves <c>NormalFrom</c> on a circle handle.
-        /// </summary>
-        private void ResolveCircleFields(Entity entity, CircleHandle circ, Dictionary<string, ParameterBase> nameToParam) {
-            if (string.IsNullOrEmpty(circ.NormalFrom)) return;
-
-            if (nameToParam.TryGetValue(circ.NormalFrom, out var normParam)
-                && normParam is Float3Parameter normF3) {
-                var v = normF3.Value;
-                if (math.lengthsq(v) > 0.0001f && EntityManager.HasComponent<NT_HandleCircle>(entity)) {
-                    var circle = EntityManager.GetComponentData<NT_HandleCircle>(entity);
-                    circle.Normal = math.normalizesafe(v);
-                    EntityManager.SetComponentData(entity, circle);
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Resolves <c>ConstraintAxisFrom</c> and <c>ConstraintOriginFrom</c> on a position handle.
-        ///     When both are set, builds an axis constraint from the referenced parameters and
-        ///     applies it to the ECS entity.
-        /// </summary>
-        private void ResolvePositionConstraintFields(Entity entity, PositionHandle ph, Dictionary<string, ParameterBase> nameToParam) {
-            ph.ResolvedConstraintAxis   = null;
-            ph.ResolvedConstraintOrigin = null;
-
-            if (!string.IsNullOrEmpty(ph.ConstraintAxisFrom)
-                && nameToParam.TryGetValue(ph.ConstraintAxisFrom, out var axisParam)
-                && axisParam is Float3Parameter axisF3) {
-                ph.ResolvedConstraintAxis = axisF3;
-            }
-
-            if (!string.IsNullOrEmpty(ph.ConstraintOriginFrom)
-                && nameToParam.TryGetValue(ph.ConstraintOriginFrom, out var originParam)
-                && originParam is Float3Parameter originF3) {
-                ph.ResolvedConstraintOrigin = originF3;
-            }
-
-            if (ph.ResolvedConstraintAxis == null || ph.ResolvedConstraintOrigin == null) return;
-
-            var axis   = ph.ResolvedConstraintAxis.Value;
-            var origin = ph.ResolvedConstraintOrigin.Value;
-            if (math.lengthsq(axis) < 0.0001f) return;
-
-            var constraints = NT_HandleConstraints.AxisOnly(axis, origin);
-            if (EntityManager.HasComponent<NT_HandleConstraints>(entity)) {
-                EntityManager.SetComponentData(entity, constraints);
-            } else {
-                EntityManager.AddComponentData(entity, constraints);
-            }
         }
 
         /// <summary>

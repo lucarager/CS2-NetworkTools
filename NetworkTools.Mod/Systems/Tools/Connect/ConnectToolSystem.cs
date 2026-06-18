@@ -32,20 +32,20 @@ namespace NetworkTools.Systems.Tools.Connect {
         public Float3Parameter StartDirection = new("connect.startDirection", modes: (int)ConnectMode.Loop) {
             Handles = new IHandleSpec<float3>[] {
                 new RotationHandle {
-                    DependsOn              = new Dependency[] { nameof(StartPosition) },
-                    RenderConnectionTo     = nameof(StartPosition),
-                    Style                  = HandleTypeFlags.Primary,
-                    ReferenceDirectionFrom = nameof(StartDirection)
+                    DependsOn                   = new Dependency[] { nameof(StartPosition) },
+                    RenderConnectionTo          = nameof(StartPosition),
+                    Style                       = HandleTypeFlags.Primary,
+                    ReferenceDirectionFromValue = true
                 }
             }
         };
         public Float3Parameter EndDirection = new("connect.endDirection", modes: (int)ConnectMode.Loop) {
             Handles = new IHandleSpec<float3>[] {
                 new RotationHandle {
-                    DependsOn              = new Dependency[] { nameof(EndPosition) },
-                    RenderConnectionTo     = nameof(EndPosition),
-                    Style                  = HandleTypeFlags.Primary,
-                    ReferenceDirectionFrom = nameof(EndDirection)
+                    DependsOn                   = new Dependency[] { nameof(EndPosition) },
+                    RenderConnectionTo          = nameof(EndPosition),
+                    Style                       = HandleTypeFlags.Primary,
+                    ReferenceDirectionFromValue = true
                 }
             }
         };
@@ -61,11 +61,11 @@ namespace NetworkTools.Systems.Tools.Connect {
             modes: (int)ConnectMode.SimpleCurve) {
             Handles = new IHandleSpec<float3>[] {
                 new PositionHandle {
-                    Style                = HandleTypeFlags.BezierControlPoint,
-                    DependsOn            = new Dependency[] { nameof(CurveStartPointPosition) },
-                    Size                 = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
-                    ConstraintAxisFrom   = nameof(StartDirection),
-                    ConstraintOriginFrom = nameof(StartPosition),
+                    Style            = HandleTypeFlags.BezierControlPoint,
+                    DependsOn        = new Dependency[] { nameof(CurveStartPointPosition) },
+                    Size             = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
+                    ConstraintAxis   = t => ((NT_ConnectToolSystem)t).StartDirection.Value,
+                    ConstraintOrigin = t => ((NT_ConnectToolSystem)t).StartPosition.Value,
                 }
             }
         };
@@ -74,11 +74,11 @@ namespace NetworkTools.Systems.Tools.Connect {
             modes: (int)ConnectMode.SimpleCurve) {
             Handles = new IHandleSpec<float3>[] {
                 new PositionHandle {
-                    Style                = HandleTypeFlags.BezierControlPoint,
-                    DependsOn            = new Dependency[] { nameof(CurveEndPointPosition) },
-                    Size                 = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
-                    ConstraintAxisFrom   = nameof(EndDirection),
-                    ConstraintOriginFrom = nameof(EndPosition),
+                    Style            = HandleTypeFlags.BezierControlPoint,
+                    DependsOn        = new Dependency[] { nameof(CurveEndPointPosition) },
+                    Size             = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
+                    ConstraintAxis   = t => ((NT_ConnectToolSystem)t).EndDirection.Value,
+                    ConstraintOrigin = t => ((NT_ConnectToolSystem)t).EndPosition.Value,
                 }
             }
         };
@@ -99,11 +99,11 @@ namespace NetworkTools.Systems.Tools.Connect {
             modes: (int)ConnectMode.ComplexCurve) {
             Handles = new IHandleSpec<float3>[] {
                 new PositionHandle {
-                    Style                = HandleTypeFlags.BezierControlPoint,
-                    DependsOn            = new Dependency[] { nameof(ComplexStartPointPosition) },
-                    Size                 = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
-                    ConstraintAxisFrom   = nameof(StartDirection),
-                    ConstraintOriginFrom = nameof(StartPosition),
+                    Style            = HandleTypeFlags.BezierControlPoint,
+                    DependsOn        = new Dependency[] { nameof(ComplexStartPointPosition) },
+                    Size             = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
+                    ConstraintAxis   = t => ((NT_ConnectToolSystem)t).StartDirection.Value,
+                    ConstraintOrigin = t => ((NT_ConnectToolSystem)t).StartPosition.Value,
                 }
             }
         };
@@ -112,11 +112,11 @@ namespace NetworkTools.Systems.Tools.Connect {
             modes: (int)ConnectMode.ComplexCurve) {
             Handles = new IHandleSpec<float3>[] {
                 new PositionHandle {
-                    Style                = HandleTypeFlags.BezierControlPoint,
-                    DependsOn            = new Dependency[] { nameof(ComplexEndPointPosition) },
-                    Size                 = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
-                    ConstraintAxisFrom   = nameof(EndDirection),
-                    ConstraintOriginFrom = nameof(EndPosition),
+                    Style            = HandleTypeFlags.BezierControlPoint,
+                    DependsOn        = new Dependency[] { nameof(ComplexEndPointPosition) },
+                    Size             = NT_Dimensions.HANDLE_AXIS_CIRCLE_RADIUS,
+                    ConstraintAxis   = t => ((NT_ConnectToolSystem)t).EndDirection.Value,
+                    ConstraintOrigin = t => ((NT_ConnectToolSystem)t).EndPosition.Value,
                 }
             }
         };
@@ -135,10 +135,10 @@ namespace NetworkTools.Systems.Tools.Connect {
             modes: (int)ConnectMode.ComplexCurve) {
             Handles = new IHandleSpec<float3>[] {
                 new RotationHandle {
-                    DependsOn              = new Dependency[] { nameof(ComplexMidPosition) },
-                    RenderConnectionTo     = nameof(ComplexMidPosition),
-                    Style                  = HandleTypeFlags.Primary,
-                    ReferenceDirectionFrom = nameof(ComplexMidRotation)
+                    DependsOn                   = new Dependency[] { nameof(ComplexMidPosition) },
+                    RenderConnectionTo          = nameof(ComplexMidPosition),
+                    Style                       = HandleTypeFlags.Primary,
+                    ReferenceDirectionFromValue = true
                 }
             }
         };

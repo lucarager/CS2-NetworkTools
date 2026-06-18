@@ -18,8 +18,8 @@ namespace NetworkTools.Systems.Tools.Connect {
             return m_PrefabSystem.HasComponent<NT_ConnectTool>(prefab);
         }
 
-        private void InitializeConfig() {
-            m_Log.Debug($"InitializeConfig: Initializing {Mode.Value}");
+        private void InitializeParameters() {
+            m_Log.Debug($"InitializeParameters: Initializing {Mode.Value}");
 
             if (Phase != OperationPhase.Ready) {
                 return;
@@ -150,7 +150,7 @@ namespace NetworkTools.Systems.Tools.Connect {
             // Mode change reinitializes context and handles
             Mode.OnChanged += _ => {
                 if (Phase == OperationPhase.Ready)
-                    InitializeConfig();
+                    InitializeParameters();
             };
 
             // Data

@@ -1,4 +1,5 @@
 namespace NetworkTools.Systems.Tools.Handles {
+    using System;
     using NetworkTools.Components.Handles;
     using NetworkTools.Systems.Tools.Parameters;
     using Unity.Entities;
@@ -14,13 +15,17 @@ namespace NetworkTools.Systems.Tools.Handles {
         public ComputePositionDelegate<float3>     ComputePosition     { get; init; }
         public ComputeFromPositionDelegate<float3> ComputeFromPosition { get; init; }
 
-        public string ConstraintAxisFrom   { get; init; }
-        public string ConstraintOriginFrom { get; init; }
+        /// <summary>
+        ///     Axis-frame source for an axis-locked (bezier) handle: the line origin and direction.
+        ///     When both are set, the handle is constrained to slide along that line (resolved once
+        ///     at build — sources are static during editing, so no <see cref="DependsOn"/> is needed).
+        ///     Same mechanism <see cref="AxisHandle"/> uses; a delegate is strictly more expressive
+        ///     than the former name-reference form.
+        /// </summary>
+        public Func<NT_BaseToolSystem, float3> ConstraintOrigin { get; init; }
+        public Func<NT_BaseToolSystem, float3> ConstraintAxis   { get; init; }
 
         HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Position | Style;
-
-        internal Float3Parameter ResolvedConstraintAxis;
-        internal Float3Parameter ResolvedConstraintOrigin;
 
         public void SyncToEntity(NT_BaseToolSystem tool, Entity entity, ParameterBase param) {
             var value = ((Float3Parameter)param).Value;
