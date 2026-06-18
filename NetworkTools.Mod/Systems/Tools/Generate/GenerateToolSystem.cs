@@ -41,7 +41,11 @@ namespace NetworkTools.Systems.Tools.Generate {
         public Float3Parameter GridDirectionPoint = new("generate.gridDirPoint",
             modes: (int)GenerateMode.Grid) {
             Handles = new IHandleSpec<float3>[] {
-                new PositionHandle { Parent = nameof(Position), Snap = HandleSnap.WorldSnap() }
+                new PositionHandle {
+                    DependsOn          = new Dependency[] { nameof(Position) },
+                    RenderConnectionTo = nameof(Position),
+                    Snap               = HandleSnap.WorldSnap()
+                }
             }
         };
 
@@ -60,8 +64,9 @@ namespace NetworkTools.Systems.Tools.Generate {
         public FloatParameter CircleRadius = new("generate.circleRadius", 60f, 4f, 240f, modes: (int)GenerateMode.Circle, label: "NetworkTools.UI.Generate.Radius", fractionDigits: 0, numberType: NumberType.Distance) {
             Handles = new IHandleSpec<float>[] {
                 new CircleHandle {
-                    Parent = nameof(Position),
-                    Normal = new float3(0, 1, 0),
+                    DependsOn          = new Dependency[] { nameof(Position) },
+                    RenderConnectionTo = nameof(Position),
+                    Normal             = new float3(0, 1, 0),
                 }
             }
         };
@@ -70,7 +75,11 @@ namespace NetworkTools.Systems.Tools.Generate {
         public Float3Parameter OvalAxisPoint = new("generate.ovalAxisPoint",
             modes: (int)GenerateMode.Oval) {
             Handles = new IHandleSpec<float3>[] {
-                new PositionHandle { Parent = nameof(Position), Snap = HandleSnap.WorldSnap() }
+                new PositionHandle {
+                    DependsOn          = new Dependency[] { nameof(Position) },
+                    RenderConnectionTo = nameof(Position),
+                    Snap               = HandleSnap.WorldSnap()
+                }
             }
         };
 
@@ -78,7 +87,9 @@ namespace NetworkTools.Systems.Tools.Generate {
         public FloatParameter OvalRadiusZ = new("generate.ovalRadiusZ", 40f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusZ", fractionDigits: 0, numberType: NumberType.Distance) {
             Handles = new IHandleSpec<float>[] {
                 new AxisHandle {
-                    Parent = nameof(Position),
+                    // Geometry derives from two inputs: the origin (Position) and the orientation
+                    // (Rotation). Both are sources, so the radius axis re-resolves when either changes.
+                    DependsOn = new Dependency[] { nameof(Position), nameof(Rotation) },
                     StartPoint = tool => ((NT_GenerateToolSystem)tool).Position.Value,
                     EndPoint = tool => {
                         var t = (NT_GenerateToolSystem)tool;

@@ -22,14 +22,28 @@ namespace NetworkTools.Systems.Tools {
             }
         }
 
-        protected class ParentChildLink {
-            public Float3Parameter Child;
-            public float3          LastParentPos;
+        /// <summary>
+        ///     One declared dependency: a handle (owned by <see cref="Owner" />) that derives from a
+        ///     source parameter. Keyed in <see cref="m_Dependencies" /> by the source parameter.
+        /// </summary>
+        protected sealed class DependencyLink {
+            public Entity           Entity;        // the dependent handle entity
+            public IHandleSpec      Spec;          // its spec (for OnDependencyChanged dispatch)
+            public ParameterBase    Owner;         // the parameter the handle belongs to
+            public DependencyUpdate Update;        // custom reaction, or null => spec-type default
+            public float3           LastSourcePos; // remembered source value for delta-follow specs
         }
 
-        protected Dictionary<Entity, HandleEntry>                m_HandleEntries;
-        protected Dictionary<ParameterBase, List<Entity>>        m_ParameterHandles;
-        protected Dictionary<Float3Parameter, ParentChildLink[]> m_ParentChildLinks;
+        protected Dictionary<Entity, HandleEntry>                  m_HandleEntries;
+        protected Dictionary<ParameterBase, List<Entity>>          m_ParameterHandles;
+        protected Dictionary<ParameterBase, List<DependencyLink>>  m_Dependencies;
+
+        /// <summary>
+        ///     Parameters already updated in the current propagation pass. Non-null only while a
+        ///     pass is running; seeded with the root (user-changed) parameter. Bounds cascades and
+        ///     cycles to one update per parameter per pass. See <see cref="PropagateDependencies" />.
+        /// </summary>
+        private HashSet<ParameterBase> m_DependencyPass;
 
         /// <summary>
         ///     All <see cref="ParameterBase" /> fields declared on the concrete tool class, in declaration order.
@@ -79,7 +93,7 @@ namespace NetworkTools.Systems.Tools {
         private void WireParameterSubscribers() {
             m_HandleEntries    = new Dictionary<Entity, HandleEntry>();
             m_ParameterHandles = new Dictionary<ParameterBase, List<Entity>>();
-            m_ParentChildLinks = new Dictionary<Float3Parameter, ParentChildLink[]>();
+            m_Dependencies     = new Dictionary<ParameterBase, List<DependencyLink>>();
 
             foreach (var p in m_ToolParameters) {
                 p.OnChanged += MarkUpdateNeeded;
@@ -95,24 +109,47 @@ namespace NetworkTools.Systems.Tools {
                         m_HandleEntries[entity].Spec.SyncToEntity(this, entity, param);
                 };
 
-                // Parent → child propagation: when a Float3Parameter moves, propagate to children.
-                // Two concerns: (1) shift Float3Parameter child values by delta, and
-                // (2) update circle/rotation handle entity centers that reference this parent.
-                // Does not filter by origin — children follow regardless of how the parent changed.
-                param.OnChanged += _ => {
-                    if (param is not Float3Parameter pp) return;
+                // Dependency propagation: when this parameter changes, update every handle that
+                // declared it as a source. Does not filter by origin — dependents track their
+                // source whether it moved by drag or by code.
+                param.OnChanged += _ => PropagateDependencies(param);
+            }
+        }
 
-                    if (m_ParentChildLinks.TryGetValue(pp, out var links)) {
-                        foreach (var link in links) {
-                            var delta = pp.Value - link.LastParentPos;
-                            link.LastParentPos = pp.Value;
-                            if (math.lengthsq(delta) < 1e-8f) continue;
-                            link.Child.Value += delta;
-                        }
+        /// <summary>
+        ///     Propagates a parameter value-change to every handle that declared it as a dependency
+        ///     source. Each entry runs its custom <see cref="DependencyUpdate" /> or, when bare, the
+        ///     spec-type default (<see cref="IHandleSpec.OnDependencyChanged" />). Dependency-driven
+        ///     writes re-enter this method (cascading to grandchildren); a per-pass visited set
+        ///     seeded with the root parameter bounds cascades and cycles to one update per parameter.
+        /// </summary>
+        private void PropagateDependencies(ParameterBase source) {
+            if (m_Dependencies == null || !m_Dependencies.TryGetValue(source, out var links)) return;
+
+            var isRoot = m_DependencyPass == null;
+            if (isRoot) m_DependencyPass = new HashSet<ParameterBase> { source };
+
+            try {
+                foreach (var link in links) {
+                    // Re-base the remembered source value and compute the delta (used by delta-follow
+                    // specs; ignored by recenter/re-resolve specs). Only Float3 sources have a delta.
+                    var delta = float3.zero;
+                    if (source is Float3Parameter sp) {
+                        delta              = sp.Value - link.LastSourcePos;
+                        link.LastSourcePos = sp.Value;
                     }
 
-                    SyncParentPositionToChildHandles(pp);
-                };
+                    // Visited guard: update each owner at most once per pass (cycle/diamond safety).
+                    if (!m_DependencyPass.Add(link.Owner)) continue;
+
+                    if (link.Update != null) {
+                        link.Update(this, link.Owner, source);
+                    } else {
+                        link.Spec.OnDependencyChanged(this, link.Entity, link.Owner, (Float3Parameter)source, delta);
+                    }
+                }
+            } finally {
+                if (isRoot) m_DependencyPass = null;
             }
         }
 

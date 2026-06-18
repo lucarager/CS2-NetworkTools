@@ -111,7 +111,7 @@ namespace NetworkTools.Systems.Tools {
         /// <summary>
         ///     Walks <see cref="Parameters"/>.<see cref="ParameterBase.Handles"/>,
         ///     creates ECS handle entities for the active mode, and populates
-        ///     <see cref="m_HandleEntries"/>, <see cref="m_ParameterHandles"/>, and <see cref="m_ParentChildLinks"/>.
+        ///     <see cref="m_HandleEntries"/>, <see cref="m_ParameterHandles"/>, and <see cref="m_Dependencies"/>.
         /// </summary>
         protected void RebuildHandlesForActiveMode() {
             CancelHandleInteraction();
@@ -136,8 +136,25 @@ namespace NetworkTools.Systems.Tools {
                 }
             }
 
-            ResolveParentLinks();
-            BuildParentChildLinks();
+            var nameToParam = BuildNameToParamMap();
+            ResolveHandleReferences(nameToParam);
+            BuildDependencyMap(nameToParam);
+        }
+
+        /// <summary>
+        ///     Maps every public <see cref="ParameterBase"/> field name on the concrete tool to its
+        ///     instance, for resolving spec name-references (dependency sources, constraint/connector
+        ///     references) to parameters.
+        /// </summary>
+        private Dictionary<string, ParameterBase> BuildNameToParamMap() {
+            var map = new Dictionary<string, ParameterBase>();
+            foreach (var field in GetType().GetFields(
+                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)) {
+                if (typeof(ParameterBase).IsAssignableFrom(field.FieldType)) {
+                    map[field.Name] = (ParameterBase)field.GetValue(this);
+                }
+            }
+            return map;
         }
 
         /// <summary>
@@ -221,18 +238,11 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Resolves <see cref="IHandleSpec.Parent"/>, <c>ReferenceDirectionFrom</c>, and <c>NormalFrom</c>
-        ///     name references to parameter values and entities.
+        ///     Resolves <c>ReferenceDirectionFrom</c>, <c>NormalFrom</c>, and constraint name
+        ///     references on typed handles, and stamps the render-only connector component from
+        ///     <see cref="IHandleSpec.RenderConnectionTo"/>.
         /// </summary>
-        private void ResolveParentLinks() {
-            var nameToParam = new Dictionary<string, ParameterBase>();
-            foreach (var field in GetType().GetFields(
-                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public)) {
-                if (typeof(ParameterBase).IsAssignableFrom(field.FieldType)) {
-                    nameToParam[field.Name] = (ParameterBase)field.GetValue(this);
-                }
-            }
-
+        private void ResolveHandleReferences(Dictionary<string, ParameterBase> nameToParam) {
             foreach (var (entity, entry) in m_HandleEntries) {
                 // Resolve dynamic field references on typed handles
                 if (entry.Spec is RotationHandle rot) {
@@ -243,29 +253,14 @@ namespace NetworkTools.Systems.Tools {
                     ResolvePositionConstraintFields(entity, ph, nameToParam);
                 }
 
-                // Resolve Parent
-                var parentName = entry.Spec.Parent;
-                if (string.IsNullOrEmpty(parentName)) continue;
+                // Resolve the render-only connector: a view tether to another parameter's primary
+                // handle entity. Deliberately independent of the data dependency (DependsOn).
+                var connectTo = entry.Spec.RenderConnectionTo;
+                if (string.IsNullOrEmpty(connectTo)) continue;
+                if (!nameToParam.TryGetValue(connectTo, out var targetParam)) continue;
 
-                if (!nameToParam.TryGetValue(parentName, out var parentParam)) continue;
-                if (parentParam is not Float3Parameter parentF3) continue;
-
-                switch (entry.Spec) {
-                    case PositionHandle ph:        ph.ResolvedParent = parentF3; break;
-                    case CircleHandle ch:          ch.ResolvedParent = parentF3; break;
-                    case RotationHandle rh:        rh.ResolvedParent = parentF3; break;
-                    case ComputedPositionHandle c: c.ResolvedParent  = parentF3; break;
-                    case AxisHandle ax:            ax.ResolvedParent = parentF3; break;
-                }
-
-                if (m_ParameterHandles.TryGetValue(parentParam, out var parentEntities) && parentEntities.Count > 0) {
-                    var parentEntity = parentEntities[0];
-                    EntityManager.AddComponentData(entity, new NT_HandleParent { Parent = parentEntity });
-
-                    if (entry.Spec is CircleHandle || entry.Spec is RotationHandle) {
-                        EntityManager.SetComponentData(entity,
-                            new NT_HandlePosition { Position = parentF3.Value });
-                    }
+                if (m_ParameterHandles.TryGetValue(targetParam, out var targetEntities) && targetEntities.Count > 0) {
+                    EntityManager.AddComponentData(entity, new NT_HandleConnector { Target = targetEntities[0] });
                 }
             }
         }
@@ -366,53 +361,80 @@ namespace NetworkTools.Systems.Tools {
         }
 
         /// <summary>
-        ///     Populates <see cref="m_ParentChildLinks"/> from resolved parent references.
-        ///     Each Float3Parameter that is referenced as a Parent gets an entry mapping to its child Float3Parameters.
+        ///     Builds <see cref="m_Dependencies"/> from every handle spec's <see cref="IHandleSpec.DependsOn"/>,
+        ///     keyed by source parameter. Enforces the single-anchor invariant on follow/recenter specs,
+        ///     seeds the remembered source value for delta-follow, and recenters circle/rotation handles
+        ///     onto their anchor (their entity center comes from the anchor, not a value).
         /// </summary>
-        private void BuildParentChildLinks() {
-            m_ParentChildLinks.Clear();
-            var parentToChildren = new Dictionary<Float3Parameter, List<ParentChildLink>>();
+        private void BuildDependencyMap(Dictionary<string, ParameterBase> nameToParam) {
+            m_Dependencies.Clear();
 
-            foreach (var (_, entry) in m_HandleEntries) {
-                var parentName = entry.Spec.Parent;
-                if (string.IsNullOrEmpty(parentName)) continue;
-                if (entry.Parameter is not Float3Parameter childF3) continue;
+            foreach (var (entity, entry) in m_HandleEntries) {
+                var deps = entry.Spec.DependsOn;
+                if (deps == null) continue;
 
-                // Rotation handles store a direction, not a position — shifting by the
-                // parent's position delta would corrupt their value.  Their entity center
-                // is already repositioned by SyncParentPositionToChildHandles.
-                if (entry.Spec is RotationHandle) continue;
+                var bareAnchorCount = 0;
+                foreach (var dep in deps) {
+                    if (string.IsNullOrEmpty(dep.Source)) continue;
+                    if (!nameToParam.TryGetValue(dep.Source, out var source)) {
+                        m_Log.Warn($"[Dependency] '{entry.Parameter.Key}' references unknown source '{dep.Source}'.");
+                        continue;
+                    }
 
-                // Find the resolved parent from the spec
-                Float3Parameter parentF3 = entry.Spec switch {
-                    PositionHandle ph        => ph.ResolvedParent,
-                    CircleHandle ch          => ch.ResolvedParent,
-                    ComputedPositionHandle c => c.ResolvedParent,
-                    AxisHandle ax            => ax.ResolvedParent,
-                    _                        => null
-                };
+                    var isBare = dep.Update == null;
 
-                if (parentF3 == null) continue;
+                    // The spec-type defaults (delta-follow / recenter / re-resolve) read a Float3 source.
+                    // Custom delegates may use any source type.
+                    if (isBare && source is not Float3Parameter) {
+                        m_Log.Warn($"[Dependency] '{entry.Parameter.Key}' bare source '{dep.Source}' is not a Float3Parameter; skipping.");
+                        continue;
+                    }
 
-                if (!parentToChildren.TryGetValue(parentF3, out var list)) {
-                    list = new List<ParentChildLink>();
-                    parentToChildren[parentF3] = list;
+                    // Single-anchor invariant: follow/recenter specs translate by, or center on, one
+                    // anchor — more than one bare anchor is a programming error. Custom (delegate)
+                    // entries and recompute (axis/computed) specs are exempt.
+                    if (isBare && IsSingleAnchorSpec(entry.Spec)) {
+                        if (++bareAnchorCount > 1) {
+                            m_Log.Error($"[Dependency] '{entry.Parameter.Key}' ({entry.Spec.GetType().Name}) declares multiple bare anchors; using the first.");
+                            continue;
+                        }
+                    }
+
+                    var link = new DependencyLink {
+                        Entity        = entity,
+                        Spec          = entry.Spec,
+                        Owner         = entry.Parameter,
+                        Update        = dep.Update,
+                        LastSourcePos = source is Float3Parameter f3 ? f3.Value : float3.zero
+                    };
+
+                    if (!m_Dependencies.TryGetValue(source, out var list)) {
+                        list = new List<DependencyLink>();
+                        m_Dependencies[source] = list;
+                    }
+                    list.Add(link);
+
+                    // Recenter-on-create: circle/rotation handles are created at the origin and must
+                    // start centred on their anchor (their value is a radius/direction, not a position).
+                    // Gated on the anchor having a primary handle to match the legacy create-time
+                    // recenter; the value-change path (OnDependencyChanged) recenters regardless after.
+                    if (isBare && (entry.Spec is CircleHandle || entry.Spec is RotationHandle)
+                        && source is Float3Parameter anchor
+                        && m_ParameterHandles.TryGetValue(anchor, out var anchorEntities) && anchorEntities.Count > 0) {
+                        EntityManager.SetComponentData(entity, new NT_HandlePosition { Position = anchor.Value });
+                    }
                 }
-
-                // Avoid duplicate entries for the same child
-                var alreadyLinked = false;
-                foreach (var existing in list) {
-                    if (existing.Child == childF3) { alreadyLinked = true; break; }
-                }
-                if (!alreadyLinked) {
-                    list.Add(new ParentChildLink { Child = childF3, LastParentPos = parentF3.Value });
-                }
-            }
-
-            foreach (var (parent, list) in parentToChildren) {
-                m_ParentChildLinks[parent] = list.ToArray();
             }
         }
+
+        /// <summary>
+        ///     True for spec kinds that may take at most one bare (delegate-less) anchor: position-follow
+        ///     (<see cref="PositionHandle"/>) and recenter (<see cref="CircleHandle"/>, <see cref="RotationHandle"/>).
+        ///     Recompute kinds (<see cref="AxisHandle"/>, <see cref="ComputedPositionHandle"/>) re-resolve
+        ///     from all their inputs and are exempt.
+        /// </summary>
+        private static bool IsSingleAnchorSpec(IHandleSpec spec) =>
+            spec is PositionHandle || spec is CircleHandle || spec is RotationHandle;
 
         /// <summary>
         ///     Generic drag dispatch for spec-driven handles.
@@ -459,33 +481,6 @@ namespace NetworkTools.Systems.Tools {
                 var s = (IHandleSpec<float3>)entry.Spec;
                 var v = s.ComputeFromPosition != null ? s.ComputeFromPosition(this, direction) : direction;
                 f3p.SetValue(v, ChangeOrigin.Handle);
-            }
-        }
-
-        /// <summary>
-        ///     When a Float3Parameter that is a parent changes, update the center position
-        ///     on any child circle or rotation handle entities that reference it.
-        /// </summary>
-        private void SyncParentPositionToChildHandles(Float3Parameter parent) {
-            if (m_HandleEntries == null || m_HandleEntries.Count == 0) return;
-
-            var pos = parent.Value;
-            foreach (var (entity, entry) in m_HandleEntries) {
-                if (!EntityManager.Exists(entity)) continue;
-
-                switch (entry.Spec) {
-                    // Circle/rotation handles are centred on the parent — move the entity directly.
-                    case CircleHandle ch when ch.ResolvedParent == parent:
-                    case RotationHandle rh when rh.ResolvedParent == parent:
-                        EntityManager.SetComponentData(entity,
-                            new NT_HandlePosition { Position = pos });
-                        break;
-
-                    case AxisHandle ax when ax.ResolvedParent == parent:
-                    case ComputedPositionHandle cp when cp.ResolvedParent == parent:
-                        entry.Spec.SyncToEntity(this, entity, entry.Parameter);
-                        break;
-                }
             }
         }
 
@@ -674,7 +669,7 @@ namespace NetworkTools.Systems.Tools {
             m_Handles.Clear();
             m_HandleEntries?.Clear();
             m_ParameterHandles?.Clear();
-            m_ParentChildLinks?.Clear();
+            m_Dependencies?.Clear();
         }
 
         /// <summary>

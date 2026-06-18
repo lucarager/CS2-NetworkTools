@@ -5,7 +5,8 @@ namespace NetworkTools.Systems.Tools.Handles {
     using Unity.Mathematics;
 
     public class CircleHandle : IHandleSpec<float> {
-        public string                Parent          { get; init; }
+        public Dependency[]          DependsOn          { get; init; }
+        public string                RenderConnectionTo { get; init; }
         public float3                Normal          { get; init; } = new(0, 1, 0);
         public string                NormalFrom      { get; init; }
         public NT_HandleConstraints? Constraints     { get; init; }
@@ -16,13 +17,17 @@ namespace NetworkTools.Systems.Tools.Handles {
 
         HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Circle;
 
-        internal Float3Parameter ResolvedParent;
-
         public void SyncToEntity(NT_BaseToolSystem tool, Entity entity, ParameterBase param) {
             var radius = ((FloatParameter)param).Value;
             var circle = tool.EntityManager.GetComponentData<NT_HandleCircle>(entity);
             circle.Radius = radius;
             tool.EntityManager.SetComponentData(entity, circle);
+        }
+
+        /// <summary>Recenter: a circle handle's center is its anchor; copy the source position onto the entity.</summary>
+        public void OnDependencyChanged(NT_BaseToolSystem tool, Entity entity,
+                                        ParameterBase owner, Float3Parameter source, float3 delta) {
+            tool.EntityManager.SetComponentData(entity, new NT_HandlePosition { Position = source.Value });
         }
     }
 }

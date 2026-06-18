@@ -25,14 +25,13 @@ namespace NetworkTools.Systems.Tools.Handles {
         /// </summary>
         public bool Reverse { get; init; }
 
-        public string                Parent      { get; init; }
+        public Dependency[]          DependsOn          { get; init; }
+        public string                RenderConnectionTo { get; init; }
         public NT_HandleConstraints? Constraints => null; // Computed dynamically in CreateHandleFromSpec
         public float                 Size      { get; init; } = NT_Handle.SizePrimary;
         public HandleSnap            Snap      { get; init; } = HandleSnap.None;
 
         HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Position | HandleTypeFlags.AxisHandle;
-
-        internal Float3Parameter ResolvedParent;
 
         private ComputePositionDelegate<float>     m_ComputePosition;
         private ComputeFromPositionDelegate<float> m_ComputeFromPosition;
@@ -55,6 +54,16 @@ namespace NetworkTools.Systems.Tools.Handles {
             } else {
                 tool.EntityManager.AddComponentData(entity, constraints);
             }
+        }
+
+        /// <summary>
+        ///     Re-resolve: re-derive position and axis constraint from the (multi-input) endpoint
+        ///     delegates. Accepts any number of sources — listing them all in <c>DependsOn</c> makes
+        ///     the handle re-project its same value onto the new axis when any input changes.
+        /// </summary>
+        public void OnDependencyChanged(NT_BaseToolSystem tool, Entity entity,
+                                        ParameterBase owner, Float3Parameter source, float3 delta) {
+            SyncToEntity(tool, entity, owner);
         }
 
         /// <summary>

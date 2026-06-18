@@ -34,7 +34,7 @@ namespace NetworkTools.Systems {
             [ReadOnly] public required ComponentTypeHandle<NT_HandleCircle>      m_HandleCircleComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleRotation>    m_HandleRotationComponentTypeHandle;
             [ReadOnly] public required ComponentTypeHandle<NT_HandleConstraints> m_HandleConstraintsComponentTypeHandle;
-            [ReadOnly] public required ComponentTypeHandle<NT_HandleParent>      m_HandleParentComponentTypeHandle;
+            [ReadOnly] public required ComponentTypeHandle<NT_HandleConnector>   m_HandleConnectorComponentTypeHandle;
             [ReadOnly] public required ComponentLookup<NT_HandlePosition>        m_HandlePositionLookup;
             [ReadOnly] public required EntityTypeHandle                          m_EntityTypeHandle;
 
@@ -51,13 +51,13 @@ namespace NetworkTools.Systems {
                 var hasCircleComponent      = chunk.Has(ref m_HandleCircleComponentTypeHandle);
                 var hasRotationComponent    = chunk.Has(ref m_HandleRotationComponentTypeHandle);
                 var hasConstraintsComponent = chunk.Has(ref m_HandleConstraintsComponentTypeHandle);
-                var hasParentComponent      = chunk.Has(ref m_HandleParentComponentTypeHandle);
+                var hasConnectorComponent   = chunk.Has(ref m_HandleConnectorComponentTypeHandle);
 
                 NativeArray<NT_HandleLine>        lineArray        = default;
                 NativeArray<NT_HandleCircle>      circleArray      = default;
                 NativeArray<NT_HandleRotation>    rotationArray    = default;
                 NativeArray<NT_HandleConstraints> constraintsArray = default;
-                NativeArray<NT_HandleParent>      parentArray      = default;
+                NativeArray<NT_HandleConnector>   connectorArray   = default;
 
                 if (hasLineComponent) {
                     lineArray = chunk.GetNativeArray(ref m_HandleLineComponentTypeHandle);
@@ -75,8 +75,8 @@ namespace NetworkTools.Systems {
                     constraintsArray = chunk.GetNativeArray(ref m_HandleConstraintsComponentTypeHandle);
                 }
 
-                if (hasParentComponent) {
-                    parentArray = chunk.GetNativeArray(ref m_HandleParentComponentTypeHandle);
+                if (hasConnectorComponent) {
+                    connectorArray = chunk.GetNativeArray(ref m_HandleConnectorComponentTypeHandle);
                 }
 
                 for (var i = 0; i < entitiesArray.Length; i++) {
@@ -104,15 +104,15 @@ namespace NetworkTools.Systems {
                         RenderPointHandle(position, handle, isHighlighted, isSelected, m_Buffer);
                     }
 
-                    // Draw dashed line from child to parent handle (axis handles draw their own connecting line)
+                    // Draw dashed connector line to the target handle (axis handles draw their own connecting line)
                     var isAxisRendered = (handle.HasAnyFlag(HandleTypeFlags.AxisHandle) || handle.HasAnyFlag(HandleTypeFlags.BezierControlPoint)) && hasConstraintsComponent;
-                    if (hasParentComponent && !isAxisRendered) {
-                        var parentEntity = parentArray[i].Parent;
-                        if (parentEntity != Entity.Null && m_HandlePositionLookup.HasComponent(parentEntity)) {
-                            var parentPos = m_HandlePositionLookup[parentEntity].Position;
+                    if (hasConnectorComponent && !isAxisRendered) {
+                        var targetEntity = connectorArray[i].Target;
+                        if (targetEntity != Entity.Null && m_HandlePositionLookup.HasComponent(targetEntity)) {
+                            var targetPos = m_HandlePositionLookup[targetEntity].Position;
                             var lineColor = (Vector4)m_Colors.HandleSecondaryLineRest;
                             m_Buffer.DrawDashedLine(lineColor,
-                                                    new Line3.Segment(position.Position, parentPos),
+                                                    new Line3.Segment(position.Position, targetPos),
                                                     0.3f,
                                                     2f,
                                                     2f);

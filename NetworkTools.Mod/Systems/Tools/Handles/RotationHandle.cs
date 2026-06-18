@@ -6,7 +6,8 @@ namespace NetworkTools.Systems.Tools.Handles {
 
     public class RotationHandle : IHandleSpec<float3> {
         public HandleTypeFlags       Style               { get; init; }
-        public string                Parent              { get; init; }
+        public Dependency[]          DependsOn              { get; init; }
+        public string                RenderConnectionTo     { get; init; }
         public float3                Normal              { get; init; } = new(0, 1, 0);
         public string                NormalFrom          { get; init; }
         public float3                ReferenceDirection  { get; init; } = new(1, 0, 0);
@@ -19,8 +20,6 @@ namespace NetworkTools.Systems.Tools.Handles {
 
         HandleTypeFlags IHandleSpec.TypeFlags => HandleTypeFlags.Rotation | Style;
 
-        internal Float3Parameter ResolvedParent;
-
         public void SyncToEntity(NT_BaseToolSystem tool, Entity entity, ParameterBase param) {
             var direction = ((Float3Parameter)param).Value;
             var rotation  = tool.EntityManager.GetComponentData<NT_HandleRotation>(entity);
@@ -28,6 +27,15 @@ namespace NetworkTools.Systems.Tools.Handles {
             var angle     = math.atan2(math.dot(direction, perp), math.dot(direction, rotation.ReferenceDirection));
             rotation.Angle = angle;
             tool.EntityManager.SetComponentData(entity, rotation);
+        }
+
+        /// <summary>
+        ///     Recenter: a rotation handle stores a direction, so the anchor's position delta must
+        ///     not shift its value — instead move the handle entity's center onto the source.
+        /// </summary>
+        public void OnDependencyChanged(NT_BaseToolSystem tool, Entity entity,
+                                        ParameterBase owner, Float3Parameter source, float3 delta) {
+            tool.EntityManager.SetComponentData(entity, new NT_HandlePosition { Position = source.Value });
         }
     }
 }
