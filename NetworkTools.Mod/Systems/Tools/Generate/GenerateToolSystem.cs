@@ -72,6 +72,9 @@ namespace NetworkTools.Systems.Tools.Generate {
         };
 
         // ── Parameters: Oval ────────────────────────────────────────────────
+        // Depth-axis tip. Dragging it sets both the oval's depth (distance from Position) and its
+        // orientation (direction from Position) — see InitializeFromSecondPoint. Width is a separate
+        // slider on OvalRadiusX.
         public Float3Parameter OvalAxisPoint = new("generate.ovalAxisPoint",
             modes: (int)GenerateMode.Oval) {
             Handles = new IHandleSpec<float3>[] {
@@ -83,12 +86,9 @@ namespace NetworkTools.Systems.Tools.Generate {
             }
         };
 
-        public FloatParameter OvalRadiusX = new("generate.ovalRadiusX", 80f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusX", fractionDigits: 0, numberType: NumberType.Distance);
-        public FloatParameter OvalRadiusZ = new("generate.ovalRadiusZ", 40f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusZ", fractionDigits: 0, numberType: NumberType.Distance) {
+        public FloatParameter OvalRadiusX = new("generate.ovalRadiusX", 80f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusX", fractionDigits: 0, numberType: NumberType.Distance) {
             Handles = new IHandleSpec<float>[] {
                 new AxisHandle {
-                    // Geometry derives from two inputs: the origin (Position) and the orientation
-                    // (Rotation). Both are sources, so the radius axis re-resolves when either changes.
                     DependsOn = new Dependency[] { nameof(Position), nameof(Rotation) },
                     StartPoint = tool => ((NT_GenerateToolSystem)tool).Position.Value,
                     EndPoint = tool => {
@@ -99,6 +99,10 @@ namespace NetworkTools.Systems.Tools.Generate {
                 }
             }
         };
+
+        // Depth is owned by the OvalAxisPoint tip (drag distance = depth, drag direction = rotation),
+        // so this radius is UI-only.
+        public FloatParameter OvalRadiusZ = new("generate.ovalRadiusZ", 40f, 4f, 240f, modes: (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.RadiusZ", fractionDigits: 0, numberType: NumberType.Distance);
 
         // ── Parameters: Elevation ───────────────────────────────────────────
         public FloatParameter Elevation = new("generate.elevation", 0f, -100f, 100f, modes: (int)GenerateMode.Grid | (int)GenerateMode.Circle | (int)GenerateMode.Oval, label: "NetworkTools.UI.Generate.Elevation", fractionDigits: 0, numberType: NumberType.Distance);
