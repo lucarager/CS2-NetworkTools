@@ -75,6 +75,7 @@ namespace NetworkTools {
             updateSystem.UpdateAt<NT_OverlaySystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<NT_ToolOverlayRenderSystem>(SystemUpdatePhase.Rendering);
             updateSystem.UpdateAt<CustomOverlayRenderSystem>(SystemUpdatePhase.Rendering);
+            //updateSystem.UpdateAfter<NT_DebugSystem, Game.Serialization.ElectricityGraphSystem>(SystemUpdatePhase.Deserialize);
         }
 
         /// <summary>
