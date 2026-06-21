@@ -31,7 +31,25 @@
         }
 
         public void PostProcess(ref NativeArray<EdgeState> edges, in ShapeTransformContext ctx, in ShapeJobConfig config) {
-            // no-op
+            // Smooth start/end: override only the first/last control point heights to match the
+            // neighbor edge's tangent. Node heights stay on the straight grade line, so the path
+            // remains globally linear — only the first/last edge bends to meet the neighbor.
+            if (edges.Length == 0) {
+                return;
+            }
+
+            if (config.SmoothStart && ctx.StartSmoothEligible) {
+                var first = edges[0];
+                SlopeUtils.ApplySmoothStartControl(ref first, ctx.StartAnchorSlope);
+                edges[0] = first;
+            }
+
+            if (config.SmoothEnd && ctx.EndSmoothEligible) {
+                var lastIndex = edges.Length - 1;
+                var last = edges[lastIndex];
+                SlopeUtils.ApplySmoothEndControl(ref last, ctx.EndAnchorSlope);
+                edges[lastIndex] = last;
+            }
         }
     }
 }

@@ -69,7 +69,8 @@
                         TransformPipeline.Execute(ref easeInOutTransform, ref edges, ref nodes, in Context, in Config);
                         break;
                     case ShapeTransformTemplate.SlopeArch:
-                        // TODO: Implement SlopeParabolicTransform
+                        var archTransform = new SlopeArchTransform();
+                        TransformPipeline.Execute(ref archTransform, ref edges, ref nodes, in Context, in Config);
                         break;
                     case ShapeTransformTemplate.CurveStraighten:
                         var straightenTransform = new CurveStraightenTransform();

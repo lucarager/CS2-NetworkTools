@@ -38,6 +38,30 @@
         public float TotalLength;
 
         /// <summary>
+        /// True when the start node connects to exactly one non-selected edge (a pass-through
+        /// node, not an intersection or dead-end), so its tangent can be matched for a smooth start.
+        /// </summary>
+        public bool StartSmoothEligible;
+
+        /// <summary>
+        /// Slope (height per horizontal world distance, in path-forward sense) of the non-selected
+        /// edge at the start node. Only meaningful when <see cref="StartSmoothEligible"/> is true.
+        /// </summary>
+        public float StartAnchorSlope;
+
+        /// <summary>
+        /// True when the end node connects to exactly one non-selected edge (a pass-through
+        /// node, not an intersection or dead-end), so its tangent can be matched for a smooth end.
+        /// </summary>
+        public bool EndSmoothEligible;
+
+        /// <summary>
+        /// Slope (height per horizontal world distance, in path-forward sense) of the non-selected
+        /// edge at the end node. Only meaningful when <see cref="EndSmoothEligible"/> is true.
+        /// </summary>
+        public float EndAnchorSlope;
+
+        /// <summary>
         /// Height (Y) at path start. Convenience accessor for StartPosition.y.
         /// </summary>
         public float StartHeight => StartPosition.y;

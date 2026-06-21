@@ -10,5 +10,17 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         public float ArchHeight;
         public float ArchPosition;
         public float SmoothingFactor;
+
+        /// <summary>
+        ///     When true, the first control point of the path is forced onto the tangent of the
+        ///     single non-selected edge connected to the start node, avoiding a slope chip.
+        /// </summary>
+        public bool SmoothStart;
+
+        /// <summary>
+        ///     When true, the last control point of the path is forced onto the tangent of the
+        ///     single non-selected edge connected to the end node, avoiding a slope chip.
+        /// </summary>
+        public bool SmoothEnd;
     }
 }

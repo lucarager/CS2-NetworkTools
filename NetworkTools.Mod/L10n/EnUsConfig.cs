@@ -226,11 +226,14 @@ namespace NetworkTools.L10n {
                 // ## Slope Tool
                 { "NetworkTools.UI.Slope.Preserve", "Preserve" },
                 { "NetworkTools.UI.Slope.ConstantSlope", "Constant Slope" },
-                { "NetworkTools.UI.Slope.EaseInOutSlope", "EaseInOut Slope" },
+                { "NetworkTools.UI.Slope.EaseInOutSlope", "Ease-In-Out Slope" },
+                { "NetworkTools.UI.Slope.ArchSlope", "Arched Slope" },
                 { "NetworkTools.UI.Slope.StartingFlatness", "Starting Flatness" },
                 { "NetworkTools.UI.Slope.EndingFlatness", "Ending Flatness" },
                 { "NetworkTools.UI.Slope.ArchHeight", "Arch Height" },
                 { "NetworkTools.UI.Slope.ArchPosition", "Arch Position" },
+                { "NetworkTools.UI.Slope.SmoothStart", "Smooth start connection" },
+                { "NetworkTools.UI.Slope.SmoothEnd", "Smooth end connection" },
 
                 // ## Curve Tool
                 { "NetworkTools.UI.Curve.Preserve", "Preserve" },

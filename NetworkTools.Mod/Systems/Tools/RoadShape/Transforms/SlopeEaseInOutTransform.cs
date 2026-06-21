@@ -27,9 +27,22 @@
             // - b: x=easeInLength, y=startHeight (flat tangent at start)
             // - c: x=(1-easeOutLength), y=endHeight (flat tangent at end)
             // - d: x=1, y=endHeight
+            //
+            // Smooth start/end: instead of a flat tangent, tilt the start/end handle to match the
+            // neighbor edge's slope so the path eases out of (and back into) the neighbor's grade.
+            // Anchor slope is world (height per horizontal distance); the curve's x is path ratio
+            // (0-1 over TotalLength), so convert with * TotalLength. A flat neighbor → slope 0 →
+            // identical to the original flat-ended curve.
+            var startSlope = config.SmoothStart && ctx.StartSmoothEligible
+                ? ctx.StartAnchorSlope * ctx.TotalLength
+                : 0f;
+            var endSlope = config.SmoothEnd && ctx.EndSmoothEligible
+                ? ctx.EndAnchorSlope * ctx.TotalLength
+                : 0f;
+
             var a = new float3(0f, ctx.StartHeight, 0f);
-            var b = new float3(config.EaseInLength, ctx.StartHeight, 0f);
-            var c = new float3(1f - config.EaseOutLength, ctx.EndPosition.y, 0f);
+            var b = new float3(config.EaseInLength, ctx.StartHeight + startSlope * config.EaseInLength, 0f);
+            var c = new float3(1f - config.EaseOutLength, ctx.EndPosition.y - endSlope * config.EaseOutLength, 0f);
             var d = new float3(1f, ctx.EndPosition.y, 0f);
 
             ReferenceBezier = new Bezier4x3(a, b, c, d);

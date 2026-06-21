@@ -111,6 +111,44 @@
         /// <param name="endHeight">Height at path-end of segment</param>
         /// <param name="isForward">True if edge direction matches path direction</param>
         /// <returns>The modified bezier curve</returns>
+        /// <summary>
+        /// Forces the path-start control point of the first edge onto the given slope, measured
+        /// relative to that edge's path-start point. Used to align with a non-selected neighbor
+        /// edge's tangent (smooth start). Only the control point's height changes.
+        /// </summary>
+        /// <param name="edge">The first edge of the path (modified in place).</param>
+        /// <param name="anchorSlope">Height per horizontal world distance, in path-forward sense.</param>
+        public static void ApplySmoothStartControl(ref EdgeState edge, float anchorSlope) {
+            var bezier = edge.Bezier;
+            if (edge.IsForward) {
+                var horizontal = math.length((bezier.b - bezier.a).xz);
+                bezier.b.y = bezier.a.y + anchorSlope * horizontal;
+            } else {
+                var horizontal = math.length((bezier.c - bezier.d).xz);
+                bezier.c.y = bezier.d.y + anchorSlope * horizontal;
+            }
+            edge.Bezier = bezier;
+        }
+
+        /// <summary>
+        /// Forces the path-end control point of the last edge onto the given slope, measured
+        /// relative to that edge's path-end point. Used to align with a non-selected neighbor
+        /// edge's tangent (smooth end). Only the control point's height changes.
+        /// </summary>
+        /// <param name="edge">The last edge of the path (modified in place).</param>
+        /// <param name="anchorSlope">Height per horizontal world distance, in path-forward sense.</param>
+        public static void ApplySmoothEndControl(ref EdgeState edge, float anchorSlope) {
+            var bezier = edge.Bezier;
+            if (edge.IsForward) {
+                var horizontal = math.length((bezier.d - bezier.c).xz);
+                bezier.c.y = bezier.d.y - anchorSlope * horizontal;
+            } else {
+                var horizontal = math.length((bezier.a - bezier.b).xz);
+                bezier.b.y = bezier.a.y - anchorSlope * horizontal;
+            }
+            edge.Bezier = bezier;
+        }
+
         public static Bezier4x3 ApplyHeightsToBezier(
             in Bezier4x3 bezier,
             float startHeight,

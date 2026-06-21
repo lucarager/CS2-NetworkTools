@@ -41,9 +41,11 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 }
             }
         };
-        public FloatParameter                        ArchHeight      = new("roadShape.archHeight",      0.5f, -1f, 1f,  modes: (int)ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Slope.ArchHeight", fractionDigits: 3);
-        public FloatParameter                        ArchPosition    = new("roadShape.archPosition",    0.5f, 0.1f, 0.9f, modes: (int)ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Slope.ArchPosition", fractionDigits: 3);
+        public FloatParameter                        ArchHeight      = new("roadShape.archHeight",      10f, -80f, 80f, modes: (int)ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Slope.ArchHeight", fractionDigits: 0, numberType: NumberType.Distance);
+        public FloatParameter                        ArchPosition    = new("roadShape.archPosition",    0.5f, 0.1f, 0.9f, modes: (int)ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Slope.ArchPosition", fractionDigits: 0, numberType: NumberType.Percentage, displayScale: 100f);
         public FloatParameter                        SmoothingFactor = new("roadShape.smoothingFactor", 0.5f, 0f, 1f,   modes: (int)ShapeTransformTemplate.CurveSmooth, label: "NetworkTools.UI.Curve.SmoothingFactor", fractionDigits: 2);
+        public BoolParameter                         SmoothStart     = new("roadShape.smoothStart", false, modes: (int)ShapeTransformTemplate.SlopeLinear | (int)ShapeTransformTemplate.SlopeEaseInOut | (int)ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Slope.SmoothStart");
+        public BoolParameter                         SmoothEnd       = new("roadShape.smoothEnd",   false, modes: (int)ShapeTransformTemplate.SlopeLinear | (int)ShapeTransformTemplate.SlopeEaseInOut | (int)ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Slope.SmoothEnd");
 
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Template.Value;
@@ -94,6 +96,8 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 ArchHeight      = ArchHeight.Value,
                 ArchPosition    = ArchPosition.Value,
                 SmoothingFactor = SmoothingFactor.Value,
+                SmoothStart     = SmoothStart.Value,
+                SmoothEnd       = SmoothEnd.Value,
             };
         }
 

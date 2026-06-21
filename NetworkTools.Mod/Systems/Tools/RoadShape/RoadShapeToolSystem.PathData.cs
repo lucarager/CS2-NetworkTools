@@ -88,6 +88,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 CurveLookup = SystemAPI.GetComponentLookup<Curve>(true),
                 EdgeLookup = SystemAPI.GetComponentLookup<Edge>(true),
                 UpgradedLookup = SystemAPI.GetComponentLookup<Upgraded>(true),
+                ConnectedEdgeLookup = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 OutContext = contextRef,
                 OutEdgeStates = m_EdgeStates,
                 OutNodeStates = m_NodeStates,
@@ -146,6 +147,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             [ReadOnly] public ComponentLookup<Curve> CurveLookup;
             [ReadOnly] public ComponentLookup<Edge> EdgeLookup;
             [ReadOnly] public ComponentLookup<Upgraded> UpgradedLookup;
+            [ReadOnly] public BufferLookup<ConnectedEdge> ConnectedEdgeLookup;
 
             public NativeReference<ShapeTransformContext> OutContext;
             public NativeList<EdgeState> OutEdgeStates;
@@ -235,6 +237,20 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 // Update context with total length
                 ctx.TotalLength = cumulativeDistance;
 
+                // Compute smooth-start/end anchor slopes from the single non-selected edge (if any)
+                // connected to each path endpoint. Endpoints never move, so these are stable.
+                if (edgeCount > 0) {
+                    ComputeAnchorSlope(CurrentPathNodes[0], CurrentPathEdges[0], isStart: true,
+                        out var startEligible, out var startSlope);
+                    ComputeAnchorSlope(CurrentPathNodes[nodeCount - 1], CurrentPathEdges[edgeCount - 1], isStart: false,
+                        out var endEligible, out var endSlope);
+
+                    ctx.StartSmoothEligible = startEligible;
+                    ctx.StartAnchorSlope    = startSlope;
+                    ctx.EndSmoothEligible   = endEligible;
+                    ctx.EndAnchorSlope      = endSlope;
+                }
+
                 // Second pass: calculate absolute ratios for each control point
                 if (ctx.TotalLength > 0f) {
                     for (var i = 0; i < edgeCount; i++) {
@@ -253,6 +269,77 @@ namespace NetworkTools.Systems.Tools.RoadShape {
 
                 // Output context
                 OutContext.Value = ctx;
+            }
+
+            /// <summary>
+            /// Computes the slope of the single non-selected edge connected to a path endpoint node,
+            /// for smooth start/end. Eligible only when exactly one such edge exists (a pass-through
+            /// node — not a dead-end or an intersection, which the game smooths on its own).
+            /// </summary>
+            /// <param name="nodeEntity">The path endpoint node.</param>
+            /// <param name="pathEdgeEntity">The selected path edge at this endpoint (excluded from the search).</param>
+            /// <param name="isStart">True for the start node, false for the end node.</param>
+            /// <param name="eligible">Set true when exactly one non-selected edge connects here.</param>
+            /// <param name="slope">Height per horizontal world distance, in path-forward sense.</param>
+            private void ComputeAnchorSlope(
+                Entity   nodeEntity,
+                Entity   pathEdgeEntity,
+                bool     isStart,
+                out bool eligible,
+                out float slope) {
+                eligible = false;
+                slope    = 0f;
+
+                if (!ConnectedEdgeLookup.TryGetBuffer(nodeEntity, out var connectedEdges)) {
+                    return;
+                }
+
+                // Find the single non-selected edge that actually attaches to this node.
+                var anchorEntity = Entity.Null;
+                var anchorCount  = 0;
+                for (var i = 0; i < connectedEdges.Length; i++) {
+                    var candidate = connectedEdges[i].m_Edge;
+
+                    if (candidate == pathEdgeEntity) {
+                        continue;
+                    }
+
+                    if (!EdgeLookup.TryGetComponent(candidate, out var candidateEdge)) {
+                        continue;
+                    }
+
+                    if (candidateEdge.m_Start != nodeEntity && candidateEdge.m_End != nodeEntity) {
+                        continue;
+                    }
+
+                    anchorCount++;
+                    anchorEntity = candidate;
+                }
+
+                if (anchorCount != 1) {
+                    return;
+                }
+
+                if (!EdgeLookup.TryGetComponent(anchorEntity, out var anchorEdge) ||
+                    !CurveLookup.TryGetComponent(anchorEntity, out var anchorCurve)) {
+                    return;
+                }
+
+                // Tangent pointing from the shared node into the anchor edge.
+                var bezier = anchorCurve.m_Bezier;
+                var tangentAway = anchorEdge.m_Start == nodeEntity
+                    ? bezier.b - bezier.a
+                    : bezier.c - bezier.d;
+
+                var horizontal = math.length(tangentAway.xz);
+                if (horizontal < 0.001f) {
+                    return;
+                }
+
+                // The path continues opposite to tangentAway at the start node, and along it at the end.
+                var worldSlope = tangentAway.y / horizontal;
+                slope    = isStart ? -worldSlope : worldSlope;
+                eligible = true;
             }
 
             /// <summary>
