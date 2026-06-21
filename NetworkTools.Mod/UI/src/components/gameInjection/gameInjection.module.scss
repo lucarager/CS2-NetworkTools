@@ -1,0 +1,16 @@
+.wrapper {
+    position: absolute;
+    left: 0;
+    top: 50rem;
+    height: 100vh;
+    padding-bottom: 188rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: flex-start;
+    pointer-events: none;
+}
+
+:global(body.nt__panelIsOpen) [class^="main-container_"] > [class^="info-layout_"] {
+    padding-left: 50rem;
+}

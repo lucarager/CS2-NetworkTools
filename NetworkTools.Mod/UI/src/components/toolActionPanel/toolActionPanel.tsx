@@ -44,7 +44,7 @@ const ToolActionPanelInner = () => {
     }, [closePrefabSearch, selectedBinding]);
 
     if (!activeTool) {
-        return <div className={styles.wrapper}></div>;
+        return <></>;
     }
 
     const ToolComponent = TOOL_COMPONENTS[activeTool.Id];
