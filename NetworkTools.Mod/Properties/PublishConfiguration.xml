@@ -78,20 +78,19 @@ Donations are incredibly kind and appreciated.</LongDescription>
   <!--Link to the forum post where the mod can be discussed-->
   <ForumLink Value="https://forum.paradoxplaza.com/forum/threads/network-tools-early-access.1927685/" />
   <!--Version of the mod-->
-  <ModVersion Value="1.5.7" />
+  <ModVersion Value="1.5.8" />
   <!--Recommended version of the base game to use the mod-->
-  <GameVersion Value="1.5.*" />
+  <GameVersion Value="1.6.*" />
   <!--Dependency for the mod, can be set multiple-->
   <Dependency Id="74417" DisplayName="Unified Icon Library" Version="1.*" />
   <!--Required DLC, can be set multiple times. Supported values are "Landmark Buildings", "San Fransisco Set", "Beach Properties", "Urban Promenades", "Modern Architecture"-->
   <RequiredDLC Value="" />
   <!--Change log for new version. Single line or multi line. Supports minimal markdown subset-->
-  <ChangeLog># 1.5.7
+  <ChangeLog># 1.5.8
 
-- New: Slope Tool - Arch mode. Allows creating perfectly arched road segments.
-- New: Slope Tool - Added toggles to all slope modes that make sure the start/end node's curve smoothly transitions into its neighbours. Fixes jagged edges at start/end when using slope tools on road segments.
-- Improved: UI now shifts vanilla infopanels right when NT panel is open.
-- Fixed: Generate tool's oval handles were incorrectly wired leading to unintended transformations.</ChangeLog>
+- Update translation files
+- Update recommended game version to 1.6
+- Fix: NT panel not opening in editor mode</ChangeLog>
   <!--External link. supported types are discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi, crowdin, gitlab-->
   <ExternalLink Type="kofi" Url="https://ko-fi.com/lucadevdesign" />
   <ExternalLink Type="discord" Url="https://discord.gg/C2XQUYHwuV" />
