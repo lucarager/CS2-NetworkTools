@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button, Tooltip } from "cs2/ui";
 import styles from "./editorInjection.module.scss";
 import { useLocalization } from "cs2/l10n";
 import { NetworkToolsWrapper } from "components/wrapper/wrapper";
+import { useValue } from "cs2/api";
+import { GAME_BINDINGS } from "gameBindings";
 
 export const EditorInjection = () => {
-    const [enabled, setIsEnabled] = useState(false);
+    const panelOpenBinding = useValue(GAME_BINDINGS.PANEL_OPEN.binding);
     const { translate } = useLocalization();
 
     return (
@@ -17,7 +19,7 @@ export const EditorInjection = () => {
                     direction="down">
                     <Button
                         variant="floating"
-                        onSelect={() => setIsEnabled(!enabled)}
+                        onSelect={() => GAME_BINDINGS.PANEL_OPEN.set(!panelOpenBinding)}
                         src={"coui://nt/Logo.svg"}
                     />
                 </Tooltip>
