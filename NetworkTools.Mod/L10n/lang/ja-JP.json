@@ -147,7 +147,7 @@
   "NetworkTools.UI.Curve.SmoothingFactor": "Smoothing Factor",
   "NetworkTools.UI.Connect.None": "なし",
   "NetworkTools.UI.Connect.SimpleCurve": "シンプルなカーブ",
-  "NetworkTools.UI.Connect.ComplexCurve": "Complex Curve",
+  "NetworkTools.UI.Connect.ComplexCurve": "複合カーブ",
   "NetworkTools.UI.Connect.Loop": "ループ",
   "NetworkTools.UI.Connect.LoopRadius": "ループ半径",
   "NetworkTools.UI.Connect.LoopArcSide": "Arc Side",
