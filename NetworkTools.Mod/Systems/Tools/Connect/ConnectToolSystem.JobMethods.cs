@@ -6,7 +6,6 @@ namespace NetworkTools.Systems.Tools.Connect {
     using Game.Net;
     using Game.Notifications;
     using Game.Prefabs;
-    using Game.Prefabs;
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
@@ -24,6 +23,7 @@ namespace NetworkTools.Systems.Tools.Connect {
                 EndPosition                    = EndPosition.Value,
                 StartDirection                 = StartDirection.Value,
                 EndDirection                   = EndDirection.Value,
+                Tunnel                         = Tunnel.Value,
                 CurveStartPointPosition        = CurveStartPointPosition.Value,
                 CurveStartControlPointPosition = CurveStartControlPointPosition.Value,
                 CurveEndControlPointPosition   = CurveEndControlPointPosition.Value,
@@ -75,9 +75,12 @@ namespace NetworkTools.Systems.Tools.Connect {
                 ConnectedEdgeLookup = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 AggregatedLookup = SystemAPI.GetComponentLookup<Aggregated>(true),
                 NetGeometryDataLookup = SystemAPI.GetComponentLookup<NetGeometryData>(true),
+                PlaceableNetDataLookup = SystemAPI.GetComponentLookup<PlaceableNetData>(true),
+                TerrainHeight = m_TerrainSystem.GetHeightData(false),
                 ECB = m_Barrier.CreateCommandBuffer(),
             }.Schedule(inputDeps);
             m_Barrier.AddJobHandleForProducer(jobHandle);
+            m_TerrainSystem.AddCPUHeightReader(jobHandle);
 
             return jobHandle;
         }

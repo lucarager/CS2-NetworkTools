@@ -26,6 +26,16 @@ namespace NetworkTools.Systems.Tools.Connect {
         public NetPrefabParameter         NetPrefab  = new("connect.netPrefab");
         public EnumParameter<ConnectMode> Mode       = new("connect.mode", ConnectMode.SimpleCurve, label: "NetworkTools.UI.Common.Mode");
 
+        /// <summary>
+        ///     Tunnel mode.
+        ///     Off: the vanilla course solver stays at or above the line between the two nodes.
+        ///     It follows the terrain above that line (bridges over dips).
+        ///     On: the network is held on the curve whatever the ground does (tunnels under hills).
+        ///     The curve is cut so that a tunnel starts where the whole width is deep enough.
+        ///     See the definitions job.
+        /// </summary>
+        public BoolParameter Tunnel = new("connect.tunnel", false, label: "NetworkTools.UI.Common.Tunnel");
+
         // Shared (from node selection)
         public Float3Parameter StartPosition  = new("connect.startPosition");
         public Float3Parameter EndPosition    = new("connect.endPosition");

@@ -19,6 +19,10 @@ export const ConnectControls: React.FC = () => {
                 </div>
                 <div className={styles.section__content}>
                     <PrefabSelection paramKey={PARAM_KEYS.connect.netPrefab} />
+                    <ParameterField
+                        paramKey="connect.tunnel"
+                        tooltip="NetworkTools.UI.Common.TunnelTooltip"
+                    />
                     {activeConnectMode === ConnectMode.Loop && (
                         <ParameterField paramKey="connect.loopArcSide" />
                     )}

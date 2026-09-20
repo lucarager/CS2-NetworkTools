@@ -181,6 +181,8 @@ namespace NetworkTools.L10n {
                 { "NetworkTools.UI.Common.Advanced", "Advanced" },
                 { "NetworkTools.UI.Common.Decrease", "Decrease" },
                 { "NetworkTools.UI.Common.Increase", "Increase" },
+                { "NetworkTools.UI.Common.Tunnel", "Tunnel" },
+                { "NetworkTools.UI.Common.TunnelTooltip", "Builds tunnels where the network runs deep enough under the ground, and open cuts up to their mouths. Does nothing for a network that cannot go underground, such as a bridge or a quay." },
 
                 // ## Prefab Search
                 { "NetworkTools.UI.PrefabSearch.Title", "Select Asset" },

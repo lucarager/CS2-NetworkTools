@@ -15,6 +15,7 @@ namespace NetworkTools.Systems.Tools.Connect {
         public float3 EndDirection;
         public float  EndElevation;
         public float Elevation;
+        public bool  Tunnel;
 
         // Computed at job start
         public Entity NetPrefabEntity;

@@ -5,6 +5,7 @@ namespace NetworkTools.Systems.Tools.Connect {
     using Game.Net;
     using Game.Objects;
     using Game.Prefabs;
+    using Game.Simulation;
     using Game.Tools;
 
     using NetworkTools.Systems.Tools.Utils;
@@ -35,6 +36,8 @@ namespace NetworkTools.Systems.Tools.Connect {
             [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Aggregated>       AggregatedLookup;
             [ReadOnly] public required ComponentLookup<NetGeometryData>  NetGeometryDataLookup;
+            [ReadOnly] public required ComponentLookup<PlaceableNetData> PlaceableNetDataLookup;
+            [ReadOnly] public required TerrainHeightData                 TerrainHeight;
 
             public required EntityCommandBuffer ECB;
 
@@ -53,6 +56,12 @@ namespace NetworkTools.Systems.Tools.Connect {
                     config.ElevationLimit = netGeom.m_ElevationLimit;
                 }
 
+                // A network the game keeps above the ground is laid as it is without Tunnel mode.
+                if (!PlaceableNetDataLookup.TryGetComponent(NetPrefabEntity, out var placeable)
+                    || !TunnelRuns.CanTunnel(placeable)) {
+                    config.Tunnel = false;
+                }
+
                 // 2. Create definitions
                 switch (Mode) {
                     case ConnectMode.SimpleCurve:
@@ -67,7 +76,24 @@ namespace NetworkTools.Systems.Tools.Connect {
                 }
 
                 // 3. Output
-                Output(curves);
+                if (config.Tunnel) {
+                    var split = new NativeList<EdgeConfig>(64, Allocator.Temp);
+
+                    for (var i = 0; i < curves.Length; i++) {
+                        TunnelRuns.SplitAtGrade(
+                            ref TerrainHeight,
+                            curves[i],
+                            config.NetWidth * 0.5f,
+                            config.ElevationLimit,
+                            CoursePosFlags.IsRight,
+                            ref split);
+                    }
+
+                    Output(split);
+                    split.Dispose();
+                } else {
+                    Output(curves);
+                }
 
                 // Cleanup
                 curves.Dispose();
