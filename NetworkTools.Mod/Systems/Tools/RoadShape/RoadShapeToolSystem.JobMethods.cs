@@ -5,12 +5,10 @@
     using Game.Net;
     using Game.Notifications;
     using Game.Prefabs;
-    using Game.Prefabs;
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
 
-    using NetworkTools.Components;
     using NetworkTools.Components;
     using NetworkTools.Settings;
 
@@ -48,6 +46,7 @@
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
                 ConnectedEdgeLookup = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 AggregatedLookup = SystemAPI.GetComponentLookup<Aggregated>(true),
+                ElevationLookup = SystemAPI.GetComponentLookup<Elevation>(true),
                 OutputMode = outputMode,
                 ECB = m_Barrier.CreateCommandBuffer(),
             }.Schedule(inputDeps);

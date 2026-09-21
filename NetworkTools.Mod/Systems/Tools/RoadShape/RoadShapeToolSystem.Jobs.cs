@@ -29,6 +29,7 @@
             [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
             [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Aggregated>       AggregatedLookup;
+            [ReadOnly] public required ComponentLookup<Elevation>        ElevationLookup;
             public required            ToolOutputMode                    OutputMode;
             public required            EntityCommandBuffer               ECB;
 
@@ -330,10 +331,25 @@
                     startNodeFlags |= CoursePosFlags.IsLast | CoursePosFlags.IsGrid;
                 }
 
-                // Initialize elevations from bezier heights
-                var startElevation = new float2(bezier.a.y, bezier.a.y);
-                var endElevation = new float2(bezier.d.y, bezier.d.y);
-                var courseElevation = new float2(bezier.a.y, bezier.d.y);
+                // Initialize elevations from what the edge and its nodes store: Apply keeps those,
+                // so the preview gets the same ground/elevated/tunnel pieces as the result
+                var startElevation = float2.zero;
+                var endElevation = float2.zero;
+                var courseElevation = float2.zero;
+
+                if (EdgeLookup.TryGetComponent(edgeEntity, out var originalEdge)) {
+                    if (ElevationLookup.TryGetComponent(originalEdge.m_Start, out var atStart)) {
+                        startElevation = atStart.m_Elevation;
+                    }
+
+                    if (ElevationLookup.TryGetComponent(originalEdge.m_End, out var atEnd)) {
+                        endElevation = atEnd.m_Elevation;
+                    }
+                }
+
+                if (ElevationLookup.TryGetComponent(edgeEntity, out var atEdge)) {
+                    courseElevation = atEdge.m_Elevation;
+                }
 
                 var netCourse = new NetCourse {
                     m_Curve      = bezier,
