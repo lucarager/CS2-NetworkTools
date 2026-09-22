@@ -8,5 +8,6 @@ namespace NetworkTools.Systems.Tools.Parallel {
         public float             VerticalOffset;
         public ParallelDirection ReverseDirection;
         public ParallelOrigin    Origin;
+        public bool              Tunnel;
     }
 }

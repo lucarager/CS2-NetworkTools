@@ -9,6 +9,10 @@ export const ParallelControls: React.FC = () => {
         <div className={styles.section}>
             <div className={styles.section__content}>
                 <PrefabSelection paramKey={PARAM_KEYS.parallel.netPrefab} />
+                <ParameterField
+                    paramKey="parallel.tunnel"
+                    tooltip="NetworkTools.UI.Common.TunnelTooltip"
+                />
                 <ParameterField paramKey="parallel.reverseDirection" />
                 {/* <ParameterField paramKey="parallel.origin" /> */}
                 <ParameterField paramKey="parallel.horizontalOffset" />

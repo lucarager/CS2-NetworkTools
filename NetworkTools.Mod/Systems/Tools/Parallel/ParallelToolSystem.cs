@@ -33,6 +33,16 @@ namespace NetworkTools.Systems.Tools.Parallel {
         public EnumParameter<ParallelDirection> ReverseDirection = new("parallel.reverseDirection", ParallelDirection.Same, label: "NetworkTools.UI.Parallel.Direction");
         public EnumParameter<ParallelOrigin>   Origin           = new("parallel.origin", ParallelOrigin.Center, label: "NetworkTools.UI.Parallel.Origin");
 
+        /// <summary>
+        ///     Tunnel mode.
+        ///     Off: the copy stays at or above the line between its nodes, or at or below it.
+        ///     The sign of the vertical offset decides which, and the copy follows the ground.
+        ///     On: the copy is held on its curve whatever the ground does (tunnels under hills).
+        ///     Each curve is cut so that a tunnel starts where the whole width is deep enough.
+        ///     See the definitions job.
+        /// </summary>
+        public BoolParameter Tunnel = new("parallel.tunnel", false, label: "NetworkTools.UI.Common.Tunnel");
+
         #region Template Method Implementations
 
         /// <inheritdoc />

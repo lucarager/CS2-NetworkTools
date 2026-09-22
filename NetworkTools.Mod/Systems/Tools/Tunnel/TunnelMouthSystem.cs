@@ -10,6 +10,7 @@ namespace NetworkTools.Systems.Tools {
     using Game.Tools;
 
     using NetworkTools.Systems.Tools.Connect;
+    using NetworkTools.Systems.Tools.Parallel;
     using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Systems.Tools.Utils;
 
@@ -18,7 +19,7 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Mathematics;
 
     /// <summary>
-    ///     Tunnel mode of the Connect and Slope tools.
+    ///     Tunnel mode of the Connect, Slope, and Parallel tools.
     ///     Makes sure a tunnel ends only where the whole width of the network is deep enough.
     ///     The game makes a tunnel of an edge as soon as one of its nodes is deep enough.
     ///     The other node only has to be deep on one side.
@@ -67,6 +68,7 @@ namespace NetworkTools.Systems.Tools {
         private TerrainSystem          m_TerrainSystem;
         private NT_ConnectToolSystem   m_ConnectTool;
         private NT_RoadShapeToolSystem m_SlopeTool;
+        private NT_ParallelToolSystem  m_ParallelTool;
         private EntityQuery            m_TempEdgeQuery;
         private EntityQuery            m_PieceQuery;
         private NativeList<Entity>     m_Rewritten;
@@ -80,6 +82,7 @@ namespace NetworkTools.Systems.Tools {
             m_TerrainSystem = World.GetOrCreateSystemManaged<TerrainSystem>();
             m_ConnectTool   = World.GetOrCreateSystemManaged<NT_ConnectToolSystem>();
             m_SlopeTool     = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
+            m_ParallelTool  = World.GetOrCreateSystemManaged<NT_ParallelToolSystem>();
             m_Rewritten     = new NativeList<Entity>(32, Allocator.Persistent);
             m_TempEdgeQuery = SystemAPI.QueryBuilder()
                                        .WithAll<Temp, Updated, Edge, Curve, Elevation, PrefabRef>()
@@ -113,10 +116,12 @@ namespace NetworkTools.Systems.Tools {
                 m_Rewritten.Clear();
             }
 
-            var connectTunnel = m_ToolSystem.activeTool == m_ConnectTool
-                                && m_ConnectTool.Tunnel.Value;
-            var slopeTunnel   = m_ToolSystem.activeTool == m_SlopeTool
-                                && m_SlopeTool.PreviewsTunnels;
+            var connectTunnel  = m_ToolSystem.activeTool == m_ConnectTool
+                                 && m_ConnectTool.Tunnel.Value;
+            var slopeTunnel    = m_ToolSystem.activeTool == m_SlopeTool
+                                 && m_SlopeTool.PreviewsTunnels;
+            var parallelTunnel = m_ToolSystem.activeTool == m_ParallelTool
+                                 && m_ParallelTool.Tunnel.Value;
 
             // The Slope tool's pieces may have no elevation yet.
             if (slopeTunnel && !m_PieceQuery.IsEmptyIgnoreFilter) {
@@ -126,7 +131,8 @@ namespace NetworkTools.Systems.Tools {
                 pieces.Dispose();
             }
 
-            if ((connectTunnel || slopeTunnel) && !m_TempEdgeQuery.IsEmptyIgnoreFilter) {
+            if ((connectTunnel || slopeTunnel || parallelTunnel)
+                && !m_TempEdgeQuery.IsEmptyIgnoreFilter) {
                 // The Slope tool's preview lies where a road has shaped the ground already.
                 var terrain = slopeTunnel
                     ? m_SlopeTool.MapTerrain()

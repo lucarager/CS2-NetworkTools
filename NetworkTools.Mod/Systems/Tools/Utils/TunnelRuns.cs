@@ -10,7 +10,7 @@ namespace NetworkTools.Systems.Tools.Utils {
     using Unity.Mathematics;
 
     /// <summary>
-    ///     Tunnel mode of the Connect and Slope tools.
+    ///     Tunnel mode of the Connect, Slope, and Parallel tools.
     ///     Finds where to cut a curve so that every tunnel starts and ends at a node deep enough.
     ///     Deep enough means the whole width of the network, not its centre alone.
     /// </summary>

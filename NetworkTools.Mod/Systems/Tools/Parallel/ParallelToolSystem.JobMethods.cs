@@ -31,6 +31,7 @@
                 VerticalOffset   = VerticalOffset.Value,
                 ReverseDirection = ReverseDirection.Value,
                 Origin           = Origin.Value,
+                Tunnel           = Tunnel.Value,
             };
 
             var jobHandle = new CreateDefinitionsJob {
@@ -49,9 +50,12 @@
                 ConnectedEdgeLookup    = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 AggregatedLookup       = SystemAPI.GetComponentLookup<Aggregated>(true),
                 NetGeometryDataLookup  = SystemAPI.GetComponentLookup<NetGeometryData>(true),
+                PlaceableNetDataLookup = SystemAPI.GetComponentLookup<PlaceableNetData>(true),
+                TerrainHeight          = m_TerrainSystem.GetHeightData(false),
                 ECB                    = m_Barrier.CreateCommandBuffer()
             }.Schedule(inputDeps);
             m_Barrier.AddJobHandleForProducer(jobHandle);
+            m_TerrainSystem.AddCPUHeightReader(jobHandle);
 
             return jobHandle;
         }
