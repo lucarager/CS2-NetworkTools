@@ -71,6 +71,11 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             m_EdgeStates = new NativeList<EdgeState>(32, Allocator.Persistent);
             m_NodeStates = new NativeList<NodeState>(33, Allocator.Persistent);
             m_PathDataValid = false;
+
+            m_Branches  = new NativeList<Branch>(8, Allocator.Persistent);
+            m_Previewed = new NativeList<Previewed>(32, Allocator.Persistent);
+            m_InPlace   = new NativeHashSet<Entity>(32, Allocator.Persistent);
+            m_Mouths    = new NativeList<float2>(16, Allocator.Persistent);
         }
 
         protected override void OnDestroy() {
@@ -81,6 +86,24 @@ namespace NetworkTools.Systems.Tools.RoadShape {
 
             if (m_NodeStates.IsCreated) {
                 m_NodeStates.Dispose();
+            }
+
+            ReleaseMapHeights();
+
+            if (m_Branches.IsCreated) {
+                m_Branches.Dispose();
+            }
+
+            if (m_Previewed.IsCreated) {
+                m_Previewed.Dispose();
+            }
+
+            if (m_InPlace.IsCreated) {
+                m_InPlace.Dispose();
+            }
+
+            if (m_Mouths.IsCreated) {
+                m_Mouths.Dispose();
             }
 
             base.OnDestroy();
@@ -99,6 +122,8 @@ namespace NetworkTools.Systems.Tools.RoadShape {
 
             // Invalidate cached path data
             InvalidatePathData();
+            ReleaseMapHeights();
+            DropTunnelApply();
         }
 
         public void MarkDirty() {

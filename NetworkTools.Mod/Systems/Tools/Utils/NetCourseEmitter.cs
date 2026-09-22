@@ -12,7 +12,7 @@ namespace NetworkTools.Systems.Tools.Utils {
     ///     Each tool fully populates an <see cref="EdgeConfig"/> — geometry, node identity,
     ///     rotations, flags, elevations, prefab overrides — and this emitter assembles the temp
     ///     entity. Edit-style tools (RoadShape, SuperNode) that mutate existing curves keep their
-    ///     own output paths.
+    ///     own output paths, but for the Tunnel mode of RoadShape.
     /// </summary>
     internal static class NetCourseEmitter {
         /// <summary>
@@ -58,6 +58,13 @@ namespace NetworkTools.Systems.Tools.Utils {
                     m_SplitPosition = 0,
                 },
             });
+
+            // Without an original, the game takes the edge's upgrades from its definition.
+            if (e.Upgrades != default) {
+                ecb.AddComponent(definitionEntity, new Upgraded {
+                    m_Flags = e.Upgrades,
+                });
+            }
         }
 
         /// <summary>

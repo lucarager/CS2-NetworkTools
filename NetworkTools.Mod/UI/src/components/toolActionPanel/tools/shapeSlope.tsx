@@ -17,6 +17,10 @@ export const ShapeSlopeControls: React.FC = () => {
                 <div className={styles.section__content}>
                     <ParameterField paramKey="roadShape.smoothStart" />
                     <ParameterField paramKey="roadShape.smoothEnd" />
+                    <ParameterField
+                        paramKey="roadShape.tunnel"
+                        tooltip="NetworkTools.UI.Common.TunnelTooltip"
+                    />
                 </div>
             )}
             {template === ShapeTransformTemplate.SlopeEaseInOut && (
@@ -25,6 +29,10 @@ export const ShapeSlopeControls: React.FC = () => {
                     <ParameterField paramKey="roadShape.easeOutLength" />
                     <ParameterField paramKey="roadShape.smoothStart" />
                     <ParameterField paramKey="roadShape.smoothEnd" />
+                    <ParameterField
+                        paramKey="roadShape.tunnel"
+                        tooltip="NetworkTools.UI.Common.TunnelTooltip"
+                    />
                 </div>
             )}
             {template === ShapeTransformTemplate.SlopeArch && (
@@ -33,6 +41,10 @@ export const ShapeSlopeControls: React.FC = () => {
                     <ParameterField paramKey="roadShape.archPosition" />
                     <ParameterField paramKey="roadShape.smoothStart" />
                     <ParameterField paramKey="roadShape.smoothEnd" />
+                    <ParameterField
+                        paramKey="roadShape.tunnel"
+                        tooltip="NetworkTools.UI.Common.TunnelTooltip"
+                    />
                 </div>
             )}
         </div>

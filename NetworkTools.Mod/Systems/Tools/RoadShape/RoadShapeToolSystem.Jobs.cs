@@ -3,8 +3,10 @@
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
+    using Game.Simulation;
     using Game.Tools;
     using NetworkTools.Components;
+    using NetworkTools.Systems.Tools.Utils;
     using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
@@ -30,6 +32,10 @@
             [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Aggregated>       AggregatedLookup;
             [ReadOnly] public required ComponentLookup<Elevation>        ElevationLookup;
+            [ReadOnly] public required ComponentLookup<Owner>            OwnerLookup;
+            [ReadOnly] public required ComponentLookup<NetGeometryData>  NetGeometryDataLookup;
+            [ReadOnly] public required ComponentLookup<PlaceableNetData> PlaceableNetDataLookup;
+            [ReadOnly] public required TerrainHeightData                 TerrainHeight;
             public required            ToolOutputMode                    OutputMode;
             public required            EntityCommandBuffer               ECB;
 
@@ -60,28 +66,7 @@
                 }
 
                 // 2. Execute transformation (context = path geometry, config = user settings)
-                switch (Config.Template) {
-                    case ShapeTransformTemplate.SlopeLinear:
-                        var linearTransform = new SlopeLinearTransform();
-                        TransformPipeline.Execute(ref linearTransform, ref edges, ref nodes, in Context, in Config);
-                        break;
-                    case ShapeTransformTemplate.SlopeEaseInOut:
-                        var easeInOutTransform = new SlopeEaseInOutTransform();
-                        TransformPipeline.Execute(ref easeInOutTransform, ref edges, ref nodes, in Context, in Config);
-                        break;
-                    case ShapeTransformTemplate.SlopeArch:
-                        var archTransform = new SlopeArchTransform();
-                        TransformPipeline.Execute(ref archTransform, ref edges, ref nodes, in Context, in Config);
-                        break;
-                    case ShapeTransformTemplate.CurveStraighten:
-                        var straightenTransform = new CurveStraightenTransform();
-                        TransformPipeline.Execute(ref straightenTransform, ref edges, ref nodes, in Context, in Config);
-                        break;
-                    case ShapeTransformTemplate.CurveSmooth:
-                        var smoothTransform = new CurveSmoothTransform();
-                        TransformPipeline.Execute(ref smoothTransform, ref edges, ref nodes, in Context, in Config);
-                        break;
-                }
+                Transform(ref edges, ref nodes, in Context, in Config);
 
                 // 3. Write slope metadata to edge entities (preview only — Apply resets the tool
                 //    immediately, so ECB additions would outlive the tool session).
@@ -92,7 +77,10 @@
                 // 4. Output
                 if (OutputMode == ToolOutputMode.Preview)
                 {
-                    OutputPreview(edges, nodes);
+                    // Tunnel mode lays a preview of its own, see EmitTunnelPreview
+                    if (!Config.Tunnel) {
+                        OutputPreview(edges, nodes);
+                    }
                 } else
                 {
                     OutputApply(edges, nodes);
@@ -101,6 +89,43 @@
                 // Cleanup
                 edges.Dispose();
                 nodes.Dispose();
+            }
+
+            /// <summary>
+            ///     Applies the configured template to the path.
+            ///     Static so that the tunnel apply can run it on the main thread.
+            /// </summary>
+            /// <param name="edges">Edge states of the path, transformed in place.</param>
+            /// <param name="nodes">Node states of the path, transformed in place.</param>
+            /// <param name="context">Transform context of the path.</param>
+            /// <param name="config">Job configuration: the template and its parameters.</param>
+            public static void Transform(
+                ref NativeArray<EdgeState> edges,
+                ref NativeArray<NodeState> nodes,
+                in ShapeTransformContext   context,
+                in ShapeJobConfig          config) {
+                switch (config.Template) {
+                    case ShapeTransformTemplate.SlopeLinear:
+                        var linearTransform = new SlopeLinearTransform();
+                        TransformPipeline.Execute(ref linearTransform, ref edges, ref nodes, in context, in config);
+                        break;
+                    case ShapeTransformTemplate.SlopeEaseInOut:
+                        var easeInOutTransform = new SlopeEaseInOutTransform();
+                        TransformPipeline.Execute(ref easeInOutTransform, ref edges, ref nodes, in context, in config);
+                        break;
+                    case ShapeTransformTemplate.SlopeArch:
+                        var archTransform = new SlopeArchTransform();
+                        TransformPipeline.Execute(ref archTransform, ref edges, ref nodes, in context, in config);
+                        break;
+                    case ShapeTransformTemplate.CurveStraighten:
+                        var straightenTransform = new CurveStraightenTransform();
+                        TransformPipeline.Execute(ref straightenTransform, ref edges, ref nodes, in context, in config);
+                        break;
+                    case ShapeTransformTemplate.CurveSmooth:
+                        var smoothTransform = new CurveSmoothTransform();
+                        TransformPipeline.Execute(ref smoothTransform, ref edges, ref nodes, in context, in config);
+                        break;
+                }
             }
 
             /// <summary>
@@ -444,6 +469,9 @@
                                          m_Bezier = state.Bezier,
                                          m_Length = MathUtils.Length(state.Bezier)
                                      });
+                    if (Config.Tunnel) {
+                        OutputUnderground(state);
+                    }
                 }
 
                 // Update nodes and connected edges
@@ -457,6 +485,59 @@
                 }
 
                 processedNodes.Dispose();
+            }
+
+            /// <summary>
+            ///     Tunnel mode: stores the elevations of an edge and of its two nodes.
+            ///     A curve written in place otherwise keeps the elevations it had.
+            ///     A ground road then stays one however deep it goes.
+            /// </summary>
+            /// <param name="state">The transformed edge.</param>
+            private void OutputUnderground(EdgeState state) {
+                if (!PrefabRefLookup.TryGetComponent(state.EdgeEntity, out var prefabRef)) {
+                    return;
+                }
+
+                if (!NetGeometryDataLookup.TryGetComponent(prefabRef.m_Prefab, out var geometry)) {
+                    return;
+                }
+
+                if (!PlaceableNetDataLookup.TryGetComponent(prefabRef.m_Prefab, out var placeable)
+                    || !TunnelRuns.CanTunnel(placeable)) {
+                    return;
+                }
+
+                OutputUnderground(state.StartNode, state.Bezier, 0f, geometry);
+                OutputUnderground(state.EdgeEntity, state.Bezier, 0.5f, geometry);
+                OutputUnderground(state.EndNode, state.Bezier, 1f, geometry);
+            }
+
+            /// <summary>
+            ///     Stores on a node or an edge the elevation measured on the curve.
+            ///     See <see cref="TunnelRuns.Stored" />.
+            /// </summary>
+            /// <param name="entity">The node or edge that takes the elevation.</param>
+            /// <param name="bezier">The curve to measure on.</param>
+            /// <param name="t">Curve position to measure at.</param>
+            /// <param name="geometry">The geometry data of the edge's prefab.</param>
+            private void OutputUnderground(
+                Entity          entity,
+                Bezier4x3       bezier,
+                float           t,
+                NetGeometryData geometry) {
+                var terrain   = TerrainHeight;
+                var limit     = geometry.m_ElevationLimit;
+                var half      = geometry.m_DefaultWidth * 0.5f;
+                var measured  = TunnelRuns.Elevation(ref terrain, bezier, t, half);
+                var had       = ElevationLookup.TryGetComponent(entity, out var existing);
+                var elevation = TunnelRuns.Stored(measured, existing.m_Elevation, limit);
+
+                // The game keeps an elevation of zero only on a building's own network.
+                if (math.any(elevation != 0f) || (had && OwnerLookup.HasComponent(entity))) {
+                    ECB.AddComponent(entity, new Elevation(elevation));
+                } else if (had) {
+                    ECB.RemoveComponent<Elevation>(entity);
+                }
             }
 
             /// <summary>

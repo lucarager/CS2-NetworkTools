@@ -43,10 +43,27 @@ namespace NetworkTools.Systems.Tools.Utils {
         public const float MaxDeepCutLength = 32f;
 
         /// <summary>
+        ///     Ground cover, in elevation limits, from which an existing node can be a mouth.
+        ///     A tool that cuts existing edges cannot place a node close to another one.
+        ///     The node there is the mouth when it has nearly the cover of one.
+        /// </summary>
+        public const float NearMouthLimits = 2.5f;
+
+        /// <summary>
         ///     Tolerance on the ground cover of a node that is a mouth.
         ///     A node placed for a mouth has the threshold exactly.
         /// </summary>
         public const float Tolerance = 0.5f;
+
+        /// <summary>
+        ///     Gets the ground cover from which an existing node can be a mouth.
+        ///     The cut of an edge and the mouth system must agree on it.
+        /// </summary>
+        /// <param name="limit">Elevation limit of the network.</param>
+        /// <returns>The cover the node needs on its worst side.</returns>
+        public static float NearMouthDepth(float limit) {
+            return limit * NearMouthLimits - Tolerance;
+        }
 
         /// <summary>
         ///     Gets the number of samples taken along a curve, both ends included.
@@ -225,7 +242,7 @@ namespace NetworkTools.Systems.Tools.Utils {
         /// <param name="limit">Elevation limit of the network prefab.</param>
         /// <param name="cutFlags">Course position flags of the node a cut makes.</param>
         /// <param name="split">Output: the run is added to this list.</param>
-        private static void AddRun(
+        public static void AddRun(
             EdgeConfig                 curve,
             float                      from,
             float                      to,
@@ -448,6 +465,45 @@ namespace NetworkTools.Systems.Tools.Utils {
         }
 
         /// <summary>
+        ///     Finds the first curve position with the cover of a mouth, going from one to another.
+        ///     A node moved along its network to be a mouth goes there.
+        ///     The runs of one edge do not tell where that is.
+        ///     They keep a mouth a portal edge away from the start of the edge.
+        /// </summary>
+        /// <param name="terrain">Terrain heights to measure against.</param>
+        /// <param name="bezier">The curve.</param>
+        /// <param name="length">Length of the curve.</param>
+        /// <param name="halfWidth">Half the width of the network.</param>
+        /// <param name="limit">Elevation limit of the network prefab.</param>
+        /// <param name="from">Curve position to search from.</param>
+        /// <param name="to">Curve position to search up to, on either side of the first.</param>
+        /// <returns>The curve position of the mouth, negative when there is none.</returns>
+        public static float FirstMouth(
+            ref TerrainHeightData terrain,
+            Bezier4x3             bezier,
+            float                 length,
+            float                 halfWidth,
+            float                 limit,
+            float                 from,
+            float                 to) {
+            var deep     = limit * 3f;
+            var steps    = math.max(1, (int)math.ceil(math.abs(to - from) * length));
+            var previous = from;
+
+            for (var i = 0; i <= steps; i++) {
+                var t = math.lerp(from, to, i / (float)steps);
+
+                if (Cover(ref terrain, bezier, t, halfWidth) >= deep) {
+                    return i == 0 ? t : Mouth(ref terrain, bezier, halfWidth, deep, previous, t);
+                }
+
+                previous = t;
+            }
+
+            return -1f;
+        }
+
+        /// <summary>
         ///     Gets the least ground above the network's left edge, centre, and right edge.
         /// </summary>
         /// <param name="terrain">Terrain heights to measure against.</param>
@@ -470,6 +526,28 @@ namespace NetworkTools.Systems.Tools.Utils {
         }
 
         /// <summary>
+        ///     Gets the height over the ground of the network's left and right edges.
+        ///     This is what the game stores as the elevation of a network it lays.
+        /// </summary>
+        /// <param name="terrain">Terrain heights to measure against.</param>
+        /// <param name="bezier">The curve.</param>
+        /// <param name="t">Curve position to measure at.</param>
+        /// <param name="halfWidth">Half the width of the network.</param>
+        /// <returns>The left and right elevations, negative under the ground.</returns>
+        public static float2 Elevation(
+            ref TerrainHeightData terrain,
+            Bezier4x3             bezier,
+            float                 t,
+            float                 halfWidth) {
+            var position = MathUtils.Position(bezier, t);
+            var side     = Side(bezier, t, halfWidth);
+            var left     = TerrainUtils.SampleHeight(ref terrain, position - side);
+            var right    = TerrainUtils.SampleHeight(ref terrain, position + side);
+
+            return position.y - new float2(left, right);
+        }
+
+        /// <summary>
         ///     Checks whether the game lets a network go under the ground, as its net tool does.
         ///     A bridge, a quay, a pier, or a waterway cannot.
         ///     A tool lays such a network as it does without Tunnel mode.
@@ -478,6 +556,22 @@ namespace NetworkTools.Systems.Tools.Utils {
         /// <returns>True if the network can be a tunnel.</returns>
         public static bool CanTunnel(PlaceableNetData placeable) {
             return placeable.m_ElevationRange.min < 0f;
+        }
+
+        /// <summary>
+        ///     Gets the elevation to store on a curve that is written in place.
+        ///     Under the ground it is the measured one, and within the limit there is none.
+        ///     Above the limit the curve keeps what it had:
+        ///     a bridge stays one, and a ground road is not made one.
+        /// </summary>
+        /// <param name="measured">Elevation measured on the terrain.</param>
+        /// <param name="existing">Elevation the entity has now.</param>
+        /// <param name="limit">Elevation limit of the network prefab.</param>
+        /// <returns>The elevation to store.</returns>
+        public static float2 Stored(float2 measured, float2 existing, float limit) {
+            var above = math.select(default, math.max(existing, 0f), measured >= limit);
+
+            return math.select(above, measured, measured <= -limit);
         }
 
         /// <summary>

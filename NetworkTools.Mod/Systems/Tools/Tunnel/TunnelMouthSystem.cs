@@ -1,4 +1,5 @@
 namespace NetworkTools.Systems.Tools {
+    using Colossal.Entities;
     using Colossal.Mathematics;
 
     using Game;
@@ -9,6 +10,7 @@ namespace NetworkTools.Systems.Tools {
     using Game.Tools;
 
     using NetworkTools.Systems.Tools.Connect;
+    using NetworkTools.Systems.Tools.RoadShape;
     using NetworkTools.Systems.Tools.Utils;
 
     using Unity.Collections;
@@ -16,7 +18,7 @@ namespace NetworkTools.Systems.Tools {
     using Unity.Mathematics;
 
     /// <summary>
-    ///     Tunnel mode of the Connect tool.
+    ///     Tunnel mode of the Connect and Slope tools.
     ///     Makes sure a tunnel ends only where the whole width of the network is deep enough.
     ///     The game makes a tunnel of an edge as soon as one of its nodes is deep enough.
     ///     The other node only has to be deep on one side.
@@ -31,12 +33,44 @@ namespace NetworkTools.Systems.Tools {
     ///     Runs on the tool's temporary entities, before the composition selection.
     ///     It runs once for a preview, in the frame the game generates it.
     ///     The preview shows the result, and the built network inherits it.
+    ///     The Slope tool's preview is completed first.
+    ///     See <see cref="NT_RoadShapeToolSystem.CompletePreview" />.
+    ///     Also runs on the edges the Slope tool rewrote in place during the frame.
     /// </summary>
     public partial class NT_TunnelMouthSystem : GameSystemBase {
-        private ToolSystem           m_ToolSystem;
-        private TerrainSystem        m_TerrainSystem;
-        private NT_ConnectToolSystem m_ConnectTool;
-        private EntityQuery          m_TempEdgeQuery;
+        /// <summary>
+        ///     What the Slope tool's preview lays for the built edges and nodes around it.
+        /// </summary>
+        private struct StandIns {
+            /// <summary>
+            ///     True for the Slope tool's preview.
+            /// </summary>
+            public bool Active;
+
+            /// <summary>
+            ///     The copy of each built edge the preview lays again.
+            /// </summary>
+            public NativeHashMap<Entity, Entity> Copies;
+
+            /// <summary>
+            ///     The built edges the preview hides, laying new pieces for them.
+            /// </summary>
+            public NativeHashSet<Entity> Hidden;
+
+            /// <summary>
+            ///     The temporary node the new pieces join, for each built node.
+            /// </summary>
+            public NativeHashMap<Entity, Entity> Nodes;
+        }
+
+        private ToolSystem             m_ToolSystem;
+        private TerrainSystem          m_TerrainSystem;
+        private NT_ConnectToolSystem   m_ConnectTool;
+        private NT_RoadShapeToolSystem m_SlopeTool;
+        private EntityQuery            m_TempEdgeQuery;
+        private EntityQuery            m_PieceQuery;
+        private NativeList<Entity>     m_Rewritten;
+        private TerrainHeightData      m_RewrittenTerrain;
 
         /// <inheritdoc />
         protected override void OnCreate() {
@@ -45,20 +79,61 @@ namespace NetworkTools.Systems.Tools {
             m_ToolSystem    = World.GetOrCreateSystemManaged<ToolSystem>();
             m_TerrainSystem = World.GetOrCreateSystemManaged<TerrainSystem>();
             m_ConnectTool   = World.GetOrCreateSystemManaged<NT_ConnectToolSystem>();
+            m_SlopeTool     = World.GetOrCreateSystemManaged<NT_RoadShapeToolSystem>();
+            m_Rewritten     = new NativeList<Entity>(32, Allocator.Persistent);
             m_TempEdgeQuery = SystemAPI.QueryBuilder()
                                        .WithAll<Temp, Updated, Edge, Curve, Elevation, PrefabRef>()
+                                       .Build();
+            m_PieceQuery    = SystemAPI.QueryBuilder()
+                                       .WithAll<Temp, Updated, Edge, Curve, PrefabRef>()
                                        .Build();
         }
 
         /// <inheritdoc />
+        protected override void OnDestroy() {
+            m_Rewritten.Dispose();
+            base.OnDestroy();
+        }
+
+        /// <summary>
+        ///     Registers edges rewritten in place this frame, elevations included.
+        ///     A command buffer of the tool phase does the writing.
+        /// </summary>
+        /// <param name="edges">The rewritten edges.</param>
+        /// <param name="terrain">The terrain their elevations were measured on.</param>
+        public void Rewritten(NativeArray<Entity> edges, TerrainHeightData terrain) {
+            m_Rewritten.AddRange(edges);
+            m_RewrittenTerrain = terrain;
+        }
+
+        /// <inheritdoc />
         protected override void OnUpdate() {
+            if (m_Rewritten.Length > 0) {
+                Demote(m_Rewritten.AsArray(), m_RewrittenTerrain, false, true);
+                m_Rewritten.Clear();
+            }
+
             var connectTunnel = m_ToolSystem.activeTool == m_ConnectTool
                                 && m_ConnectTool.Tunnel.Value;
+            var slopeTunnel   = m_ToolSystem.activeTool == m_SlopeTool
+                                && m_SlopeTool.PreviewsTunnels;
 
-            if (connectTunnel && !m_TempEdgeQuery.IsEmptyIgnoreFilter) {
+            // The Slope tool's pieces may have no elevation yet.
+            if (slopeTunnel && !m_PieceQuery.IsEmptyIgnoreFilter) {
+                var pieces = m_PieceQuery.ToEntityArray(Allocator.Temp);
+
+                m_SlopeTool.CompletePreview(pieces);
+                pieces.Dispose();
+            }
+
+            if ((connectTunnel || slopeTunnel) && !m_TempEdgeQuery.IsEmptyIgnoreFilter) {
+                // The Slope tool's preview lies where a road has shaped the ground already.
+                var terrain = slopeTunnel
+                    ? m_SlopeTool.MapTerrain()
+                    : m_TerrainSystem.GetHeightData(true);
                 var edges = m_TempEdgeQuery.ToEntityArray(Allocator.Temp);
 
-                Demote(edges, m_TerrainSystem.GetHeightData(true), true);
+                Demote(edges, terrain, true, slopeTunnel);
                 edges.Dispose();
             }
         }
@@ -70,14 +145,42 @@ namespace NetworkTools.Systems.Tools {
         /// <param name="edges">The edges to check.</param>
         /// <param name="terrain">Terrain heights to measure against.</param>
         /// <param name="temp">True when the edges are temporary entities of a preview.</param>
-        private void Demote(NativeArray<Entity> edges, TerrainHeightData terrain, bool temp) {
+        /// <param name="inPlace">True when the tool rewrites its network in place.</param>
+        private void Demote(
+            NativeArray<Entity> edges,
+            TerrainHeightData   terrain,
+            bool                temp,
+            bool                inPlace) {
+            var standIns = new StandIns {
+                Active = temp && inPlace,
+                Copies = new NativeHashMap<Entity, Entity>(16, Allocator.Temp),
+                Hidden = new NativeHashSet<Entity>(16, Allocator.Temp),
+                Nodes  = new NativeHashMap<Entity, Entity>(16, Allocator.Temp)
+            };
+
+            if (standIns.Active) {
+                CollectStandIns(ref standIns);
+            }
+
             for (var pass = 0; pass < edges.Length; pass++) {
                 var changed = false;
 
                 for (var i = 0; i < edges.Length; i++) {
-                    // A preview also holds copies of the networks around it: those stay as built
+                    // The mouths are judged at the nodes of the edge, or of the one it stands for
+                    var judged    = edges[i];
+                    var judgeTemp = temp;
+
+                    // A preview also holds copies of the networks around it: those stay as built.
+                    // A piece of the path laid again in place names no node, so its own nodes
+                    // join nothing: it is judged at the nodes of the edge it stands for.
                     if (temp && IsCopy(edges[i])) {
-                        continue;
+                        judged = EntityManager.GetComponentData<Temp>(edges[i]).m_Original;
+
+                        if (!inPlace || !m_SlopeTool.PreviewsInPlace(judged)) {
+                            continue;
+                        }
+
+                        judgeTemp = false;
                     } else if (temp && !IsLaid(edges[i])) {
                         // A built edge the preview splits at a junction comes back as new pieces.
                         // They have no original, and stay as built too.
@@ -88,7 +191,7 @@ namespace NetworkTools.Systems.Tools {
                         continue;
                     }
 
-                    var edge   = EntityManager.GetComponentData<Edge>(edges[i]);
+                    var edge   = EntityManager.GetComponentData<Edge>(judged);
                     var bezier = EntityManager.GetComponentData<Curve>(edges[i]).m_Bezier;
                     var depth  = geometry.m_ElevationLimit * 3f - TunnelRuns.Tolerance;
                     var half   = geometry.m_DefaultWidth * 0.5f;
@@ -101,10 +204,15 @@ namespace NetworkTools.Systems.Tools {
                         continue;
                     }
 
-                    var startOk = !IsMouth(edge.m_Start, edges[i], temp)
-                                  || TunnelRuns.Cover(ref terrain, bezier, 0f, half) >= depth;
-                    var endOk = !IsMouth(edge.m_End, edges[i], temp)
-                                || TunnelRuns.Cover(ref terrain, bezier, 1f, half) >= depth;
+                    // An edge rewritten in place may end at a node taken as the mouth.
+                    // Such a node has nearly the cover, where a node placed for a mouth has it.
+                    var mouthDepth = inPlace
+                        ? TunnelRuns.NearMouthDepth(geometry.m_ElevationLimit)
+                        : depth;
+                    var startOk = !IsMouth(edge.m_Start, judged, judgeTemp, standIns)
+                                  || TunnelRuns.Cover(ref terrain, bezier, 0f, half) >= mouthDepth;
+                    var endOk = !IsMouth(edge.m_End, judged, judgeTemp, standIns)
+                                || TunnelRuns.Cover(ref terrain, bezier, 1f, half) >= mouthDepth;
 
                     if (startOk && endOk && !HasDip(ref terrain, bezier, geometry)) {
                         continue;
@@ -127,6 +235,46 @@ namespace NetworkTools.Systems.Tools {
                 if (!changed) {
                     break;
                 }
+            }
+
+            standIns.Copies.Dispose();
+            standIns.Hidden.Dispose();
+            standIns.Nodes.Dispose();
+        }
+
+        /// <summary>
+        ///     Finds what the Slope tool's preview lays for the built edges and nodes around it.
+        /// </summary>
+        /// <param name="standIns">The copies, hidden edges, and temporary nodes, filled.</param>
+        private void CollectStandIns(ref StandIns standIns) {
+            var pieces = m_PieceQuery.ToEntityArray(Allocator.Temp);
+
+            for (var i = 0; i < pieces.Length; i++) {
+                var temp = EntityManager.GetComponentData<Temp>(pieces[i]);
+                var edge = EntityManager.GetComponentData<Edge>(pieces[i]);
+
+                if (temp.m_Original != Entity.Null && (temp.m_Flags & TempFlags.Delete) != 0) {
+                    standIns.Hidden.Add(temp.m_Original);
+                } else if (temp.m_Original != Entity.Null) {
+                    standIns.Copies.TryAdd(temp.m_Original, pieces[i]);
+                }
+
+                AddStandIn(ref standIns, edge.m_Start);
+                AddStandIn(ref standIns, edge.m_End);
+            }
+
+            pieces.Dispose();
+        }
+
+        /// <summary>
+        ///     Notes the built node a temporary node stands for, if any.
+        /// </summary>
+        /// <param name="standIns">The stand-ins, updated.</param>
+        /// <param name="node">A node of a temporary edge.</param>
+        private void AddStandIn(ref StandIns standIns, Entity node) {
+            if (EntityManager.TryGetComponent<Temp>(node, out var temp)
+                && temp.m_Original != Entity.Null) {
+                standIns.Nodes.TryAdd(temp.m_Original, node);
             }
         }
 
@@ -186,25 +334,130 @@ namespace NetworkTools.Systems.Tools {
         /// <param name="node">The node to check.</param>
         /// <param name="tunnelEdge">The tunnel edge that reaches the node.</param>
         /// <param name="temp">True when only a temporary node can be a mouth.</param>
+        /// <param name="standIns">What the Slope tool's preview lays for the built network.</param>
         /// <returns>True if the node is a mouth of the tunnel.</returns>
-        private bool IsMouth(Entity node, Entity tunnelEdge, bool temp) {
+        private bool IsMouth(Entity node, Entity tunnelEdge, bool temp, StandIns standIns) {
             if (temp && !EntityManager.HasComponent<Temp>(node)) {
                 return false;
             }
 
+            if (standIns.Active) {
+                return EndsInPreview(node, tunnelEdge, temp, standIns);
+            }
+
             var connected = EntityManager.GetBuffer<ConnectedEdge>(node, true)
                                          .ToNativeArray(Allocator.Temp);
-            var mouth = connected.Length > 1;
+            var others  = 0;
+            var tunnels = 0;
 
             for (var i = 0; i < connected.Length; i++) {
-                if (connected[i].m_Edge != tunnelEdge && IsTunnel(connected[i].m_Edge, out _)) {
-                    mouth = false;
+                var other = connected[i].m_Edge;
+
+                // A preview keeps the edges it replaces, hidden and deleted.
+                if (other == tunnelEdge || IsDeleted(other)) {
+                    continue;
+                }
+
+                others++;
+
+                if (IsTunnel(other, out _)) {
+                    tunnels++;
                 }
             }
 
             connected.Dispose();
 
-            return mouth;
+            return others > 0 && tunnels == 0;
+        }
+
+        /// <summary>
+        ///     Checks whether a tunnel of the Slope tool's preview ends at a node.
+        ///     The preview keeps the built edges it lays again, hidden and deleted.
+        ///     An edge laid again in place names no node, so it joins nodes of its own.
+        ///     So the node is judged by the built one's edges, each as the preview lays it:
+        ///     its copy, or the new pieces laid for it, which join the preview's node.
+        /// </summary>
+        /// <param name="node">The node to check, built or temporary.</param>
+        /// <param name="tunnelEdge">The tunnel edge that reaches the node.</param>
+        /// <param name="temp">True when the node is the preview's own.</param>
+        /// <param name="standIns">What the preview lays for the built network.</param>
+        /// <returns>True if the node is a mouth of the tunnel.</returns>
+        private bool EndsInPreview(Entity node, Entity tunnelEdge, bool temp, StandIns standIns) {
+            var built    = node;
+            var standIn  = Entity.Null;
+            var original = tunnelEdge;
+
+            if (temp) {
+                standIn  = node;
+                built    = EntityManager.GetComponentData<Temp>(node).m_Original;
+                original = EntityManager.GetComponentData<Temp>(tunnelEdge).m_Original;
+            } else {
+                standIns.Nodes.TryGetValue(node, out standIn);
+            }
+
+            var others  = 0;
+            var tunnels = 0;
+
+            if (built != Entity.Null) {
+                var edges = EntityManager.GetBuffer<ConnectedEdge>(built, true)
+                                         .ToNativeArray(Allocator.Temp);
+
+                for (var i = 0; i < edges.Length; i++) {
+                    var other = edges[i].m_Edge;
+
+                    // A hidden edge is counted by the pieces laid for it, below.
+                    if (other == original || standIns.Hidden.Contains(other)) {
+                        continue;
+                    }
+
+                    if (standIns.Copies.TryGetValue(other, out var copy)) {
+                        other = copy;
+                    }
+
+                    others++;
+
+                    if (IsTunnel(other, out _)) {
+                        tunnels++;
+                    }
+                }
+
+                edges.Dispose();
+            }
+
+            if (standIn != Entity.Null) {
+                var pieces = EntityManager.GetBuffer<ConnectedEdge>(standIn, true)
+                                          .ToNativeArray(Allocator.Temp);
+
+                for (var i = 0; i < pieces.Length; i++) {
+                    var piece = pieces[i].m_Edge;
+                    var copy  = built != Entity.Null && IsCopy(piece);
+
+                    if (piece == tunnelEdge || copy || IsDeleted(piece)) {
+                        continue;
+                    }
+
+                    others++;
+
+                    if (IsTunnel(piece, out _)) {
+                        tunnels++;
+                    }
+                }
+
+                pieces.Dispose();
+            }
+
+            return others > 0 && tunnels == 0;
+        }
+
+        /// <summary>
+        ///     Checks whether an edge is a temporary one that its preview deletes.
+        /// </summary>
+        /// <param name="edgeEntity">The edge to check.</param>
+        /// <returns>True if the edge is flagged for deletion.</returns>
+        private bool IsDeleted(Entity edgeEntity) {
+            return EntityManager.HasComponent<Temp>(edgeEntity)
+                   && (EntityManager.GetComponentData<Temp>(edgeEntity).m_Flags
+                       & TempFlags.Delete) != 0;
         }
 
         /// <summary>

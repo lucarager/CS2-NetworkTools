@@ -47,6 +47,16 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         public BoolParameter                         SmoothStart     = new("roadShape.smoothStart", false, modes: (int)ShapeTransformTemplate.SlopeLinear | (int)ShapeTransformTemplate.SlopeEaseInOut | (int)ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Slope.SmoothStart");
         public BoolParameter                         SmoothEnd       = new("roadShape.smoothEnd",   false, modes: (int)ShapeTransformTemplate.SlopeLinear | (int)ShapeTransformTemplate.SlopeEaseInOut | (int)ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Slope.SmoothEnd");
 
+        /// <summary>
+        ///     Tunnel mode of the slope templates.
+        ///     Off: the path keeps the elevations it had.
+        ///     A ground road stays one, and the ground is dug down to it.
+        ///     On: a path the slope takes under the ground becomes what a network laid there is.
+        ///     The path is cut first, so that a tunnel starts where the whole width is deep enough.
+        ///     See <see cref="ApplyTunnel" />.
+        /// </summary>
+        public BoolParameter                         Tunnel          = new("roadShape.tunnel", false, modes: (int)ShapeTransformTemplate.SlopeLinear | (int)ShapeTransformTemplate.SlopeEaseInOut | (int)ShapeTransformTemplate.SlopeArch, label: "NetworkTools.UI.Common.Tunnel");
+
         /// <inheritdoc />
         protected override int GetActiveModeFlag() => (int)Template.Value;
 
@@ -98,6 +108,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 SmoothingFactor = SmoothingFactor.Value,
                 SmoothStart     = SmoothStart.Value,
                 SmoothEnd       = SmoothEnd.Value,
+                Tunnel          = Tunnel.Value && IsSlope,
             };
         }
 
