@@ -103,6 +103,7 @@ export const GAME_BINDINGS = {
     DISTANCE_UNIT: new TwoWayBinding<DistanceUnits>("DISTANCE_UNIT", "Meters"),
     ANARCHY_AVAILABLE: new TwoWayBinding<boolean>("ANARCHY_AVAILABLE", false),
     ANARCHY_ENABLED: new TwoWayBinding<boolean>("ANARCHY_ENABLED", false),
+    TUNNEL_AVAILABLE: new TwoWayBinding<boolean>("TUNNEL_AVAILABLE", true),
     AVAILABLE_SNAPS: new TwoWayBinding<number>("AVAILABLE_SNAPS", SnapOption.None),
     SELECTED_SNAPS: new TwoWayBinding<number>("SELECTED_SNAPS", SnapOption.None),
     AVAILABLE_TARGETS: new TwoWayBinding<number>("AVAILABLE_TARGETS", TargetOption.All),

@@ -4,6 +4,7 @@ import { ConnectMode, PARAM_KEYS, PARAM_BINDINGS } from "generated/parameters.ge
 import { useValue } from "cs2/api";
 import { PrefabSelection } from "../shared/prefabSelection";
 import { ParameterField } from "../shared/parameterField";
+import { TunnelField } from "../shared/tunnelField";
 import { TabBar } from "../shared/tabBar";
 
 const C = PARAM_BINDINGS.connect;
@@ -19,10 +20,7 @@ export const ConnectControls: React.FC = () => {
                 </div>
                 <div className={styles.section__content}>
                     <PrefabSelection paramKey={PARAM_KEYS.connect.netPrefab} />
-                    <ParameterField
-                        paramKey="connect.tunnel"
-                        tooltip="NetworkTools.UI.Common.TunnelTooltip"
-                    />
+                    <TunnelField paramKey="connect.tunnel" />
                     {activeConnectMode === ConnectMode.Loop && (
                         <ParameterField paramKey="connect.loopArcSide" />
                     )}

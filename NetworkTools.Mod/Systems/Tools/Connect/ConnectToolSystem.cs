@@ -1,4 +1,6 @@
 namespace NetworkTools.Systems.Tools.Connect {
+    using Colossal.Entities;
+
     using Game.Prefabs;
 
     using NetworkTools.Components.Handles;
@@ -20,6 +22,27 @@ namespace NetworkTools.Systems.Tools.Connect {
 
         /// <inheritdoc />
         public override bool SupportsAnarchy => true;
+
+        /// <inheritdoc />
+        public override bool TunnelAvailable {
+            get {
+                var prefab = NetPrefab.NetPrefabEntity;
+
+                // Without a network picked, the tool lays the first selected node's own.
+                if (prefab == Entity.Null && NetPrefab.NetLanePrefabEntity == Entity.Null) {
+                    if (m_SelectedNodes.Length == 0
+                        || !EntityManager.TryGetComponent<PrefabRef>(
+                            m_SelectedNodes[0],
+                            out var prefabRef)) {
+                        return true;
+                    }
+
+                    prefab = prefabRef.m_Prefab;
+                }
+
+                return CanTunnel(prefab);
+            }
+        }
 
         // ── Parameters
 

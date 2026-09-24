@@ -4,6 +4,7 @@
 // </copyright>
 
 namespace NetworkTools.Systems.Tools.Parallel {
+    using Game.Net;
     using Game.Prefabs;
 
     using NetworkTools.Systems.Tools;
@@ -26,6 +27,26 @@ namespace NetworkTools.Systems.Tools.Parallel {
 
         /// <inheritdoc />
         public override bool SupportsAnarchy => true;
+
+        /// <inheritdoc />
+        public override bool TunnelAvailable {
+            get {
+                var prefab = NetPrefab.NetPrefabEntity;
+
+                // Without a network picked, the copy takes the network of the path's first node.
+                if (prefab == Entity.Null && NetPrefab.NetLanePrefabEntity == Entity.Null) {
+                    if (m_CurrentPathEdges.Length == 0) {
+                        return true;
+                    }
+
+                    var edge = EntityManager.GetComponentData<Edge>(m_CurrentPathEdges[0]);
+
+                    prefab = EntityManager.GetComponentData<PrefabRef>(edge.m_Start).m_Prefab;
+                }
+
+                return CanTunnel(prefab);
+            }
+        }
 
         public NetPrefabParameter          NetPrefab           = new("parallel.netPrefab");
         public FloatParameter              HorizontalOffset    = new("parallel.horizontalOffset", 20f, -80f, 240f, label: "NetworkTools.UI.Parallel.HorizontalOffset", fractionDigits: 0, numberType: NumberType.Distance);

@@ -12,6 +12,7 @@ namespace NetworkTools.Systems.Tools {
     using NetworkTools.Components;
     using NetworkTools.Components.Handles;
     using NetworkTools.Systems.Tools.Parameters;
+    using NetworkTools.Systems.Tools.Utils;
 
     using LucaModsCommon.Utils;
     using Unity.Collections;
@@ -318,6 +319,13 @@ namespace NetworkTools.Systems.Tools {
         public bool AnarchyEnabled { get; set; }
 
         /// <summary>
+        ///     Whether the network this tool holds can go under the ground.
+        ///     The panel greys the Tunnel toggle out when it cannot.
+        ///     True for a tool without the toggle, and before the tool holds a network.
+        /// </summary>
+        public virtual bool TunnelAvailable => true;
+
+        /// <summary>
         ///     The parameter bound to PageUp/PageDown elevation shortcuts.
         ///     Null (default) means elevation shortcuts are disabled for this tool.
         ///     Set in derived tool's OnStartRunning to opt in.
@@ -585,6 +593,21 @@ namespace NetworkTools.Systems.Tools {
             }
 
             return false;
+        }
+
+        /// <summary>
+        ///     Checks whether Tunnel mode applies to a network prefab.
+        ///     See <see cref="TunnelRuns.CanTunnel" />.
+        /// </summary>
+        /// <param name="prefab">The network prefab.</param>
+        /// <returns>True if the network is cut and given elevations.</returns>
+        protected bool CanTunnel(Entity prefab) {
+            if (!EntityManager.HasComponent<NetGeometryData>(prefab)
+                || !EntityManager.HasComponent<PlaceableNetData>(prefab)) {
+                return false;
+            }
+
+            return TunnelRuns.CanTunnel(EntityManager.GetComponentData<PlaceableNetData>(prefab));
         }
 
         public void RequestEnable() {

@@ -236,13 +236,13 @@ function IntStepper({ meta, value, label, disabled, onChange, translate }: Field
     );
 }
 
-/** Simple on/off toggle for boolean parameters. */
+/** Simple on/off toggle for boolean parameters. A disabled toggle shows off, keeping its value. */
 function BoolToggle({ value, label, tooltip, disabled, onChange }: FieldRenderProps) {
     const row = (
         <div className={styles.controlRow}>
             <div className={styles.vanillaField}>
                 <VC.ToggleField
-                    value={value as boolean}
+                    value={!disabled && (value as boolean)}
                     label={label}
                     disabled={disabled}
                     onChange={(v: boolean) => onChange(v)}

@@ -384,19 +384,23 @@ namespace NetworkTools.Systems.Tools.RoadShape {
             return any;
         }
 
-        /// <summary>
-        ///     Checks whether Tunnel mode applies to an edge of this network prefab.
-        ///     See <see cref="TunnelRuns.CanTunnel" />.
-        /// </summary>
-        /// <param name="prefab">The network prefab of the edge.</param>
-        /// <returns>True if the edge is cut and given elevations.</returns>
-        private bool CanTunnel(Entity prefab) {
-            if (!EntityManager.HasComponent<NetGeometryData>(prefab)
-                || !EntityManager.HasComponent<PlaceableNetData>(prefab)) {
+        /// <inheritdoc />
+        public override bool TunnelAvailable {
+            get {
+                if (m_CurrentPathEdges.Length == 0) {
+                    return true;
+                }
+
+                // Tunnel mode applies edge by edge, so one edge that may go under keeps the toggle.
+                foreach (var edge in m_CurrentPathEdges) {
+                    if (!EntityManager.TryGetComponent<PrefabRef>(edge, out var prefabRef)
+                        || CanTunnel(prefabRef.m_Prefab)) {
+                        return true;
+                    }
+                }
+
                 return false;
             }
-
-            return TunnelRuns.CanTunnel(EntityManager.GetComponentData<PlaceableNetData>(prefab));
         }
 
         /// <summary>
