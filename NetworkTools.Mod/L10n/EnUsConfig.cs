@@ -285,6 +285,7 @@ namespace NetworkTools.L10n {
                 { "NetworkTools.UI.Generate.AltNetPrefabZ", "Asset" },
                 { "NetworkTools.UI.Generate.AltEveryZ", "Alternate every" },
                 { "NetworkTools.UI.PrefabSearch.None", "None" },
+                { "NetworkTools.UI.PrefabSearch.SameAsSelected", "Same as selected" },
 
                 // ## Apply Buttons
                 { "NetworkTools.UI.Apply.ShapeSlope", "Apply Slope" },

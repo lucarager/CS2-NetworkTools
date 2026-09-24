@@ -9,7 +9,11 @@ namespace NetworkTools.Systems.Tools.Parameters {
 
         public bool HasSelection => Prefab != null;
 
-        /// <summary>Whether this prefab selection can be cleared to "None" in the UI.</summary>
+        /// <summary>
+        ///     Whether this prefab selection can be left empty.
+        ///     An empty one takes the network of what the tool has selected.
+        ///     The UI shows it as "Same as selected", and never fills it with a default.
+        /// </summary>
         public bool Nullable { get; }
 
         public NetPrefabParameter(string key, int modes = 0, bool nullable = false, string label = null)

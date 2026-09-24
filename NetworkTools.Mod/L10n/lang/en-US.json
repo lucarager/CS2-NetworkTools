@@ -184,6 +184,7 @@
   "NetworkTools.UI.Generate.AltNetPrefabZ": "Asset",
   "NetworkTools.UI.Generate.AltEveryZ": "Alternate every",
   "NetworkTools.UI.PrefabSearch.None": "None",
+  "NetworkTools.UI.PrefabSearch.SameAsSelected": "Same as selected",
   "NetworkTools.UI.Apply.ShapeSlope": "Apply Slope",
   "NetworkTools.UI.Apply.ShapeCurve": "Apply Transformation",
   "NetworkTools.UI.Apply.Connect": "Create Connection",

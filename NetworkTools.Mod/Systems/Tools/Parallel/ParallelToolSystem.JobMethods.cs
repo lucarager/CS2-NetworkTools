@@ -20,12 +20,6 @@
             var netPrefabEntity = NetPrefab.NetPrefabEntity;
             var netLanePrefabEntity = NetPrefab.NetLanePrefabEntity;
 
-            if (netPrefabEntity == Entity.Null && netLanePrefabEntity == Entity.Null) {
-                var firstEdge = EntityManager.GetComponentData<Edge>(m_CurrentPathEdges[0]);
-                var prefabRef = EntityManager.GetComponentData<PrefabRef>(firstEdge.m_Start);
-                netPrefabEntity = prefabRef.m_Prefab;
-            }
-
             var jobConfig = new ParallelJobConfig {
                 HorizontalOffset = HorizontalOffset.Value,
                 VerticalOffset   = VerticalOffset.Value,

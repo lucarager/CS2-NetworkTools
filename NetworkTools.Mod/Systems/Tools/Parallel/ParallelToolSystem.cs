@@ -4,7 +4,8 @@
 // </copyright>
 
 namespace NetworkTools.Systems.Tools.Parallel {
-    using Game.Net;
+    using Colossal.Entities;
+
     using Game.Prefabs;
 
     using NetworkTools.Systems.Tools;
@@ -33,22 +34,27 @@ namespace NetworkTools.Systems.Tools.Parallel {
             get {
                 var prefab = NetPrefab.NetPrefabEntity;
 
-                // Without a network picked, the copy takes the network of the path's first node.
-                if (prefab == Entity.Null && NetPrefab.NetLanePrefabEntity == Entity.Null) {
-                    if (m_CurrentPathEdges.Length == 0) {
-                        return true;
-                    }
-
-                    var edge = EntityManager.GetComponentData<Edge>(m_CurrentPathEdges[0]);
-
-                    prefab = EntityManager.GetComponentData<PrefabRef>(edge.m_Start).m_Prefab;
+                if (prefab != Entity.Null || NetPrefab.NetLanePrefabEntity != Entity.Null) {
+                    return CanTunnel(prefab);
                 }
 
-                return CanTunnel(prefab);
+                if (m_CurrentPathEdges.Length == 0) {
+                    return true;
+                }
+
+                // Without a network picked, each section is copied with its own network.
+                foreach (var edge in m_CurrentPathEdges) {
+                    if (!EntityManager.TryGetComponent<PrefabRef>(edge, out var prefabRef)
+                        || CanTunnel(prefabRef.m_Prefab)) {
+                        return true;
+                    }
+                }
+
+                return false;
             }
         }
 
-        public NetPrefabParameter          NetPrefab           = new("parallel.netPrefab");
+        public NetPrefabParameter          NetPrefab           = new("parallel.netPrefab", nullable: true);
         public FloatParameter              HorizontalOffset    = new("parallel.horizontalOffset", 20f, -80f, 240f, label: "NetworkTools.UI.Parallel.HorizontalOffset", fractionDigits: 0, numberType: NumberType.Distance);
         public FloatParameter              VerticalOffset      = new("parallel.verticalOffset",   0f,  -80f, 240f, label: "NetworkTools.UI.Parallel.VerticalOffset", fractionDigits: 0, numberType: NumberType.Distance);
         public EnumParameter<ParallelDirection> ReverseDirection = new("parallel.reverseDirection", ParallelDirection.Same, label: "NetworkTools.UI.Parallel.Direction");

@@ -169,6 +169,13 @@
                     var endRotation   = quaternion.LookRotationSafe(endTangent,   math.up());
                     var offsetLength  = MathUtils.Length(offsetBezier);
 
+                    // Without a network picked, each section is copied with its own network.
+                    var prefab = NetPrefabEntity;
+
+                    if (prefab == Entity.Null && NetLanePrefabEntity == Entity.Null) {
+                        prefab = PrefabRefLookup[state.EdgeEntity].m_Prefab;
+                    }
+
                     var elevation = new float2(0f);
 
                     if (Config.VerticalOffset >= 0) {
@@ -185,7 +192,8 @@
                         var reversedStartRotation = quaternion.LookRotationSafe(reversedStartTangent, math.up());
                         var reversedEndRotation   = quaternion.LookRotationSafe(reversedEndTangent,   math.up());
 
-                        OutputPreviewEdge(offsetEndPos,
+                        OutputPreviewEdge(prefab,
+                                          offsetEndPos,
                                           offsetStartPos,
                                           reversedStartRotation,
                                           reversedEndRotation,
@@ -193,7 +201,8 @@
                                           offsetLength,
                                           elevation);
                     } else {
-                        OutputPreviewEdge(offsetStartPos,
+                        OutputPreviewEdge(prefab,
+                                          offsetStartPos,
                                           offsetEndPos,
                                           startRotation,
                                           endRotation,
@@ -264,7 +273,8 @@
                 return perpendicular * signedDistance;
             }
 
-            private void OutputPreviewEdge(float3     startNodePosition, float3     endNodePosition,
+            private void OutputPreviewEdge(Entity     prefab,
+                                           float3     startNodePosition, float3     endNodePosition,
                                            quaternion startNodeRotation, quaternion endNodeRotation,
                                            Bezier4x3  existingBezier,    float      existingLength, float2 elevation
             ) {
@@ -284,13 +294,13 @@
                     CourseElevation     = elevation,
                     StartNodeFlags      = nodeFlags,
                     EndNodeFlags        = nodeFlags,
-                    NetPrefabEntity     = NetPrefabEntity,
+                    NetPrefabEntity     = prefab,
                     NetLanePrefabEntity = NetLanePrefabEntity,
                 };
 
                 if (Config.Tunnel
-                    && NetGeometryDataLookup.TryGetComponent(NetPrefabEntity, out var geometry)
-                    && PlaceableNetDataLookup.TryGetComponent(NetPrefabEntity, out var placeable)
+                    && NetGeometryDataLookup.TryGetComponent(prefab, out var geometry)
+                    && PlaceableNetDataLookup.TryGetComponent(prefab, out var placeable)
                     && TunnelRuns.CanTunnel(placeable)) {
                     OutputRuns(edge, geometry, nodeFlags);
 

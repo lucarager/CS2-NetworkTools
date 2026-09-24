@@ -84,8 +84,8 @@
 
             if (m_ToolSystem.activeTool is NT_BaseToolSystem tool) {
                 foreach (var param in tool.Parameters) {
-                    if (param is NetPrefabParameter np && !np.HasSelection) {
-                        var defaultPrefab = GetDefaultRoadPrefab();
+                    if (param is NetPrefabParameter np && !np.HasSelection && !np.Nullable) {
+                        var defaultPrefab = GetDefaultPrefab();
                         if (defaultPrefab != null) {
                             tool.SetNetPrefab(np.Key, defaultPrefab);
                         }
@@ -95,9 +95,15 @@
         }
 
         /// <summary>
-        ///     Returns the cached default road prefab, querying for it once on first access.
+        ///     Returns the network a tool starts with: the last one picked in the game's menus.
+        ///     Before any, the first road of the picker's list, queried once on first access.
         /// </summary>
-        private PrefabBase GetDefaultRoadPrefab() {
+        private PrefabBase GetDefaultPrefab() {
+            var cache = m_PrefabCacheSystem.LastNetPrefab;
+            if (cache.HasSelection) {
+                return cache.Prefab;
+            }
+
             if (m_DefaultRoadPrefab != null) {
                 return m_DefaultRoadPrefab;
             }
@@ -106,8 +112,8 @@
                                    .WithAll<RoadData>()
                                    .Build()
                                    .ToEntityArray(Allocator.Temp);
-            for (int i = 0; i < entities.Length; i++) {
-                if (m_PrefabSystem.TryGetPrefab<PrefabBase>(entities[i], out var prefab)) {
+            foreach (var entity in entities.OrderBy(GetPriority)) {
+                if (m_PrefabSystem.TryGetPrefab<PrefabBase>(entity, out var prefab)) {
                     m_DefaultRoadPrefab = prefab;
                     break;
                 }

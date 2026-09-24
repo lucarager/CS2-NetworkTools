@@ -46,7 +46,7 @@ namespace NetworkTools.Systems.Tools.Connect {
 
         // ── Parameters
 
-        public NetPrefabParameter         NetPrefab  = new("connect.netPrefab");
+        public NetPrefabParameter         NetPrefab  = new("connect.netPrefab", nullable: true);
         public EnumParameter<ConnectMode> Mode       = new("connect.mode", ConnectMode.SimpleCurve, label: "NetworkTools.UI.Common.Mode");
 
         /// <summary>
