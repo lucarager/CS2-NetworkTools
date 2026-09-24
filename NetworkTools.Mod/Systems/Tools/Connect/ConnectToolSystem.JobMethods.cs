@@ -43,7 +43,7 @@ namespace NetworkTools.Systems.Tools.Connect {
         private JobHandle ScheduleDefinitionsJob(JobHandle inputDeps, ToolOutputMode outputMode) {
             m_Log.Debug($"ScheduleDefinitionsJob: Mode={Mode.Value}");
 
-            if (m_SelectedNodes.Length != 2) {
+            if (m_SelectedNodes.Length != 2 && !m_DebugFree) {
                 return inputDeps;
             }
 
@@ -52,7 +52,9 @@ namespace NetworkTools.Systems.Tools.Connect {
             var netPrefabEntity = NetPrefab.NetPrefabEntity;
             var netLanePrefabEntity = NetPrefab.NetLanePrefabEntity;
 
-            if (netPrefabEntity == Entity.Null && netLanePrefabEntity == Entity.Null) {
+            if (netPrefabEntity == Entity.Null
+                && netLanePrefabEntity == Entity.Null
+                && m_SelectedNodes.Length > 0) {
                 var prefabRef = EntityManager.GetComponentData<PrefabRef>(m_SelectedNodes[0]);
                 netPrefabEntity = prefabRef.m_Prefab;
             }

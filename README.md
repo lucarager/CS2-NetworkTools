@@ -93,6 +93,50 @@ To regenerate the UI parameter bindings without a full build:
 dotnet run --project NetworkTools.Codegen -- "NetworkTools.Mod\Systems" "NetworkTools.Mod\UI\src\generated\parameters.generated.ts" --configuration Release
 ```
 
+### Testing
+
+Tunnel mode has two sets of tests: unit tests that run outside the game in seconds, and a scenario that the game's own test runner plays on a terrain made for it.
+
+#### Outside the game
+
+`NetworkTools.Tests/` is an NUnit project that references the mod. A plain `dotnet test` builds and deploys the whole mod first; after a mod build, skip that:
+
+```sh
+cd NetworkTools.Tests
+dotnet test -c Release -p:BuildProjectReferences=false
+```
+
+The tests of `TunnelRuns.Split` allocate Unity's native collections, which need native calls of the game's that only Mono lets a test process register (`NativeAllocations.cs`). On Windows, `dotnet test` runs `net48` on the .NET Framework, and those tests skip themselves with a reason.
+
+Under Mono, run them once more in the other float mode:
+
+```sh
+MONO_ENV_OPTIONS=-O=-float32 dotnet test -c Release -p:BuildProjectReferences=false
+```
+
+`TunnelRuns` runs in Burst jobs, which compute `float` in single precision, and on the main thread under the game's Mono, which computes it in double precision. A system Mono computes it in single precision by default; `-O=-float32` switches it to double.
+
+#### In the game
+
+`NetworkTools.Mod/Tests/` holds the scenario "NetworkTools: Tunnel mode". It opens the editor on a new map, puts a proving ground under it (a terrain made by formulas, one lane for each family of cases), lays networks along the lanes with the Connect, Slope and Parallel tools, and checks where the mouths are, previewed and built. Leave the game alone for the few minutes it takes. It puts the tools' saved parameters back when it ends.
+
+The mod registers its scenarios with the game's runner in a Debug build only, where its jobs are not Burst-compiled:
+
+```sh
+cd NetworkTools.Mod
+dotnet build -c Debug
+```
+
+Then start it from the main menu, in one of three ways:
+
+- **Automatic start.** Launch the game with `--categoryFilter=QA`. Five seconds after the main menu first shows, the game runs every scenario of that category: this one alone, since none of the game's carries it.
+- **Developer menu.** Launch the game with `-developerMode -qaDeveloperMode`. The developer menu gets a Test Scenarios tab, with a button for each scenario under its category: this one is under QA.
+- **From a debugger.** Evaluate `Colossal.TestFramework.TestScenarioSystem.instance.RunScenario("NetworkTools: Tunnel mode", System.Threading.CancellationToken.None)`.
+
+The results are in `Logs/TestScenarios.log`, in the game's user data folder: a line for each check (`PASSED`, `FAILED`, or `KNOWN` for a fault of the game's, reported without failing the test), the counts of each test, and `FINISH TEST SCENARIO` with the outcome. The runner counts the tests' own errors only: a scenario that fails to load its map runs no test and still ends in a Success, so read the counts.
+
+Build `-c Release` again afterwards to play.
+
 ## Support the project
 If you'd like to support development, you can do so on [Ko-fi](https://ko-fi.com/lucadevdesign). Thank you!
 

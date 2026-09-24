@@ -22,6 +22,8 @@
 
 	<PropertyGroup>
 		<ImplicitUsings>disable</ImplicitUsings>
+		<LangVersion>11.0</LangVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<!-- References needed at test runtime - copied to output -->
