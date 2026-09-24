@@ -348,7 +348,9 @@ namespace NetworkTools.Tests {
 
         /// <summary>
         ///     Starts each test with no check counted, on the proving ground.
+        ///     Keeps the game's terrain cull within its list, which the proving ground overruns.
         ///     Runs before each test: the runner counts no error of the scenario's preparation.
+        ///     Once the game changes, each test fails with <see cref="LaneCullRoom" />'s error.
         /// </summary>
         [TestPrepare]
         private async Task PrepareTest() {
@@ -360,6 +362,7 @@ namespace NetworkTools.Tests {
             m_Overlay.StartTest(m_Test, m_Tests.Length, m_Tests[m_Test - 1]);
 
             // Async, so that the runner awaits the error itself and not a reflection wrapper of it.
+            LaneCullRoom.Arm();
             CheckTerrain();
 
             await Task.CompletedTask;
