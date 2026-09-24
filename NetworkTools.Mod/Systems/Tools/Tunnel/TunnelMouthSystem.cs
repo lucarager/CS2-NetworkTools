@@ -21,20 +21,21 @@ namespace NetworkTools.Systems.Tools {
     /// <summary>
     ///     Tunnel mode of the Connect, Slope, and Parallel tools.
     ///     Makes sure a tunnel ends only where the whole width of the network is deep enough.
-    ///     The game makes a tunnel of an edge as soon as one of its nodes is deep enough.
-    ///     The other node only has to be deep on one side.
+    ///     Its head wall must be level too (<see cref="TunnelRuns.IsMouth" />).
+    ///     The game reads an edge's elevation at its start, its middle, and its end.
+    ///     Three limits across the width at one, and two on one side at all three, make a tunnel.
     ///     On a hillside that puts the mouth where one side is in the open.
     ///     The head wall leaves a gap there.
-    ///     Such an edge is turned into an open cut.
-    ///     Its own elevation is lifted just above the tunnel threshold.
+    ///     The system turns such an edge into an open cut.
+    ///     It lifts the edge's own elevation just above the tunnel threshold.
     ///     The next edge inwards follows, up to the node placed for the mouth.
-    ///     The cut left between two tunnels at a dip of the ground is treated the same way.
+    ///     An edge where the ground dips close to it becomes an open cut too: the roof would show.
     ///     An edge that is deep at its middle stays a tunnel unless it is short.
     ///     All the ground above it would go otherwise.
     ///     Runs on the tool's temporary entities, before the composition selection.
     ///     It runs once for a preview, in the frame the game generates it.
     ///     The preview shows the result, and the built network inherits it.
-    ///     The Slope tool's preview is completed first.
+    ///     It completes the Slope tool's preview first.
     ///     See <see cref="NT_RoadShapeToolSystem.CompletePreview" />.
     ///     Also runs on the edges the Slope tool rewrote in place during the frame.
     /// </summary>
@@ -71,8 +72,17 @@ namespace NetworkTools.Systems.Tools {
         private NT_ParallelToolSystem  m_ParallelTool;
         private EntityQuery            m_TempEdgeQuery;
         private EntityQuery            m_PieceQuery;
-        private NativeList<Entity>     m_Rewritten;
-        private TerrainHeightData      m_RewrittenTerrain;
+
+        /// <summary>
+        ///     Edges the Slope tool rewrote in place, judged at the next update.
+        ///     A command buffer that plays back before then writes their elevations.
+        /// </summary>
+        private NativeList<Entity> m_Rewritten;
+
+        /// <summary>
+        ///     Terrain on which the tool measured the elevations of <see cref="m_Rewritten" />.
+        /// </summary>
+        private TerrainHeightData m_RewrittenTerrain;
 
         /// <inheritdoc />
         protected override void OnCreate() {
@@ -103,7 +113,7 @@ namespace NetworkTools.Systems.Tools {
         ///     A command buffer of the tool phase does the writing.
         /// </summary>
         /// <param name="edges">The rewritten edges.</param>
-        /// <param name="terrain">The terrain their elevations were measured on.</param>
+        /// <param name="terrain">The terrain on which the tool measured their elevations.</param>
         public void Rewritten(NativeArray<Entity> edges, TerrainHeightData terrain) {
             m_Rewritten.AddRange(edges);
             m_RewrittenTerrain = terrain;
@@ -172,13 +182,13 @@ namespace NetworkTools.Systems.Tools {
                 var changed = false;
 
                 for (var i = 0; i < edges.Length; i++) {
-                    // The mouths are judged at the nodes of the edge, or of the one it stands for
                     var judged    = edges[i];
                     var judgeTemp = temp;
 
                     // A preview also holds copies of the networks around it: those stay as built.
-                    // A piece of the path laid again in place names no node, so its own nodes
-                    // join nothing: it is judged at the nodes of the edge it stands for.
+                    // A piece of the path laid again in place names no node.
+                    // Its own nodes join none of the built network.
+                    // It is judged at the nodes of the edge it stands for.
                     if (temp && IsCopy(edges[i])) {
                         judged = EntityManager.GetComponentData<Temp>(edges[i]).m_Original;
 
@@ -199,36 +209,34 @@ namespace NetworkTools.Systems.Tools {
 
                     var edge   = EntityManager.GetComponentData<Edge>(judged);
                     var bezier = EntityManager.GetComponentData<Curve>(edges[i]).m_Bezier;
-                    var depth  = geometry.m_ElevationLimit * 3f - TunnelRuns.Tolerance;
+                    var limit  = geometry.m_ElevationLimit;
+                    var depth  = limit * 3f - TunnelRuns.Tolerance;
                     var half   = geometry.m_DefaultWidth * 0.5f;
 
-                    // An open cut keeps no ground above that depth, so an edge that is deep
-                    // at its middle is never made one, unless it is a short portal edge.
+                    // An open cut keeps no ground above that depth.
+                    // Only a short edge may become one while deep at its middle.
                     var deepMiddle = TunnelRuns.Cover(ref terrain, bezier, 0.5f, half) >= depth;
 
                     if (deepMiddle && MathUtils.Length(bezier) > TunnelRuns.MaxDeepCutLength) {
                         continue;
                     }
 
-                    // An edge rewritten in place may end at a node taken as the mouth.
-                    // Such a node has nearly the cover, where a node placed for a mouth has it.
-                    var mouthDepth = inPlace
-                        ? TunnelRuns.NearMouthDepth(geometry.m_ElevationLimit)
-                        : depth;
-                    var startOk = !IsMouth(edge.m_Start, judged, judgeTemp, standIns)
-                                  || TunnelRuns.Cover(ref terrain, bezier, 0f, half) >= mouthDepth;
-                    var endOk = !IsMouth(edge.m_End, judged, judgeTemp, standIns)
-                                || TunnelRuns.Cover(ref terrain, bezier, 1f, half) >= mouthDepth;
+                    // A node judged, not placed: it is allowed the tolerance a placed one keeps.
+                    var slack   = TunnelRuns.Tolerance;
+                    var startOk = !EndsAt(edge.m_Start, judged, judgeTemp, standIns)
+                        || TunnelRuns.IsMouth(ref terrain, bezier, 0f, half, limit, slack);
+                    var endOk = !EndsAt(edge.m_End, judged, judgeTemp, standIns)
+                        || TunnelRuns.IsMouth(ref terrain, bezier, 1f, half, limit, slack);
 
                     if (startOk && endOk && !HasDip(ref terrain, bezier, geometry)) {
                         continue;
                     }
 
-                    // Just above the threshold from which the game makes a tunnel.
-                    var cutElevation = 0.1f - geometry.m_ElevationLimit * 2f;
+                    // The lift stops just above the threshold from which the game makes a tunnel.
+                    var cutElevation = 0.1f - limit * 2f;
                     var elevation    = EntityManager.GetComponentData<Elevation>(edges[i]);
 
-                    // Nothing to lift: a network whose open cuts are tunnels too stays one
+                    // Nothing to lift: a network whose open cuts are tunnels too stays one.
                     if (math.all(elevation.m_Elevation >= cutElevation)) {
                         continue;
                     }
@@ -342,7 +350,7 @@ namespace NetworkTools.Systems.Tools {
         /// <param name="temp">True when only a temporary node can be a mouth.</param>
         /// <param name="standIns">What the Slope tool's preview lays for the built network.</param>
         /// <returns>True if the node is a mouth of the tunnel.</returns>
-        private bool IsMouth(Entity node, Entity tunnelEdge, bool temp, StandIns standIns) {
+        private bool EndsAt(Entity node, Entity tunnelEdge, bool temp, StandIns standIns) {
             if (temp && !EntityManager.HasComponent<Temp>(node)) {
                 return false;
             }

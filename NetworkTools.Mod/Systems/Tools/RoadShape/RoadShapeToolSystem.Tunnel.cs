@@ -465,6 +465,8 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         /// <summary>
         ///     Finds where an edge is cut, for the curve the apply will give it.
         ///     The preview cuts its pieces at the same places.
+        ///     The game merges two cuts nearer than a cut may be to a joined node.
+        ///     Where an open cut starts gives way to a mouth next to it, as to a node.
         /// </summary>
         /// <param name="terrain">Terrain heights to measure against.</param>
         /// <param name="entity">The edge to cut, of a network that can tunnel.</param>
@@ -493,23 +495,63 @@ namespace NetworkTools.Systems.Tools.RoadShape {
 
             SplitBounds(edge.m_Start, edge.m_End, length, geometry, out var min, out var max);
 
+            // How near a cut may be to a joined node, or to another cut.
+            var apart = NT_EdgeUtils.GetMinimumSplitDistance(
+                            length,
+                            geometry.m_DefaultWidth,
+                            geometry.m_EdgeLengthRange.min)
+                        * NT_EdgeUtils.CONNECTED_END_MULTIPLIER;
+
             var minDistance = TunnelRuns.MinPortalSamples * TunnelRuns.Step;
             var halfWidth   = geometry.m_DefaultWidth * 0.5f;
-            var nearMouth   = TunnelRuns.NearMouthDepth(geometry.m_ElevationLimit);
+            var limit       = geometry.m_ElevationLimit;
+            var slack       = TunnelRuns.Tolerance;
             var previous    = 0f;
+            var lastMouth   = false;
 
             for (var r = 1; r < runs.Length && min < max; r++) {
-                var t = math.clamp(runs[r].min, min, max);
+                var t     = math.clamp(runs[r].min, min, max);
+                var mouth = TunnelRuns.IsMouth(
+                    ref terrain,
+                    sloped,
+                    runs[r].min,
+                    halfWidth,
+                    limit,
+                    slack);
 
-                // A mouth the clamp would move goes to the end node that has nearly the cover.
+                // A mouth the clamp would move goes to the end node, when that can be a mouth.
                 // Clamped, it would leave a slot between that node and the head wall.
+                // Not over a dip: the node would close an open cut between two tunnels.
                 var moved = runs[r].min < min || runs[r].min > max;
                 var node  = runs[r].min < min ? 0f : 1f;
 
                 if (moved
-                    && TunnelRuns.Cover(ref terrain, sloped, runs[r].min, halfWidth) >= nearMouth
-                    && TunnelRuns.Cover(ref terrain, sloped, node, halfWidth) >= nearMouth) {
+                    && mouth
+                    && TunnelRuns.IsMouth(ref terrain, sloped, node, halfWidth, limit, slack)
+                    && KeepsTwoLimits(ref terrain, sloped, node, runs[r].min, halfWidth, limit)) {
                     continue;
+                }
+
+                // Where an open cut starts gives way to a mouth next to it, as to a node.
+                if (!mouth) {
+                    var nextMouth = r + 1 < runs.Length
+                                    && TunnelRuns.IsMouth(
+                                        ref terrain,
+                                        sloped,
+                                        runs[r + 1].min,
+                                        halfWidth,
+                                        limit,
+                                        slack);
+                    var from      = lastMouth ? math.max(min, previous + apart) : min;
+                    var to        = nextMouth
+                        ? math.min(max, math.clamp(runs[r + 1].min, min, max) - apart)
+                        : max;
+
+                    if (from > to) {
+                        continue;
+                    }
+
+                    t = math.clamp(runs[r].min, from, to);
                 }
 
                 if (previous > 0f && (t - previous) * length < minDistance) {
@@ -517,10 +559,45 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 }
 
                 cuts.Add(t);
-                previous = t;
+                previous  = t;
+                lastMouth = mouth;
             }
 
             runs.Dispose();
+        }
+
+        /// <summary>
+        ///     Checks whether the ground keeps two limits over the road between two of its points.
+        ///     That is the least the game tunnels from, less the tolerance a judged mouth has.
+        /// </summary>
+        /// <param name="terrain">Terrain heights to measure against.</param>
+        /// <param name="curve">The curve.</param>
+        /// <param name="from">One curve position.</param>
+        /// <param name="to">The other.</param>
+        /// <param name="halfWidth">Half the width of the network.</param>
+        /// <param name="limit">Elevation limit of the network prefab.</param>
+        /// <returns>True if no point between them, every step, has less.</returns>
+        private static bool KeepsTwoLimits(
+            ref TerrainHeightData terrain,
+            Bezier4x3             curve,
+            float                 from,
+            float                 to,
+            float                 halfWidth,
+            float                 limit) {
+            var range   = new Bounds1(math.min(from, to), math.max(from, to));
+            var stretch = MathUtils.Length(curve, range);
+            var samples = TunnelRuns.SampleCount(stretch);
+            var least   = limit * 2f - TunnelRuns.Tolerance;
+
+            for (var i = 0; i < samples; i++) {
+                var t = math.lerp(from, to, i / (samples - 1f));
+
+                if (TunnelRuns.Cover(ref terrain, curve, t, halfWidth) < least) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>

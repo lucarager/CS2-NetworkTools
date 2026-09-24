@@ -132,8 +132,6 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                 out var min,
                 out var max);
 
-            var nearMouth = TunnelRuns.NearMouthDepth(geometry.m_ElevationLimit);
-
             // An edge too short for any cut has both limits at its middle.
             var room = min < max;
 
@@ -142,7 +140,13 @@ namespace NetworkTools.Systems.Tools.RoadShape {
 
                 // A cut goes there, or the boundary is not a mouth.
                 if ((room && at >= min && at <= max)
-                    || TunnelRuns.Cover(ref terrain, sloped.Bezier, at, half) < nearMouth) {
+                    || !TunnelRuns.IsMouth(
+                        ref terrain,
+                        sloped.Bezier,
+                        at,
+                        half,
+                        geometry.m_ElevationLimit,
+                        TunnelRuns.Tolerance)) {
                     continue;
                 }
 
@@ -154,6 +158,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                     continue;
                 }
 
+                // The mouth moves out from where the whole width has three limits, in the tunnel.
                 // A node with three limits already would be its own mouth.
                 // It goes out to the mouth the split found instead.
                 var end    = atStart ? 0f : 1f;
@@ -167,7 +172,7 @@ namespace NetworkTools.Systems.Tools.RoadShape {
                         half,
                         geometry.m_ElevationLimit,
                         end,
-                        at);
+                        atStart ? runs[r].max : runs[r - 1].min);
 
                 if (target < 0f || math.abs(target - end) * length < MinSlide) {
                     continue;

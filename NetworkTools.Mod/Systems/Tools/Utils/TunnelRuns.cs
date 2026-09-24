@@ -23,13 +23,14 @@ namespace NetworkTools.Systems.Tools.Utils {
         /// <summary>
         ///     Ground above the curve from which a sample counts as under the terrain.
         /// </summary>
-        public const float UnderTerrain = 1f;
+        private const float UnderTerrain = 1f;
 
         /// <summary>
-        ///     A run shorter than this joins the run before it.
-        ///     The first run of a curve joins the run after it.
+        ///     Shortest stretch on or under the ground.
+        ///     A shorter one joins the stretch before it.
+        ///     The first stretch of a curve joins the one after it instead.
         /// </summary>
-        public const float MinRunLength = 16f;
+        private const float MinStretchLength = 16f;
 
         /// <summary>
         ///     Shortest portal edge and shortest tunnel, in samples.
@@ -37,32 +38,28 @@ namespace NetworkTools.Systems.Tools.Utils {
         public const int MinPortalSamples = 2;
 
         /// <summary>
-        ///     Longest portal edge that may be an open cut however deep its far end is.
+        ///     Longest portal edge that may be an open cut however deep its middle is.
         ///     The pit of such a short cut is a slot, not a canyon.
         /// </summary>
         public const float MaxDeepCutLength = 32f;
 
         /// <summary>
-        ///     Ground cover, in elevation limits, from which an existing node can be a mouth.
-        ///     A tool that cuts existing edges cannot place a node close to another one.
-        ///     The node there is the mouth when it has nearly the cover of one.
-        /// </summary>
-        public const float NearMouthLimits = 2.5f;
-
-        /// <summary>
-        ///     Tolerance on the ground cover of a node that is a mouth.
-        ///     A node placed for a mouth has the threshold exactly.
+        ///     Margin on the ground cover of a mouth and on the step of its head wall.
+        ///     A node placed for a mouth keeps it in hand.
+        ///     A node that exists already may take it as slack.
+        ///     Every node a tool placed then passes as a mouth, whatever the float precision.
         /// </summary>
         public const float Tolerance = 0.5f;
 
         /// <summary>
-        ///     Gets the ground cover from which an existing node can be a mouth.
-        ///     The cut of an edge and the mouth system must agree on it.
+        ///     Gets how far out a mouth may go from where the whole width has three limits.
+        ///     The game makes a course of its own of a stretch under three limits the width long.
+        ///     Its node goes on a sample of the game's: one sample short keeps clear of it.
         /// </summary>
-        /// <param name="limit">Elevation limit of the network.</param>
-        /// <returns>The cover the node needs on its worst side.</returns>
-        public static float NearMouthDepth(float limit) {
-            return limit * NearMouthLimits - Tolerance;
+        /// <param name="halfWidth">Half the width of the network.</param>
+        /// <returns>The distance, zero or less when a mouth cannot move.</returns>
+        public static float Reach(float halfWidth) {
+            return halfWidth * 2f - Step;
         }
 
         /// <summary>
@@ -75,13 +72,13 @@ namespace NetworkTools.Systems.Tools.Utils {
         }
 
         /// <summary>
-        ///     Marks the samples that belong to a run under the terrain.
-        ///     Each run is widened by one sample, to start and end on a sample at the surface.
+        ///     Marks the samples that belong to a stretch under the terrain.
+        ///     It widens each stretch by one sample, to start and end on a sample at the surface.
         /// </summary>
         /// <param name="depth">Ground above the curve at each sample.</param>
         /// <param name="length">Length of the curve.</param>
-        /// <param name="under">Output: true for each sample of a run under the terrain.</param>
-        public static void MarkUnder(
+        /// <param name="under">Output: true for each sample of a stretch under the terrain.</param>
+        private static void MarkUnder(
             NativeArray<float> depth,
             float              length,
             NativeArray<bool>  under) {
@@ -92,32 +89,32 @@ namespace NetworkTools.Systems.Tools.Utils {
                 raw[i] = depth[i] > UnderTerrain;
             }
 
-            // A run that is too short takes the state of the run before it.
-            var minRunSamples = (int)math.ceil(MinRunLength / (length / (samples - 1)));
-            var runStart      = 0;
+            // A stretch that is too short takes the state of the one before it.
+            var minStretchSamples = (int)math.ceil(MinStretchLength / (length / (samples - 1)));
+            var stretchStart      = 0;
 
             for (var i = 1; i <= samples; i++) {
-                if (i < samples && raw[i] == raw[runStart]) {
+                if (i < samples && raw[i] == raw[stretchStart]) {
                     continue;
                 }
 
-                if (i - runStart < minRunSamples && runStart > 0) {
-                    for (var j = runStart; j < i; j++) {
-                        raw[j] = raw[runStart - 1];
+                if (i - stretchStart < minStretchSamples && stretchStart > 0) {
+                    for (var j = stretchStart; j < i; j++) {
+                        raw[j] = raw[stretchStart - 1];
                     }
                 }
 
-                runStart = i;
+                stretchStart = i;
             }
 
-            // The first run has none before it: too short, it takes the state of the run after.
+            // The first stretch has none before it: too short, it takes the state of the next.
             var firstEnd = 1;
 
             while (firstEnd < samples && raw[firstEnd] == raw[0]) {
                 firstEnd++;
             }
 
-            if (firstEnd < minRunSamples && firstEnd < samples) {
+            if (firstEnd < minStretchSamples && firstEnd < samples) {
                 for (var j = 0; j < firstEnd; j++) {
                     raw[j] = raw[firstEnd];
                 }
@@ -132,8 +129,8 @@ namespace NetworkTools.Systems.Tools.Utils {
 
         /// <summary>
         ///     Splits a curve into its runs, in order: on the ground, open cut, or tunnel.
-        ///     <see cref="MarkUnder" /> finds the runs under the terrain.
-        ///     Each of those is split again into its tunnels and the open cuts around them.
+        ///     <see cref="MarkUnder" /> finds the stretches under the terrain.
+        ///     <see cref="SplitUnder" /> finds the tunnels in each, and the open cuts around them.
         /// </summary>
         /// <param name="terrain">Terrain heights to measure against.</param>
         /// <param name="bezier">The curve to split.</param>
@@ -161,12 +158,12 @@ namespace NetworkTools.Systems.Tools.Utils {
             MarkUnder(depth, length, under);
 
             // The piece between two samples is under the terrain when both samples are.
-            var step       = 1f / (samples - 1);
-            var dipSamples = (int)math.ceil(halfWidth * 2f / (length * step));
-            var runStart   = 0;
+            var step         = 1f / (samples - 1);
+            var dipSamples   = (int)math.ceil(halfWidth * 2f / (length * step));
+            var stretchStart = 0;
 
             for (var i = 1; i < samples; i++) {
-                var isUnder = under[runStart] && under[runStart + 1];
+                var isUnder = under[stretchStart] && under[stretchStart + 1];
 
                 if (i < samples - 1 && (under[i] && under[i + 1]) == isUnder) {
                     continue;
@@ -178,16 +175,16 @@ namespace NetworkTools.Systems.Tools.Utils {
                         bezier,
                         halfWidth,
                         limit,
-                        runStart,
+                        stretchStart,
                         i,
                         step,
                         dipSamples,
                         ref runs);
                 } else {
-                    runs.Add(new Bounds1(runStart * step, i * step));
+                    runs.Add(new Bounds1(stretchStart * step, i * step));
                 }
 
-                runStart = i;
+                stretchStart = i;
             }
 
             // The last sample sits at position 1, give or take the rounding.
@@ -206,14 +203,14 @@ namespace NetworkTools.Systems.Tools.Utils {
         ///     One of at least the limit keeps the course at or above its straight line.
         ///     One of at most minus the limit keeps it at or below that line.
         ///     A course declaring one of each lies on the line whatever the ground does.
-        ///     The network is built with elevations measured on the ground afterwards.
+        ///     The game builds the network with elevations measured on the ground afterwards.
         /// </summary>
         /// <param name="terrain">Terrain heights to measure against.</param>
         /// <param name="curve">The curve to cut.</param>
         /// <param name="halfWidth">Half the width of the network.</param>
         /// <param name="limit">Elevation limit of the network prefab.</param>
         /// <param name="cutFlags">Course position flags of the node a cut makes.</param>
-        /// <param name="split">Output: the runs are added to this list.</param>
+        /// <param name="split">Output: the list that receives the runs.</param>
         public static void SplitAtGrade(
             ref TerrainHeightData      terrain,
             EdgeConfig                 curve,
@@ -241,7 +238,7 @@ namespace NetworkTools.Systems.Tools.Utils {
         /// <param name="to">Curve position where the run ends.</param>
         /// <param name="limit">Elevation limit of the network prefab.</param>
         /// <param name="cutFlags">Course position flags of the node a cut makes.</param>
-        /// <param name="split">Output: the run is added to this list.</param>
+        /// <param name="split">Output: the list that receives the run.</param>
         public static void AddRun(
             EdgeConfig                 curve,
             float                      from,
@@ -270,30 +267,31 @@ namespace NetworkTools.Systems.Tools.Utils {
         }
 
         /// <summary>
-        ///     Splits a run under the terrain into tunnels and the open cuts around them.
+        ///     Splits a stretch under the terrain into tunnels and the open cuts around them.
         ///     A tunnel starts and ends where the whole width has three limits of ground over it.
         ///     With less on one side, the game leaves a gap beside the head wall.
         ///     With more, the game digs a pit in front of the mouth.
         ///     An open cut keeps no ground above that depth.
         ///     A tunnel stops before a dip that ends it (<see cref="IsDip" />).
         ///     Another tunnel starts after the dip.
-        ///     A mouth keeps <see cref="MinPortalSamples" /> samples from the ends of the run.
+        ///     A mouth keeps <see cref="MinPortalSamples" /> samples from the ends of the stretch.
         ///     It keeps as many from the mouth before.
-        ///     A tunnel runs to an end of the curve that is deep enough.
-        ///     Nearly is enough there, by <see cref="Tolerance" />.
+        ///     A tunnel is as long at least, once its mouths moved out, or it stays an open cut.
+        ///     A tunnel runs to an end of the curve that can be a mouth, by <see cref="IsMouth" />.
         ///     The tunnel goes on in the next curve, or the node there is the mouth.
-        ///     Whatever is left of the run stays an open cut.
+        ///     Whatever is left of the stretch stays an open cut.
         ///     That is all of it when the curve runs along a hillside.
+        ///     The mouths then move out into the open cuts (<see cref="MoveMouthsOut" />).
         /// </summary>
         /// <param name="terrain">Terrain heights to measure against.</param>
-        /// <param name="bezier">The curve the run belongs to.</param>
+        /// <param name="bezier">The curve the stretch belongs to.</param>
         /// <param name="halfWidth">Half the width of the network.</param>
         /// <param name="limit">Elevation limit of the network prefab.</param>
-        /// <param name="first">First sample of the run.</param>
-        /// <param name="last">Last sample of the run.</param>
+        /// <param name="first">First sample of the stretch.</param>
+        /// <param name="last">Last sample of the stretch.</param>
         /// <param name="step">Curve position between two samples.</param>
         /// <param name="dipSamples">Samples across the width, the least a dip needs.</param>
-        /// <param name="runs">Output: the runs found are added to this list.</param>
+        /// <param name="runs">Output: the list that receives the runs found.</param>
         private static void SplitUnder(
             ref TerrainHeightData   terrain,
             Bezier4x3               bezier,
@@ -306,29 +304,33 @@ namespace NetworkTools.Systems.Tools.Utils {
             ref NativeList<Bounds1> runs) {
             var deep = limit * 3f;
 
-            // An end of the curve is a node already, and with nearly the cover it can be a mouth.
-            var deepEnd = deep - Tolerance;
-
             // Outside Burst a product can compare unequal to itself, kept at two precisions.
-            var tiny = step * 0.01f;
-            var from = first * step;
-            var i    = first;
+            var tiny        = step * 0.01f;
+            var from        = first * step;
+            var i           = first;
+            var firstRun    = runs.Length;
+            var tunnelFirst = false;
 
             while (i < last) {
-                // Mouth in: the first point deep enough, a portal edge away from the run before.
+                // The mouth in is the first point deep enough.
+                // It keeps a portal edge's length from the run before.
+                // An end of the curve is a node already: a tunnel runs to one that can be a mouth.
+                // After a dip, the tunnel keeps a portal edge's length from the one before.
                 var a       = i;
                 var mouthIn = i * step;
 
-                if (Cover(ref terrain, bezier, mouthIn, halfWidth) < deepEnd) {
+                if (i > first
+                    || !IsMouth(ref terrain, bezier, mouthIn, halfWidth, limit, Tolerance)) {
                     var nearest = (int)math.ceil(from / step - 0.001f) + MinPortalSamples;
 
                     a = math.max(i, nearest);
 
-                    while (a < last && Cover(ref terrain, bezier, a * step, halfWidth) < deep) {
+                    // The stretch can end deep only where the curve ends, inside a hill.
+                    while (a <= last && Cover(ref terrain, bezier, a * step, halfWidth) < deep) {
                         a++;
                     }
 
-                    if (a >= last) {
+                    if (a > last) {
                         break;
                     }
 
@@ -337,7 +339,7 @@ namespace NetworkTools.Systems.Tools.Utils {
                         : Mouth(ref terrain, bezier, halfWidth, deep, (a - 1) * step, a * step);
                 }
 
-                // The tunnel goes on to the sample before a dip, or to the end of the run.
+                // The tunnel goes on to the sample before a dip, or to the end of the stretch.
                 var b = a;
 
                 while (b < last
@@ -353,25 +355,31 @@ namespace NetworkTools.Systems.Tools.Utils {
                     b++;
                 }
 
-                // Mouth out: the last point deep enough, a portal edge away from the run's end.
+                // The mouth out is the last point deep enough.
+                // It keeps a portal edge's length from the end of the stretch.
                 var mouthOut = last * step;
 
-                if (b < last || Cover(ref terrain, bezier, mouthOut, halfWidth) < deepEnd) {
+                if (b < last
+                    || !IsMouth(ref terrain, bezier, mouthOut, halfWidth, limit, Tolerance)) {
                     var nearest = last - MinPortalSamples;
                     var c       = math.min(b, nearest);
 
-                    while (c > a && Cover(ref terrain, bezier, c * step, halfWidth) < deep) {
+                    // A tunnel from the start of the curve may have three limits there alone.
+                    while (c >= a && Cover(ref terrain, bezier, c * step, halfWidth) < deep) {
                         c--;
                     }
 
-                    mouthOut = c == nearest || c <= a
+                    mouthOut = c == nearest || c < a
                         ? c * step
                         : Mouth(ref terrain, bezier, halfWidth, deep, (c + 1) * step, c * step);
                 }
 
-                if (mouthOut - mouthIn >= MinPortalSamples * step) {
+                if (mouthOut - mouthIn > tiny) {
                     if (mouthIn - from > tiny) {
                         runs.Add(new Bounds1(from, mouthIn));
+                    } else if (runs.Length == firstRun) {
+                        // No cut before the first tunnel: the runs start with it.
+                        tunnelFirst = true;
                     }
 
                     runs.Add(new Bounds1(mouthIn, mouthOut));
@@ -384,6 +392,16 @@ namespace NetworkTools.Systems.Tools.Utils {
             if (last * step - from > tiny) {
                 runs.Add(new Bounds1(from, last * step));
             }
+
+            MoveMouthsOut(
+                ref terrain,
+                bezier,
+                halfWidth,
+                limit,
+                step,
+                firstRun,
+                tunnelFirst,
+                ref runs);
         }
 
         /// <summary>
@@ -395,11 +413,11 @@ namespace NetworkTools.Systems.Tools.Utils {
         ///     A dip that keeps two limits stays a tunnel then.
         /// </summary>
         /// <param name="terrain">Terrain heights to measure against.</param>
-        /// <param name="bezier">The curve the run belongs to.</param>
+        /// <param name="bezier">The curve the stretch belongs to.</param>
         /// <param name="halfWidth">Half the width of the network.</param>
         /// <param name="limit">Elevation limit of the network prefab.</param>
         /// <param name="sample">The sample.</param>
-        /// <param name="last">Last sample of the run.</param>
+        /// <param name="last">Last sample of the stretch.</param>
         /// <param name="step">Curve position between two samples.</param>
         /// <param name="dipSamples">Samples across the width, the least a dip needs.</param>
         /// <returns>True if the sample is under a dip that ends the tunnel.</returns>
@@ -434,27 +452,291 @@ namespace NetworkTools.Systems.Tools.Utils {
         }
 
         /// <summary>
-        ///     Finds the curve position from which the ground cover is enough for a tunnel.
+        ///     Moves each mouth of a stretch under the terrain out into the open cut it faces.
+        ///     <see cref="SplitUnder" /> puts the mouths where the whole width has three limits.
+        ///     The game makes a tunnel of an edge with less at its ends (<see cref="IsTunnel" />).
+        ///     A mouth nearer the surface spares a deep open cut.
+        ///     A cut between two tunnels that the game makes a tunnel too keeps its mouths.
+        ///     The dip under it keeps two limits, and moved, they would open a slot over it.
+        ///     The two mouths of any other cut between two tunnels share it.
+        ///     They keep a portal edge's length between them, as between a mouth and the surface.
+        ///     A tunnel left with three limits nowhere the game reads them gets one mouth back.
+        ///     The one that moved less goes back to its anchor (<see cref="KeepsThreeLimits" />).
+        ///     A tunnel still shorter than a portal edge is none: it joins the cuts around it.
+        /// </summary>
+        /// <param name="terrain">Terrain heights to measure against.</param>
+        /// <param name="bezier">The curve the runs belong to.</param>
+        /// <param name="halfWidth">Half the width of the network.</param>
+        /// <param name="limit">Elevation limit of the network prefab.</param>
+        /// <param name="step">Curve position between two samples.</param>
+        /// <param name="first">Index of the stretch's first run.</param>
+        /// <param name="tunnelFirst">True if that run is a tunnel, not an open cut.</param>
+        /// <param name="runs">The runs of the curve, their ends moved in place.</param>
+        private static void MoveMouthsOut(
+            ref TerrainHeightData   terrain,
+            Bezier4x3               bezier,
+            float                   halfWidth,
+            float                   limit,
+            float                   step,
+            int                     first,
+            bool                    tunnelFirst,
+            ref NativeList<Bounds1> runs) {
+            var portal  = MinPortalSamples * step;
+            var anchors = new NativeArray<Bounds1>(runs.Length - first, Allocator.Temp);
+
+            for (var r = first; r < runs.Length; r++) {
+                anchors[r - first] = runs[r];
+            }
+
+            // An open cut and a tunnel take turns: every other run is a cut.
+            var cutParity = tunnelFirst ? 1 : 0;
+
+            for (var r = first + cutParity; r < runs.Length; r += 2) {
+                var before = r > first;
+                var after  = r + 1 < runs.Length;
+                var cut    = runs[r];
+                var middle = MathUtils.Center(cut);
+
+                if (before && after && IsTunnel(ref terrain, bezier, halfWidth, limit, cut)) {
+                    continue;
+                }
+
+                if (before) {
+                    var bound = after ? middle - portal * 0.5f : cut.max - portal;
+                    var mouth = MoveOut(
+                        ref terrain,
+                        bezier,
+                        halfWidth,
+                        limit,
+                        cut.min,
+                        1f,
+                        bound);
+
+                    runs[r - 1] = new Bounds1(runs[r - 1].min, mouth);
+                    cut.min     = mouth;
+                }
+
+                if (after) {
+                    var bound = before ? middle + portal * 0.5f : cut.min + portal;
+                    var mouth = MoveOut(
+                        ref terrain,
+                        bezier,
+                        halfWidth,
+                        limit,
+                        cut.max,
+                        -1f,
+                        bound);
+
+                    runs[r + 1] = new Bounds1(mouth, runs[r + 1].max);
+                    cut.max     = mouth;
+                }
+
+                runs[r] = cut;
+            }
+
+            // With both mouths out, a tunnel may have three limits nowhere the game reads them.
+            // The mouth that moved less goes back to its anchor: the tunnel has them there.
+            for (var r = first + 1 - cutParity; r < runs.Length; r += 2) {
+                var run         = runs[r];
+                var anchor      = anchors[r - first];
+                var startStayed = run.min >= anchor.min;
+                var endStayed   = run.max <= anchor.max;
+
+                if (KeepsThreeLimits(
+                        ref terrain,
+                        bezier,
+                        halfWidth,
+                        limit,
+                        run,
+                        startStayed,
+                        endStayed)) {
+                    continue;
+                }
+
+                // A move is measured on the ground: the curve may run faster at one mouth.
+                // Moves as long as each other, give or take the rounding, send the start back.
+                var startMoved = MathUtils.Length(bezier.xz, new Bounds1(run.min, anchor.min));
+                var endMoved   = MathUtils.Length(bezier.xz, new Bounds1(anchor.max, run.max));
+                var rounding   = Step * 0.01f;
+
+                if (!startStayed && (endStayed || startMoved <= endMoved + rounding)) {
+                    runs[r - 1] = new Bounds1(runs[r - 1].min, anchor.min);
+                    runs[r]     = new Bounds1(anchor.min, run.max);
+                } else if (!endStayed) {
+                    runs[r + 1] = new Bounds1(anchor.max, runs[r + 1].max);
+                    runs[r]     = new Bounds1(run.min, anchor.max);
+                }
+            }
+
+            anchors.Dispose();
+
+            // Outside Burst a difference can come out just under a portal edge's length.
+            var shortest = portal - step * 0.01f;
+            var kept     = first;
+            var lastCut  = false;
+
+            for (var r = first; r < runs.Length; r++) {
+                var run   = runs[r];
+                var isCut = (r - first) % 2 == cutParity || MathUtils.Size(run) < shortest;
+
+                if (isCut && lastCut) {
+                    runs[kept - 1] = new Bounds1(runs[kept - 1].min, run.max);
+                } else {
+                    runs[kept] = run;
+                    kept++;
+                }
+
+                lastCut = isCut;
+            }
+
+            runs.Length = kept;
+        }
+
+        /// <summary>
+        ///     Moves a mouth out from where the whole width has three limits, by steps.
+        ///     It goes to the outermost point that passes <see cref="IsMouth" />, placed.
+        ///     It skips a point where only the head wall has a step.
+        ///     One with too little cover ends the search: the point where it is enough is the last.
+        ///     It goes no further than <see cref="Reach" />, nor past the bound.
+        ///     A step covers <see cref="Step" /> on the ground at the anchor.
+        /// </summary>
+        /// <param name="terrain">Terrain heights to measure against.</param>
+        /// <param name="bezier">The curve.</param>
+        /// <param name="halfWidth">Half the width of the network.</param>
+        /// <param name="limit">Elevation limit of the network prefab.</param>
+        /// <param name="anchor">Curve position where the whole width has three limits.</param>
+        /// <param name="direction">1 towards the end of the curve, -1 towards its start.</param>
+        /// <param name="bound">Curve position the mouth may reach, itself a candidate.</param>
+        /// <returns>The curve position of the mouth, the anchor when it cannot move.</returns>
+        private static float MoveOut(
+            ref TerrainHeightData terrain,
+            Bezier4x3             bezier,
+            float                 halfWidth,
+            float                 limit,
+            float                 anchor,
+            float                 direction,
+            float                 bound) {
+            if ((bound - anchor) * direction <= 0f) {
+                return anchor;
+            }
+
+            var spacing  = direction * Step / math.length(MathUtils.Tangent(bezier, anchor).xz);
+            var count    = (int)(Reach(halfWidth) / Step);
+            var least    = limit * 2f + Tolerance;
+            var mouth    = anchor;
+            var previous = anchor;
+
+            for (var k = 1; k <= count; k++) {
+                var candidate = anchor + k * spacing;
+                var atBound   = (candidate - bound) * spacing >= 0f;
+
+                if (atBound) {
+                    candidate = bound;
+                }
+
+                if (Cover(ref terrain, bezier, candidate, halfWidth) < least) {
+                    var edge = Mouth(ref terrain, bezier, halfWidth, least, candidate, previous);
+
+                    return IsMouth(ref terrain, bezier, edge, halfWidth, limit, 0f) ? edge : mouth;
+                }
+
+                if (IsMouth(ref terrain, bezier, candidate, halfWidth, limit, 0f)) {
+                    mouth = candidate;
+                }
+
+                if (atBound) {
+                    break;
+                }
+
+                previous = candidate;
+            }
+
+            return mouth;
+        }
+
+        /// <summary>
+        ///     Checks whether the game makes a tunnel of a run, as it does of an edge.
+        ///     The deeper side needs two limits at both ends and at the middle.
+        ///     The shallower side needs three limits at one of them.
+        ///     Nearly is enough, by <see cref="Tolerance" />.
+        ///     A run judged a tunnel keeps its mouths where they are.
+        /// </summary>
+        /// <param name="terrain">Terrain heights to measure against.</param>
+        /// <param name="bezier">The curve the run belongs to.</param>
+        /// <param name="halfWidth">Half the width of the network.</param>
+        /// <param name="limit">Elevation limit of the network prefab.</param>
+        /// <param name="run">Curve positions of the run.</param>
+        /// <returns>True if the run would be a tunnel.</returns>
+        private static bool IsTunnel(
+            ref TerrainHeightData terrain,
+            Bezier4x3             bezier,
+            float                 halfWidth,
+            float                 limit,
+            Bounds1               run) {
+            var start     = Elevation(ref terrain, bezier, run.min, halfWidth);
+            var middle    = Elevation(ref terrain, bezier, MathUtils.Center(run), halfWidth);
+            var end       = Elevation(ref terrain, bezier, run.max, halfWidth);
+            var deeper    = new float3(math.cmin(start), math.cmin(middle), math.cmin(end));
+            var shallower = new float3(math.cmax(start), math.cmax(middle), math.cmax(end));
+
+            return math.cmax(deeper) <= Tolerance - limit * 2f
+                   && math.cmin(shallower) <= Tolerance - limit * 3f;
+        }
+
+        /// <summary>
+        ///     Checks whether the game still finds three limits on a tunnel whose mouths moved out.
+        ///     It reads the shallower side at the start, the middle, and the end of the edge.
+        ///     A moved mouth has less: an end counts when it stayed, an anchor has them exactly.
+        ///     Nearly is enough there, by <see cref="Tolerance" />.
+        ///     The middle keeps it in hand instead, as a mouth placed does.
+        /// </summary>
+        /// <param name="terrain">Terrain heights to measure against.</param>
+        /// <param name="bezier">The curve the run belongs to.</param>
+        /// <param name="halfWidth">Half the width of the network.</param>
+        /// <param name="limit">Elevation limit of the network prefab.</param>
+        /// <param name="run">Curve positions of the tunnel.</param>
+        /// <param name="startStayed">True if the start of the tunnel did not move out.</param>
+        /// <param name="endStayed">True if the end of the tunnel did not move out.</param>
+        /// <returns>True if the game finds three limits on the tunnel.</returns>
+        private static bool KeepsThreeLimits(
+            ref TerrainHeightData terrain,
+            Bezier4x3             bezier,
+            float                 halfWidth,
+            float                 limit,
+            Bounds1               run,
+            bool                  startStayed,
+            bool                  endStayed) {
+            var nearly = limit * 3f - Tolerance;
+            var inHand = limit * 3f + Tolerance;
+            var middle = MathUtils.Center(run);
+
+            return (startStayed && Cover(ref terrain, bezier, run.min, halfWidth) >= nearly)
+                   || (endStayed && Cover(ref terrain, bezier, run.max, halfWidth) >= nearly)
+                   || Cover(ref terrain, bezier, middle, halfWidth) >= inHand;
+        }
+
+        /// <summary>
+        ///     Finds the curve position from which the ground cover reaches a threshold.
         ///     Searches between a shallow point and a deep point.
         /// </summary>
         /// <param name="terrain">Terrain heights to measure against.</param>
         /// <param name="bezier">The curve.</param>
         /// <param name="halfWidth">Half the width of the network.</param>
-        /// <param name="tunnelDepth">Ground cover a tunnel needs.</param>
+        /// <param name="threshold">Ground cover to reach.</param>
         /// <param name="shallow">Curve position with less cover than that.</param>
         /// <param name="deep">Curve position with at least that cover.</param>
-        /// <returns>The curve position of the mouth.</returns>
+        /// <returns>The curve position, on the deep side.</returns>
         private static float Mouth(
             ref TerrainHeightData terrain,
             Bezier4x3             bezier,
             float                 halfWidth,
-            float                 tunnelDepth,
+            float                 threshold,
             float                 shallow,
             float                 deep) {
             for (var i = 0; i < 6; i++) {
                 var middle = (shallow + deep) * 0.5f;
 
-                if (Cover(ref terrain, bezier, middle, halfWidth) < tunnelDepth) {
+                if (Cover(ref terrain, bezier, middle, halfWidth) < threshold) {
                     shallow = middle;
                 } else {
                     deep = middle;
@@ -465,10 +747,12 @@ namespace NetworkTools.Systems.Tools.Utils {
         }
 
         /// <summary>
-        ///     Finds the first curve position with the cover of a mouth, going from one to another.
+        ///     Finds the first curve position that can be a mouth, going from one to another.
         ///     A node moved along its network to be a mouth goes there.
         ///     The runs of one edge do not tell where that is.
         ///     They keep a mouth a portal edge away from the start of the edge.
+        ///     The mouth moves out from where the whole width has three limits, as in a split.
+        ///     It may reach the position searched from, where the node is.
         /// </summary>
         /// <param name="terrain">Terrain heights to measure against.</param>
         /// <param name="bezier">The curve.</param>
@@ -494,13 +778,53 @@ namespace NetworkTools.Systems.Tools.Utils {
                 var t = math.lerp(from, to, i / (float)steps);
 
                 if (Cover(ref terrain, bezier, t, halfWidth) >= deep) {
-                    return i == 0 ? t : Mouth(ref terrain, bezier, halfWidth, deep, previous, t);
+                    var anchor = i == 0
+                        ? t
+                        : Mouth(ref terrain, bezier, halfWidth, deep, previous, t);
+
+                    return MoveOut(
+                        ref terrain,
+                        bezier,
+                        halfWidth,
+                        limit,
+                        anchor,
+                        math.sign(from - to),
+                        from);
                 }
 
                 previous = t;
             }
 
             return -1f;
+        }
+
+        /// <summary>
+        ///     Checks whether a node at a curve position can be a mouth.
+        ///     The whole width needs two limits of ground over it, the least the game tunnels from.
+        ///     The head wall must be level too: its top follows the ground on each side.
+        ///     The game caps the ground at three limits, so a slant above that does not show.
+        ///     A node placed for a mouth keeps <see cref="Tolerance" /> in hand on both.
+        ///     A node that exists already may take it as slack.
+        /// </summary>
+        /// <param name="terrain">Terrain heights to measure against.</param>
+        /// <param name="bezier">The curve.</param>
+        /// <param name="t">Curve position of the node.</param>
+        /// <param name="halfWidth">Half the width of the network.</param>
+        /// <param name="limit">Elevation limit of the network prefab.</param>
+        /// <param name="slack">Zero to place a node, <see cref="Tolerance" /> to judge one.</param>
+        /// <returns>True if a mouth there has the cover and a level head wall.</returns>
+        public static bool IsMouth(
+            ref TerrainHeightData terrain,
+            Bezier4x3             bezier,
+            float                 t,
+            float                 halfWidth,
+            float                 limit,
+            float                 slack) {
+            var sides    = -Elevation(ref terrain, bezier, t, halfWidth);
+            var cover    = Cover(ref terrain, bezier, t, halfWidth);
+            var wallStep = math.min(math.cmax(sides), limit * 3f) - math.cmin(sides);
+
+            return cover >= limit * 2f + Tolerance - slack && wallStep <= Tolerance + slack;
         }
 
         /// <summary>
@@ -559,10 +883,10 @@ namespace NetworkTools.Systems.Tools.Utils {
         }
 
         /// <summary>
-        ///     Gets the elevation to store on a curve that is written in place.
+        ///     Gets the elevation to store on a curve that a tool writes in place.
         ///     Under the ground it is the measured one, and within the limit there is none.
-        ///     Above the limit the curve keeps what it had:
-        ///     a bridge stays one, and a ground road is not made one.
+        ///     Above the limit the curve keeps what it had.
+        ///     A bridge stays one, and a ground road does not become one.
         /// </summary>
         /// <param name="measured">Elevation measured on the terrain.</param>
         /// <param name="existing">Elevation the entity has now.</param>
