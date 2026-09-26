@@ -495,7 +495,6 @@ namespace NetworkTools.Tests.Tunnel {
                 var road  = Road(101.5f, 701.5f);
                 var start = new Entity { Index = 1, Version = 1 };
                 var end   = new Entity { Index = 2, Version = 1 };
-                var split = new NativeList<EdgeConfig>(8, Allocator.Temp);
 
                 var curve = new EdgeConfig {
                     Bezier          = road,
@@ -504,13 +503,7 @@ namespace NetworkTools.Tests.Tunnel {
                     EndNodeEntity   = end,
                 };
 
-                TunnelRuns.SplitAtGrade(
-                    ref terrain.Data,
-                    curve,
-                    HalfWidth,
-                    Limit,
-                    CoursePosFlags.FreeHeight,
-                    ref split);
+                var split = SplitAtGrade(terrain, curve);
 
                 Assert.AreEqual(5, split.Length);
                 Assert.AreEqual(start, split[0].StartNodeEntity);
@@ -533,7 +526,6 @@ namespace NetworkTools.Tests.Tunnel {
                 }
 
                 Assert.AreEqual(curve.Length, length, 0.01f);
-                split.Dispose();
             }
         }
 
@@ -852,6 +844,34 @@ namespace NetworkTools.Tests.Tunnel {
             }
 
             runs.Dispose();
+
+            return result;
+        }
+
+        /// <summary>
+        ///     Splits a small road at grade and copies the courses out of their native list.
+        /// </summary>
+        /// <param name="terrain">The ground.</param>
+        /// <param name="curve">The course to split.</param>
+        /// <returns>The courses, in order.</returns>
+        private static EdgeConfig[] SplitAtGrade(TestTerrain terrain, EdgeConfig curve) {
+            var split = new NativeList<EdgeConfig>(8, Allocator.Temp);
+
+            TunnelRuns.SplitAtGrade(
+                ref terrain.Data,
+                curve,
+                HalfWidth,
+                Limit,
+                CoursePosFlags.FreeHeight,
+                ref split);
+
+            var result = new EdgeConfig[split.Length];
+
+            for (var i = 0; i < result.Length; i++) {
+                result[i] = split[i];
+            }
+
+            split.Dispose();
 
             return result;
         }

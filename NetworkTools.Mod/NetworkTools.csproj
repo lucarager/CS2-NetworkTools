@@ -71,7 +71,7 @@
 	<!--Generate TypeScript parameter definitions from C# source (NT-specific; runs before the shared BuildUI)-->
 	<Target Name="GenerateParametersTS" BeforeTargets="BuildUI">
 		<Message Text="[GenerateParametersTS]" Importance="high" />
-		<Exec Command="dotnet run --project &quot;$(SolutionDir)NetworkTools.Codegen&quot; -- &quot;$(ProjectDir)Systems&quot; &quot;$(ProjectDir)UI/src/generated/parameters.generated.ts&quot; --configuration $(Configuration)" />
+		<Exec Command="dotnet run --project &quot;$(ProjectDir)../NetworkTools.Codegen&quot; -- &quot;$(ProjectDir)Systems&quot; &quot;$(ProjectDir)UI/src/generated/parameters.generated.ts&quot; --configuration $(Configuration)" />
 	</Target>
 
 </Project>

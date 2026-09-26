@@ -102,7 +102,26 @@ namespace NetworkTools.Tests.Tunnel {
                 heights.Length,
                 Allocator.None);
 
-            m_Data = new TerrainHeightData(native, default, resolution, scale, offset, false);
+            // The terrain's constructor reads a constant of the terrain system, and loading that
+            // system fails under the .NET Framework: set the heights through their setters.
+            object data = default(TerrainHeightData);
+
+            Set(data, nameof(TerrainHeightData.heights), native);
+            Set(data, nameof(TerrainHeightData.resolution), resolution);
+            Set(data, nameof(TerrainHeightData.scale), scale);
+            Set(data, nameof(TerrainHeightData.offset), offset);
+
+            m_Data = (TerrainHeightData)data;
+        }
+
+        /// <summary>
+        ///     Sets one property of a boxed terrain through its private setter.
+        /// </summary>
+        /// <param name="data">The boxed terrain.</param>
+        /// <param name="property">Name of the property.</param>
+        /// <param name="value">Its value.</param>
+        private static void Set(object data, string property, object value) {
+            typeof(TerrainHeightData).GetProperty(property).SetValue(data, value);
         }
 
         /// <summary>

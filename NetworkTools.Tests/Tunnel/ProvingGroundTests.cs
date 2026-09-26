@@ -243,25 +243,14 @@ namespace NetworkTools.Tests.Tunnel {
                 centre + new float3(0f, 0f, -100f),
                 centre + new float3(100f, 0f, 0f),
                 centre + new float3(400f, 0f, 0f));
-            var runs   = new NativeList<Bounds1>(8, Allocator.Temp);
             var mouths = new List<float>();
 
-            TunnelRuns.Split(
-                ref m_Terrain.Data,
-                bend,
-                MathUtils.Length(bend),
-                HalfWidth,
-                Limit,
-                ref runs);
-
-            for (var i = 0; i < runs.Length; i++) {
-                if (IsTunnel(bend, runs[i])) {
-                    mouths.Add(runs[i].min);
-                    mouths.Add(runs[i].max);
+            foreach (var run in Split(bend)) {
+                if (IsTunnel(bend, run)) {
+                    mouths.Add(run.min);
+                    mouths.Add(run.max);
                 }
             }
-
-            runs.Dispose();
 
             // One tunnel, in on one leg and out on the other, at the cover the formulas give.
             // The legs cross the flank 7 degrees from square.
@@ -382,16 +371,8 @@ namespace NetworkTools.Tests.Tunnel {
         /// <param name="origin">The x the distances start from.</param>
         /// <returns>The tunnels, in order.</returns>
         private List<Bounds1> Tunnels(Bezier4x3 road, float origin) {
-            var runs    = new NativeList<Bounds1>(8, Allocator.Temp);
+            var runs    = Split(road);
             var tunnels = new List<Bounds1>();
-
-            TunnelRuns.Split(
-                ref m_Terrain.Data,
-                road,
-                MathUtils.Length(road),
-                HalfWidth,
-                Limit,
-                ref runs);
 
             for (var i = 0; i < runs.Length; i++) {
                 if (!IsTunnel(road, runs[i])) {
@@ -410,9 +391,34 @@ namespace NetworkTools.Tests.Tunnel {
                 tunnels.Add(tunnel);
             }
 
+            return tunnels;
+        }
+
+        /// <summary>
+        ///     Splits a road and copies the runs out of their native list.
+        /// </summary>
+        /// <param name="road">The curve to split.</param>
+        /// <returns>The runs, in order.</returns>
+        private Bounds1[] Split(Bezier4x3 road) {
+            var runs = new NativeList<Bounds1>(8, Allocator.Temp);
+
+            TunnelRuns.Split(
+                ref m_Terrain.Data,
+                road,
+                MathUtils.Length(road),
+                HalfWidth,
+                Limit,
+                ref runs);
+
+            var result = new Bounds1[runs.Length];
+
+            for (var i = 0; i < result.Length; i++) {
+                result[i] = runs[i];
+            }
+
             runs.Dispose();
 
-            return tunnels;
+            return result;
         }
     }
 }

@@ -59,8 +59,17 @@ Translations are managed on [Crowdin](https://crowdin.com/project/networktools-c
 
 ### Requirements
 - Cities: Skylines II with the official modding toolchain installed (it sets the `CSII_TOOLPATH` environment variable)
-- .NET SDK and .NET Framework 4.8 targeting pack
-- Node.js 18 or later, for the UI
+- .NET SDK and .NET Framework 4.8 targeting pack (see below on Windows)
+- Node.js 18 or later, for the UI: run `npm install` once in `NetworkTools.Mod/UI`
+- Mono, optional on Windows, to run every test outside the game (`winget install Mono.Mono`, see Testing)
+
+Without the targeting pack the mod does not compile: `CS0518`, the SDK falling back to a reference `mscorlib` without `ReadOnlySpan`. With Visual Studio 2022 Community, from an administrator PowerShell:
+
+```powershell
+& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\setup.exe" modify --installPath "C:\Program Files\Microsoft Visual Studio\2022\Community" --add Microsoft.Net.Component.4.8.TargetingPack --passive
+```
+
+Without Visual Studio, install the [.NET Framework 4.8 Developer Pack](https://dotnet.microsoft.com/download/dotnet-framework/net48).
 
 ### Getting started
 Clone the repository with its submodules:
@@ -69,7 +78,7 @@ Clone the repository with its submodules:
 git clone --recurse-submodules https://github.com/lucarager/CS2-NetworkTools.git
 ```
 
-Build through the solution, not the project file, so that `$(SolutionDir)` resolves for the codegen step:
+Build the solution, or run `dotnet build` in `NetworkTools.Mod/`:
 
 ```bash
 dotnet build CS2-NetworkTools.sln
@@ -99,22 +108,26 @@ Tunnel mode has two sets of tests: unit tests that run outside the game in secon
 
 #### Outside the game
 
-`NetworkTools.Tests/` is an NUnit project that references the mod. A plain `dotnet test` builds and deploys the whole mod first; after a mod build, skip that:
+`NetworkTools.Tests/` is an NUnit project that references the mod. Run it after a mod build (`dotnet build -c Release` in `NetworkTools.Mod/`).
+
+**Linux**, from `NetworkTools.Tests/`:
 
 ```sh
-cd NetworkTools.Tests
 dotnet test -c Release -p:BuildProjectReferences=false
-```
-
-The tests of `TunnelRuns.Split` allocate Unity's native collections, which need native calls of the game's that only Mono lets a test process register (`NativeAllocations.cs`). On Windows, `dotnet test` runs `net48` on the .NET Framework, and those tests skip themselves with a reason.
-
-Under Mono, run them once more in the other float mode:
-
-```sh
 MONO_ENV_OPTIONS=-O=-float32 dotnet test -c Release -p:BuildProjectReferences=false
 ```
 
-`TunnelRuns` runs in Burst jobs, which compute `float` in single precision, and on the main thread under the game's Mono, which computes it in double precision. A system Mono computes it in single precision by default; `-O=-float32` switches it to double.
+**Windows**, from the repository root:
+
+```bat
+.\NetworkTools.Tests\test.cmd
+```
+
+`test.cmd` runs both passes under Mono, with NUnit's console runner. Without Mono it falls back to `dotnet test`. Set `MONO` to the path of `mono.exe` when Mono is not in `C:\Program Files\Mono`.
+
+- **`-p:BuildProjectReferences=false`** skips building and deploying the whole mod, which a plain `dotnet test` does first.
+- **Why Mono.** `dotnet test` runs `net48` on Mono on Linux, and on the .NET Framework on Windows. Most tests allocate Unity's native collections, whose memory functions the game implements in native code. Mono lets the test process supply them (`NativeAllocations.cs`); the .NET Framework cannot even load Unity's collections, so there those tests skip themselves with a reason.
+- **Why two passes.** `TunnelRuns` runs in Burst jobs, which compute `float` in single precision, and on the main thread under the game's Mono, which computes it in double precision. A system Mono computes it in single precision by default; `-O=-float32` switches it to double.
 
 #### In the game
 
