@@ -29,8 +29,8 @@ namespace NetworkTools.Systems.Tools.Connect {
             var endNodeEntity       = m_SelectedNodes[1];
             var startNode           = EntityManager.GetComponentData<Node>(startNodeEntity);
             var endNode             = EntityManager.GetComponentData<Node>(endNodeEntity);
-            var startConnectedEdges = EntityManager.GetBuffer<ConnectedEdge>(startNodeEntity);
-            var endConnectedEdges   = EntityManager.GetBuffer<ConnectedEdge>(endNodeEntity);
+            var startConnectedEdges = EntityManager.GetBuffer<ConnectedEdge>(startNodeEntity, true);
+            var endConnectedEdges   = EntityManager.GetBuffer<ConnectedEdge>(endNodeEntity, true);
             var startPosition       = startNode.m_Position;
             var endPosition         = endNode.m_Position;
 
@@ -184,6 +184,10 @@ namespace NetworkTools.Systems.Tools.Connect {
 
             // Clear selection state
             ClearSelectionState();
+
+            // Back to Idle, as OnStartRunning does: reopening the tool from the panel notifies the
+            // parameters before it runs, and a Ready phase would initialize them from no selection.
+            Phase = OperationPhase.Idle;
         }
     }
 }
