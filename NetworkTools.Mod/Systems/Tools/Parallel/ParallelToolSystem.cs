@@ -4,6 +4,8 @@
 // </copyright>
 
 namespace NetworkTools.Systems.Tools.Parallel {
+    using Colossal.Entities;
+
     using Game.Prefabs;
 
     using NetworkTools.Systems.Tools;
@@ -27,11 +29,46 @@ namespace NetworkTools.Systems.Tools.Parallel {
         /// <inheritdoc />
         public override bool SupportsAnarchy => true;
 
-        public NetPrefabParameter          NetPrefab           = new("parallel.netPrefab");
+        /// <inheritdoc />
+        public override bool TunnelAvailable {
+            get {
+                var prefab = NetPrefab.NetPrefabEntity;
+
+                if (prefab != Entity.Null || NetPrefab.NetLanePrefabEntity != Entity.Null) {
+                    return CanTunnel(prefab);
+                }
+
+                if (m_CurrentPathEdges.Length == 0) {
+                    return true;
+                }
+
+                // Without a network picked, each section is copied with its own network.
+                foreach (var edge in m_CurrentPathEdges) {
+                    if (!EntityManager.TryGetComponent<PrefabRef>(edge, out var prefabRef)
+                        || CanTunnel(prefabRef.m_Prefab)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        public NetPrefabParameter          NetPrefab           = new("parallel.netPrefab", nullable: true);
         public FloatParameter              HorizontalOffset    = new("parallel.horizontalOffset", 20f, -80f, 240f, label: "NetworkTools.UI.Parallel.HorizontalOffset", fractionDigits: 0, numberType: NumberType.Distance);
         public FloatParameter              VerticalOffset      = new("parallel.verticalOffset",   0f,  -80f, 240f, label: "NetworkTools.UI.Parallel.VerticalOffset", fractionDigits: 0, numberType: NumberType.Distance);
         public EnumParameter<ParallelDirection> ReverseDirection = new("parallel.reverseDirection", ParallelDirection.Same, label: "NetworkTools.UI.Parallel.Direction");
         public EnumParameter<ParallelOrigin>   Origin           = new("parallel.origin", ParallelOrigin.Center, label: "NetworkTools.UI.Parallel.Origin");
+
+        /// <summary>
+        ///     Tunnel mode.
+        ///     Off: the copy stays at or above the line between its nodes, or at or below it.
+        ///     The sign of the vertical offset decides which, and the copy follows the ground.
+        ///     On: the copy is held on its curve whatever the ground does (tunnels under hills).
+        ///     Each curve is cut so that a tunnel starts where the whole width is deep enough.
+        ///     See the definitions job.
+        /// </summary>
+        public BoolParameter Tunnel = new("parallel.tunnel", false, label: "NetworkTools.UI.Common.Tunnel");
 
         #region Template Method Implementations
 

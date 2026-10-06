@@ -22,5 +22,11 @@ namespace NetworkTools.Systems.Tools.RoadShape {
         ///     single non-selected edge connected to the end node, avoiding a slope chip.
         /// </summary>
         public bool SmoothEnd;
+
+        /// <summary>
+        ///     Tunnel mode.
+        ///     When true, the parts of the path under the ground become tunnels and open cuts.
+        /// </summary>
+        public bool Tunnel;
     }
 }

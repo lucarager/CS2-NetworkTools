@@ -3,6 +3,7 @@
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
+    using Game.Simulation;
     using Game.Tools;
     using NetworkTools.Systems.Tools.Utils;
     using Unity.Burst;
@@ -29,6 +30,8 @@
             [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Aggregated>       AggregatedLookup;
             [ReadOnly] public required ComponentLookup<NetGeometryData> NetGeometryDataLookup;
+            [ReadOnly] public required ComponentLookup<PlaceableNetData> PlaceableNetDataLookup;
+            [ReadOnly] public required TerrainHeightData                 TerrainHeight;
             [ReadOnly] public required Entity                            NetPrefabEntity;
             [ReadOnly] public required Entity                            NetLanePrefabEntity;
 
@@ -166,6 +169,13 @@
                     var endRotation   = quaternion.LookRotationSafe(endTangent,   math.up());
                     var offsetLength  = MathUtils.Length(offsetBezier);
 
+                    // Without a network picked, each section is copied with its own network.
+                    var prefab = NetPrefabEntity;
+
+                    if (prefab == Entity.Null && NetLanePrefabEntity == Entity.Null) {
+                        prefab = PrefabRefLookup[state.EdgeEntity].m_Prefab;
+                    }
+
                     var elevation = new float2(0f);
 
                     if (Config.VerticalOffset >= 0) {
@@ -182,7 +192,8 @@
                         var reversedStartRotation = quaternion.LookRotationSafe(reversedStartTangent, math.up());
                         var reversedEndRotation   = quaternion.LookRotationSafe(reversedEndTangent,   math.up());
 
-                        OutputPreviewEdge(offsetEndPos,
+                        OutputPreviewEdge(prefab,
+                                          offsetEndPos,
                                           offsetStartPos,
                                           reversedStartRotation,
                                           reversedEndRotation,
@@ -190,7 +201,8 @@
                                           offsetLength,
                                           elevation);
                     } else {
-                        OutputPreviewEdge(offsetStartPos,
+                        OutputPreviewEdge(prefab,
+                                          offsetStartPos,
                                           offsetEndPos,
                                           startRotation,
                                           endRotation,
@@ -261,7 +273,8 @@
                 return perpendicular * signedDistance;
             }
 
-            private void OutputPreviewEdge(float3     startNodePosition, float3     endNodePosition,
+            private void OutputPreviewEdge(Entity     prefab,
+                                           float3     startNodePosition, float3     endNodePosition,
                                            quaternion startNodeRotation, quaternion endNodeRotation,
                                            Bezier4x3  existingBezier,    float      existingLength, float2 elevation
             ) {
@@ -281,11 +294,56 @@
                     CourseElevation     = elevation,
                     StartNodeFlags      = nodeFlags,
                     EndNodeFlags        = nodeFlags,
-                    NetPrefabEntity     = NetPrefabEntity,
+                    NetPrefabEntity     = prefab,
                     NetLanePrefabEntity = NetLanePrefabEntity,
                 };
 
+                if (Config.Tunnel
+                    && NetGeometryDataLookup.TryGetComponent(prefab, out var geometry)
+                    && PlaceableNetDataLookup.TryGetComponent(prefab, out var placeable)
+                    && TunnelRuns.CanTunnel(placeable)) {
+                    OutputRuns(edge, geometry, nodeFlags);
+
+                    return;
+                }
+
                 NetCourseEmitter.EmitPreview(ref ECB, in edge, CreationFlags.SubElevation);
+            }
+
+            /// <summary>
+            ///     Emits a curve of the copy as the runs of <see cref="TunnelRuns.Split" />.
+            ///     The copy keeps the heights of its curve, and its own ground decides the tunnels.
+            /// </summary>
+            /// <param name="edge">The curve to cut.</param>
+            /// <param name="geometry">The geometry data of the copy's prefab.</param>
+            /// <param name="cutFlags">Course position flags of the node a cut makes.</param>
+            private void OutputRuns(
+                EdgeConfig      edge,
+                NetGeometryData geometry,
+                CoursePosFlags  cutFlags) {
+                var runs = new NativeList<EdgeConfig>(8, Allocator.Temp);
+
+                TunnelRuns.SplitAtGrade(
+                    ref TerrainHeight,
+                    edge,
+                    geometry.m_DefaultWidth * 0.5f,
+                    geometry.m_ElevationLimit,
+                    cutFlags,
+                    ref runs);
+
+                for (var i = 0; i < runs.Length; i++) {
+                    var run          = runs[i];
+                    var startTangent = math.normalize(MathUtils.StartTangent(run.Bezier));
+                    var endTangent   = math.normalize(MathUtils.EndTangent(run.Bezier));
+
+                    run.StartNodePosition = run.Bezier.a;
+                    run.EndNodePosition   = run.Bezier.d;
+                    run.StartNodeRotation = quaternion.LookRotationSafe(startTangent, math.up());
+                    run.EndNodeRotation   = quaternion.LookRotationSafe(endTangent, math.up());
+                    NetCourseEmitter.EmitPreview(ref ECB, in run, CreationFlags.SubElevation);
+                }
+
+                runs.Dispose();
             }
         }
     }

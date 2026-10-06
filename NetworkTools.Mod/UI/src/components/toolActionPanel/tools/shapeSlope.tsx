@@ -4,6 +4,7 @@ import { ShapeTransformTemplate, PARAM_BINDINGS } from "generated/parameters.gen
 import { useValue } from "cs2/api";
 import { TabBar } from "../shared/tabBar";
 import { ParameterField } from "../shared/parameterField";
+import { TunnelField } from "../shared/tunnelField";
 
 export const ShapeSlopeControls: React.FC = () => {
     const template = useValue(PARAM_BINDINGS.roadShape.template.binding);
@@ -17,6 +18,7 @@ export const ShapeSlopeControls: React.FC = () => {
                 <div className={styles.section__content}>
                     <ParameterField paramKey="roadShape.smoothStart" />
                     <ParameterField paramKey="roadShape.smoothEnd" />
+                    <TunnelField paramKey="roadShape.tunnel" />
                 </div>
             )}
             {template === ShapeTransformTemplate.SlopeEaseInOut && (
@@ -25,6 +27,7 @@ export const ShapeSlopeControls: React.FC = () => {
                     <ParameterField paramKey="roadShape.easeOutLength" />
                     <ParameterField paramKey="roadShape.smoothStart" />
                     <ParameterField paramKey="roadShape.smoothEnd" />
+                    <TunnelField paramKey="roadShape.tunnel" />
                 </div>
             )}
             {template === ShapeTransformTemplate.SlopeArch && (
@@ -33,6 +36,7 @@ export const ShapeSlopeControls: React.FC = () => {
                     <ParameterField paramKey="roadShape.archPosition" />
                     <ParameterField paramKey="roadShape.smoothStart" />
                     <ParameterField paramKey="roadShape.smoothEnd" />
+                    <TunnelField paramKey="roadShape.tunnel" />
                 </div>
             )}
         </div>

@@ -181,6 +181,9 @@ namespace NetworkTools.L10n {
                 { "NetworkTools.UI.Common.Advanced", "Advanced" },
                 { "NetworkTools.UI.Common.Decrease", "Decrease" },
                 { "NetworkTools.UI.Common.Increase", "Increase" },
+                { "NetworkTools.UI.Common.Tunnel", "Tunnel" },
+                { "NetworkTools.UI.Common.TunnelTooltip", "Builds tunnels where the network runs deep enough under the ground, and open cuts up to their mouths. Does nothing for a network that cannot go underground, such as a bridge or a quay." },
+                { "NetworkTools.UI.Common.TunnelUnavailableTooltip", "This network stays above the ground: a bridge, a quay, or a waterway cannot be a tunnel." },
 
                 // ## Prefab Search
                 { "NetworkTools.UI.PrefabSearch.Title", "Select Asset" },
@@ -282,6 +285,7 @@ namespace NetworkTools.L10n {
                 { "NetworkTools.UI.Generate.AltNetPrefabZ", "Asset" },
                 { "NetworkTools.UI.Generate.AltEveryZ", "Alternate every" },
                 { "NetworkTools.UI.PrefabSearch.None", "None" },
+                { "NetworkTools.UI.PrefabSearch.SameAsSelected", "Same as selected" },
 
                 // ## Apply Buttons
                 { "NetworkTools.UI.Apply.ShapeSlope", "Apply Slope" },

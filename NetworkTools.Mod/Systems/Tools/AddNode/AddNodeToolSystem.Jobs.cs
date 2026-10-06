@@ -199,52 +199,12 @@ namespace NetworkTools.Systems.Tools {
             }
 
             private void OutputPreview(Edge edge, Curve curve, PrefabRef prefabRef, PseudoRandomSeed seed) {
-                var definitionEntity = ECB.CreateEntity();
-
-                var creationDefinition = new CreationDefinition {
-                    m_Original = Entity.Null,
-                    m_Flags    = CreationFlags.Construction 
-                };
-
-                if (prefabRef.m_Prefab != Entity.Null) {
-                    creationDefinition.m_Prefab = prefabRef;
-                }
-
-                creationDefinition.m_RandomSeed = seed.m_Seed;
-
-                ECB.AddComponent(definitionEntity, creationDefinition);
-                ECB.AddComponent<Updated>(definitionEntity);
-
-                var netCourse = new NetCourse {
-                    m_Curve      = new Bezier4x3(HitPosition, HitPosition, HitPosition, HitPosition),
-                    m_Length     = 0,
-                    m_FixedIndex = -1,
-                    m_Elevation  = default,
-                    m_StartPosition = new CoursePos {
-                        m_Entity      = Entity.Null,
-                        m_Position    = HitPosition,
-                        m_Rotation    = default,
-                        m_CourseDelta = 0,
-                        m_Elevation   = default,
-                        m_Flags = CoursePosFlags.IsFirst | CoursePosFlags.IsLast | CoursePosFlags.IsRight |
-                                  CoursePosFlags.IsLeft,
-                        m_ParentMesh    = -1,
-                        m_SplitPosition = CurvePosition
-                    },
-                    m_EndPosition = new CoursePos {
-                        m_Entity      = Entity.Null,
-                        m_Position    = HitPosition,
-                        m_Rotation    = default,
-                        m_CourseDelta = 1,
-                        m_Elevation   = default,
-                        m_Flags = CoursePosFlags.IsFirst | CoursePosFlags.IsLast | CoursePosFlags.IsRight |
-                                  CoursePosFlags.IsLeft,
-                        m_ParentMesh    = -1,
-                        m_SplitPosition = CurvePosition
-                    }
-                };
-
-                ECB.AddComponent(definitionEntity, netCourse);
+                NetCourseEmitter.EmitSplit(
+                    ref ECB,
+                    prefabRef.m_Prefab,
+                    seed.m_Seed,
+                    HitPosition,
+                    CurvePosition);
             }
 
             private void OutputApply(Edge edge, Curve curve, PrefabRef prefabRef, PseudoRandomSeed seed) {

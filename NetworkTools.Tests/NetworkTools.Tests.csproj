@@ -11,6 +11,7 @@
 	<PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
 	<PackageReference Include="NUnit.Engine" Version="3.16.3" />
 	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+	<PackageReference Include="NUnit.ConsoleRunner" Version="3.16.3" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +23,8 @@
 
 	<PropertyGroup>
 		<ImplicitUsings>disable</ImplicitUsings>
+		<LangVersion>11.0</LangVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<!-- References needed at test runtime - copied to output -->

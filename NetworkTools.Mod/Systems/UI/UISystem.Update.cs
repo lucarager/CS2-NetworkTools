@@ -49,7 +49,7 @@ namespace NetworkTools.Systems.UI {
             // Update distance unit binding when the setting changes
             m_DistanceUnitBinding.Value = NetworkToolsMod.Instance.Settings.DistanceUnit;
 
-            // Update snap/target/anarchy/view bindings from the active tool
+            // Update snap/target/anarchy/tunnel/view bindings from the active tool
             var activeTool = m_ToolSystem.activeTool as NT_BaseToolSystem;
 
             m_AvailableSnapsBinding.Value   = activeTool != null ? (int)activeTool.AvailableSnaps   : (int)SnapOption.None;
@@ -58,6 +58,7 @@ namespace NetworkTools.Systems.UI {
             m_SelectedTargetsBinding.Value  = activeTool != null ? (int)activeTool.SelectedTargets  : (int)TargetOption.All;
             m_AnarchyAvailableBinding.Value = activeTool != null && activeTool.SupportsAnarchy;
             m_AnarchyEnabledBinding.Value   = activeTool != null && activeTool.AnarchyEnabled;
+            m_TunnelAvailableBinding.Value  = activeTool == null || activeTool.TunnelAvailable;
             m_AvailableViewsBinding.Value   = activeTool != null ? (int)activeTool.AvailableViews   : (int)ViewOption.All;
             m_SelectedViewsBinding.Value    = activeTool != null ? (int)activeTool.SelectedViews    : (int)ViewOption.None;
             m_ApplyStateBinding.Value       = (int)ComputeApplyState(activeTool, selectedNodes.Length);

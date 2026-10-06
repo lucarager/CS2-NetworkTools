@@ -1,4 +1,6 @@
 namespace NetworkTools.Systems.Tools.Connect {
+    using Colossal.Entities;
+
     using Game.Prefabs;
 
     using NetworkTools.Components.Handles;
@@ -21,10 +23,41 @@ namespace NetworkTools.Systems.Tools.Connect {
         /// <inheritdoc />
         public override bool SupportsAnarchy => true;
 
+        /// <inheritdoc />
+        public override bool TunnelAvailable {
+            get {
+                var prefab = NetPrefab.NetPrefabEntity;
+
+                // Without a network picked, the tool lays the first selected node's own.
+                if (prefab == Entity.Null && NetPrefab.NetLanePrefabEntity == Entity.Null) {
+                    if (m_SelectedNodes.Length == 0
+                        || !EntityManager.TryGetComponent<PrefabRef>(
+                            m_SelectedNodes[0],
+                            out var prefabRef)) {
+                        return true;
+                    }
+
+                    prefab = prefabRef.m_Prefab;
+                }
+
+                return CanTunnel(prefab);
+            }
+        }
+
         // ── Parameters
 
-        public NetPrefabParameter         NetPrefab  = new("connect.netPrefab");
+        public NetPrefabParameter         NetPrefab  = new("connect.netPrefab", nullable: true);
         public EnumParameter<ConnectMode> Mode       = new("connect.mode", ConnectMode.SimpleCurve, label: "NetworkTools.UI.Common.Mode");
+
+        /// <summary>
+        ///     Tunnel mode.
+        ///     Off: the vanilla course solver stays at or above the line between the two nodes.
+        ///     It follows the terrain above that line (bridges over dips).
+        ///     On: the network is held on the curve whatever the ground does (tunnels under hills).
+        ///     The curve is cut so that a tunnel starts where the whole width is deep enough.
+        ///     See the definitions job.
+        /// </summary>
+        public BoolParameter Tunnel = new("connect.tunnel", false, label: "NetworkTools.UI.Common.Tunnel");
 
         // Shared (from node selection)
         public Float3Parameter StartPosition  = new("connect.startPosition");

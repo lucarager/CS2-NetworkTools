@@ -18,6 +18,15 @@
         protected override JobHandle OnUpdate(JobHandle inputDeps) {
             UpdateActions();
 
+            // A tunnel apply takes three frames, the selection must not change under it.
+            if (m_TunnelStage != 0) {
+                return ApplyTunnel(inputDeps);
+            }
+
+            if (Phase == OperationPhase.Idle || Phase == OperationPhase.Configuring) {
+                ReleaseMapHeights();
+            }
+
             // ═══════════════════════════════════════════════════════════════════════════
             // HANDLE INTERACTION PIPELINE 
             // ═══════════════════════════════════════════════════════════════════════════

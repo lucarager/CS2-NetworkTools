@@ -1,5 +1,6 @@
 namespace NetworkTools.Systems.Tools.Utils {
     using Colossal.Mathematics;
+    using Game.Prefabs;
     using Game.Tools;
     using Unity.Entities;
 
@@ -70,5 +71,8 @@ namespace NetworkTools.Systems.Tools.Utils {
 
         /// <summary>Course position flags applied to the end node during output.</summary>
         public CoursePosFlags EndNodeFlags;
+
+        /// <summary>Upgrades written to the definition as <c>Upgraded</c> (defaults to none).</summary>
+        public CompositionFlags Upgrades;
     }
 }

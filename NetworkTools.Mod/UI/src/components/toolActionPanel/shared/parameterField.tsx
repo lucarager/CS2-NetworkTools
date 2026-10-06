@@ -38,6 +38,7 @@ export interface FieldRenderProps {
     meta: ParamMeta;
     value: unknown;
     label: string;
+    tooltip?: string | null;
     disabled?: boolean;
     big?: boolean;
     onChange: (v: any) => void;
@@ -95,10 +96,17 @@ interface ParameterFieldProps {
     paramKey: ParamKey;
     disabled?: boolean;
     big?: boolean;
+    /** Locale key of a tooltip over the control. Only the toggle shows one so far. */
+    tooltip?: string;
 }
 
 /** Resolves and renders the appropriate control for a parameter key from PARAM_META. */
-export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabled, big }) => {
+export const ParameterField: React.FC<ParameterFieldProps> = ({
+    paramKey,
+    disabled,
+    big,
+    tooltip,
+}) => {
     const meta = PARAM_META[paramKey] as ParamMeta;
     const binding = PARAM_BINDING[paramKey];
     const value = useValue(binding.binding);
@@ -112,6 +120,7 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({ paramKey, disabl
             meta={meta}
             value={value}
             label={label}
+            tooltip={tooltip ? translate(tooltip) : null}
             disabled={disabled}
             big={big}
             onChange={(value) => binding.set(value)}
@@ -227,13 +236,13 @@ function IntStepper({ meta, value, label, disabled, onChange, translate }: Field
     );
 }
 
-/** Simple on/off toggle for boolean parameters. */
-function BoolToggle({ value, label, disabled, onChange }: FieldRenderProps) {
-    return (
+/** Simple on/off toggle for boolean parameters. A disabled toggle shows off, keeping its value. */
+function BoolToggle({ value, label, tooltip, disabled, onChange }: FieldRenderProps) {
+    const row = (
         <div className={styles.controlRow}>
             <div className={styles.vanillaField}>
                 <VC.ToggleField
-                    value={value as boolean}
+                    value={!disabled && (value as boolean)}
                     label={label}
                     disabled={disabled}
                     onChange={(v: boolean) => onChange(v)}
@@ -241,6 +250,8 @@ function BoolToggle({ value, label, disabled, onChange }: FieldRenderProps) {
             </div>
         </div>
     );
+    // The row stays a direct child of the section: the row spacing is a sibling rule.
+    return tooltip ? <Tooltip tooltip={tooltip}>{row}</Tooltip> : row;
 }
 
 /** Row of icon buttons for enum parameters. Each option is a selectable icon with a tooltip. */

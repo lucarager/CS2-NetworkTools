@@ -45,6 +45,7 @@
         private ValueBindingHelper<int>                 m_SelectedViewsBinding;
         private ValueBindingHelper<int>                 m_ApplyStateBinding;
         private ValueBindingHelper<bool>                m_PanelOpenBinding;
+        private ValueBindingHelper<bool>                m_TunnelAvailableBinding;
         private ValueBindingHelper<NT_ToolPrefab[]>     m_ToolUIDataBinding;
 
         private ProxyAction m_ApplyTransformationAction;
@@ -94,6 +95,7 @@
             m_DistanceUnitBinding = CreateBinding("DISTANCE_UNIT", NT_Settings.DistanceUnitMeters);
             m_AnarchyAvailableBinding = CreateBinding("ANARCHY_AVAILABLE", false);
             m_AnarchyEnabledBinding = CreateBinding("ANARCHY_ENABLED", false, HandleUpdateAnarchyEnabled);
+            m_TunnelAvailableBinding = CreateBinding("TUNNEL_AVAILABLE", true);
             m_AvailableSnapsBinding = CreateBinding("AVAILABLE_SNAPS", (int)SnapOption.None);
             m_SelectedSnapsBinding = CreateBinding("SELECTED_SNAPS", (int)SnapOption.None, HandleUpdateSelectedSnaps);
             m_AvailableTargetsBinding = CreateBinding("AVAILABLE_TARGETS", (int)TargetOption.All);

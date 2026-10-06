@@ -3,8 +3,10 @@
     using Game.Common;
     using Game.Net;
     using Game.Prefabs;
+    using Game.Simulation;
     using Game.Tools;
     using NetworkTools.Components;
+    using NetworkTools.Systems.Tools.Utils;
     using Unity.Burst;
     using Unity.Collections;
     using Unity.Entities;
@@ -29,6 +31,11 @@
             [ReadOnly] public required ComponentLookup<Curve>            CurveLookup;
             [ReadOnly] public required ComponentLookup<Upgraded>         UpgradedLookup;
             [ReadOnly] public required ComponentLookup<Aggregated>       AggregatedLookup;
+            [ReadOnly] public required ComponentLookup<Elevation>        ElevationLookup;
+            [ReadOnly] public required ComponentLookup<Owner>            OwnerLookup;
+            [ReadOnly] public required ComponentLookup<NetGeometryData>  NetGeometryDataLookup;
+            [ReadOnly] public required ComponentLookup<PlaceableNetData> PlaceableNetDataLookup;
+            [ReadOnly] public required TerrainHeightData                 TerrainHeight;
             public required            ToolOutputMode                    OutputMode;
             public required            EntityCommandBuffer               ECB;
 
@@ -59,28 +66,7 @@
                 }
 
                 // 2. Execute transformation (context = path geometry, config = user settings)
-                switch (Config.Template) {
-                    case ShapeTransformTemplate.SlopeLinear:
-                        var linearTransform = new SlopeLinearTransform();
-                        TransformPipeline.Execute(ref linearTransform, ref edges, ref nodes, in Context, in Config);
-                        break;
-                    case ShapeTransformTemplate.SlopeEaseInOut:
-                        var easeInOutTransform = new SlopeEaseInOutTransform();
-                        TransformPipeline.Execute(ref easeInOutTransform, ref edges, ref nodes, in Context, in Config);
-                        break;
-                    case ShapeTransformTemplate.SlopeArch:
-                        var archTransform = new SlopeArchTransform();
-                        TransformPipeline.Execute(ref archTransform, ref edges, ref nodes, in Context, in Config);
-                        break;
-                    case ShapeTransformTemplate.CurveStraighten:
-                        var straightenTransform = new CurveStraightenTransform();
-                        TransformPipeline.Execute(ref straightenTransform, ref edges, ref nodes, in Context, in Config);
-                        break;
-                    case ShapeTransformTemplate.CurveSmooth:
-                        var smoothTransform = new CurveSmoothTransform();
-                        TransformPipeline.Execute(ref smoothTransform, ref edges, ref nodes, in Context, in Config);
-                        break;
-                }
+                Transform(ref edges, ref nodes, in Context, in Config);
 
                 // 3. Write slope metadata to edge entities (preview only — Apply resets the tool
                 //    immediately, so ECB additions would outlive the tool session).
@@ -91,7 +77,10 @@
                 // 4. Output
                 if (OutputMode == ToolOutputMode.Preview)
                 {
-                    OutputPreview(edges, nodes);
+                    // Tunnel mode lays a preview of its own, see EmitTunnelPreview
+                    if (!Config.Tunnel) {
+                        OutputPreview(edges, nodes);
+                    }
                 } else
                 {
                     OutputApply(edges, nodes);
@@ -100,6 +89,43 @@
                 // Cleanup
                 edges.Dispose();
                 nodes.Dispose();
+            }
+
+            /// <summary>
+            ///     Applies the configured template to the path.
+            ///     Static so that the tunnel apply can run it on the main thread.
+            /// </summary>
+            /// <param name="edges">Edge states of the path, transformed in place.</param>
+            /// <param name="nodes">Node states of the path, transformed in place.</param>
+            /// <param name="context">Transform context of the path.</param>
+            /// <param name="config">Job configuration: the template and its parameters.</param>
+            public static void Transform(
+                ref NativeArray<EdgeState> edges,
+                ref NativeArray<NodeState> nodes,
+                in ShapeTransformContext   context,
+                in ShapeJobConfig          config) {
+                switch (config.Template) {
+                    case ShapeTransformTemplate.SlopeLinear:
+                        var linearTransform = new SlopeLinearTransform();
+                        TransformPipeline.Execute(ref linearTransform, ref edges, ref nodes, in context, in config);
+                        break;
+                    case ShapeTransformTemplate.SlopeEaseInOut:
+                        var easeInOutTransform = new SlopeEaseInOutTransform();
+                        TransformPipeline.Execute(ref easeInOutTransform, ref edges, ref nodes, in context, in config);
+                        break;
+                    case ShapeTransformTemplate.SlopeArch:
+                        var archTransform = new SlopeArchTransform();
+                        TransformPipeline.Execute(ref archTransform, ref edges, ref nodes, in context, in config);
+                        break;
+                    case ShapeTransformTemplate.CurveStraighten:
+                        var straightenTransform = new CurveStraightenTransform();
+                        TransformPipeline.Execute(ref straightenTransform, ref edges, ref nodes, in context, in config);
+                        break;
+                    case ShapeTransformTemplate.CurveSmooth:
+                        var smoothTransform = new CurveSmoothTransform();
+                        TransformPipeline.Execute(ref smoothTransform, ref edges, ref nodes, in context, in config);
+                        break;
+                }
             }
 
             /// <summary>
@@ -193,8 +219,12 @@
 
                     if (processedNodes.Add(node.Entity))
                     {
-                        var nodeDelta = node.Position - node.OriginalPosition;
-                        PreviewConnectedEdges(node.Entity, node.Position, nodeDelta, edges);
+                        PreviewConnectedEdges(
+                            node.Entity,
+                            node.Position,
+                            edges,
+                            nodePositionMap,
+                            processedNodes);
                     }
                 }
 
@@ -206,10 +236,11 @@
             ///     Creates preview entities for edges connected to a node that are not in the selection.
             /// </summary>
             private void PreviewConnectedEdges(
-                Entity                 nodeEntity,
-                float3                 nodePosition,
-                float3                 nodeDelta,
-                NativeArray<EdgeState> selectedEdges) {
+                Entity                        nodeEntity,
+                float3                        nodePosition,
+                NativeArray<EdgeState>        selectedEdges,
+                NativeHashMap<Entity, float3> nodePositionMap,
+                NativeHashSet<Entity>         processedNodes) {
                 //if (!HasNodePositionChanged(nodeEntity, nodePosition)) {
                 //    return;
                 //}
@@ -225,7 +256,11 @@
                         continue;
                     }
 
-                    OutputPreviewConnectedEdge(connectedEdgeEntity, nodeEntity, nodePosition, nodeDelta);
+                    OutputPreviewConnectedEdge(
+                        connectedEdgeEntity,
+                        nodeEntity,
+                        nodePositionMap,
+                        processedNodes);
                 }
             }
 
@@ -233,8 +268,13 @@
             ///     Creates a preview entity for a connected edge with adjusted control points at the intersection.
             ///     Applies the node movement delta to the bezier endpoint and control point,
             ///     preserving the original offset between node center and bezier endpoint.
+            ///     An edge joining two selected nodes is laid once, from the first of them.
             /// </summary>
-            private void OutputPreviewConnectedEdge(Entity edgeEntity, Entity nodeEntity, float3 nodePosition, float3 nodeDelta) {
+            private void OutputPreviewConnectedEdge(
+                Entity                        edgeEntity,
+                Entity                        nodeEntity,
+                NativeHashMap<Entity, float3> nodePositionMap,
+                NativeHashSet<Entity>         processedNodes) {
                 if (!EdgeLookup.TryGetComponent(edgeEntity, out var edge)) {
                     return;
                 }
@@ -243,28 +283,43 @@
                     return;
                 }
 
-                var    bezier = curve.m_Bezier;
-                Entity startNodeRef;
-                Entity endNodeRef;
-                float3 startNodePos;
-                float3 endNodePos;
-
-                if (edge.m_Start == nodeEntity) {
-                    bezier.a     += nodeDelta;
-                    bezier.b     += nodeDelta;
-                    startNodeRef =  Entity.Null;
-                    endNodeRef   =  edge.m_End;
-                    startNodePos =  nodePosition;
-                    endNodePos   =  NodeLookup.TryGetComponent(edge.m_End, out var endNode) ? endNode.m_Position : bezier.d;
-                } else if (edge.m_End == nodeEntity) {
-                    bezier.d     += nodeDelta;
-                    bezier.c     += nodeDelta;
-                    startNodeRef =  edge.m_Start;
-                    endNodeRef   =  Entity.Null;
-                    startNodePos =  NodeLookup.TryGetComponent(edge.m_Start, out var startNode) ? startNode.m_Position : bezier.a;
-                    endNodePos   =  nodePosition;
-                } else {
+                if (edge.m_Start != nodeEntity && edge.m_End != nodeEntity) {
                     return;
+                }
+
+                var other = edge.m_Start == nodeEntity ? edge.m_End : edge.m_Start;
+
+                if (other != nodeEntity && processedNodes.Contains(other)) {
+                    return;
+                }
+
+                var bezier       = curve.m_Bezier;
+                var startNodeRef = edge.m_Start;
+                var endNodeRef   = edge.m_End;
+                var startNodePos = NodeLookup.TryGetComponent(edge.m_Start, out var startNode)
+                    ? startNode.m_Position
+                    : bezier.a;
+                var endNodePos   = NodeLookup.TryGetComponent(edge.m_End, out var endNode)
+                    ? endNode.m_Position
+                    : bezier.d;
+
+                // Shift each end at a selected node by that node's movement delta.
+                if (nodePositionMap.TryGetValue(edge.m_Start, out var movedStart)) {
+                    var startDelta = movedStart - startNodePos;
+
+                    bezier.a     += startDelta;
+                    bezier.b     += startDelta;
+                    startNodeRef =  Entity.Null;
+                    startNodePos =  movedStart;
+                }
+
+                if (nodePositionMap.TryGetValue(edge.m_End, out var movedEnd)) {
+                    var endDelta = movedEnd - endNodePos;
+
+                    bezier.d   += endDelta;
+                    bezier.c   += endDelta;
+                    endNodeRef =  Entity.Null;
+                    endNodePos =  movedEnd;
                 }
 
                 var composition = GetNetworkComposition(edgeEntity);
@@ -330,10 +385,25 @@
                     startNodeFlags |= CoursePosFlags.IsLast | CoursePosFlags.IsGrid;
                 }
 
-                // Initialize elevations from bezier heights
-                var startElevation = new float2(bezier.a.y, bezier.a.y);
-                var endElevation = new float2(bezier.d.y, bezier.d.y);
-                var courseElevation = new float2(bezier.a.y, bezier.d.y);
+                // Initialize elevations from what the edge and its nodes store: Apply keeps those,
+                // so the preview gets the same ground/elevated/tunnel pieces as the result
+                var startElevation = float2.zero;
+                var endElevation = float2.zero;
+                var courseElevation = float2.zero;
+
+                if (EdgeLookup.TryGetComponent(edgeEntity, out var originalEdge)) {
+                    if (ElevationLookup.TryGetComponent(originalEdge.m_Start, out var atStart)) {
+                        startElevation = atStart.m_Elevation;
+                    }
+
+                    if (ElevationLookup.TryGetComponent(originalEdge.m_End, out var atEnd)) {
+                        endElevation = atEnd.m_Elevation;
+                    }
+                }
+
+                if (ElevationLookup.TryGetComponent(edgeEntity, out var atEdge)) {
+                    courseElevation = atEdge.m_Elevation;
+                }
 
                 var netCourse = new NetCourse {
                     m_Curve      = bezier,
@@ -428,6 +498,9 @@
                                          m_Bezier = state.Bezier,
                                          m_Length = MathUtils.Length(state.Bezier)
                                      });
+                    if (Config.Tunnel) {
+                        OutputUnderground(state);
+                    }
                 }
 
                 // Update nodes and connected edges
@@ -435,12 +508,64 @@
                     var node = nodes[i];
 
                     if (processedNodes.Add(node.Entity)) {
-                        var nodeDelta = node.Position - node.OriginalPosition;
-                        UpdateNodeAndConnectedEdges(node.Entity, node.Position, nodeDelta, edges);
+                        UpdateNodeAndConnectedEdges(node.Entity, node.Position, edges, nodes);
                     }
                 }
 
                 processedNodes.Dispose();
+            }
+
+            /// <summary>
+            ///     Tunnel mode: stores the elevations of an edge and of its two nodes.
+            ///     A curve written in place otherwise keeps the elevations it had.
+            ///     A ground road then stays one however deep it goes.
+            /// </summary>
+            /// <param name="state">The transformed edge.</param>
+            private void OutputUnderground(EdgeState state) {
+                if (!PrefabRefLookup.TryGetComponent(state.EdgeEntity, out var prefabRef)) {
+                    return;
+                }
+
+                if (!NetGeometryDataLookup.TryGetComponent(prefabRef.m_Prefab, out var geometry)) {
+                    return;
+                }
+
+                if (!PlaceableNetDataLookup.TryGetComponent(prefabRef.m_Prefab, out var placeable)
+                    || !TunnelRuns.CanTunnel(placeable)) {
+                    return;
+                }
+
+                OutputUnderground(state.StartNode, state.Bezier, 0f, geometry);
+                OutputUnderground(state.EdgeEntity, state.Bezier, 0.5f, geometry);
+                OutputUnderground(state.EndNode, state.Bezier, 1f, geometry);
+            }
+
+            /// <summary>
+            ///     Stores on a node or an edge the elevation measured on the curve.
+            ///     See <see cref="TunnelRuns.Stored" />.
+            /// </summary>
+            /// <param name="entity">The node or edge that takes the elevation.</param>
+            /// <param name="bezier">The curve to measure on.</param>
+            /// <param name="t">Curve position to measure at.</param>
+            /// <param name="geometry">The geometry data of the edge's prefab.</param>
+            private void OutputUnderground(
+                Entity          entity,
+                Bezier4x3       bezier,
+                float           t,
+                NetGeometryData geometry) {
+                var terrain   = TerrainHeight;
+                var limit     = geometry.m_ElevationLimit;
+                var half      = geometry.m_DefaultWidth * 0.5f;
+                var measured  = TunnelRuns.Elevation(ref terrain, bezier, t, half);
+                var had       = ElevationLookup.TryGetComponent(entity, out var existing);
+                var elevation = TunnelRuns.Stored(measured, existing.m_Elevation, limit);
+
+                // The game keeps an elevation of zero only on a building's own network.
+                if (math.any(elevation != 0f) || (had && OwnerLookup.HasComponent(entity))) {
+                    ECB.AddComponent(entity, new Elevation(elevation));
+                } else if (had) {
+                    ECB.RemoveComponent<Elevation>(entity);
+                }
             }
 
             /// <summary>
@@ -449,8 +574,8 @@
             private void UpdateNodeAndConnectedEdges(
                 Entity                 nodeEntity,
                 float3                 newPosition,
-                float3                 nodeDelta,
-                NativeArray<EdgeState> selectedEdges) {
+                NativeArray<EdgeState> selectedEdges,
+                NativeArray<NodeState> selectedNodes) {
                 // Update node position
                 ECB.SetComponent(nodeEntity, new Node { m_Position = newPosition });
                 MarkNodeUpdated(nodeEntity);
@@ -470,7 +595,7 @@
                         continue;
                     }
 
-                    AdjustConnectedEdgeAtNode(connectedEdgeEntity, nodeEntity, nodeDelta);
+                    AdjustConnectedEdgeAtNode(connectedEdgeEntity, nodeEntity, selectedNodes);
                 }
             }
 
@@ -478,8 +603,12 @@
             ///     Adjusts a connected edge's bezier control points at the intersection node.
             ///     Applies the node movement delta to preserve the original offset between
             ///     node center and bezier endpoint.
+            ///     An edge joining two moved nodes follows both.
             /// </summary>
-            private void AdjustConnectedEdgeAtNode(Entity edgeEntity, Entity nodeEntity, float3 nodeDelta) {
+            private void AdjustConnectedEdgeAtNode(
+                Entity                 edgeEntity,
+                Entity                 nodeEntity,
+                NativeArray<NodeState> selectedNodes) {
                 if (!EdgeLookup.TryGetComponent(edgeEntity, out var edge)) {
                     return;
                 }
@@ -488,18 +617,19 @@
                     return;
                 }
 
-                var bezier = curve.m_Bezier;
-
-                // Shift the endpoint and control point by the node's movement delta
-                if (edge.m_Start == nodeEntity) {
-                    bezier.a += nodeDelta;
-                    bezier.b += nodeDelta;
-                } else if (edge.m_End == nodeEntity) {
-                    bezier.d += nodeDelta;
-                    bezier.c += nodeDelta;
-                } else {
+                if (edge.m_Start != nodeEntity && edge.m_End != nodeEntity) {
                     return;
                 }
+
+                var bezier     = curve.m_Bezier;
+                var startDelta = NodeDelta(edge.m_Start, selectedNodes);
+                var endDelta   = NodeDelta(edge.m_End, selectedNodes);
+
+                // Shift each endpoint and control point by its node's movement delta.
+                bezier.a += startDelta;
+                bezier.b += startDelta;
+                bezier.d += endDelta;
+                bezier.c += endDelta;
 
                 ECB.SetComponent(edgeEntity,
                                  new Curve {
@@ -507,6 +637,24 @@
                                      m_Length = MathUtils.Length(bezier)
                                  });
                 MarkUpdated(edgeEntity);
+            }
+
+            /// <summary>
+            ///     Gets how far a selected node moves, or zero for a node outside the selection.
+            /// </summary>
+            /// <param name="nodeEntity">The node.</param>
+            /// <param name="selectedNodes">Node states of the path.</param>
+            /// <returns>The node's movement delta.</returns>
+            private static float3 NodeDelta(
+                Entity                 nodeEntity,
+                NativeArray<NodeState> selectedNodes) {
+                for (var i = 0; i < selectedNodes.Length; i++) {
+                    if (selectedNodes[i].Entity == nodeEntity) {
+                        return selectedNodes[i].Position - selectedNodes[i].OriginalPosition;
+                    }
+                }
+
+                return float3.zero;
             }
 
             /// <summary>

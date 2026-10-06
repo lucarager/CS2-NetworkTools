@@ -5,12 +5,10 @@
     using Game.Net;
     using Game.Notifications;
     using Game.Prefabs;
-    using Game.Prefabs;
     using Game.Rendering;
     using Game.Simulation;
     using Game.Tools;
 
-    using NetworkTools.Components;
     using NetworkTools.Components;
     using NetworkTools.Settings;
 
@@ -21,6 +19,22 @@
 
     public partial class NT_RoadShapeToolSystem {
         private JobHandle SchedulePathTransformJob(JobHandle inputDeps, ToolOutputMode outputMode) {
+            var terrain = m_TerrainSystem.GetHeightData(false);
+
+            return SchedulePathTransformJob(inputDeps, outputMode, terrain);
+        }
+
+        /// <summary>
+        ///     Schedules the path transform job against given terrain heights.
+        /// </summary>
+        /// <param name="inputDeps">Input job dependencies.</param>
+        /// <param name="outputMode">Whether the job previews or applies the transform.</param>
+        /// <param name="terrain">Terrain heights the tunnel mode measures elevations on.</param>
+        /// <returns>The job handle.</returns>
+        private JobHandle SchedulePathTransformJob(
+            JobHandle         inputDeps,
+            ToolOutputMode    outputMode,
+            TerrainHeightData terrain) {
             // Ensure path data is valid before scheduling
             if (!m_PathDataValid || m_EdgeStates.Length == 0) {
                 m_Log.Debug("SchedulePathTransformJob: No valid path data, skipping");
@@ -48,10 +62,16 @@
                 PseudoRandomSeedLookup = SystemAPI.GetComponentLookup<PseudoRandomSeed>(true),
                 ConnectedEdgeLookup = SystemAPI.GetBufferLookup<ConnectedEdge>(true),
                 AggregatedLookup = SystemAPI.GetComponentLookup<Aggregated>(true),
+                ElevationLookup = SystemAPI.GetComponentLookup<Elevation>(true),
+                OwnerLookup = SystemAPI.GetComponentLookup<Owner>(true),
+                NetGeometryDataLookup = SystemAPI.GetComponentLookup<NetGeometryData>(true),
+                PlaceableNetDataLookup = SystemAPI.GetComponentLookup<PlaceableNetData>(true),
+                TerrainHeight = terrain,
                 OutputMode = outputMode,
                 ECB = m_Barrier.CreateCommandBuffer(),
             }.Schedule(inputDeps);
             m_Barrier.AddJobHandleForProducer(jobHandle);
+            m_TerrainSystem.AddCPUHeightReader(jobHandle);
             return jobHandle;
         }
 
@@ -69,6 +89,10 @@
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             inputDeps = SchedulePathTransformJob(inputDeps, ToolOutputMode.Preview);
 
+            if (Tunnel.Value && IsSlope) {
+                EmitTunnelPreview();
+            }
+
             // Reset the flag after processing
             m_UpdateNeeded = false;
 
@@ -82,6 +106,10 @@
         }
 
         private JobHandle Apply(JobHandle inputDeps) {
+            if (Tunnel.Value && IsSlope) {
+                return ApplyTunnel(inputDeps);
+            }
+
             applyMode = ApplyMode.Clear;
             inputDeps = DestroyDefinitions(m_DefinitionQuery, m_Barrier, inputDeps);
             var jobHandle = SchedulePathTransformJob(inputDeps, ToolOutputMode.Apply);

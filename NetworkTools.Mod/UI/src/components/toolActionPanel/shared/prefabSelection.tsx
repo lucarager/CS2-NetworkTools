@@ -40,7 +40,9 @@ export const PrefabSelection: React.FC<{ paramKey: string }> = ({ paramKey }) =>
 
     const displayName = hasSelection
         ? (translate(`Assets.NAME[${prefabData.Name}]`, prefabData.Name) ?? prefabData.Name)
-        : (translate("NetworkTools.UI.PrefabSearch.None") ?? "None");
+        : nullable
+          ? (translate("NetworkTools.UI.PrefabSearch.SameAsSelected") ?? "Same as selected")
+          : (translate("NetworkTools.UI.PrefabSearch.None") ?? "None");
 
     return (
         <div className={styles.controlRow}>

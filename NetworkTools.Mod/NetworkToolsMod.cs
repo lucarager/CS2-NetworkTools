@@ -56,6 +56,7 @@ namespace NetworkTools {
             // Core systems
             updateSystem.UpdateAt<NT_PrefabsCreateSystem>(SystemUpdatePhase.PrefabUpdate);
             updateSystem.UpdateAt<NT_PostProcessingSystem>(SystemUpdatePhase.Modification4); // Search system updates on Mod5, run before then
+            updateSystem.UpdateAt<NT_TunnelMouthSystem>(SystemUpdatePhase.Modification2B); // After the references, before the composition selection
             // Tools
             updateSystem.UpdateAt<NT_RoadShapeToolSystem>(SystemUpdatePhase.ToolUpdate);
             updateSystem.UpdateAt<NT_AddNodeToolSystem>(SystemUpdatePhase.ToolUpdate);
