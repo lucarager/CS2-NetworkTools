@@ -104,7 +104,7 @@
   "NetworkTools.UI.Common.Increase": "Zwiększ",
   "NetworkTools.UI.Common.Tunnel": "Tunel",
   "NetworkTools.UI.Common.TunnelTooltip": "Buduje tunele w miejscach, w których sieć biegnie wystarczająco głęboko pod ziemią. Nie działa w przypadku sieci, które nie mogą być tunelem, np. mosty, nabrzeża.",
-  "NetworkTools.UI.Common.TunnelUnavailableTooltip": "This network stays above the ground: a bridge, a quay, or a waterway cannot be a tunnel.",
+  "NetworkTools.UI.Common.TunnelUnavailableTooltip": "Ta sieć nie może być tunelem, mosty, nabrzeża, drogi wodne muszą być nad ziemią.",
   "NetworkTools.UI.PrefabSearch.Title": "Wybierz sieć",
   "NetworkTools.UI.PrefabSearch.Placeholder": "Szukaj sieci...",
   "NetworkTools.UI.PrefabSearch.Empty": "Nie znaleziono pasujących wyników.",
