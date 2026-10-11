@@ -184,7 +184,7 @@
   "NetworkTools.UI.Generate.AltNetPrefabZ": "Sieć",
   "NetworkTools.UI.Generate.AltEveryZ": "Zamień co",
   "NetworkTools.UI.PrefabSearch.None": "Brak",
-  "NetworkTools.UI.PrefabSearch.SameAsSelected": "Same as selected",
+  "NetworkTools.UI.PrefabSearch.SameAsSelected": "Taki sam jak wybrano",
   "NetworkTools.UI.Apply.ShapeSlope": "Zastosuj nachylenie",
   "NetworkTools.UI.Apply.ShapeCurve": "Zastosuj krzywą",
   "NetworkTools.UI.Apply.Connect": "Stwórz połączenie",
