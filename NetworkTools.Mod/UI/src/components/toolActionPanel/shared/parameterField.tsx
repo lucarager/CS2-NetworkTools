@@ -41,6 +41,8 @@ export interface FieldRenderProps {
     tooltip?: string | null;
     disabled?: boolean;
     big?: boolean;
+    /** Suppresses the inline row title; used when the label would only repeat the options. */
+    hideLabel?: boolean;
     onChange: (v: any) => void;
     translate: (key: string) => string | null;
 }
@@ -98,6 +100,8 @@ interface ParameterFieldProps {
     big?: boolean;
     /** Locale key of a tooltip over the control. Only the toggle shows one so far. */
     tooltip?: string;
+    /** Drops the inline row title when the control labels itself (e.g. a two-option enum). */
+    hideLabel?: boolean;
 }
 
 /** Resolves and renders the appropriate control for a parameter key from PARAM_META. */
@@ -106,6 +110,7 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({
     disabled,
     big,
     tooltip,
+    hideLabel,
 }) => {
     const meta = PARAM_META[paramKey] as ParamMeta;
     const binding = PARAM_BINDING[paramKey];
@@ -123,6 +128,7 @@ export const ParameterField: React.FC<ParameterFieldProps> = ({
             tooltip={tooltip ? translate(tooltip) : null}
             disabled={disabled}
             big={big}
+            hideLabel={hideLabel}
             onChange={(value) => binding.set(value)}
             translate={translate}
         />
@@ -255,15 +261,15 @@ function BoolToggle({ value, label, tooltip, disabled, onChange }: FieldRenderPr
 }
 
 /** Row of icon buttons for enum parameters. Each option is a selectable icon with a tooltip. */
-function EnumButtons({ meta, value, label, disabled, big, onChange, translate }: FieldRenderProps) {
+function EnumButtons({ meta, value, label, disabled, big, hideLabel, onChange, translate }: FieldRenderProps) {
     const m = meta as EnumMeta;
     const options = ENUM_OPTIONS[m.enumType as EnumOptionsKey];
     if (!options) return null;
     return (
         <div className={styles.controlRow}>
             <div className={styles.controlRowInner}>
-                <span className={styles.paramLabel}>{label}</span>
-                <div className={styles.buttonRow}>
+                {!hideLabel && <span className={styles.paramLabel}>{label}</span>}
+                <div className={c(styles.buttonRow, hideLabel && styles.buttonRow__labelLess)}>
                     {options.map((option) => (
                         <Tooltip key={option.value} tooltip={translate(option.label)} delayTime={0}>
                             <VC.ToolButton

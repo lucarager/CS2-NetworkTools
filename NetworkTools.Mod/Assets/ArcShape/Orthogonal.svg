@@ -1,0 +1,7 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 正交 / 圆角：圆心落在内角，圆弧只切过 90° -->
+  <path d="M0 21H32" stroke="white" stroke-opacity="0.35" stroke-width="2"/>
+  <path d="M11 0V32" stroke="white" stroke-opacity="0.35" stroke-width="2"/>
+  <circle cx="17" cy="15" r="6" stroke="white" stroke-width="2.5" stroke-linecap="round"
+          stroke-dasharray="9.425 37.699" transform="rotate(90 17 15)"/>
+</svg>

@@ -367,6 +367,16 @@
         margin-bottom: 2rem;
         margin-left: 4rem;
     }
+
+    /* No row title to sit next to: keep the buttons at the left edge instead of floating right. */
+    &__labelLess {
+        justify-content: flex-start;
+
+        & > button {
+            margin-left: 0;
+            margin-right: 4rem;
+        }
+    }
 }
 
 .actions {

@@ -11,6 +11,7 @@ namespace NetworkTools.Systems.Tooltips {
 
     using NetworkTools.Components;
     using NetworkTools.Systems.Tools;
+    using NetworkTools.Systems.Tools.Connect;
     using LucaModsCommon.Utils;
 
     using Unity.Collections;
@@ -74,6 +75,10 @@ namespace NetworkTools.Systems.Tooltips {
 
                 if (tool.RenderNodeTooltips) {
                     BuildNodeTooltips();
+                }
+
+                if (tool is NT_ConnectToolSystem connect) {
+                    BuildLoopRadiusTooltip(connect);
                 }
             }
 
@@ -220,8 +225,31 @@ namespace NetworkTools.Systems.Tooltips {
             public bool   HasPreview;
         }
 
-        private void BuildNodeTooltips() {
-            var nodes = m_SelectedNodesQuery.ToEntityArray(Allocator.Temp);
+        /// <summary>
+        ///     Radius readout pinned to the loop's radius knob, so the number the slider is setting is
+        ///     visible in the world instead of only as a 0..1 factor in the panel.
+        ///     <para>
+        ///         Shown for every loop shape: on the single-arc shapes it is the arc radius, on the
+        ///         stacked shape the radius both 270° loops share, and on the u-turn the half-gap the
+        ///         two nodes force. Rounded to 0.1 m because the sliders are metre-based; the solver
+        ///         already snaps the radius itself to whole metres.
+        ///     </para>
+        /// </summary>
+        private void BuildLoopRadiusTooltip(NT_ConnectToolSystem tool) {
+            if (tool.Mode.Value != ConnectMode.Loop) return;
+            if (!LoopGenerator.TryGetRadius(tool, out var radius, out var knob)) return;
+
+            var group = new TooltipGroup {
+                path     = "NT_LoopRadius",
+                category = TooltipGroup.Category.Network,
+                position = WorldToTooltipPos(knob),
+            };
+
+            group.children.Add(new RadiusTooltip { Radius = math.round(radius * 10f) / 10f });
+            AddGroup(group);
+        }
+
+        private void BuildNodeTooltips() {            var nodes = m_SelectedNodesQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in nodes) {
                 var node     = EntityManager.GetComponentData<Node>(entity);
                 var position = WorldToTooltipPos(node.m_Position);

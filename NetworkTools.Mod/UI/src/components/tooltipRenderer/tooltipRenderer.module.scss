@@ -53,3 +53,25 @@
         margin: 0 8rem;
     }
 }
+
+.radiusTooltip {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+
+    &__label {
+        // The conventional radius symbol, so the number is not mistaken for a length.
+        font-size: 12rem;
+        line-height: 16rem;
+        font-weight: 600;
+        opacity: 0.8;
+        margin-right: 4rem;
+        font-style: italic;
+    }
+
+    &__value {
+        font-size: 14rem;
+        line-height: 16rem;
+        font-weight: 600;
+    }
+}

@@ -1,0 +1,7 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 相交 / 喇叭：圆心落在对角，圆弧要绕远路走 270° -->
+  <path d="M0 26H32" stroke="white" stroke-opacity="0.35" stroke-width="2"/>
+  <path d="M6 0V32" stroke="white" stroke-opacity="0.35" stroke-width="2"/>
+  <circle cx="17" cy="15" r="11" stroke="white" stroke-width="2.5" stroke-linecap="round"
+          stroke-dasharray="51.836 69.115" transform="rotate(180 17 15)"/>
+</svg>

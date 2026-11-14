@@ -50,6 +50,11 @@ namespace NetworkTools.Systems.Tools.Connect {
                 var config = Config;
                 config.NetPrefabEntity = NetPrefabEntity;
                 config.NetLanePrefabEntity = NetLanePrefabEntity;
+
+                // Node classification (bridge / cutting / ground) needs the terrain under each node,
+                // which only the job has.
+                config.Terrain    = TerrainHeight;
+                config.HasTerrain = true;
                 if (NetGeometryDataLookup.TryGetComponent(NetPrefabEntity, out var netGeom))
                 {
                     config.NetWidth = netGeom.m_DefaultWidth;
