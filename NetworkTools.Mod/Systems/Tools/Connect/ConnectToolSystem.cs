@@ -206,30 +206,75 @@ namespace NetworkTools.Systems.Tools.Connect {
             fractionDigits: 2) {
             Handles = new IHandleSpec<float>[] {
                 new AxisHandle {
+                    // The handle slides the circle centre along the bisector: factor 0 is the
+                    // tightest reachable arc, factor 1 the widest.
+                    DependsOn = new Dependency[] {
+                        nameof(StartPosition), nameof(EndPosition),
+                        nameof(StartDirection), nameof(EndDirection),
+                        // The bisector the handle slides along is also chosen by the shape, and its
+                        // height by the ramp grade. Neither is a position, so they cannot ride the
+                        // bare (Float3) re-resolve path -- they carry an explicit re-resolve instead.
+                        // Without it the knob stays where the *previous* shape left it, which is what
+                        // made switching 90° <-> 270° look like the centre never moved.
+                        new Dependency(nameof(LoopShapeMode), OnLoopShapeChanged),
+                        new Dependency(nameof(LoopGrade), ResyncLoopHandle),
+                        new Dependency(nameof(LoopHeight), ResyncLoopHandle),
+                    },
                     StartPoint = tool => {
-                        var ct = (NT_ConnectToolSystem)tool;
-                        LoopGenerator.ComputeLoopAxis(
-                            ct.StartPosition.Value, ct.StartDirection.Value,
-                            ct.EndPosition.Value, ct.EndDirection.Value,
-                            out var nc, out _, out _);
-                        return nc;
+                        LoopGenerator.TryGetCenterAxis((NT_ConnectToolSystem)tool, out var from, out _);
+                        return from;
                     },
                     EndPoint = tool => {
-                        var ct = (NT_ConnectToolSystem)tool;
-                        LoopGenerator.ComputeLoopAxis(
-                            ct.StartPosition.Value, ct.StartDirection.Value,
-                            ct.EndPosition.Value, ct.EndDirection.Value,
-                            out var nc, out var axisDir, out _);
-                        return LoopGenerator.ComputeMaxCenter(nc, axisDir,
-                            ct.StartPosition.Value, ct.EndPosition.Value);
+                        LoopGenerator.TryGetCenterAxis((NT_ConnectToolSystem)tool, out _, out var to);
+                        return to;
                     },
                     YOffset = 1f,
                 }
             }
         };
-        public EnumParameter<LoopArcSide> LoopArc = new("connect.loopArcSide", LoopArcSide.Outer,
+        /// <summary>
+        ///     Shape of the loop. On <b>intersecting</b> roads: orthogonal (arc cuts the corner, 90° on a
+        ///     right-angle junction) or crossing (arc goes the long way round, 270°). On <b>parallel</b>
+        ///     roads: u-turn (one 180° half circle between two opposite-way roads) or stacked (two 270°
+        ///     loops joined by an elevated deck between two same-way roads). The old per-quadrant
+        ///     selector is gone: which branch you get is fully determined by which side of the corner
+        ///     the centre sits on, i.e. by whether the sweep is short or long.
+        /// </summary>
+        public EnumParameter<LoopShape> LoopShapeMode = new("connect.loopShape", LoopShape.Orthogonal,
             modes: (int)ConnectMode.Loop,
-            label: "NetworkTools.UI.Connect.LoopArcSide");
+            label: "NetworkTools.UI.Connect.LoopShape");
+
+        /// <summary>
+        ///     Design grade of the whole connection, as a fraction (0.04 = 4%). It sets how much of
+        ///     the link is spent climbing: <c>|Δh| / grade</c> metres rise at exactly this pitch and
+        ///     the leftover length stays level, centred on the loop. When that climb does not fit in
+        ///     the link at all, the whole link rises at <c>|Δh| / length</c> instead -- the nodes are
+        ///     pinned, so the profile has to close.
+        /// </summary>
+        public FloatParameter LoopGrade = new("connect.loopGrade", 0.04f, 0f, 0.15f,
+            modes: (int)ConnectMode.Loop,
+            label: "NetworkTools.UI.Connect.LoopGrade",
+            fractionDigits: 1,
+            numberType: NumberType.Percentage,
+            displayScale: 100f);
+
+        /// <summary>
+        ///     Height of the flyover deck, in metres. <b>Only the stacked shape has a deck</b>;
+        ///     the field is hidden for the other shapes, whose profile is fully determined by the two
+        ///     nodes and the design grade.
+        ///     <para>
+        ///         Positive lifts the deck (viaduct), negative drops it (underpass / tunnel). The
+        ///         reference is the start of the first loop, so the value is exactly how much each
+        ///         ramp climbs between its node and the deck. The plan geometry, the radius and both
+        ///         node positions are untouched.
+        ///     </para>
+        /// </summary>
+        public FloatParameter LoopHeight = new("connect.loopHeight", 0f, -30f, 30f,
+            modes: (int)ConnectMode.Loop,
+            label: "NetworkTools.UI.Connect.LoopHeight",
+            fractionDigits: 1,
+            numberType: NumberType.Distance,
+            displayScale: 1f);
 
         /// <summary>
         ///     Custom dependency reaction shared by the two inner control points. When the sibling
@@ -253,6 +298,35 @@ namespace NetworkTools.Systems.Tools.Connect {
             var mirrored = mid - axis * armLen;
             mirrored.y   = own.Value.y;                          // keep our own height
             own.SetValue(mirrored, ChangeOrigin.Dependency);
+        }
+
+        /// <summary>
+        ///     Custom dependency reaction for the loop radius knob. The knob's position is not a value
+        ///     the tool stores -- it is recomputed from the current geometry each time, because the
+        ///     bisector it slides along is chosen by the shape and its height by the ramp grade. A
+        ///     change to either of those re-resolves the handle so the knob lands on the new axis
+        ///     instead of staying where the previous geometry put it.
+        /// </summary>
+        private static void ResyncLoopHandle(NT_BaseToolSystem tool, ParameterBase owner, ParameterBase source) {
+            tool.SyncHandlesFor(owner);
+        }
+
+        /// <summary>
+        ///     Shape switch: re-resolve the knob, and give stacked a usable deck height the first time it
+        ///     is picked. With a zero offset the two loops would run dead flat between the nodes --
+        ///     technically buildable, but not what "stacked" means, and the negative-capable slider
+        ///     makes zero an easy place to sit by accident.
+        /// </summary>
+        private static void OnLoopShapeChanged(NT_BaseToolSystem tool, ParameterBase owner, ParameterBase source) {
+            var connect = (NT_ConnectToolSystem)tool;
+
+            if (connect.LoopShapeMode.Value == LoopShape.Stacked
+                && connect.LoopHeight.Value > -0.05f
+                && connect.LoopHeight.Value < 0.05f) {
+                connect.LoopHeight.SetValue(10f, ChangeOrigin.Dependency);
+            }
+
+            connect.SyncHandlesFor(owner);
         }
 
         /// <inheritdoc />

@@ -26,8 +26,12 @@ type SlopeTooltipProps = {
     NewSlope: number;
 };
 
-const customTooltipComponents: { [key: string]: React.FC<{ props: SlopeTooltipProps }> } = {
-    "NT.SlopeTooltip": ({ props }) => {
+type RadiusTooltipProps = {
+    Radius: number;
+};
+
+const customTooltipComponents: { [key: string]: React.FC<{ props: any }> } = {
+    "NT.SlopeTooltip": ({ props }: { props: SlopeTooltipProps }) => {
         return (
             <div className={c(VT.tooltipRenderer.item, styles.slopeTooltip)}>
                 <div className={styles.slopeTooltip__icon}>
@@ -55,6 +59,16 @@ const customTooltipComponents: { [key: string]: React.FC<{ props: SlopeTooltipPr
                         </div>
                     </>
                 )}
+            </div>
+        );
+    },
+    "NT.RadiusTooltip": ({ props }: { props: RadiusTooltipProps }) => {
+        return (
+            <div className={c(VT.tooltipRenderer.item, styles.radiusTooltip)}>
+                <div className={styles.radiusTooltip__label}>{"R"}</div>
+                <div className={styles.radiusTooltip__value}>
+                    <VC.LocalizedNumber value={props.Radius} unit={Unit.Length} />
+                </div>
             </div>
         );
     },

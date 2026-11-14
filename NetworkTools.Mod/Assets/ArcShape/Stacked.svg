@@ -1,0 +1,7 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 双环 / 高架：两个 270° 环向外绕出，中间一段水平高架桥连起来 -->
+  <path d="M14 13V0" stroke="white" stroke-opacity="0.35" stroke-width="2"/>
+  <path d="M20 13V0" stroke="white" stroke-opacity="0.35" stroke-width="2"/>
+  <path d="M14 13A4 4 0 1 0 10 17H24A4 4 0 1 0 20 13"
+        stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

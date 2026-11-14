@@ -90,6 +90,24 @@ namespace NetworkTools.Systems.Tools {
             return false;
         }
 
+        /// <summary>
+        ///     Re-positions every active handle bound to <paramref name="param" /> from the tool's
+        ///     current state. Runs automatically when that parameter itself changes; call it explicitly
+        ///     when a handle's geometry also derives from <b>other</b> parameters it does not own
+        ///     (e.g. an axis whose two endpoints are resolved from several unrelated parameters), so
+        ///     the knob follows the new axis instead of staying where it was drawn.
+        /// </summary>
+        public void SyncHandlesFor(ParameterBase param) {
+            if (m_ParameterHandles == null || m_HandleEntries == null) return;
+            if (param == null) return;
+            if (!m_ParameterHandles.TryGetValue(param, out var entities)) return;
+
+            foreach (var entity in entities) {
+                if (!m_HandleEntries.TryGetValue(entity, out var entry)) continue;
+                entry.Spec.SyncToEntity(this, entity, param);
+            }
+        }
+
         private void WireParameterSubscribers() {
             m_HandleEntries    = new Dictionary<Entity, HandleEntry>();
             m_ParameterHandles = new Dictionary<ParameterBase, List<Entity>>();
@@ -104,9 +122,7 @@ namespace NetworkTools.Systems.Tools {
                 var param = p;
                 param.OnChanged += origin => {
                     if (origin == ChangeOrigin.Handle) return;
-                    if (!m_ParameterHandles.TryGetValue(param, out var entities)) return;
-                    foreach (var entity in entities)
-                        m_HandleEntries[entity].Spec.SyncToEntity(this, entity, param);
+                    SyncHandlesFor(param);
                 };
 
                 // Dependency propagation: when this parameter changes, update every handle that

@@ -250,9 +250,13 @@ namespace NetworkTools.L10n {
                 { "NetworkTools.UI.Connect.ComplexCurve", "Complex Curve" },
                 { "NetworkTools.UI.Connect.Loop", "Loop" },
                 { "NetworkTools.UI.Connect.LoopRadius", "Loop Radius" },
-                { "NetworkTools.UI.Connect.LoopArcSide", "Arc Side" },
-                { "NetworkTools.UI.Connect.LoopOuterArc", "Outer" },
-                { "NetworkTools.UI.Connect.LoopInnerArc", "Inner" },
+                { "NetworkTools.UI.Connect.LoopShape", "Loop Shape" },
+                { "NetworkTools.UI.Connect.LoopShapeOrthogonal", "Orthogonal (90° corner)" },
+                { "NetworkTools.UI.Connect.LoopShapeCrossing", "Crossing (270° loop)" },
+                { "NetworkTools.UI.Connect.LoopShapeUTurn", "U-Turn (180° half circle)" },
+                { "NetworkTools.UI.Connect.LoopShapeStacked", "Stacked (270° on viaduct)" },
+                { "NetworkTools.UI.Connect.LoopGrade", "Design Grade" },
+                { "NetworkTools.UI.Connect.LoopHeight", "Height Offset" },
 
                 // ## Parallel Tool
                 { "NetworkTools.UI.Parallel.HorizontalOffset", "Horizontal Offset" },
